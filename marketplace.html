@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --bg:#000000; --panel:#0b0b0c; --panel2:#101012;
+    --gold:#F1C14C; --gold-a:#FCE39A; --gold-b:#E0A93C;
+    --line:rgba(233,184,74,.20); --hair:rgba(255,255,255,.06);
+    --text:#eceae4; --muted:#8a8780; --faint:#5c5a54;
+    --green:#3fd17a; --red:#e0556a;
+    --c-common:#cfccc4; --c-rare:#5b9bd5; --c-epic:#c468d8; --c-legendary:#E9B84A; --c-mythic:#e0556a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  .app{margin:14px;border:1px solid var(--line);border-radius:20px;background:#000;position:relative}
+  .head{border-radius:19px 19px 0 0}
+  .app>footer{border-radius:0 0 19px 19px;overflow:hidden}
+  /* embedded in home.html (#embed): hide header + footer, remove frame */
+  html.embed .head{display:none!important}
+  html.embed .app{margin:0;border:none;border-radius:0}
+  html.embed .app>footer{display:none!important}
+  html.embed .hero{border-top:none}
+  a{color:inherit;text-decoration:none}
+  img{display:block}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== HEADER ===== */
+  .head{position:sticky;top:0;z-index:40;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 36px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mk{width:32px;height:32px;border:2px solid var(--gold);border-radius:8px;display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:18px}
+  .brand .wm{color:var(--gold);font-weight:700;letter-spacing:3px;font-size:20px}
+  .nav{display:flex;gap:34px;font-size:13px;letter-spacing:1.4px;color:#cdcabf;font-weight:600}
+  .nav a{position:relative;padding:6px 0;transition:color .2s}
+  .nav a:hover{color:#fff}
+  .nav a.on{color:var(--gold)}
+  .nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-20px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hr{display:flex;align-items:center;gap:20px}
+  .soc{display:flex;gap:16px;color:#b7b4ac}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:18px;height:18px;fill:currentColor}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:10px 16px;border-radius:8px;
+    font-family:var(--font-body);font-weight:600;font-size:12px;letter-spacing:1.4px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .wbtn:hover{background:var(--gold);color:#000}
+  .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7}
+  @media(max-width:1040px){.nav,.soc{display:none}}
+
+  /* ===== HERO ===== */
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--hair);background:#000}
+  .hero-in{position:relative;display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:center;
+    max-width:1500px;margin:0 auto;padding:30px 36px 18px 36px}
+  .h-eye{font-size:13px;letter-spacing:4px;color:#fff;font-weight:600}
+  .h-title{font-weight:700;font-size:26px;line-height:1.05;letter-spacing:.5px;margin:8px 0 12px;white-space:nowrap}
+  .h-title .g{color:var(--gold)}
+  .h-sub{color:#bdbab2;font-weight:400;font-size:15px;line-height:1.5;max-width:165px}
+  .h-cta{margin-top:24px;display:inline-flex;align-items:center;gap:12px;border:1px solid var(--gold);color:var(--gold);background:transparent;white-space:nowrap;
+    padding:13px 18px;border-radius:8px;font-weight:700;font-size:12px;letter-spacing:1.2px;cursor:pointer;transition:.2s}
+  .h-cta span{font-size:15px;line-height:1}
+  .h-cta:hover{background:var(--gold);color:#000}
+  .h-trend{margin-top:30px}
+  .h-trend .lab{font-size:11px;letter-spacing:1.8px;color:#cdcabf;font-weight:600}
+  .tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .tags span{border:1px solid var(--hair);color:#b7b4ac;font-size:11.5px;letter-spacing:.5px;padding:7px 13px;border-radius:7px;cursor:pointer;transition:.2s}
+  .tags span:hover{border-color:var(--line);color:#fff}
+  .featured{display:flex;justify-content:flex-start;align-items:flex-start;gap:6px;padding:0;flex-wrap:nowrap}
+  .featured .fc{position:relative;flex:0 0 234px;min-width:0;aspect-ratio:237/392;
+    transition:transform .2s}
+  .featured .fc img{width:100%;height:100%;object-fit:contain;display:block;border-radius:9px}
+  .featured .fc:hover{transform:translateY(-8px);z-index:5}
+  .dots{grid-column:1/-1;display:flex;justify-content:center;gap:8px;margin-top:18px}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#34332f;display:block;cursor:pointer;transition:.2s}
+  .dots i.on{background:var(--gold);width:20px;border-radius:4px}
+  @media(max-width:980px){.hero-in{grid-template-columns:1fr}.featured{flex-wrap:wrap;gap:8px}.featured .fc{flex:1 1 28%;transform:none!important}}
+
+  /* ===== MAIN ===== */
+  .main{display:grid;grid-template-columns:224px 1fr;gap:28px;max-width:1500px;margin:0 auto;padding:34px 36px 50px}
+  .side{align-self:start;position:sticky;top:78px}
+  .side .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .side .sh b{font-size:13px;letter-spacing:1.8px;color:var(--gold);font-weight:700}
+  .side .sh a{font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer}
+  .side .sh a:hover{color:var(--red)}
+  .fgroup{border-top:1px solid var(--hair);padding:17px 0}
+  .fgroup>h5{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;letter-spacing:1.8px;color:var(--gold);font-weight:600;cursor:pointer;margin-bottom:14px}
+  .fgroup>h5 .chev{color:var(--muted);font-size:10px}
+  .frow{display:flex;align-items:center;gap:11px;padding:6px 0;cursor:pointer;font-size:12.5px;letter-spacing:.6px;color:#cdcabf}
+  .frow:hover{color:#fff}
+  .frow .cb{width:16px;height:16px;border:1.5px solid #3c3c3a;border-radius:4px;flex:none;display:grid;place-items:center;transition:.15s}
+  .frow .cb svg{width:10px;height:10px;stroke:#000;stroke-width:3;fill:none;opacity:0}
+  .frow.on .cb svg{opacity:1}
+  .frow .nm{flex:1}
+  .frow .ct{color:var(--faint);font-size:12px}
+  .frow[data-r="common"].on .cb{background:var(--c-common);border-color:var(--c-common)}
+  .frow[data-r="rare"].on .cb{background:var(--c-rare);border-color:var(--c-rare)}
+  .frow[data-r="epic"].on .cb{background:var(--c-epic);border-color:var(--c-epic)}
+  .frow[data-r="legendary"].on .cb{background:var(--c-legendary);border-color:var(--c-legendary)}
+  .frow[data-r="mythic"].on .cb{background:var(--c-mythic);border-color:var(--c-mythic)}
+  .frow.cat.on .cb{background:var(--gold);border-color:var(--gold)}
+  .price-in{display:flex;gap:8px;margin-bottom:14px}
+  .price-in input{flex:1;width:100%;background:#0b0b0c;border:1px solid var(--hair);border-radius:7px;color:#fff;padding:10px 11px;font-family:var(--font-body);font-size:12.5px;letter-spacing:.5px}
+  .price-in input::placeholder{color:#5c5a54}
+  .apply{width:100%;border:1px solid var(--gold);color:var(--gold);background:transparent;border-radius:7px;padding:11px;
+    font-family:var(--font-body);font-weight:600;font-size:11.5px;letter-spacing:1.6px;cursor:pointer;transition:.2s}
+  .apply:hover{background:var(--gold);color:#000}
+
+  .toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+  .search{position:relative;flex:1;min-width:220px}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8}
+  .search input{width:100%;background:#0b0b0c;border:1px solid var(--hair);border-radius:9px;color:#fff;padding:12px 14px 12px 39px;font-family:var(--font-body);font-size:13px}
+  .search input::placeholder{color:#6a6862}
+  .rpills{display:flex;gap:9px}
+  .rpill{background:transparent;padding:10px 16px;border-radius:8px;font-family:var(--font-body);
+    font-weight:700;font-size:11px;letter-spacing:1.4px;cursor:pointer;transition:.18s;
+    color:var(--rc,#cdcabf);border:1px solid color-mix(in srgb, var(--rc,#888) 42%, transparent)}
+  .rpill[data-r="common"]{--rc:var(--c-common)}
+  .rpill[data-r="rare"]{--rc:var(--c-rare)}
+  .rpill[data-r="epic"]{--rc:var(--c-epic)}
+  .rpill[data-r="legendary"]{--rc:var(--c-legendary)}
+  .rpill[data-r="mythic"]{--rc:var(--c-mythic)}
+  .rpill:hover{border-color:var(--rc,#888)}
+  .rpill.on{border-color:var(--rc);background:color-mix(in srgb, var(--rc) 16%, transparent);box-shadow:0 0 14px -7px var(--rc)}
+  .sortwrap{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
+  .sortwrap select{background:#0b0b0c;border:1px solid var(--hair);border-radius:8px;color:#eceae4;padding:10px 11px;font-family:var(--font-body);font-size:12px;cursor:pointer}
+  .viewtog{display:flex;border:1px solid var(--hair);border-radius:8px;overflow:hidden}
+  .viewtog button{background:transparent;border:none;padding:10px 11px;cursor:pointer;display:grid;place-items:center}
+  .viewtog button svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8}
+  .viewtog button.on{background:rgba(233,184,74,.1)}
+  .viewtog button.on svg{stroke:var(--gold)}
+  @media(max-width:760px){.rpills{order:3;width:100%}}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  @media(max-width:1180px){.grid{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:820px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.side{position:static}}
+  .lc{position:relative;background:#0a0a0b;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;transition:transform .18s, border-color .18s;cursor:pointer}
+  .lc:hover{transform:translateY(-4px);border-color:var(--rc,#333)}
+  .lc .thumb{position:relative;aspect-ratio:1/1;overflow:hidden;background:#0c0c0d}
+  .lc .thumb img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .lc .bdg{position:absolute;top:9px;left:9px;font-size:8.5px;font-weight:700;letter-spacing:1.2px;padding:4px 8px;border-radius:6px;
+    color:var(--rc,#cfccc4);background:rgba(0,0,0,.6);border:1px solid color-mix(in srgb, var(--rc,#cfccc4) 45%, transparent)}
+  .lc .idn{position:absolute;top:9px;right:9px;font-size:10px;font-weight:600;color:#cdcabf;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:6px}
+  .lc .info{padding:12px 13px 13px}
+  .lc .nm{font-weight:700;font-size:13px;letter-spacing:.6px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lc .pr{display:flex;align-items:baseline;justify-content:space-between;margin-top:8px}
+  .lc .pr .eth{font-weight:700;font-size:14px;color:var(--gold)}
+  .lc .pr .fs{font-size:10px;color:var(--green);font-weight:600;letter-spacing:.5px}
+  .lc .meta{display:flex;align-items:center;gap:13px;margin-top:11px;padding-top:10px;border-top:1px solid var(--hair);font-size:10.5px;color:var(--muted)}
+  .lc .meta span{display:flex;align-items:center;gap:4px}
+  .lc .meta svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.6}
+  .lc .meta .t{margin-left:auto}
+  .grid.list{grid-template-columns:1fr;gap:10px}
+  .grid.list .lc{display:grid;grid-template-columns:60px 1fr auto;align-items:center;gap:16px;padding:10px 16px 10px 10px}
+  .grid.list .lc:hover{transform:none}
+  .grid.list .thumb{width:60px;aspect-ratio:1/1;border-radius:8px}
+  .grid.list .bdg,.grid.list .idn{display:none}
+  .grid.list .info{padding:0}
+  .grid.list .pr{display:block;margin:0}
+  .grid.list .meta{border:none;margin:0;padding:0}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0;font-size:14px}
+
+  .pager{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:36px}
+  .pager button{min-width:40px;height:40px;border:1px solid var(--hair);background:transparent;color:#cdcabf;border-radius:8px;
+    font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;padding:0 11px}
+  .pager button:hover:not(:disabled){border-color:var(--line);color:#fff}
+  .pager button.on{background:var(--gold);color:#000;border-color:var(--gold)}
+  .pager button:disabled{opacity:.32;cursor:default}
+  .pager .ell{color:var(--muted);padding:0 4px}
+
+  /* ===== RECENTLY SOLD ===== */
+  .sold{max-width:1500px;margin:0 auto;padding:6px 36px 44px 288px}
+  .sold-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .sold-h b{display:flex;align-items:center;gap:9px;font-size:15px;letter-spacing:1.6px;font-weight:700}
+  .sold-h b svg{width:16px;height:16px;fill:var(--gold)}
+  .sold-h a{font-size:11.5px;letter-spacing:1.2px;color:var(--gold);font-weight:600;cursor:pointer}
+  .sold-grid{display:flex;justify-content:flex-start;gap:11px}
+  .sold-grid .sold-c{flex:1 1 0;width:auto;aspect-ratio:237/392}
+  @media(max-width:980px){.sold-grid{flex-wrap:wrap;justify-content:center}}
+
+  .sold-c{position:relative;transition:transform .2s}
+  .sold-c:hover{transform:translateY(-6px)}
+  .sold-c img{width:100%;height:100%;object-fit:contain;display:block;border-radius:9px}
+
+  /* ===== STATS ===== */
+  .stats{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);background:#000}
+  .stats-in{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);padding:0 36px}
+  .stat{display:flex;align-items:center;gap:17px;padding:32px 28px}
+  .stat+.stat{border-left:1px solid var(--hair)}
+  .stat .ic{width:50px;height:50px;display:grid;place-items:center;flex:none;background:transparent}
+  .stat .ic img{width:100%;height:100%;object-fit:contain}
+  .stat .ic img ~ svg{display:none}
+  .stat .ic svg{width:40px;height:40px}
+  .stat.s1 .ic{border:2px solid var(--gold);border-radius:50%}
+  .stat.s1 .ic:has(img){border:none}
+  .stat.s1 .ic svg{width:24px;height:24px;fill:var(--gold)}
+  .stat.s2 .ic svg{fill:var(--c-epic)}
+  .stat.s3 .ic svg{fill:var(--c-rare)}
+  .stat.s4 .ic svg{fill:none;stroke:var(--green);stroke-width:1.6}
+  .stat .lab{font-size:10.5px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase}
+  .stat .big{font-size:24px;font-weight:700;letter-spacing:.5px;margin-top:3px}
+  .stat .delta{font-size:11px;font-weight:700;margin-left:8px}
+  .stat .delta.up{color:var(--green)} .stat .delta.down{color:var(--red)}
+  .stat .sub{font-size:9.5px;letter-spacing:1.2px;color:var(--faint);margin-top:4px}
+  @media(max-width:900px){.stats-in{grid-template-columns:repeat(2,1fr)}.stat:nth-child(3){border-left:none}.stat:nth-child(n+3){border-top:1px solid var(--hair)}}
+
+  /* ===== FOOTER ===== */
+  footer{background:#000;border-top:1px solid var(--hair)}
+  .foot{max-width:1500px;margin:0 auto;padding:50px 36px 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1.4fr;gap:32px}
+  .foot .fb{display:flex;align-items:center;gap:11px;margin-bottom:15px}
+  .foot .fb .mk{width:34px;height:34px;border:2px solid var(--gold);border-radius:8px;display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:18px}
+  .foot .fb .wm{color:var(--gold);font-weight:700;letter-spacing:3px;font-size:22px}
+  .foot p.tg{color:var(--muted);font-size:13px;line-height:1.6;max-width:230px}
+  .foot .fsoc{display:flex;gap:17px;margin-top:17px;color:#94918a}
+  .foot .fsoc a:hover{color:var(--gold)}
+  .foot .fsoc svg{width:18px;height:18px;fill:currentColor}
+  .foot h6{font-size:11px;letter-spacing:1.8px;color:var(--gold);font-weight:700;margin-bottom:17px}
+  .foot ul{list-style:none}
+  .foot ul li{margin-bottom:12px}
+  .foot ul a{color:#b7b4ac;font-size:13px;display:flex;align-items:center;gap:8px}
+  .foot ul a:hover{color:#fff}
+  .foot ul a svg{width:13px;height:13px;fill:currentColor;opacity:.8}
+  .sub-in{display:flex;gap:8px;margin-top:6px}
+  .sub-in input{flex:1;min-width:0;background:#0b0b0c;border:1px solid var(--hair);border-radius:7px;color:#fff;padding:11px 12px;font-family:var(--font-body);font-size:12.5px}
+  .sub-in input::placeholder{color:#5c5a54}
+  .sub-in button{border:1px solid var(--gold);background:var(--gold);color:#000;border-radius:7px;padding:0 17px;font-family:var(--font-body);font-weight:700;font-size:11.5px;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+  .copy{text-align:center;color:var(--faint);font-size:12px;padding:22px;border-top:1px solid var(--hair)}
+  @media(max-width:900px){.foot{grid-template-columns:1fr 1fr}}
+
+  /* ===== MEMONS FONT SYSTEM (Rajdhani + Inter) ===== */
+  .brand .mk,.brand .wm,.foot .fb .mk,.foot .fb .wm,.sold-h b,.h-eye,.h-title,
+  .nav a,.h-cta,.wbtn,.apply,.sub-in button,.pager button,.side .sh b,.fgroup>h5,.foot h6,
+  .lc .nm,.h-trend .lab,.rpill,.lc .bdg,.stat .lab,#rarityFilters .frow .nm{font-family:var(--font-head)}
+  .brand .wm,.foot .fb .wm{letter-spacing:.12em;text-transform:uppercase}
+  .h-sub,.search input,.sortwrap,.sortwrap select,.frow,.tags span,.sold-h a,
+  .lc .pr .fs,.stat .sub,.stat .delta,.price-in input,.foot ul a,.foot p.tg,.sub-in input,.copy,
+  .lc .pr .eth,.stat .big,.lc .idn,.frow .ct,.lc .meta{font-family:var(--font-body)}
+</style>
+</head>
+<body>
+<script>/*embed-mode*/if(location.hash.indexOf("embed")>=0){document.documentElement.classList.add("embed");
+  function __mkH(){var a=document.querySelector(".app");return a?Math.ceil(a.getBoundingClientRect().height):document.body.offsetHeight;}
+  function __mkPostH(){try{parent.postMessage({embedHeight:__mkH()},"*");}catch(e){}}
+  window.addEventListener("load",__mkPostH);
+  window.addEventListener("resize",__mkPostH);
+  document.addEventListener("DOMContentLoaded",function(){
+    __mkPostH();
+    if(window.ResizeObserver){try{new ResizeObserver(__mkPostH).observe(document.querySelector(".app"));}catch(e){}}
+    try{document.querySelectorAll("img").forEach(function(im){im.addEventListener("load",__mkPostH);});}catch(e){}
+    var n=0,iv=setInterval(function(){__mkPostH();if(++n>20)clearInterval(iv);},300);
+  });
+}</script>
+<div class="app">
+
+<header class="head">
+  <div class="brand"><span class="mk">M</span><span class="wm">MEMONS</span></div>
+  <nav class="nav">
+    <a href="home.html">HOME</a>
+    <a href="vault.html">MEMONS VAULT</a>
+    <a href="open-capsule.html">OPEN CAPSULE</a>
+    <a href="marketplace.html" class="on">MARKETPLACE</a>
+    <a href="home.html#contact">CONTACT</a>
+  </nav>
+  <div class="hr">
+    <div class="soc">
+      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5a14 14 0 0 1 4.1 2 13 13 0 0 0-11.2 0 14 14 0 0 1 4.1-2L11.7 3A19 19 0 0 0 7 4.4 19.6 19.6 0 0 0 3.7 18a19 19 0 0 0 5.8 2.9l.7-1.1a12 12 0 0 1-1.9-.9l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12 12 0 0 1-1.9.9l.7 1.1a19 19 0 0 0 5.8-2.9A19.6 19.6 0 0 0 20 4.4ZM9.3 15.3c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Zm5.4 0c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Z"/></svg></a>
+      <a aria-label="Telegram" href="#"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+    </div>
+    <button class="wbtn"><svg viewBox="0 0 24 24"><path d="M3 7h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 0 3-3h11"/><circle cx="16" cy="12.5" r="1.2" fill="currentColor" stroke="none"/></svg>CONNECT WALLET</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <div class="hcol">
+      <div class="h-eye">DISCOVER</div>
+      <h1 class="h-title"><span class="g">INTERNET CULTURE.</span></h1>
+      <p class="h-sub">Collect iconic moments from meme history.</p>
+      <button class="h-cta">EXPLORE COLLECTION <span>→</span></button>
+      <div class="h-trend">
+        <div class="lab">🔥 TRENDING NOW</div>
+        <div class="tags"><span># APEPE</span><span># DOGE</span><span># NYAN CAT</span><span># SUCCESS KID</span></div>
+      </div>
+    </div>
+    <div class="featured" id="featured"></div>
+    <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+  </div>
+</section>
+
+<div class="main">
+  <aside class="side">
+    <div class="sh"><b>FILTERS</b><a id="clearAll">CLEAR ALL</a></div>
+    <div class="fgroup">
+      <h5>RARITY <span class="chev">⌄</span></h5>
+      <div id="rarityFilters"></div>
+    </div>
+    <div class="fgroup">
+      <h5>CATEGORY <span class="chev">⌄</span></h5>
+      <div class="frow cat on"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">CLASSIC MEME</span><span class="ct">314</span></div>
+      <div class="frow cat"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">REACTION MEME</span><span class="ct">156</span></div>
+      <div class="frow cat"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">VIRAL VIDEO</span><span class="ct">68</span></div>
+      <div class="frow cat"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">INTERNET CELEBRITY</span><span class="ct">43</span></div>
+    </div>
+    <div class="fgroup">
+      <h5>PRICE (ETH) <span class="chev">⌃</span></h5>
+      <div class="price-in"><input id="pmin" type="number" placeholder="MIN" min="0" step="0.01"><input id="pmax" type="number" placeholder="MAX" min="0" step="0.01"></div>
+      <button class="apply" id="applyPrice">APPLY FILTERS</button>
+    </div>
+  </aside>
+
+  <section class="content">
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" placeholder="Search by meme, card ID, or creator...">
+      </div>
+      <div class="rpills" id="rpills"></div>
+      <div class="sortwrap">Sort by
+        <select id="sort">
+          <option value="recent">Recently Listed</option>
+          <option value="plow">Price: Low to High</option>
+          <option value="phigh">Price: High to Low</option>
+          <option value="likes">Most Liked</option>
+        </select>
+      </div>
+      <div class="viewtog">
+        <button id="vGrid" class="on" aria-label="Grid"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+        <button id="vList" aria-label="List"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="pager" id="pager"></div>
+  </section>
+</div>
+
+<section class="sold">
+  <div class="sold-h">
+    <b><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg> RECENTLY SOLD</b>
+    <a>VIEW ALL →</a>
+  </div>
+  <div class="sold-grid" id="soldGrid"></div>
+</section>
+
+<section class="stats">
+  <div class="stats-in">
+    <div class="stat s1">
+      <div class="ic"><img src="images/market/icon-volume.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><path d="M12 2 5.5 12 12 15.8 18.5 12 12 2ZM5.5 13.4 12 22l6.5-8.6L12 17.2 5.5 13.4Z"/></svg></div>
+      <div><div class="lab">Total Volume</div><div class="big">12,458 ETH <span class="delta up">+12.4%</span></div><div class="sub">24H CHANGE</div></div>
+    </div>
+    <div class="stat s2">
+      <div class="ic"><img src="images/market/icon-minted.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="11" height="15" rx="2" opacity=".55"/><rect x="3" y="6" width="11" height="15" rx="2"/></svg></div>
+      <div><div class="lab">Cards Minted</div><div class="big">28,647 <span class="delta up">+8.7%</span></div><div class="sub">TOTAL</div></div>
+    </div>
+    <div class="stat s3">
+      <div class="ic"><img src="images/market/icon-holders.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0Z"/><circle cx="17.5" cy="8.5" r="2.6" opacity=".55"/><path d="M15 20a8 8 0 0 0-1-4 5 5 0 0 1 7 4Z" opacity=".55"/></svg></div>
+      <div><div class="lab">Unique Holders</div><div class="big">8,912 <span class="delta up">+9.3%</span></div><div class="sub">TOTAL</div></div>
+    </div>
+    <div class="stat s4">
+      <div class="ic"><img src="images/market/icon-listings.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h6.4a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-6.4 6.4a2 2 0 0 1-2.8 0l-8-8a2 2 0 0 1-.6-1.4V4.5Z"/><circle cx="7.5" cy="7.5" r="1.6" fill="#060607"/></svg></div>
+      <div><div class="lab">Active Listings</div><div class="big">2,341 <span class="delta down">-3.1%</span></div><div class="sub">TOTAL</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot">
+    <div>
+      <div class="fb"><span class="mk">M</span><span class="wm">MEMONS</span></div>
+      <p class="tg">The archive of internet culture. Collect. Trade. Preserve.</p>
+      <div class="fsoc">
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5a14 14 0 0 1 4.1 2 13 13 0 0 0-11.2 0 14 14 0 0 1 4.1-2L11.7 3A19 19 0 0 0 7 4.4 19.6 19.6 0 0 0 3.7 18a19 19 0 0 0 5.8 2.9l.7-1.1a12 12 0 0 1-1.9-.9l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12 12 0 0 1-1.9.9l.7 1.1a19 19 0 0 0 5.8-2.9A19.6 19.6 0 0 0 20 4.4ZM9.3 15.3c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Zm5.4 0c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M12 2c2.7 0 3 0 4.1.1 1 0 1.7.2 2.3.5.6.2 1.1.5 1.6 1 .5.5.8 1 1 1.6.3.6.4 1.3.5 2.3.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c0 1-.2 1.7-.5 2.3-.2.6-.5 1.1-1 1.6-.5.5-1 .8-1.6 1-.6.3-1.3.4-2.3.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-1 0-1.7-.2-2.3-.5-.6-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.6-.3-.6-.4-1.3-.5-2.3C2 15 2 14.7 2 12s0-3 .1-4.1c0-1 .2-1.7.5-2.3.2-.6.5-1.1 1-1.6.5-.5 1-.8 1.6-1 .6-.3 1.3-.4 2.3-.5C8.6 2 9 2 12 2Zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM17.8 7a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/></svg></a>
+      </div>
+    </div>
+    <div><h6>MARKETPLACE</h6><ul><li><a href="#">All Memons</a></li><li><a href="#">Recently Sold</a></li><li><a href="#">Trending</a></li></ul></div>
+    <div><h6>SUPPORT</h6><ul><li><a href="#">Help Center</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+    <div><h6>COMMUNITY</h6><ul><li><a href="#">X (Twitter)</a></li><li><a href="#">Discord</a></li><li><a href="#">Telegram</a></li></ul></div>
+    <div>
+      <h6>STAY UPDATED</h6>
+      <p class="tg" style="margin-bottom:8px">Subscribe for the latest drops and marketplace updates.</p>
+      <div class="sub-in"><input placeholder="Enter your email"><button>SUBSCRIBE</button></div>
+    </div>
+  </div>
+  <div class="copy">© 2024 MEMONS. All rights reserved.</div>
+</footer>
+
+<script src="data/memons.js"></script>
+<script>
+const D = window.MEMONS_DATA || {
+  rarities:[
+    {key:'common',label:'COMMON',color:'#cfccc4',card:'images/detail/common.png'},
+    {key:'rare',label:'RARE',color:'#5b9bd5',card:'images/detail/rare.png'},
+    {key:'epic',label:'EPIC',color:'#c468d8',card:'images/detail/epic.png'},
+    {key:'legendary',label:'LEGENDARY',color:'#E9B84A',card:'images/detail/legendary.png'},
+    {key:'mythic',label:'MYTHIC',color:'#e0556a',card:'images/detail/mythic.png'},
+  ],
+  characters:[
+    {num:'0001',name:'APEPE',img:'images/vault/apepe.png'},
+    {num:'0002',name:'DOGE',img:'images/vault/doge.png'},
+    {num:'0003',name:'NYAN CAT',img:'images/vault/nyancat.png'},
+    {num:'0004',name:'PEPE',img:'images/vault/pepe.png'},
+    {num:'0005',name:'CHILL GUY',img:'images/vault/chillguy.png'},
+    {num:'0006',name:'WOJAK',img:'images/vault/wojak.png'},
+  ]
+};
+/* full cards (top/bottom) use images/detail/*.png */
+const DETAIL = {common:'images/detail/common.png',rare:'images/detail/rare.png',epic:'images/detail/epic.png',legendary:'images/detail/legendary.png',mythic:'images/detail/mythic.png'};
+/* one-piece card slots (shared top/bottom): drop into images/market/ to auto-apply, falls back to DETAIL if absent */
+const CARD = {common:'images/market/card-common.png',rare:'images/market/card-rare.png',epic:'images/market/card-epic.png',legendary:'images/market/card-legendary.png',mythic:'images/market/card-mythic.png'};
+const RAR = D.rarities;
+const rarByKey = Object.fromEntries(RAR.map(r=>[r.key,r]));
+const CHARS = D.characters.filter(c=>!c.locked);
+const RKEYS = ['common','rare','epic','legendary','mythic'];
+const PRICE = {common:[0.22,0.45],rare:[0.30,0.95],epic:[1.20,1.90],legendary:[3.50,5.20],mythic:[9.0,14.0]};
+const RCOUNT = {common:243,rare:186,epic:97,legendary:43,mythic:12};
+const seed = i => { const x = Math.sin(i*99.13+7)*10000; return x - Math.floor(x); };
+const addr = i => '0x'+Math.floor(seed(i)*0xffffffff).toString(16).padStart(8,'0').slice(0,4)+'...'+Math.floor(seed(i+13)*0xffff).toString(16).padStart(4,'0').toUpperCase();
+const fmtK = n => n>=1000 ? (n/1000).toFixed(1)+'K' : (''+n);
+
+let LISTINGS = [];
+CHARS.forEach((c,ci)=>{ RKEYS.forEach((rk,ri)=>{
+  if(((ci+ri)%5===2) && ri<2) return;
+  const r = rarByKey[rk]; if(!r) return;
+  const [lo,hi]=PRICE[rk]; const sd=ci*7+ri+1;
+  LISTINGS.push({char:c.name,num:c.num,img:c.img||r.card,rkey:rk,rarity:r.label,color:r.color,
+    price:+(lo+(hi-lo)*seed(sd)).toFixed(2),likes:Math.floor(120+seed(sd+1)*2400),
+    views:Math.floor(900+seed(sd+2)*16000),hours:Math.floor(1+seed(sd+3)*22),seller:addr(sd+4)});
+});});
+
+const state = {rar:new Set(),q:'',sort:'recent',pmin:null,pmax:null,page:1,view:'grid'};
+const PER = 12;
+
+function buildFeatured(){
+  document.getElementById('featured').innerHTML = RKEYS.map(rk=>{
+    const r=rarByKey[rk]; if(!r) return '';
+    return `<div class="fc r-${rk}"><img src="${CARD[rk]}" alt="${r.label}" loading="lazy" onerror="this.onerror=null;this.src='${DETAIL[rk]}'"></div>`;
+  }).join('');
+}
+function buildSold(){
+  document.getElementById('soldGrid').innerHTML = RKEYS.map((rk)=>{
+    const r=rarByKey[rk];
+    return `<div class="sold-c" style="--rc:${r.color}">
+      <img src="${CARD[rk]}" alt="${r.label}" loading="lazy" onerror="this.onerror=null;this.src='${DETAIL[rk]}'">
+    </div>`;
+  }).join('');
+}
+function buildRarityFilters(){
+  document.getElementById('rarityFilters').innerHTML = RKEYS.map(rk=>{
+    const r=rarByKey[rk]; if(!r) return '';
+    return `<div class="frow" data-r="${rk}"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">${r.label}</span><span class="ct">${RCOUNT[rk]||0}</span></div>`;
+  }).join('');
+  document.getElementById('rpills').innerHTML = RKEYS.map(rk=>{
+    const r=rarByKey[rk]; if(!r) return '';
+    return `<button class="rpill" data-r="${rk}">${r.label}</button>`;
+  }).join('');
+  document.querySelectorAll('.frow[data-r], .rpill[data-r]').forEach(el=>el.addEventListener('click',()=>toggleRar(el.dataset.r)));
+}
+function toggleRar(rk){ state.rar.has(rk)?state.rar.delete(rk):state.rar.add(rk); state.page=1; syncRarUI(); render(); }
+function syncRarUI(){
+  document.querySelectorAll('.frow[data-r]').forEach(e=>e.classList.toggle('on',state.rar.has(e.dataset.r)));
+  document.querySelectorAll('.rpill[data-r]').forEach(e=>e.classList.toggle('on',state.rar.has(e.dataset.r)));
+}
+function filtered(){
+  let l=LISTINGS.slice();
+  if(state.rar.size) l=l.filter(x=>state.rar.has(x.rkey));
+  if(state.q){const q=state.q.toLowerCase(); l=l.filter(x=>x.char.toLowerCase().includes(q)||x.num.includes(q)||x.seller.toLowerCase().includes(q));}
+  if(state.pmin!=null) l=l.filter(x=>x.price>=state.pmin);
+  if(state.pmax!=null) l=l.filter(x=>x.price<=state.pmax);
+  if(state.sort==='plow') l.sort((a,b)=>a.price-b.price);
+  else if(state.sort==='phigh') l.sort((a,b)=>b.price-a.price);
+  else if(state.sort==='likes') l.sort((a,b)=>b.likes-a.likes);
+  else l.sort((a,b)=>a.hours-b.hours);
+  return l;
+}
+function cardHTML(x){
+  return `<div class="lc" style="--rc:${x.color}">
+    <div class="thumb"><img src="${x.img}" alt="${x.char}" loading="lazy"><span class="bdg">${x.rarity}</span><span class="idn">#${x.num}</span></div>
+    <div class="info">
+      <div class="nm">${x.char}</div>
+      <div class="pr"><span class="eth">${x.price.toFixed(2)} ETH</span><span class="fs">For Sale</span></div>
+      <div class="meta">
+        <span><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.3-8.4C1 9.4 2.6 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.4 0 5 3.4 3.3 6.6C19 16.6 12 21 12 21Z"/></svg>${fmtK(x.likes)}</span>
+        <span><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="2.5"/></svg>${fmtK(x.views)}</span>
+        <span class="t">${x.hours}h ago</span>
+      </div>
+    </div></div>`;
+}
+function render(){
+  const list=filtered(), total=list.length, pages=Math.max(1,Math.ceil(total/PER));
+  if(state.page>pages) state.page=pages;
+  const grid=document.getElementById('grid');
+  grid.className='grid'+(state.view==='list'?' list':'');
+  if(!total){grid.innerHTML='<div class="empty">No cards match your filters.</div>';document.getElementById('pager').innerHTML='';return;}
+  const start=(state.page-1)*PER;
+  grid.innerHTML=list.slice(start,start+PER).map(cardHTML).join('');
+  renderPager(pages);
+}
+function renderPager(pages){
+  const p=state.page; let nums=[];
+  if(pages<=7){for(let i=1;i<=pages;i++)nums.push(i);}
+  else{nums=[1];if(p>3)nums.push('…');for(let i=Math.max(2,p-1);i<=Math.min(pages-1,p+1);i++)nums.push(i);if(p<pages-2)nums.push('…');nums.push(pages);}
+  const pager=document.getElementById('pager');
+  pager.innerHTML=`<button ${p===1?'disabled':''} data-go="${p-1}">‹</button>`+
+    nums.map(n=>n==='…'?`<span class="ell">…</span>`:`<button class="${n===p?'on':''}" data-go="${n}">${n}</button>`).join('')+
+    `<button ${p===pages?'disabled':''} data-go="${p+1}">›</button>`;
+  pager.querySelectorAll('button[data-go]').forEach(b=>b.addEventListener('click',()=>{
+    const g=+b.dataset.go; if(g>=1&&g<=pages){state.page=g;render();window.scrollTo({top:document.querySelector('.main').offsetTop-70,behavior:'smooth'});}
+  }));
+}
+document.getElementById('search').addEventListener('input',e=>{state.q=e.target.value.trim();state.page=1;render();});
+document.getElementById('sort').addEventListener('change',e=>{state.sort=e.target.value;render();});
+document.getElementById('applyPrice').addEventListener('click',()=>{
+  const mn=parseFloat(document.getElementById('pmin').value),mx=parseFloat(document.getElementById('pmax').value);
+  state.pmin=isNaN(mn)?null:mn;state.pmax=isNaN(mx)?null:mx;state.page=1;render();
+});
+document.querySelectorAll('.frow.cat').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('on')));
+document.getElementById('clearAll').addEventListener('click',()=>{
+  state.rar.clear();state.q='';state.pmin=state.pmax=null;state.page=1;state.sort='recent';
+  document.getElementById('search').value='';document.getElementById('pmin').value='';document.getElementById('pmax').value='';
+  document.getElementById('sort').value='recent';
+  document.querySelectorAll('.frow.cat').forEach((e,i)=>e.classList.toggle('on',i===0));
+  syncRarUI();render();
+});
+document.getElementById('vGrid').addEventListener('click',()=>{state.view='grid';document.getElementById('vGrid').classList.add('on');document.getElementById('vList').classList.remove('on');render();});
+document.getElementById('vList').addEventListener('click',()=>{state.view='list';document.getElementById('vList').classList.add('on');document.getElementById('vGrid').classList.remove('on');render();});
+document.querySelectorAll('.dots i').forEach(d=>d.addEventListener('click',()=>{document.querySelectorAll('.dots i').forEach(x=>x.classList.remove('on'));d.classList.add('on');}));
+buildFeatured();buildSold();buildRarityFilters();render();
+</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/communityflow", "destination": "https://apepe-communityflow.vercel.app/" },
+    { "source": "/communityflow/:path*", "destination": "https://apepe-communityflow.vercel.app/:path*" },
+    { "source": "/memeaistudio", "destination": "https://apepe-meme-ai-studio-nu.vercel.app/memeaistudio" },
+    { "source": "/memeaistudio/:path*", "destination": "https://apepe-meme-ai-studio-nu.vercel.app/memeaistudio/:path*" }
+  ],
+  "redirects": [
+    { "source": "/form", "destination": "/communityflow/form", "permanent": false },
+    { "source": "/vote", "destination": "/communityflow/vote", "permanent": false },
+    { "source": "/result", "destination": "/communityflow/result", "permanent": false }
+  ]
+}

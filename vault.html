@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS VAULT</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --bg:#050505; --gold:#E9B84A; --gold-a:#f4d27a; --gold-b:#b8862e;
+    --line:rgba(233,184,74,.30); --hair:rgba(255,255,255,.08);
+    --text:#e8e6e0; --muted:#8d8a82; --panel:#0a0a0a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body)}
+  a{color:inherit;text-decoration:none}
+
+  /* ===== HEADER ===== */
+  .head{display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:13px 34px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-body);font-weight:800;letter-spacing:2px;font-size:19px}
+  .brand .mk{width:30px;height:30px;border:2px solid var(--gold);border-radius:7px;display:grid;place-items:center;color:var(--gold);font-family:var(--font-head);font-weight:800;font-size:15px}
+  .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1.3px;color:#cfccc4;font-weight:500}
+  .nav a{position:relative;padding:6px 0;transition:color .2s}
+  .nav a:hover{color:#fff}
+  .nav a.on{color:var(--gold)}
+  .nav a.on::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-19px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hr{display:flex;align-items:center;gap:18px}
+  .soc{display:flex;gap:15px;color:#bdbab2}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:17px;height:17px;fill:currentColor}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:9px 15px;border-radius:7px;
+    font-family:var(--font-body);font-weight:500;font-size:11.5px;letter-spacing:1.3px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .wbtn:hover{background:var(--gold);color:#000}
+  .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
+  @media(max-width:1040px){.nav,.soc{display:none}}
+
+  /* ===== MAIN ===== */
+  main{max-width:1380px;margin:0 auto;padding:36px 30px 60px}
+  .vtitle{display:flex;align-items:center;gap:12px}
+  .vtitle h1{font-family:var(--font-body);font-weight:800;font-size:40px;letter-spacing:1.5px;
+    background:linear-gradient(180deg,var(--gold-a),var(--gold-b));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .vtitle .i{width:20px;height:20px;border:1px solid var(--muted);border-radius:50%;display:grid;place-items:center;color:var(--muted);font-size:12px;font-style:italic;font-family:Georgia,serif}
+  .vsub{color:var(--muted);font-size:15px;font-weight:300;margin-top:6px}
+
+  /* ===== TOOLBAR ===== */
+  .bar{display:flex;align-items:center;gap:16px;margin:26px 0 28px}
+  .search{flex:1;max-width:430px;position:relative;display:flex;align-items:center;
+    border:1px solid var(--hair);border-radius:9px;background:var(--panel);padding:0 14px;height:48px}
+  .search:focus-within{border-color:var(--line)}
+  .search svg.s{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:1.6;flex:none}
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:14px;padding:0 10px;letter-spacing:.3px}
+  .search input::placeholder{color:#6f6c64}
+  .search .clr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:4px;display:none}
+  .search .clr.show{display:block}
+  .search .clr:hover{color:#fff}
+  .cat{position:relative;height:48px}
+  .cat select{height:48px;background:var(--panel);border:1px solid var(--hair);border-radius:9px;color:var(--text);
+    font-family:var(--font-body);font-size:13px;letter-spacing:1px;padding:0 40px 0 18px;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none}
+  .cat::after{content:"⌄";position:absolute;right:16px;top:46%;transform:translateY(-50%);color:var(--gold);pointer-events:none;font-size:16px}
+  .collected{margin-left:auto;font-size:13px;letter-spacing:1.5px;color:var(--muted)}
+  .collected b{color:var(--gold);font-weight:600;margin-left:8px;font-size:15px}
+  @media(max-width:720px){.bar{flex-wrap:wrap}.collected{margin-left:0;width:100%}}
+
+  /* ===== GRID ===== */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,204px);justify-content:center;gap:18px 14px}
+  .card{width:204px;border:1px solid var(--hair);border-radius:14px;padding:14px 16px 16px;background:#080808;
+    display:flex;flex-direction:column;transition:border-color .2s, box-shadow .2s}
+  .card:hover{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset,0 0 26px rgba(233,184,74,.30)}
+  .card:hover .pic{border-color:rgba(233,184,74,.6)}
+  .card .num{font-size:14px;color:#e8e6e0;letter-spacing:.5px;margin:1px 2px 11px;font-weight:600}
+
+  .art{position:relative;width:164px;height:164px;margin:0 auto}
+  .pic{position:absolute;inset:0;border-radius:10px;overflow:hidden;border:1px solid rgba(233,184,74,.22);
+    background:#060606;display:grid;place-items:center}
+  .pic img{width:100%;height:100%;object-fit:cover;display:block}
+  /* gold corner brackets - hooked onto the square frame corners */
+  .cn{position:absolute;width:24px;height:24px;border:2.5px solid var(--gold);pointer-events:none;z-index:2;
+    filter:drop-shadow(0 0 3px rgba(233,184,74,.5))}
+  .cn.tl{top:0;left:0;border-right:0;border-bottom:0;border-radius:10px 0 0 0}
+  .cn.tr{top:0;right:0;border-left:0;border-bottom:0;border-radius:0 10px 0 0}
+  .cn.bl{bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 10px}
+  .cn.br{bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 10px 0}
+  .card.locked .pic{border-color:rgba(233,184,74,.14)}
+  .card.owned::after{content:"OWNED";position:absolute;top:8px;right:8px;background:rgba(233,184,74,.92);color:#000;font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 6px;border-radius:4px;z-index:3}
+  .card.locked .cn{border-color:rgba(233,184,74,.5);filter:none}
+
+  .name{text-align:center;font-size:17px;font-weight:600;color:#fff;letter-spacing:1px;margin-top:14px}
+  .card.locked .name{color:#cfccc4}
+  .ccat{text-align:center;font-size:11px;font-weight:600;letter-spacing:1.4px;color:var(--gold);margin-top:6px}
+  .card.locked .ccat{color:#8a7a52}
+  /* lock reticle (SVG) */
+  .lock{width:100%;height:100%;display:grid;place-items:center}
+  .lock svg{width:78%;height:78%}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0;font-size:15px;letter-spacing:.5px}
+
+  /* ===== PAGINATION ===== */
+  .page{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:40px}
+  .page button{min-width:38px;height:38px;border:1px solid var(--hair);background:transparent;color:#bdbab2;
+    border-radius:8px;font-family:var(--font-body);font-size:14px;cursor:pointer;transition:.15s;padding:0 6px}
+  .page button:hover{border-color:var(--line);color:#fff}
+  .page button.on{border-color:var(--gold);color:var(--gold)}
+  .page .dots{color:var(--muted)}
+  .page .arrow{color:var(--muted)}
+  html.embed .head{display:none!important}
+  html.embed main{padding:92px 30px 44px;margin:0 auto;max-width:1380px}
+</style>
+<script>/*embed-mode*/if(location.hash.indexOf("embed")>=0){document.documentElement.classList.add("embed");
+  function __vH(){var m=document.querySelector("main");if(!m)return document.body.offsetHeight;var r=m.getBoundingClientRect();return Math.ceil(r.top+r.height+30);}
+  function __vPost(){try{parent.postMessage({embedHeight:__vH()},"*");}catch(e){}}
+  window.addEventListener("load",__vPost);
+  window.addEventListener("resize",__vPost);
+  document.addEventListener("DOMContentLoaded",function(){
+    __vPost();
+    if(window.ResizeObserver){try{new ResizeObserver(__vPost).observe(document.querySelector("main"));}catch(e){}}
+    var n=0,iv=setInterval(function(){__vPost();if(++n>20)clearInterval(iv);},300);
+  });
+}</script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="head">
+  <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
+  <nav class="nav">
+    <a href="home.html">HOME</a>
+    <a href="vault.html" class="on">MEMONS VAULT</a>
+    <a href="open-capsule.html">OPEN CAPSULE</a>
+    <a href="#">MARKETPLACE</a>
+    <a href="#">CONTACT</a>
+  </nav>
+  <div class="hr">
+    <div class="soc">
+      <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+    </div>
+    <button class="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+  </div>
+</header>
+
+<main>
+  <div class="vtitle"><h1>MEMONS VAULT</h1><span class="i">i</span></div>
+  <div class="vsub">The official archive of internet-born monsters.</div>
+
+  <div class="bar">
+    <div class="search">
+      <svg class="s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="Search by Name or Vault Number…" autocomplete="off">
+      <button class="clr" id="clr" aria-label="clear">&times;</button>
+    </div>
+    <div class="cat">
+      <select id="cat">
+        <option value="">ALL CATEGORIES</option>
+      </select>
+    </div>
+    <div class="collected">COLLECTED <b id="collected">0 / 9999</b></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="page" id="page"></div>
+</main>
+
+<script src="data/memons.js"></script>
+<script src="data/collection.js"></script>
+<script>
+/* ===== data: read from the shared file (data/memons.js) ===== */
+const MD = window.MEMONS_DATA || window.MEMONS_DATA;          /* use whichever is defined */
+const MC = window.MEMONS_COLLECTION || window.MEMONS_COLLECTION;
+const DATA = (MD && MD.characters) ? MD.characters : [];
+function goDetail(n){ var u='detail.html?id='+n; if(document.documentElement.classList.contains('embed')){ try{ window.top.location.href=u; return; }catch(e){} } location.href=u; }
+const REVEALED = DATA.filter(d=>!d.locked);
+
+/* lock reticle SVG */
+const LOCK_SVG=`<div class="lock"><svg viewBox="0 0 120 120" fill="none" stroke="rgba(233,184,74,.28)" stroke-width="1.2">
+  <circle cx="60" cy="60" r="50"/><circle cx="60" cy="60" r="34" stroke-dasharray="3 5"/>
+  <path d="M60 6v18M60 96v18M6 60h18M96 60h18"/>
+  <path d="M22 22l12 12M98 22L86 34M22 98l12-12M98 98L86 86"/>
+  <g stroke="#9b8a5e" stroke-width="2.4"><rect x="48" y="58" width="24" height="20" rx="3"/><path d="M52 58v-6a8 8 0 0 1 16 0v6"/></g>
+</svg></div>`;
+
+/* populate the category dropdown */
+const cats=[...new Set(REVEALED.map(d=>d.cat))];
+const catSel=document.getElementById('cat');
+cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;catSel.appendChild(o);});
+
+/* render + search/filter */
+const grid=document.getElementById('grid');
+const q=document.getElementById('q');
+const clr=document.getElementById('clr');
+
+function matches(d, query){
+  query=query.trim().toLowerCase().replace('#','');
+  if(!query) return true;
+  if(d.name.toLowerCase().includes(query)) return true;
+  if(d.cat.toLowerCase().includes(query)) return true;
+  if(d.num.toLowerCase().includes(query)) return true;             // "0007", "07"
+  const qn=query.replace(/^0+/,''), cn=d.num.replace(/^0+/,'');     // "7" == "0007"
+  if(qn && qn===cn) return true;
+  return false;
+}
+
+const PAGE_SIZE=18;            /* cards per page */
+let curPage=1, curList=[];
+function render(){
+  const query=q.value, cat=catSel.value;
+  clr.classList.toggle('show', query.length>0);
+  curList=DATA.filter(d=> (!cat || d.cat===cat) && matches(d, query));
+  curPage=1; draw();
+}
+function draw(){
+  if(!curList.length){
+    grid.innerHTML = DATA.length
+      ? '<div class="empty">No results. Check the number or name.</div>'
+      : '<div class="empty">Failed to load card data.<br>Make sure <b>data/memons.js</b> is in the same folder as vault.html and that it defines window.MEMONS_DATA (or MEMONS_DATA).</div>';
+    renderPager(0); return; }
+  const pages=Math.max(1, Math.ceil(curList.length/PAGE_SIZE));
+  if(curPage>pages) curPage=pages;
+  const slice=curList.slice((curPage-1)*PAGE_SIZE, curPage*PAGE_SIZE);
+  grid.innerHTML=slice.map(d=>{
+    const art = d.locked ? LOCK_SVG : `<img loading="lazy" src="${d.img}" alt="${d.name}">`;
+    const clickAttr = d.locked ? '' : ` onclick="goDetail('${d.num}')" style="cursor:pointer"`;
+    return `<div class="card ${d.locked?'locked':''}"${clickAttr}>
+      <div class="num">#${d.num}</div>
+      <div class="art"><div class="pic">${art}</div><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i></div>
+      <div class="name">${d.name}</div>
+      <div class="ccat">${d.cat}</div>
+    </div>`;
+  }).join('');
+  markOwned();
+  renderPager(pages);
+}
+function go(pp){ curPage=pp; draw(); window.scrollTo({top:0,behavior:'smooth'}); }
+function renderPager(pages){
+  const el=document.getElementById('page'); if(!el) return;
+  if(pages<=1){ el.innerHTML=''; return; }
+  const nums=[...new Set([1,2,curPage-1,curPage,curPage+1,pages-1,pages])].filter(n=>n>=1&&n<=pages).sort((a,b)=>a-b);
+  let html=`<button class="arrow" ${curPage===1?'disabled':''} data-go="${Math.max(1,curPage-1)}">&lsaquo;</button>`;
+  let prev=0;
+  nums.forEach(n=>{ if(n-prev>1) html+='<span class="dots">…</span>'; html+=`<button class="${n===curPage?'on':''}" data-go="${n}">${n}</button>`; prev=n; });
+  html+=`<button class="arrow" ${curPage===pages?'disabled':''} data-go="${Math.min(pages,curPage+1)}">&rsaquo;</button>`;
+  el.innerHTML=html;
+  el.querySelectorAll('button[data-go]').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.go)));
+}
+
+
+/* apply owned-collection state (called after every render) */
+function markOwned(){
+  const owned = (MC ? MC.ownedNums() : new Set());
+  const el=document.getElementById('collected');
+  if(el) el.textContent = owned.size + ' / ' + ((MD&&MD.total)||9999);
+  document.querySelectorAll('.card').forEach(c=>{
+    const numEl=c.querySelector('.num'); if(!numEl) return;
+    if(owned.has(numEl.textContent.replace('#',''))) c.classList.add('owned');
+  });
+}
+q.addEventListener('input', render);
+catSel.addEventListener('change', render);
+clr.addEventListener('click', ()=>{ q.value=''; render(); q.focus(); });
+
+render();
+</script>
+<script>
+if(document.documentElement.classList.contains('embed')){
+  const post=()=>{try{parent.postMessage({memonsH:document.documentElement.scrollHeight},'*');}catch(e){}};
+  window.addEventListener('load',post); setTimeout(post,300); setTimeout(post,1200);
+  try{new ResizeObserver(post).observe(document.body);}catch(e){}
+}
+</script>
+</body>
+</html>

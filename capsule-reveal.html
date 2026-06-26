@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — Open Capsule</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{--bg:#050505;--gold:#E9B84A;--gold-a:#f4d27a;--gold-b:#b8862e;--muted:#8d8a82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:#e8e6e0;font-family:var(--font-body);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;overflow-y:auto;padding:24px 0}
+  .backlink{position:fixed;top:18px;left:20px;z-index:20;color:#cfccc4;text-decoration:none;font-size:12px;letter-spacing:2px;border:1px solid rgba(255,255,255,.2);padding:8px 14px;border-radius:8px}
+  .backlink:hover{color:var(--gold);border-color:var(--gold)}
+  .title{font-family:var(--font-head);font-weight:800;font-size:28px;letter-spacing:3px;
+    background:linear-gradient(180deg,var(--gold-a),var(--gold-b));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* top status bar: pity + session stats */
+  .statusbar{display:flex;gap:22px;align-items:center;font-size:12px;letter-spacing:1px;color:var(--muted);flex-wrap:wrap;justify-content:center}
+  .statusbar b{color:var(--gold);font-weight:700}
+  .pity{display:flex;align-items:center;gap:8px}
+  .pbar{width:120px;height:6px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+  .pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-b),var(--gold-a));width:0%}
+
+  .stage{position:relative;width:min(360px,80vw);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
+  .capsule{width:100%;height:100%;object-fit:contain;cursor:pointer;animation:float 4.5s ease-in-out infinite;
+    transition:transform .9s ease, opacity .9s ease, filter .9s ease;z-index:2}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3%)}}
+  .flash{position:absolute;inset:0;margin:auto;width:42%;height:42%;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,235,170,.98),rgba(233,184,74,.6) 40%,transparent 70%);
+    opacity:0;transform:scale(.4);z-index:1;filter:blur(4px);transition:opacity .5s ease, transform .9s ease}
+  .floor{position:absolute;left:50%;bottom:8%;width:55%;height:9%;transform:translateX(-50%);border-radius:50%;
+    background:radial-gradient(ellipse,rgba(233,184,74,.45),transparent 70%);filter:blur(2px);opacity:.6;z-index:0}
+  .stage.opening .capsule{transform:scale(1.18);opacity:0;filter:brightness(2.2)}
+  .stage.opening .flash{opacity:1;transform:scale(1.25)}
+  .stage.opening .floor{opacity:0}
+  .capvid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;z-index:2;border-radius:10px;background:#000}
+  .stage.playing .capvid{display:block}
+  .stage.playing .capsule,.stage.playing .floor{display:none}
+
+  /* single result card */
+  .result{position:absolute;inset:0;margin:auto;width:46%;z-index:3;opacity:0;transform:translateY(8%) scale(.7);
+    transition:opacity .5s ease .1s, transform .7s cubic-bezier(.2,1.3,.4,1) .1s;pointer-events:none}
+  .stage.single .result{opacity:1;transform:translateY(0) scale(1)}
+  .result img{width:100%;aspect-ratio:1/1.5;object-fit:cover;object-position:top center;display:block;
+    border-radius:12px;border:2px solid var(--rc,#E9B84A);box-shadow:0 0 36px -3px var(--rc,#E9B84A)}
+  .badge{position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 7px;border-radius:5px;z-index:2}
+  .badge.new{background:var(--gold);color:#000}.badge.dup{background:#555;color:#fff}
+
+  .info{height:64px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+  .hint{font-size:12px;letter-spacing:3px;color:var(--muted)}
+  .you{font-size:11px;letter-spacing:3px;color:var(--gold);opacity:0;transition:.3s}
+  .got{font-weight:700;font-size:20px;opacity:0;transition:.3s}.got b{color:var(--rc,#E9B84A);margin-left:8px}
+  .stage.single ~ .info .you,.stage.single ~ .info .got{opacity:1}
+
+  .acts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .b{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:12px 22px;border-radius:9px;
+    font-weight:600;font-size:13px;letter-spacing:1.4px;cursor:pointer;transition:.2s}
+  .b:hover{background:var(--gold);color:#000}
+  .b.solid{background:var(--gold);color:#000}.b.solid:hover{filter:brightness(1.1)}
+  .b.ghost{border-color:rgba(255,255,255,.25);color:#cfccc4}.b.ghost:hover{background:rgba(255,255,255,.1);color:#fff}
+  .hidden{display:none}
+
+  /* 10-pull result overlay */
+  .multi{position:fixed;inset:0;background:rgba(4,4,4,.96);z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:30px}
+  .multi.show{display:flex}
+  .multi h3{font-size:14px;letter-spacing:3px;color:var(--gold)}
+  .mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:680px;width:100%}
+  .mcard{position:relative;border-radius:9px;overflow:hidden;border:1.5px solid var(--rc,#cfccc4);background:#070707;
+    box-shadow:0 0 14px -6px var(--rc,#cfccc4);opacity:0;transform:scale(.8);animation:pop .4s forwards}
+  @keyframes pop{to{opacity:1;transform:scale(1)}}
+  .mcard img{width:100%;aspect-ratio:1/1.4;object-fit:cover;object-position:top center;display:block}
+  .mcard .mf{text-align:center;padding:5px 2px 7px}
+  .mcard .mn{font-size:10px;color:#fff;font-weight:600}
+  .mcard .mr{font-size:8.5px;color:var(--rc,#cfccc4);letter-spacing:1px}
+  .mcard .mb{position:absolute;top:4px;left:4px;font-size:7.5px;font-weight:700;padding:1px 4px;border-radius:3px}
+  .mcard .mb.new{background:var(--gold);color:#000}.mcard .mb.dup{background:#555;color:#fff}
+  .summary{font-size:12px;color:var(--muted);letter-spacing:1px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .summary span b{color:#fff}
+
+  /* session history */
+  .history{width:min(540px,90vw);font-size:12px;color:var(--muted)}
+  .history .ht{letter-spacing:2px;color:#cfccc4;margin-bottom:8px;display:flex;justify-content:space-between}
+  .tally{display:flex;gap:10px;flex-wrap:wrap}
+  .tally .t{padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.1)}
+  .tally .t b{color:var(--rc);font-weight:700}
+</style></head>
+<body>
+  <a class="backlink" href="open-capsule.html">&lsaquo; MAIN</a>
+  <div class="title">OPEN CAPSULE</div>
+
+  <div class="statusbar">
+    <div class="pity">Pity in <b id="pityLeft">--</b>
+      <span class="pbar"><i id="pityFill"></i></span></div>
+    <div>Session pulls <b id="sessTotal">0</b></div>
+    <div>Owned <b id="ownTotal">0</b></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="floor"></div>
+    <div class="flash"></div>
+    <img class="capsule" id="capsule" src="images/reveal/capsule.png" alt="capsule" title="Click to open">
+    <video class="capvid" id="capVid" src="images/reveal/capsule.mp4" muted playsinline preload="auto"></video>
+    <div class="result" id="result"><span class="badge" id="rbadge"></span><img id="art" src="images/reveal/legendary.png" alt=""></div>
+  </div>
+
+  <div class="info">
+    <div class="hint" id="hint">CLICK THE CAPSULE · OR OPEN ×10</div>
+    <div class="you" id="you">YOU GOT</div>
+    <div class="got" id="got"><span id="cName">APEPE</span> <b id="rr">LEGENDARY</b></div>
+  </div>
+
+  <div class="acts">
+    <button class="b solid" id="open1">OPEN ×1</button>
+    <button class="b" id="open10">OPEN ×10</button>
+    <button class="b ghost hidden" id="again">CONTINUE</button>
+  </div>
+
+  <div class="history">
+    <div class="ht"><span>THIS SESSION</span><a href="collection.html" style="color:var(--gold);text-decoration:none">MY COLLECTION →</a></div>
+    <div class="tally" id="tally"></div>
+  </div>
+
+  <!-- 10-pull result -->
+  <div class="multi" id="multi">
+    <h3>YOU GOT ×10</h3>
+    <div class="mgrid" id="mgrid"></div>
+    <div class="summary" id="msum"></div>
+    <button class="b solid" id="mclose">CONTINUE</button>
+  </div>
+
+<script src="data/memons.js"></script>
+<script src="data/collection.js"></script>
+<script>
+/* ====== config ====== */
+const HIGH = ['legendary','mythic'];   // pity-eligible high rarities
+const PITY_MAX = 50;                   // pity (guarantees a high rarity within N pulls)
+const PITY_KEY = 'memons_pity_v1';
+const OPEN_MS = 850;                   // animation length (replace with video/sprites later)
+
+const RAR = MEMONS_DATA.rarities;
+const CHARS = MEMONS_DATA.characters.filter(c=>!c.locked);
+const session = [];                    // pulls this session
+
+const $=id=>document.getElementById(id);
+const getPity=()=>+(localStorage.getItem(PITY_KEY)||0);
+const setPity=v=>{try{localStorage.setItem(PITY_KEY,v)}catch(e){}};
+
+function weightedRarity(){
+  const total=RAR.reduce((s,x)=>s+x.weight,0); let n=Math.random()*total;
+  for(const x of RAR){ if((n-=x.weight)<0) return x; } return RAR[0];
+}
+/* one draw: rarity (pity applied) + character + duplicate check + save */
+function rollOne(){
+  let pity=getPity()+1, rar;
+  if(pity>=PITY_MAX){ const hs=RAR.filter(r=>HIGH.includes(r.key)); rar=hs[Math.floor(Math.random()*hs.length)]; }
+  else rar=weightedRarity();
+  if(HIGH.includes(rar.key)) pity=0;
+  setPity(pity);
+  const ch=CHARS[Math.floor(Math.random()*CHARS.length)];
+  const dup=MEMONS_COLLECTION.all().some(x=>x.num===ch.num && x.rarity===rar.label);
+  const item={num:ch.num, char:ch.name, rarity:rar.label, rkey:rar.key, color:rar.color, img:rar.card, dup};
+  MEMONS_COLLECTION.add(item); session.push(item);
+  return item;
+}
+function refreshStatus(){
+  const left=Math.max(0, PITY_MAX-getPity());
+  $('pityLeft').textContent=left;
+  $('pityFill').style.width=(getPity()/PITY_MAX*100)+'%';
+  $('sessTotal').textContent=session.length;
+  $('ownTotal').textContent=MEMONS_COLLECTION.count();
+  // session rarity tally
+  const tally={}; session.forEach(p=>tally[p.rarity]=(tally[p.rarity]||0)+1);
+  $('tally').innerHTML = RAR.map(r=> tally[r.label] ? `<div class="t" style="--rc:${r.color}"><b>${r.label}</b> ${tally[r.label]}` + `</div>` : '').join('') || '<div class="t">None yet</div>';
+}
+
+/* animation slot (replace with video/sprites later) */
+function playOpen(onEnd){
+  const v=$('capVid'), st=$('stage'); let done=false;
+  const finish=()=>{ if(done)return; done=true; st.classList.remove('playing'); v.onended=v.ontimeupdate=null; onEnd(); };
+  if(v && v.getAttribute('src')){
+    st.classList.add('playing'); try{ v.currentTime=0; }catch(e){}
+    const pr=v.play();
+    if(pr&&pr.catch) pr.catch(()=>{ st.classList.remove('playing'); st.classList.add('opening'); setTimeout(finish,OPEN_MS); });
+    v.ontimeupdate=()=>{ if(v.duration && v.currentTime>=v.duration-0.4) finish(); };
+    v.onended=finish;
+    setTimeout(()=>{ if(!done && v.readyState<2){ st.classList.remove('playing'); st.classList.add('opening'); setTimeout(finish,OPEN_MS); } }, 600);
+  } else { st.classList.add('opening'); setTimeout(onEnd, OPEN_MS); }
+}
+document.getElementById('stage').addEventListener('click',()=>{ const v=$('capVid'),st=$('stage'); if(st.classList.contains('playing')&&v.duration){ v.currentTime=v.duration; } });
+
+let busy=false;
+function single(){
+  if(busy) return; busy=true; closeResult();
+  playOpen(()=>{
+    const it=rollOne();
+    $('art').src=it.img; $('cName').textContent=it.char; $('rr').textContent=it.rarity;
+    [ $('result'),$('got') ].forEach(el=>el.style.setProperty('--rc',it.color));
+    $('rr').style.color=it.color;
+    const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'DUP':'NEW';
+    $('stage').classList.add('single'); $('hint').style.display='none';
+    $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
+    refreshStatus(); busy=false;
+  });
+}
+function ten(){
+  if(busy) return; busy=true; closeResult();
+  playOpen(()=>{
+    const items=Array.from({length:10},()=>rollOne());
+    const grid=$('mgrid');
+    grid.innerHTML=items.map((it,i)=>`
+      <div class="mcard" style="--rc:${it.color};animation-delay:${i*0.06}s">
+        <span class="mb ${it.dup?'dup':'new'}">${it.dup?'DUP':'NEW'}</span>
+        <img src="${it.img}" alt="">
+        <div class="mf"><div class="mn">${it.char}</div><div class="mr">${it.rarity}</div></div>
+      </div>`).join('');
+    const tal={}; items.forEach(p=>tal[p.rarity]=(tal[p.rarity]||0)+1);
+    $('msum').innerHTML=RAR.filter(r=>tal[r.label]).map(r=>`<span style="color:${r.color}">${r.label} <b>×${tal[r.label]}</b></span>`).join('');
+    $('multi').classList.add('show'); $('stage').classList.remove('opening');
+    refreshStatus(); busy=false;
+  });
+}
+function closeResult(){
+  $('stage').classList.remove('opening','single');
+  $('again').classList.add('hidden'); $('open1').classList.remove('hidden'); $('open10').classList.remove('hidden');
+  $('hint').style.display='';
+}
+$('capsule').addEventListener('click', single);
+$('open1').addEventListener('click', single);
+$('open10').addEventListener('click', ten);
+$('again').addEventListener('click', closeResult);
+$('mclose').addEventListener('click', ()=>{ $('multi').classList.remove('show'); closeResult(); });
+refreshStatus();
+</script>
+</body></html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — My Collection</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{--bg:#050505;--gold:#E9B84A;--gold-a:#f4d27a;--gold-b:#b8862e;--line:rgba(233,184,74,.30);--hair:rgba(255,255,255,.08);--text:#e8e6e0;--muted:#8d8a82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body)}
+  .head{display:flex;align-items:center;justify-content:space-between;padding:13px 34px;border-bottom:1px solid var(--hair)}
+  .brand{font-family:var(--font-head);display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:1px}
+  .brand .m{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:16px}
+  nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1px}
+  nav a{color:var(--muted);text-decoration:none}nav a:hover,nav a.on{color:var(--gold)}
+  .wrap{max-width:1260px;margin:0 auto;padding:40px 34px 80px}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+  h1{font-family:var(--font-head);font-size:30px;font-weight:800;letter-spacing:1px}
+  .sub{color:var(--muted);font-size:14px;margin-top:6px}
+  .count{color:var(--gold);font-weight:700;font-size:15px}
+  .clr{border:1px solid rgba(255,255,255,.22);color:#cfccc4;background:transparent;padding:9px 16px;border-radius:8px;font-family:var(--font-body);font-size:12px;letter-spacing:1px;cursor:pointer}
+  .clr:hover{border-color:#e0556a;color:#e0556a}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,170px);gap:18px;justify-content:center}
+  .card{position:relative;border-radius:11px;overflow:hidden;background:#070707;border:1.5px solid var(--rc,#cfccc4);box-shadow:0 0 18px -7px var(--rc,#cfccc4)}
+  .card img{display:block;width:100%;aspect-ratio:1/1.05;object-fit:cover;object-position:top center}
+  .foot{text-align:center;padding:10px 6px 12px}
+  .foot .nm{color:#fff;font-weight:700;font-size:13px;letter-spacing:.5px}
+  .foot .rr{color:var(--rc,#cfccc4);font-weight:600;font-size:10.5px;letter-spacing:1.4px;margin-top:3px}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:70px 0}
+  .empty a{color:var(--gold)}
+</style></head>
+<body>
+  <header class="head">
+    <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
+    <nav>
+      <a href="home.html">HOME</a>
+      <a href="vault.html">MEMONS VAULT</a>
+      <a href="open-capsule.html">OPEN CAPSULE</a>
+      <a href="#">MARKETPLACE</a>
+      <a href="#">CONTACT</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>MY COLLECTION</h1>
+        <div class="sub">MEMONS pulled from capsules — <span class="count" id="cnt">0</span> collected</div>
+      </div>
+      <button class="clr" id="clr">CLEAR</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script src="data/memons.js"></script>
+<script src="data/collection.js"></script>
+<script>
+  const grid=document.getElementById('grid'), cnt=document.getElementById('cnt'), clr=document.getElementById('clr');
+  function render(){
+    const items=MEMONS_COLLECTION.all();
+    cnt.textContent=items.length;
+    if(!items.length){ grid.innerHTML='<div class="empty">No cards yet.<br><a href="capsule-reveal.html">Go open a capsule →</a></div>'; return; }
+    grid.innerHTML=items.map(it=>`
+      <div class="card" style="--rc:${it.color||'#cfccc4'}">
+        <img src="${it.img}" alt="${it.char}">
+        <div class="foot"><div class="nm">${it.char||'MEMONS'}</div><div class="rr">${it.rarity||''}</div></div>
+      </div>`).join('');
+  }
+  clr.addEventListener('click', ()=>{ if(confirm('Clear your entire collection?')){ MEMONS_COLLECTION.clear(); render(); } });
+  render();
+</script>
+</body></html>

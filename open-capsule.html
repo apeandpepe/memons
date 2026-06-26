@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPEN CAPSULE — MEMONS</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --bg:#050505; --gold:#E9B84A; --gold-a:#f4d27a; --gold-b:#b8862e;
+    --line:rgba(233,184,74,.22); --hair:rgba(255,255,255,.06);
+    --text:#e8e6e0; --muted:#8d8a82;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+  a{color:inherit;text-decoration:none}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== HEADER ===== */
+  .head{display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:13px 34px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-body);font-weight:800;letter-spacing:2px;font-size:19px}
+  .brand .mk{width:30px;height:30px;border:2px solid var(--gold);border-radius:7px;display:grid;place-items:center;color:var(--gold);font-family:var(--font-head);font-weight:800;font-size:15px}
+  .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1.3px;color:#cfccc4;font-weight:500}
+  .nav a{position:relative;padding:6px 0;transition:color .2s}
+  .nav a:hover{color:#fff}
+  .nav a.on{color:var(--gold)}
+  .nav a.on::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-19px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hr{display:flex;align-items:center;gap:18px}
+  .soc{display:flex;gap:15px;color:#bdbab2}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:17px;height:17px;fill:currentColor}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:9px 15px;border-radius:7px;
+    font-family:var(--font-body);font-weight:500;font-size:11.5px;letter-spacing:1.3px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .wbtn:hover{background:var(--gold);color:#000}
+  .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
+  @media(max-width:1040px){.nav,.soc{display:none}}
+
+  /* ===== OPEN CAPSULE PAGE ===== */
+  body{position:relative}
+  header.head{position:relative;z-index:5}
+  .foot{position:relative;z-index:1}
+  .ocwrap{display:grid;grid-template-columns:230px minmax(0,520px) 245px;gap:18px;align-items:center;justify-content:center;
+    width:100%;max-width:1090px;margin:0 auto;padding:18px 28px 0;flex:1 1 auto;position:relative;z-index:1}
+
+  /* left info */
+  .left{align-self:center}
+  .title{font-family:var(--font-head),'Saira Condensed';font-weight:400;font-size:51px;line-height:.92;letter-spacing:1.5px}
+  .title .a{display:block;background:linear-gradient(180deg,#e3b462,#b5873a);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .title .b{display:block;background:linear-gradient(180deg,#cb9a44,#8f6324);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .s1{font-family:var(--font-body);font-size:19px;font-weight:500;color:#a99d85;line-height:1.4;margin-top:18px}
+  .aboutbox{margin-top:18px;max-width:214px;border:1px solid var(--line);border-radius:13px;padding:14px 15px;
+    background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+  .aboutbox .abh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .aboutbox .abh .ic{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center}
+  .aboutbox .abh .ic svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.3}
+  .aboutbox .abh h4{font-size:11.5px;letter-spacing:2px;color:var(--gold);font-weight:600}
+  .aboutbox p{font-family:var(--font-body);font-size:13.5px;color:#837c68;font-weight:400;line-height:1.5}
+
+  /* center video frame: video layered over the frame PNG (739x628) */
+  .capframe{position:relative;width:100%;max-width:520px;aspect-ratio:739/628;margin:0 auto;justify-self:center;cursor:pointer}
+  .capframe .capframeimg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
+  /* inner window (video area): aligned to the frame's black panel */
+  .capframe .capwin{position:absolute;left:5.0%;top:5.9%;width:92.2%;height:87.6%;overflow:hidden;border-radius:9px;z-index:2}
+  .capframe .capwin .capposter{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;z-index:1}
+  .capframe .capwin .capvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:2;background:transparent}
+
+  /* right purchase panel */
+  .buybox{align-self:center;font-family:var(--font-body);border:1px solid var(--line);border-radius:14px;padding:20px 18px;
+    background:linear-gradient(180deg,rgba(255,255,255,.014),transparent)}
+  .buybox .bt{font-family:var(--font-head),'Saira';font-weight:700;font-size:17px;color:#e6c878;letter-spacing:.5px}
+  .buybox .ql{font-size:11px;letter-spacing:2px;color:#a4905a;margin:16px 0 9px;font-weight:600}
+  .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .qty button{flex:none;width:46px;height:46px;background:transparent;border:0;color:var(--gold);font-size:20px;cursor:pointer;transition:.15s}
+  .qty button:hover{background:rgba(233,184,74,.1)}
+  .qty .qn{flex:1;text-align:center;font-family:var(--font-body);font-weight:600;font-size:16px;color:#fff}
+  .obtn{width:100%;margin-top:16px;border:0;cursor:pointer;border-radius:9px;font-family:var(--font-body);font-weight:700;
+    font-size:14px;letter-spacing:1.2px;padding:15px;transition:.25s;white-space:nowrap}
+  .obtn.gold{background:linear-gradient(180deg,var(--gold-a),var(--gold-b));color:#1a1206}
+  .obtn.gold:hover{box-shadow:0 0 30px rgba(233,184,74,.45);filter:brightness(1.05)}
+  .obtn.ghost{background:transparent;border:1px solid var(--line);color:#c9b06a;font-size:13px;letter-spacing:.6px;padding:9px 12px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
+  .obtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .obtn.ghost .off{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:7px;color:#1a1206;background:var(--gold);
+    font-size:9.5px;font-weight:800;letter-spacing:0;line-height:1.05}
+  .bnote{display:flex;gap:9px;align-items:flex-start;margin-top:16px}
+  .bnote .ic{width:18px;height:18px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:11px;font-style:italic;font-family:var(--font-body)}
+  .bnote p{font-size:11px;color:#978b62;font-weight:400;line-height:1.5}
+
+  /* bottom rarity cards */
+  .rarity{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;
+    width:100%;max-width:1500px;margin:14px auto 0;padding:0 28px 20px;position:relative;z-index:1}
+  .rc{width:176px;height:268px;border-radius:13px;position:relative;
+    border:1.5px solid var(--rc,#888);background:linear-gradient(180deg,#131313,#070707);color:var(--rc,#888);
+    box-shadow:0 0 36px -4px var(--rc,#888), 0 30px 50px -16px var(--rc,#888), inset 0 0 0 1px rgba(255,255,255,.06), inset 0 0 64px rgba(0,0,0,.5);
+    display:flex;flex-direction:column;padding:15px 16px;
+    -webkit-box-reflect:below 9px linear-gradient(transparent,transparent 38%,rgba(255,255,255,.24))}
+  .rc::before{content:"";position:absolute;inset:0;z-index:0;opacity:.2;border-radius:12px;
+    background:radial-gradient(78% 55% at 50% 46%, var(--rc,#888) 0%, transparent 64%)}
+  .rc .rl{position:relative;z-index:1;display:flex;align-items:center;gap:8px;font-family:var(--font-body);font-weight:700;font-size:11px;letter-spacing:1.5px;color:var(--rc,#888)}
+  .rc .rl::before{content:"";width:9px;height:9px;background:var(--rc,#888);box-shadow:0 0 8px var(--rc,#888);transform:rotate(45deg)}
+  .rc .rm{position:relative;z-index:1;flex:1;display:grid;place-items:center;padding:4px 0}
+  .rc .rm svg{width:104px;height:104px;filter:drop-shadow(0 0 16px var(--rc,#888))}
+  .rc .rf{position:relative;z-index:1;text-align:center;font-size:9.5px;letter-spacing:2px;color:var(--rc,#888);opacity:.85;font-weight:600}
+  .rc.holo{border-color:#8a7a9a}
+  .rc.holo::after{content:"";position:absolute;inset:-1.5px;z-index:0;border-radius:12px;padding:1.5px;
+    background:linear-gradient(135deg,#e0556a,#E9B84A,#5b9bd5,#c468d8,#e0556a);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude}
+  .rc.holo .rl,.rc.holo .rf{color:#d9b8ff}
+  .rc.holo .rl::before{background:#c46bff;box-shadow:0 0 8px #c46bff}
+  .rc.holo .rm svg{filter:drop-shadow(0 0 14px rgba(196,107,255,.6))}
+
+
+  @media(max-width:980px){
+    .ocwrap{grid-template-columns:1fr;gap:26px;max-width:680px;text-align:center}
+    .left{order:2;text-align:left} .capframe{order:1} .buybox{order:3;text-align:left}
+    .title{font-size:42px}
+  }
+  @media(max-width:560px){
+    .rc{width:150px;height:182px} .rc .rm{font-size:66px}
+  }
+
+  /* ===== FOOTER ===== */
+  .foot{text-align:center;padding:12px 20px 14px;margin-top:6px}
+  .foot span{font-size:11px;letter-spacing:2.5px;color:#6a675f}
+  .foot b{color:#8d8a82;font-weight:500}
+  html.embed .head{display:none!important}
+</style>
+<script>/*embed-mode*/if(location.hash.indexOf("embed")>=0)document.documentElement.classList.add("embed");</script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="head">
+  <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
+  <nav class="nav">
+    <a href="home.html">HOME</a>
+    <a href="vault.html">MEMONS VAULT</a>
+    <a href="open-capsule.html" class="on">OPEN CAPSULE</a>
+    <a href="#">MARKETPLACE</a>
+    <a href="#">CONTACT</a>
+  </nav>
+  <div class="hr">
+    <div class="soc">
+      <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+    </div>
+    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+  </div>
+</header>
+
+<!-- OPEN CAPSULE -->
+<section class="ocwrap">
+  <div class="left">
+    <h1 class="title"><span class="a">MEMONS</span><span class="b">CAPSULE</span></h1>
+    <div class="s1">Unlock rare memes.<br>Own the moment.</div>
+    <div class="aboutbox">
+      <div class="abh">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></span>
+        <h4>ABOUT CAPSULE</h4>
+      </div>
+      <p>Each capsule contains<br>a randomized MEMONS card.<br>The rarity is based on probability.<br>Better luck, bigger memes.</p>
+    </div>
+  </div>
+
+  <!-- center video frame (1120x1056 ratio, video fills the frame). video: images/open-capsule/capsule.mp4 -->
+  <!-- center video frame: video layered over the frame PNG. video: images/open-capsule/capsule.mp4 -->
+  <div class="capframe" id="capFrame">
+    <div class="capwin">
+      <img class="capposter" src="images/open-capsule/capsule.png" alt="">
+      <video class="capvid" id="capVid" autoplay muted loop playsinline preload="auto">
+        <source src="images/open-capsule/capsule.mp4" type="video/mp4">
+      </video>
+    </div>
+    <img class="capframeimg" src="images/open-capsule/frame.png" alt="">
+  </div>
+
+  <div class="buybox">
+    <div class="bt">MEMONS CAPSULE 001</div>
+    <div class="ql">QUANTITY</div>
+    <div class="qty">
+      <button id="qMinus" aria-label="Decrease">−</button>
+      <span class="qn" id="qn">1</span>
+      <button id="qPlus" aria-label="Increase">+</button>
+    </div>
+    <button class="obtn gold" id="openOne">OPEN CAPSULE</button>
+    <button class="obtn ghost" id="openTen"><span class="lbl">OPEN 10 CAPSULES</span><span class="off">10%<br>OFF</span></button>
+    <div class="bnote">
+      <span class="ic">i</span>
+      <p>Opening a capsule will consume the selected quantity.</p>
+    </div>
+  </div>
+</section>
+
+<!-- RARITY -->
+<section class="rarity">
+  <div class="rc" style="--rc:#cfccc4"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#5b9bd5"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#c468d8"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#E9B84A"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc holo" style="--rc:#e0556a"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot"><span><b>MEMONS CAPSULE</b>&nbsp;&nbsp;|&nbsp;&nbsp;POWERED BY APEPE</span></footer>
+
+<script>
+/* quantity +/- */
+(function(){
+  const qn=document.getElementById('qn'); let q=1;
+  const set=v=>{ q=Math.max(1,Math.min(99,v)); qn.textContent=q; };
+  document.getElementById('qMinus').onclick=()=>set(q-1);
+  document.getElementById('qPlus').onclick=()=>set(q+1);
+})();
+
+/* open capsule -> standalone pull page (click frame/M/button) */
+(function(){
+  const go=()=>{ location.href='capsule-reveal.html'; };
+  document.getElementById('capFrame').addEventListener('click', go);
+  document.getElementById('openOne').addEventListener('click', go);
+  document.getElementById('openTen').addEventListener('click', go);
+})();
+
+/* video mute toggle (stops frame-click propagation) */
+(function(){
+  const vid=document.getElementById('capVid'), mute=document.getElementById('capMute');
+  if(vid && matchMedia('(prefers-reduced-motion: reduce)').matches){ try{vid.pause();}catch(e){} }
+  if(vid && mute){
+    const spk='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9c1.3 1.3 1.3 4.7 0 6M19 7c2.5 2.6 2.5 7.4 0 10"/></svg>';
+    const off='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+    const sync=()=>{ mute.innerHTML = vid.muted ? off : spk; };
+    sync();
+    mute.addEventListener('click', e=>{ e.stopPropagation(); vid.muted=!vid.muted; if(!vid.muted){ vid.play().catch(()=>{}); } sync(); });
+  }
+})();
+</script>
+<script>
+if(document.documentElement.classList.contains('embed')){
+  const post=()=>{try{parent.postMessage({memonsH:document.documentElement.scrollHeight},'*');}catch(e){}};
+  window.addEventListener('load',post); setTimeout(post,300); setTimeout(post,1200);
+  try{new ResizeObserver(post).observe(document.body);}catch(e){}
+}
+</script>
+</body>
+</html>

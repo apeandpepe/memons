@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEPE — MEMONS VAULT</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --bg:#050505; --gold:#E9B84A; --gold-a:#f4d27a; --gold-b:#b8862e;
+    --line:rgba(233,184,74,.30); --hair:rgba(255,255,255,.08);
+    --text:#e8e6e0; --muted:#8d8a82; --panel:#0a0a0a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body)}
+  a{color:inherit;text-decoration:none}
+
+  /* ===== HEADER (site-wide / unified) ===== */
+  .head{display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:13px 34px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-body);font-weight:800;letter-spacing:2px;font-size:19px}
+  .brand .mk{width:30px;height:30px;border:2px solid var(--gold);border-radius:7px;display:grid;place-items:center;color:var(--gold);font-family:var(--font-head);font-weight:800;font-size:15px}
+  .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1.3px;color:#cfccc4;font-weight:500}
+  .nav a{position:relative;padding:6px 0;transition:color .2s}
+  .nav a:hover{color:#fff}
+  .nav a.on{color:var(--gold)}
+  .nav a.on::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-19px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hr{display:flex;align-items:center;gap:18px}
+  .soc{display:flex;gap:15px;color:#bdbab2}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:17px;height:17px;fill:currentColor}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:9px 15px;border-radius:7px;
+    font-family:var(--font-body);font-weight:500;font-size:11.5px;letter-spacing:1.3px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .wbtn:hover{background:var(--gold);color:#000}
+  .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
+  @media(max-width:1040px){.nav,.soc{display:none}}
+
+  /* ===== MAIN ===== */
+  main{max-width:1240px;margin:0 auto;padding:30px 30px 70px}
+  .vtitle{display:flex;align-items:center;gap:12px}
+  .vtitle h1{font-family:var(--font-body);font-weight:800;font-size:38px;letter-spacing:1.5px;
+    background:linear-gradient(180deg,var(--gold-a),var(--gold-b));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .vtitle .i{width:20px;height:20px;border:1px solid var(--muted);border-radius:50%;display:grid;place-items:center;color:var(--muted);font-size:12px;font-style:italic;font-family:Georgia,serif}
+  .vsub{color:var(--muted);font-size:14px;font-weight:300;margin-top:6px}
+  .vtitle.ct{margin-top:54px}
+
+  .panel{border:1px solid rgba(233,184,74,.18);border-radius:18px;padding:26px 28px 28px;margin-top:20px;
+    background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+  .dnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .dbtn{border:1px solid var(--hair);background:#0c0c0c;color:#cfccc4;border-radius:9px;padding:11px 18px;
+    font-size:12px;letter-spacing:1.4px;cursor:pointer;font-family:var(--font-body);transition:.2s;display:flex;align-items:center;gap:8px}
+  .dbtn:hover{border-color:var(--line);color:#fff}
+  .counter{font-size:16px;letter-spacing:2px;color:#e8e6e0}
+
+  /* ----- detail body ----- */
+  .detail-body{display:grid;grid-template-columns:478px 1fr;gap:44px;align-items:start}
+  .dart{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#060606;line-height:0}
+  .dart img{width:100%;display:block}
+  .dno{color:var(--muted);font-size:15px;letter-spacing:.5px}
+  .dname{font-family:var(--font-body);font-weight:800;font-size:62px;line-height:1;letter-spacing:1px;margin:6px 0 18px;
+    background:linear-gradient(180deg,var(--gold-a),var(--gold-b));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .dbadge{display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:24px;
+    padding:9px 22px;font-size:13px;letter-spacing:1.2px;font-weight:500;margin-bottom:26px}
+  .ddesc p{color:#bdbab2;font-size:15px;line-height:1.65;margin-bottom:16px;font-weight:300}
+  .ddesc p:last-child{margin-bottom:0}
+  .dmeta{margin-top:22px}
+  .lbl{color:var(--gold);font-size:12px;letter-spacing:2px;margin-bottom:12px;font-weight:600}
+  .dmeta .mrow{border-top:1px solid var(--hair);margin-top:18px;padding-top:18px}
+  .dmeta .mrow:first-child{margin-top:0}
+  .born .val{font-size:18px;color:#e8e6e0;display:flex;align-items:center;gap:10px}
+  .born .val svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:1.5}
+  
+  .qbox{border:1px solid var(--line);border-radius:10px;padding:18px 22px;color:#dcd9d1;font-size:15px;line-height:1.6;position:relative}
+  .qbox .qm{color:var(--gold);font-family:Georgia,serif;font-size:26px;line-height:0;vertical-align:-6px}
+  .qbox .open{margin-right:8px}.qbox .close{margin-left:8px}
+
+  /* ----- MEMORIA COLLECTION ----- */
+  .memoria-row{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-top:10px}
+  .mcol{--rc:#cfccc4}
+  .mcol.rare{--rc:#5b9bd5}.mcol.epic{--rc:#c468d8}.mcol.legendary{--rc:#E9B84A}.mcol.mythic{--rc:#e0556a}
+  .mlabel{text-align:center;color:var(--rc);font-weight:600;letter-spacing:1.6px;font-size:14px;margin-bottom:14px}
+  .mcard{position:relative;border-radius:11px;overflow:hidden;background:#070707;color:var(--rc);
+    border:1.5px solid var(--rc);box-shadow:0 0 20px -7px var(--rc);transition:transform .2s,box-shadow .2s}
+  .mcard:hover{transform:translateY(-3px);box-shadow:0 0 28px -3px var(--rc)}
+  .mcard .mart{display:block;width:100%;aspect-ratio:1/1.05;object-fit:cover;object-position:top center}
+  .mcard .innf{position:absolute;inset:5px;border:1px solid currentColor;opacity:.35;border-radius:8px;z-index:2;pointer-events:none}
+  .mcard .mnum{position:absolute;top:9px;left:11px;z-index:3;font-size:10px;color:#e7e4dc;letter-spacing:.4px;text-shadow:0 1px 3px rgba(0,0,0,.95)}
+  .mcard .mfoot{position:relative;z-index:3;text-align:center;padding:12px 6px 15px;background:#070707}
+  .mcard .mfoot .nm{color:#fff;font-weight:700;font-size:14px;letter-spacing:1px}
+  .mcard .mfoot .rr{color:var(--rc);font-weight:600;font-size:11px;letter-spacing:1.6px;margin-top:4px}
+  .orn{position:absolute;width:26px;height:26px;z-index:3;color:var(--rc);stroke:currentColor;fill:none}
+  .orn.tl{top:3px;left:3px}.orn.tr{top:3px;right:3px;transform:scaleX(-1)}
+  .orn.bl{bottom:3px;left:3px;transform:scaleY(-1)}.orn.br{bottom:3px;right:3px;transform:scale(-1,-1)}
+
+  .slider{display:flex;align-items:center;gap:14px;margin-top:24px}
+  .sar{width:34px;height:34px;flex:none;border:1px solid var(--hair);background:#0c0c0c;border-radius:8px;
+    color:#bdbab2;cursor:pointer;display:grid;place-items:center;font-size:16px}
+  .sar:hover{border-color:var(--line);color:#fff}
+  .track{flex:1;height:3px;background:#262626;border-radius:2px;position:relative}
+  .track .fill{position:absolute;left:0;top:0;height:100%;width:13%;background:var(--gold);border-radius:2px}
+  .track .knob{position:absolute;left:13%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px rgba(233,184,74,.5)}
+
+  .coll-foot{display:flex;align-items:center;justify-content:space-between;gap:24px;
+    border:1px solid var(--hair);border-radius:12px;padding:18px 24px;margin-top:24px}
+  .cf-left{display:flex;align-items:center;gap:18px;color:#bdbab2;font-size:14px;line-height:1.55;font-weight:300}
+  .seal{width:50px;height:50px;flex:none;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;
+    color:var(--gold);font-family:var(--font-head);font-weight:800;font-size:20px;
+    background:radial-gradient(circle,rgba(233,184,74,.12),transparent 70%)}
+  .viewall{border:1px solid var(--gold);color:var(--gold);background:transparent;border-radius:9px;
+    padding:14px 28px;font-size:13px;letter-spacing:1.5px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:.2s}
+  .viewall:hover{background:var(--gold);color:#000}
+
+  @media(max-width:900px){
+    .detail-body{grid-template-columns:1fr;gap:28px}
+    .dmeta{grid-template-columns:1fr;gap:22px}
+    .quote{border-left:0;padding-left:0;border-top:1px solid var(--hair);padding-top:22px}
+    .rarity-row{grid-template-columns:repeat(2,1fr)}
+    .coll-foot{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="head">
+  <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
+  <nav class="nav">
+    <a href="home.html">HOME</a>
+    <a href="vault.html" class="on">MEMONS VAULT</a>
+    <a href="open-capsule.html">OPEN CAPSULE</a>
+    <a href="#">MARKETPLACE</a>
+    <a href="#">CONTACT</a>
+  </nav>
+  <div class="hr">
+    <div class="soc">
+      <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+    </div>
+    <button class="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+  </div>
+</header>
+
+<main>
+  <!-- ===== SECTION 1: detail ===== -->
+  <div class="vtitle"><h1>MEMONS VAULT</h1><span class="i">i</span></div>
+  <div class="vsub">The official archive of internet-born monsters.</div>
+
+  <section class="panel">
+    <div class="dnav">
+      <a class="dbtn" href="vault.html">&lsaquo;&nbsp; PREVIOUS</a>
+      <span class="counter" id="dCounter">1 / 9999</span>
+      <button class="dbtn">NEXT &nbsp;&rsaquo;</button>
+    </div>
+    <div class="detail-body">
+      <div class="dart"><img id="dArt" src="images/detail/apepe-main.png" alt="APEPE"></div>
+      <div class="dinfo">
+        <div class="dno" id="dNo">No.0001</div>
+        <h2 class="dname" id="dName">APEPE</h2>
+        <span class="dbadge" id="dBadge">CRYPTO MEME</span>
+        <div class="ddesc" id="dDesc">
+          <p>Emerging from the heart of crypto culture, APEPE started as a simple image shared among degens on Polygon. But what began as a joke soon became a symbol of belief, resilience, and community.</p>
+          <p>Through countless charts, crashes, and comebacks, APEPE represents the spirit of those who never sell, who hodl through the chaos, and who build the culture together.</p>
+          <p>Not just a meme.<br>It's a movement.</p>
+        </div>
+        <div class="dmeta">
+          <div class="mrow born">
+            <div class="lbl">BORN</div>
+            <div class="val"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> <span id="dBorn">2023.06.07</span></div>
+          </div>
+          <div class="mrow quote">
+            <div class="lbl">QUOTE</div>
+            <div class="qbox" id="dQuote"><span class="qm open">&ldquo;</span>Every meme starts as a joke.<br>Legends are created by communities.<span class="qm close">&rdquo;</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 2: MEMORIA COLLECTION ===== -->
+  <div class="vtitle ct"><h1>MEMORIA COLLECTION</h1><span class="i">i</span></div>
+
+  <section class="panel">
+    <div class="memoria-row">
+      <div class="mcol common">
+        <div class="mlabel">COMMON</div>
+        <div class="mcard">
+          <img class="mart" src="images/detail/memoria-common.png" alt="APEPE Common">
+          <div class="innf"></div>
+          <div class="mnum">#0001-001</div>
+          <div class="mfoot"><div class="nm">APEPE</div><div class="rr">COMMON</div></div>
+        </div>
+      </div>
+      <div class="mcol rare">
+        <div class="mlabel">RARE</div>
+        <div class="mcard">
+          <img class="mart" src="images/detail/memoria-rare.png" alt="APEPE Rare">
+          <div class="innf"></div>
+          <div class="mnum">#0001-002</div>
+          <div class="mfoot"><div class="nm">APEPE</div><div class="rr">RARE</div></div>
+        </div>
+      </div>
+      <div class="mcol epic">
+        <div class="mlabel">EPIC</div>
+        <div class="mcard">
+          <img class="mart" src="images/detail/memoria-epic.png" alt="APEPE Epic">
+          <div class="innf"></div>
+          <div class="mnum">#0001-003</div>
+          <div class="mfoot"><div class="nm">APEPE</div><div class="rr">EPIC</div></div>
+        </div>
+      </div>
+      <div class="mcol legendary">
+        <div class="mlabel">LEGENDARY</div>
+        <div class="mcard">
+          <img class="mart" src="images/detail/memoria-legendary.png" alt="APEPE Legendary">
+          <div class="innf"></div>
+          <div class="mnum">#0001-004</div>
+          <div class="mfoot"><div class="nm">APEPE</div><div class="rr">LEGENDARY</div></div>
+          <svg class="orn tl" viewBox="0 0 40 40" stroke-width="1.4"><path d="M4 22V9Q4 4 9 4H22"/><path d="M11 11Q18 11 18 18"/><circle cx="11" cy="11" r="1.4" fill="currentColor" stroke="none"/></svg>
+          <svg class="orn tr" viewBox="0 0 40 40" stroke-width="1.4"><path d="M4 22V9Q4 4 9 4H22"/><path d="M11 11Q18 11 18 18"/><circle cx="11" cy="11" r="1.4" fill="currentColor" stroke="none"/></svg>
+          <svg class="orn bl" viewBox="0 0 40 40" stroke-width="1.4"><path d="M4 22V9Q4 4 9 4H22"/><path d="M11 11Q18 11 18 18"/><circle cx="11" cy="11" r="1.4" fill="currentColor" stroke="none"/></svg>
+          <svg class="orn br" viewBox="0 0 40 40" stroke-width="1.4"><path d="M4 22V9Q4 4 9 4H22"/><path d="M11 11Q18 11 18 18"/><circle cx="11" cy="11" r="1.4" fill="currentColor" stroke="none"/></svg>
+        </div>
+      </div>
+      <div class="mcol mythic">
+        <div class="mlabel">MYTHIC</div>
+        <div class="mcard">
+          <img class="mart" src="images/detail/memoria-mythic.png" alt="APEPE Mythic">
+          <div class="innf"></div>
+          <div class="mnum">#0001-005</div>
+          <div class="mfoot"><div class="nm">APEPE</div><div class="rr">MYTHIC</div></div>
+          <svg class="orn tl" viewBox="0 0 40 40" stroke-width="1.6"><path d="M4 24V13L10 7H21"/><path d="M4 16L9 11"/></svg>
+          <svg class="orn tr" viewBox="0 0 40 40" stroke-width="1.6"><path d="M4 24V13L10 7H21"/><path d="M4 16L9 11"/></svg>
+          <svg class="orn bl" viewBox="0 0 40 40" stroke-width="1.6"><path d="M4 24V13L10 7H21"/><path d="M4 16L9 11"/></svg>
+          <svg class="orn br" viewBox="0 0 40 40" stroke-width="1.6"><path d="M4 24V13L10 7H21"/><path d="M4 16L9 11"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="slider">
+      <button class="sar">&lsaquo;</button>
+      <div class="track"><div class="fill"></div><div class="knob"></div></div>
+      <button class="sar">&rsaquo;</button>
+    </div>
+
+    <div class="coll-foot">
+      <div class="cf-left">
+        <span class="seal">M</span>
+        <span>Each Memoria captures a moment in APEPE's journey.<br>Collect all rarities to complete the archive.</span>
+      </div>
+      <button class="viewall">VIEW ALL MEMORIA</button>
+    </div>
+  </section>
+</main>
+
+<script src="data/memons.js"></script>
+<script>
+/* show the character by ?id=number (defaults to 0001) */
+(function(){
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id')||'0001';
+  const list=MEMONS_DATA.characters;
+  let c=list.find(x=>x.num===id) || list[0];
+  if(c.locked){ c=list.find(x=>x.num==='0001')||list[0]; }
+  const set=(id,html)=>{const el=document.getElementById(id); if(el) el.innerHTML=html;};
+  set('dNo','No.'+c.num);
+  set('dName',c.name);
+  if(c.cat) set('dBadge',c.cat);
+  if(c.main) document.getElementById('dArt').src=c.main;
+  // description
+  if(c.desc && c.desc.length){
+    set('dDesc', c.desc.map(t=>'<p>'+t.replace(/\n/g,'<br>')+'</p>').join(''));
+  }
+  if(c.born) set('dBorn', c.born);
+  if(c.quote && c.quote.length){
+    set('dQuote', '<span class="qm open">&ldquo;</span>'+c.quote.join('<br>')+'<span class="qm close">&rdquo;</span>');
+  }
+  // counter + prev/next (cycles through revealed characters)
+  const revealed=list.filter(x=>!x.locked);
+  const idx=Math.max(0, revealed.findIndex(x=>x.num===c.num));
+  set('dCounter', (idx+1)+' / '+(MEMONS_DATA.total||revealed.length));
+  const prev=revealed[(idx-1+revealed.length)%revealed.length];
+  const next=revealed[(idx+1)%revealed.length];
+  const pb=document.querySelector('.dnav a.dbtn'), nb=document.querySelector('.dnav button.dbtn');
+  if(pb) pb.setAttribute('href','detail.html?id='+prev.num);
+  if(nb) nb.onclick=()=>location.href='detail.html?id='+next.num;
+  // MEMORIA card image/label also driven by data
+  const marts=document.querySelectorAll('.mart');
+  MEMONS_DATA.rarities.forEach((r,i)=>{ if(marts[i]) marts[i].src=r.memoria; });
+  document.querySelectorAll('.mfoot .nm').forEach(el=>el.textContent=c.name);
+})();
+</script>
+</body>
+</html>
