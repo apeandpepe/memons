@@ -92,17 +92,23 @@
   /* bottom rarity cards */
   .rarity{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;
     width:100%;max-width:1500px;margin:14px auto 0;padding:0 28px 20px;position:relative;z-index:1}
-  .rc{width:176px;height:268px;border-radius:13px;position:relative;
+  .rc{width:192px;height:300px;border-radius:13px;position:relative;
     border:1.5px solid var(--rc,#888);background:linear-gradient(180deg,#131313,#070707);color:var(--rc,#888);
     box-shadow:0 0 36px -4px var(--rc,#888), 0 30px 50px -16px var(--rc,#888), inset 0 0 0 1px rgba(255,255,255,.06), inset 0 0 64px rgba(0,0,0,.5);
-    display:flex;flex-direction:column;padding:15px 16px;
-    -webkit-box-reflect:below 9px linear-gradient(transparent,transparent 38%,rgba(255,255,255,.24))}
+    display:flex;flex-direction:column;padding:15px 16px}
+  .rc:not(.hasimg){-webkit-box-reflect:below 9px linear-gradient(transparent,transparent 38%,rgba(255,255,255,.24))}
   .rc::before{content:"";position:absolute;inset:0;z-index:0;opacity:.2;border-radius:12px;
     background:radial-gradient(78% 55% at 50% 46%, var(--rc,#888) 0%, transparent 64%)}
   .rc .rl{position:relative;z-index:1;display:flex;align-items:center;gap:8px;font-family:var(--font-body);font-weight:700;font-size:11px;letter-spacing:1.5px;color:var(--rc,#888)}
   .rc .rl::before{content:"";width:9px;height:9px;background:var(--rc,#888);box-shadow:0 0 8px var(--rc,#888);transform:rotate(45deg)}
   .rc .rm{position:relative;z-index:1;flex:1;display:grid;place-items:center;padding:4px 0}
   .rc .rm svg{width:104px;height:104px;filter:drop-shadow(0 0 16px var(--rc,#888))}
+  /* whole card = user image (only when present) */
+  .rc .rcimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:13px;z-index:3;display:block}
+  .rc.hasimg .rl,.rc.hasimg .rm,.rc.hasimg .rf{display:none}
+  .rc.hasimg::before,.rc.hasimg::after{display:none}
+  .rc.hasimg{border:0;background:none;box-shadow:none;padding:0;
+    -webkit-box-reflect:below 9px linear-gradient(transparent,transparent 62%,rgba(255,255,255,.28))}
   .rc .rf{position:relative;z-index:1;text-align:center;font-size:9.5px;letter-spacing:2px;color:var(--rc,#888);opacity:.85;font-weight:600}
   .rc.holo{border-color:#8a7a9a}
   .rc.holo::after{content:"";position:absolute;inset:-1.5px;z-index:0;border-radius:12px;padding:1.5px;
@@ -128,6 +134,13 @@
   .foot span{font-size:11px;letter-spacing:2.5px;color:#6a675f}
   .foot b{color:#8d8a82;font-weight:500}
   html.embed .head{display:none!important}
+  /* ===== Scrollbar: thin subtle gold (horizontal bar hidden) ===== */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(233,184,74,.30);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(233,184,74,.55)}
+  ::-webkit-scrollbar:horizontal{height:0;display:none}
+  html{scrollbar-width:thin;scrollbar-color:rgba(233,184,74,.4) transparent}
 </style>
 <script>/*embed-mode*/if(location.hash.indexOf("embed")>=0)document.documentElement.classList.add("embed");</script>
 </head>
@@ -137,7 +150,7 @@
 <header class="head">
   <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
   <nav class="nav">
-    <a href="home.html">HOME</a>
+    <a href="index.html">HOME</a>
     <a href="vault.html">MEMONS VAULT</a>
     <a href="open-capsule.html" class="on">OPEN CAPSULE</a>
     <a href="#">MARKETPLACE</a>
@@ -197,11 +210,11 @@
 
 <!-- RARITY -->
 <section class="rarity">
-  <div class="rc" style="--rc:#cfccc4"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#5b9bd5"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#c468d8"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#E9B84A"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc holo" style="--rc:#e0556a"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#cfccc4"><img class="rcimg" src="images/open-capsule/card-common.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#5b9bd5"><img class="rcimg" src="images/open-capsule/card-rare.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#c468d8"><img class="rcimg" src="images/open-capsule/card-epic.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#E9B84A"><img class="rcimg" src="images/open-capsule/card-legendary.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc holo" style="--rc:#e0556a"><img class="rcimg" src="images/open-capsule/card-mythic.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
 </section>
 
 <!-- FOOTER -->
@@ -218,7 +231,7 @@
 
 /* open capsule -> standalone pull page (click frame/M/button) */
 (function(){
-  const go=()=>{ location.href='capsule-reveal.html'; };
+  const go=()=>{ var u='capsule-reveal.html'; if(window.top!==window.self){ try{ window.top.location.href=u; return; }catch(e){} } location.href=u; };
   document.getElementById('capFrame').addEventListener('click', go);
   document.getElementById('openOne').addEventListener('click', go);
   document.getElementById('openTen').addEventListener('click', go);
@@ -243,6 +256,24 @@ if(document.documentElement.classList.contains('embed')){
   window.addEventListener('load',post); setTimeout(post,300); setTimeout(post,1200);
   try{new ResizeObserver(post).observe(document.body);}catch(e){}
 }
+</script>
+<script>
+/* horizontal slider: scroll self vertically; at vertical edge, forward wheel to parent to change slide */
+(function(){
+  if(window.top===window.self) return; // only when embedded
+  var lock=false;
+  window.addEventListener('wheel', function(e){
+    var de=document.scrollingElement||document.documentElement;
+    var dir=e.deltaY>0?1:-1;
+    var canV=de.scrollHeight>de.clientHeight+2;
+    var atBottom=de.scrollTop+de.clientHeight>=de.scrollHeight-2;
+    var atTop=de.scrollTop<=2;
+    if(canV && ((dir>0&&!atBottom)||(dir<0&&!atTop))) return; // scroll within this page first
+    e.preventDefault();
+    if(lock) return; lock=true; setTimeout(function(){lock=false;},700);
+    try{ parent.postMessage({navSlide:dir}, '*'); }catch(_){}
+  }, {passive:false});
+})();
 </script>
 </body>
 </html>

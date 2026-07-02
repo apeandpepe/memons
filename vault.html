@@ -104,7 +104,16 @@
   .page .dots{color:var(--muted)}
   .page .arrow{color:var(--muted)}
   html.embed .head{display:none!important}
-  html.embed main{padding:92px 30px 44px;margin:0 auto;max-width:1380px}
+  html.embed main{padding:82px 30px 20px;margin:0 auto;max-width:1380px}
+  html.embed .bar{margin:18px 0 20px}
+  html.embed .page{margin-top:22px}
+  /* ===== Scrollbar: thin subtle gold (horizontal bar hidden) ===== */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(233,184,74,.30);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(233,184,74,.55)}
+  ::-webkit-scrollbar:horizontal{height:0;display:none}
+  html{scrollbar-width:thin;scrollbar-color:rgba(233,184,74,.4) transparent}
 </style>
 <script>/*embed-mode*/if(location.hash.indexOf("embed")>=0){document.documentElement.classList.add("embed");
   function __vH(){var m=document.querySelector("main");if(!m)return document.body.offsetHeight;var r=m.getBoundingClientRect();return Math.ceil(r.top+r.height+30);}
@@ -124,7 +133,7 @@
 <header class="head">
   <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
   <nav class="nav">
-    <a href="home.html">HOME</a>
+    <a href="index.html">HOME</a>
     <a href="vault.html" class="on">MEMONS VAULT</a>
     <a href="open-capsule.html">OPEN CAPSULE</a>
     <a href="#">MARKETPLACE</a>
@@ -267,6 +276,24 @@ if(document.documentElement.classList.contains('embed')){
   window.addEventListener('load',post); setTimeout(post,300); setTimeout(post,1200);
   try{new ResizeObserver(post).observe(document.body);}catch(e){}
 }
+</script>
+<script>
+/* horizontal slider: scroll self vertically; at vertical edge, forward wheel to parent to change slide */
+(function(){
+  if(window.top===window.self) return; // only when embedded
+  var lock=false;
+  window.addEventListener('wheel', function(e){
+    var de=document.scrollingElement||document.documentElement;
+    var dir=e.deltaY>0?1:-1;
+    var canV=de.scrollHeight>de.clientHeight+2;
+    var atBottom=de.scrollTop+de.clientHeight>=de.scrollHeight-2;
+    var atTop=de.scrollTop<=2;
+    if(canV && ((dir>0&&!atBottom)||(dir<0&&!atTop))) return; // scroll within this page first
+    e.preventDefault();
+    if(lock) return; lock=true; setTimeout(function(){lock=false;},700);
+    try{ parent.postMessage({navSlide:dir}, '*'); }catch(_){}
+  }, {passive:false});
+})();
 </script>
 </body>
 </html>

@@ -260,11 +260,11 @@
 <header class="head">
   <div class="brand"><span class="mk">M</span><span class="wm">MEMONS</span></div>
   <nav class="nav">
-    <a href="home.html">HOME</a>
+    <a href="index.html">HOME</a>
     <a href="vault.html">MEMONS VAULT</a>
     <a href="open-capsule.html">OPEN CAPSULE</a>
     <a href="marketplace.html" class="on">MARKETPLACE</a>
-    <a href="home.html#contact">CONTACT</a>
+    <a href="index.html#contact">CONTACT</a>
   </nav>
   <div class="hr">
     <div class="soc">
@@ -535,5 +535,23 @@ document.querySelectorAll('.dots i').forEach(d=>d.addEventListener('click',()=>{
 buildFeatured();buildSold();buildRarityFilters();render();
 </script>
 </div>
+<script>
+/* horizontal slider: scroll self vertically; at vertical edge, forward wheel to parent to change slide */
+(function(){
+  if(window.top===window.self) return; // only when embedded
+  var lock=false;
+  window.addEventListener('wheel', function(e){
+    var de=document.scrollingElement||document.documentElement;
+    var dir=e.deltaY>0?1:-1;
+    var canV=de.scrollHeight>de.clientHeight+2;
+    var atBottom=de.scrollTop+de.clientHeight>=de.scrollHeight-2;
+    var atTop=de.scrollTop<=2;
+    if(canV && ((dir>0&&!atBottom)||(dir<0&&!atTop))) return; // scroll within this page first
+    e.preventDefault();
+    if(lock) return; lock=true; setTimeout(function(){lock=false;},700);
+    try{ parent.postMessage({navSlide:dir}, '*'); }catch(_){}
+  }, {passive:false});
+})();
+</script>
 </body>
 </html>

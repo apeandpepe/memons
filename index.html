@@ -12,7 +12,9 @@
     --text:#e8e6e0; --muted:#8d8a82;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);margin:0;
+    width:100vw;height:100vh;height:100svh;display:flex;flex-direction:row;flex-wrap:nowrap;
+    overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth}
   a{color:inherit;text-decoration:none}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
@@ -134,15 +136,16 @@
   #start{scroll-margin-top:72px}
   @media(max-width:560px){ .vmute{right:16px;bottom:18px} .vscroll{display:none} }
 
-  html{scroll-behavior:smooth;scroll-snap-type:y mandatory}
-  /* ===== HOME SECTIONS (scroll in menu order) ===== */
-  section[id], .vhero{scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:0}
+  html{scroll-behavior:smooth;overflow:hidden;height:100vh;height:100svh}
+  /* ===== HOME SECTIONS (horizontal swipe) ===== */
+  body>section, body>.vhero{flex:0 0 100vw;width:100vw;height:100vh;height:100svh;
+    scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;overflow-x:hidden}
+  body>section.sec{max-width:none;margin:0}
   .sec{position:relative;max-width:1247px;margin:0 auto;padding:34px;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center}
   .sec.divtop{border-top:1px solid var(--hair)}
   .embedsec{background:var(--bg)}
-  .embedsec iframe.embed{display:block;width:100%;border:0;height:100vh}
-  .embedsec iframe.mkembed{height:1900px}
-  .embedsec iframe.vembed{height:900px}
+  .embedsec iframe.embed{display:block;width:100%;border:0;height:100vh;height:100svh}
+  .embedsec iframe.mkembed,.embedsec iframe.vembed,.embedsec iframe.abembed{height:100vh;height:100svh}
   .sec-h{text-align:center;margin:0 auto 40px}
   .sec-eyebrow{font-size:12px;letter-spacing:4px;color:var(--gold);font-weight:600;margin-bottom:14px}
   .sec-title{font-family:var(--font-head);font-weight:700;font-size:clamp(34px,5vw,56px);line-height:1;letter-spacing:.5px}
@@ -199,6 +202,13 @@
   .foot{text-align:center;padding:12px 20px 14px;margin-top:6px}
   .foot span{font-size:11px;letter-spacing:2.5px;color:#6a675f}
   .foot b{color:#8d8a82;font-weight:500}
+  /* ===== Scrollbar: horizontal hidden, vertical thin subtle gold ===== */
+  body::-webkit-scrollbar{width:0;height:0;display:none}
+  body{scrollbar-width:none;-ms-overflow-style:none}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(233,184,74,.30);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(233,184,74,.55)}
 </style>
 </head>
 <body>
@@ -208,6 +218,7 @@
   <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
   <nav class="nav">
     <a href="#home" class="on">HOME</a>
+    <a href="#about">ABOUT</a>
     <a href="#vault">MEMONS VAULT</a>
     <a href="#capsule">OPEN CAPSULE</a>
     <a href="#marketplace">MARKETPLACE</a>
@@ -233,25 +244,35 @@
 
   <button class="vmute" id="vMute" aria-label="Toggle sound"></button>
 
-  <a class="vscroll" href="#vault" aria-label="Scroll down">
+  <a class="vscroll" href="#about" aria-label="Scroll down">
     <span class="mouse"></span>
     SCROLL
   </a>
 </section>
 
+<!-- ABOUT (embed, below home) -->
+<section id="about" class="embedsec">
+  <iframe class="embed abembed" src="about.html" title="ABOUT MEMONS"></iframe>
+</section>
+
 <!-- MEMONS VAULT (embed) -->
 <section id="vault" class="embedsec">
-  <iframe class="embed vembed" src="vault.html#embed" scrolling="no" title="MEMONS VAULT"></iframe>
+  <iframe class="embed vembed" src="vault.html#embed" title="MEMONS VAULT"></iframe>
 </section>
 
 <!-- OPEN CAPSULE (embed) -->
 <section id="capsule" class="embedsec">
-  <iframe class="embed" src="open-capsule.html#embed" scrolling="no" title="OPEN CAPSULE"></iframe>
+  <iframe class="embed" src="open-capsule.html#embed" title="OPEN CAPSULE"></iframe>
 </section>
 
 <!-- MARKETPLACE -->
-<section id="marketplace" class="embedsec">
-  <iframe class="embed mkembed" id="mkFrame" src="marketplace.html#embed" scrolling="no" title="MARKETPLACE"></iframe>
+<section id="marketplace" class="sec">
+  <div style="text-align:center;max-width:640px">
+    <div class="sec-eyebrow">MARKETPLACE</div>
+    <div class="sec-title">COMING SOON</div>
+    <p class="sec-sub">The MEMONS marketplace is on its way.<br>Trade, collect, and flex your memes — very soon.</p>
+    <div class="sec-cta"><span class="gbtn ghost">STAY TUNED</span></div>
+  </div>
 </section>
 
 <!-- CONTACT -->
@@ -273,17 +294,18 @@
 /* video intro + menu-order scrollspy + mute toggle */
 (function(){
   const head=document.querySelector('header.head');
-  const ids=['home','vault','capsule','marketplace','contact'];
+  const ids=['home','about','vault','capsule','marketplace','contact'];
   const links={}; ids.forEach(id=>{ const a=document.querySelector('.nav a[href="#'+id+'"]'); if(a) links[id]=a; });
+  const scroller=document.body;
   const onScroll=()=>{
-    head.classList.toggle('scrolled', window.scrollY>40);
+    head.classList.toggle('scrolled', scroller.scrollLeft>40);
     let cur=ids[0];
     for(const id of ids){ const el=document.getElementById(id);
-      if(el && el.getBoundingClientRect().top<=110) cur=id; }
-    if(window.innerHeight+Math.ceil(window.scrollY) >= document.documentElement.scrollHeight-2) cur=ids[ids.length-1];
+      if(el && el.getBoundingClientRect().left<=window.innerWidth*0.4) cur=id; }
+    if(scroller.scrollLeft+window.innerWidth >= scroller.scrollWidth-2) cur=ids[ids.length-1];
     for(const id in links) if(links[id]) links[id].classList.toggle('on', id===cur);
   };
-  onScroll(); window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll(); scroller.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('resize',onScroll);
 
   const vid=document.getElementById('introVid'), mute=document.getElementById('vMute');
   if(vid && matchMedia('(prefers-reduced-motion: reduce)').matches){ try{vid.pause();}catch(e){} }
@@ -295,13 +317,37 @@
     mute.addEventListener('click',()=>{ vid.muted=!vid.muted; if(!vid.muted){ vid.play().catch(()=>{}); } sync(); });
   }
 })();
-/* auto-size embedded iframes (marketplace, vault) to their content via postMessage */
+/* ===== wheel = horizontal slide nav (iframe slides forward via postMessage) ===== */
 (function(){
+  const scroller=document.body;
+  const sections=['home','about','vault','capsule','marketplace','contact'].map(id=>document.getElementById(id)).filter(Boolean);
+  let lock=false;
+  function curIdx(){ return Math.round(scroller.scrollLeft/window.innerWidth); }
+  function goSlide(dir){
+    if(lock) return;
+    const idx=curIdx(); const t=Math.min(sections.length-1, Math.max(0, idx+dir));
+    if(t===idx) return;
+    lock=true; scroller.scrollTo({left:t*window.innerWidth, behavior:'smooth'});
+    setTimeout(()=>{ lock=false; }, 650);
+  }
+  function goToId(id){
+    const i = sections.findIndex(s=>s && s.id===id);
+    if(i<0) return;
+    scroller.scrollTo({left:i*window.innerWidth, behavior:'smooth'});
+  }
+  // embedded iframe pages forward their wheel intent / section jumps here
   window.addEventListener('message',function(e){
-    if(!e||!e.data||typeof e.data.embedHeight!=='number'||e.data.embedHeight<200) return;
-    var frames=document.querySelectorAll('section.embedsec iframe');
-    for(var i=0;i<frames.length;i++){ if(frames[i].contentWindow===e.source){ frames[i].style.height=e.data.embedHeight+'px'; break; } }
+    if(!e || !e.data) return;
+    if(typeof e.data.navSlide==='number') goSlide(e.data.navSlide);
+    if(e.data.gotoSection) goToId(e.data.gotoSection);
   });
+  // wheel over non-iframe slides (home, contact): handle directly
+  scroller.addEventListener('wheel',function(e){
+    const sec=sections[curIdx()];
+    if(sec && sec.querySelector('iframe')) return;   // iframe slides handle their own wheel
+    e.preventDefault();
+    goSlide(e.deltaY>0?1:-1);
+  }, {passive:false});
 })();
 </script>
 </body>
