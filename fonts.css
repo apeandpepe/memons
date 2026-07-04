@@ -1,5 +1,5 @@
 /* ============================================================
-   MEMONS — SITE-WIDE FONT CONTROL
+   MEMONS - SITE-WIDE FONT CONTROL
    Edit just this one file to change fonts across every page.
    How to change: swap the @font-face src (font file) and family name,
    plus the :root --font-head / --font-body values.
@@ -17,4 +17,10 @@
 :root{
   --font-head:'ChakraPetch','Rajdhani',sans-serif;  /* headings - logo - menu - buttons */
   --font-body:'Inter',system-ui,sans-serif;          /* body - descriptions - numbers */
+}
+
+/* headings / logo / labels / buttons -> head font (site-wide) */
+h1,h2,h3,h4,h5,h6,
+.brand,.title,.sec-title,.vtitle,.vtitleX,.mlabel,.viewall,.dbtn,.dname,.name,.rname,.rr,.tag,.how .ht{
+  font-family:var(--font-head);
 }
