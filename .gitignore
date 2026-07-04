@@ -1,5 +1,32 @@
-capsule-fullscreen/
+# local only (do not expose to users)
+admin.html
 card-factory/
-files/
+
+# backend / dev material (not deployed)
+auth-index.ts
+backend-src/
+backend-src.zip
+test-cards/
+
+# backup / dev files
 home.html
+capsule-reveal-VIDEO.html
+compare-bg.html
+
+# keep existing exclusions
+capsule-fullscreen/
+files/
 who.bat
+
+# standard
+node_modules/
+.env
+*.env
+.DS_Store
+Thumbs.db
+
+# reveal folder: keep only what is used, exclude test videos
+images/reveal/*.mp4
+!images/reveal/open.mp4
+!images/reveal/fx-fire.mp4
+!images/reveal/fx-leak.mp4
