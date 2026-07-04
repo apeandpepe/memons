@@ -118,6 +118,12 @@
     .rarity-row{grid-template-columns:repeat(2,1fr)}
     .coll-foot{flex-direction:column;align-items:flex-start}
   }
+  /* render the finished card image directly (no frame overlay) */
+  .mcard{background:transparent!important;border:none!important;border-radius:0;overflow:visible;box-shadow:none!important}
+  .mcard:hover{transform:translateY(-4px);box-shadow:none!important;filter:drop-shadow(0 10px 22px rgba(0,0,0,.55))}
+  .mcard .mart{width:100%;height:auto;aspect-ratio:auto;object-fit:contain;border-radius:8px;display:block;transform:scale(1.08);transform-origin:center top}
+  .memoria-row{align-items:start;gap:12px}
+  .mcard .innf,.mcard .mnum,.mcard .mfoot,.mcard .orn{display:none!important}
 </style>
 </head>
 <body>
