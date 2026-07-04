@@ -310,7 +310,7 @@
         <img class="lf in"  src="images/reveal/top-inner.png" alt="" aria-hidden="true">
       </div>
     </div>
-    <div class="result" id="result"><span class="badge" id="rbadge"></span><img id="art" src="images/reveal/legendary.png" alt=""><div class="shine"></div></div>
+    <div class="result" id="result"><span class="badge" id="rbadge"></span><img id="art" alt=""><div class="shine"></div></div>
   </div>
 
   <div class="info">
@@ -675,13 +675,22 @@ async function single(){
 }
 function singleReveal(it){
   if($('stage')._wantPillar) $('stage').classList.add('pillar-on');
-  $('art').src = LAB.testCard || it.img; $('cName').textContent=it.char; $('rr').textContent=it.rarity;
+  const art=$('art');
+  $('cName').textContent=it.char; $('rr').textContent=it.rarity;
   [ $('result'),$('got') ].forEach(el=>el.style.setProperty('--rc',it.color));
   $('rr').style.color=it.color;
   const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'DUP':'NEW';
-  $('stage').classList.add('single'); $('hint').style.display='none';
-  $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
-  refreshStatus(); busy=false;
+  const reveal=()=>{
+    $('stage').classList.add('single'); $('hint').style.display='none';
+    $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
+    refreshStatus(); busy=false;
+  };
+  const src = LAB.testCard || it.img;
+  if(src){ // reveal after the real card image loads (prevents placeholder flicker)
+    let done=false; const run=()=>{ if(done)return; done=true; art.src=src; reveal(); };
+    const pre=new Image(); pre.onload=run; pre.onerror=run; pre.src=src;
+    if(pre.complete) run(); else setTimeout(run,2500);
+  } else { art.removeAttribute('src'); reveal(); }
 }
 async function ten(){
   if(busy) return;
