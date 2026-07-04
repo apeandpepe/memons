@@ -43,7 +43,7 @@
   .badge.new{background:var(--gold);color:#000}.badge.dup{background:#555;color:#fff}
 
   .info{height:64px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-  .hint{font-size:12px;letter-spacing:3px;color:var(--muted)}
+  .hint{font-size:12px;letter-spacing:3px;color:var(--muted);display:none}
   .you{font-size:11px;letter-spacing:3px;color:var(--gold);opacity:0;transition:.3s}
   .got{font-weight:700;font-size:20px;opacity:0;transition:.3s}.got b{color:var(--rc,#E9B84A);margin-left:8px}
   .stage.single ~ .info .you,.stage.single ~ .info .got{opacity:1}
@@ -191,14 +191,14 @@
   @keyframes rvFade{from{opacity:0}to{opacity:1}}
   @keyframes rvPop{0%{opacity:0;transform:scale(.55) translateY(6%)}60%{opacity:1}100%{opacity:1;transform:scale(1) translateY(0)}}
   .stage.single::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(20,16,10,.85),rgba(3,3,3,.96));z-index:38;animation:rvFade .6s ease both}
-  .stage.single .result{position:fixed;top:3vh;left:0;right:var(--panel);margin:0 auto;width:auto;height:70vh;aspect-ratio:958/1280;
-    z-index:40;opacity:1;transform:none;animation:cardEmerge 1.2s cubic-bezier(.16,.84,.28,1) both}
+  .stage.single .result{position:fixed;top:29vh;left:0;right:var(--panel);margin:0 auto;width:auto;height:44vh;aspect-ratio:958/1280;
+    z-index:40;opacity:1;transform:none;animation:cardEmerge .8s cubic-bezier(.16,.84,.28,1) both}
   /* rises from below as a small dark card, grows, then a final shine */
   @keyframes cardEmerge{
-    0%   {opacity:0; transform:translateY(46vh) scale(.12); filter:brightness(.08) saturate(.35)}
-    10%  {opacity:1}
-    58%  {transform:translateY(0) scale(1); filter:brightness(.1) saturate(.35)}
-    74%  {filter:brightness(2.6) saturate(1.6)}
+    0%   {opacity:0; transform:translateY(8vh) scale(.42); filter:brightness(.15) saturate(.5)}
+    15%  {opacity:1}
+    55%  {transform:translateY(0) scale(1); filter:brightness(.18) saturate(.5)}
+    72%  {filter:brightness(2.4) saturate(1.5)}
     100% {opacity:1; transform:translateY(0) scale(1); filter:brightness(1) saturate(1)}
   }
   .result .shine{position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:5;opacity:0;
@@ -585,7 +585,9 @@ function playOpen(onEnd){
     const go=()=>{ if(done)return; done=true; st.classList.add('opening'); onEnd(); };
     try{ v.pause(); v.currentTime=0; }catch(e){}
     v.muted=true; v.playbackRate = LAB.speed||1;
-    v.onended = go;                                       // reveal the card when the video ends
+    const LEAD=4.0;                                       // reveal the card N seconds before the video ends
+    v.ontimeupdate=()=>{ if(v.duration && v.currentTime >= v.duration - LEAD) go(); };
+    v.onended = go;                                       // safety: always reveal on end
     const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{ setTimeout(go,300); }); // if autoplay is blocked, reveal immediately
     setTimeout(go, 15000);                                // fallback in case the video never ends
     return;
