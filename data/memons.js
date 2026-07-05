@@ -28,11 +28,13 @@ window.MEMONS_DATA = {
         "Not just a meme.\nIt's a movement."
       ]
     },
-    { num:'0002', name:'DOGE',     cat:'INTERNET LEGEND', img:'images/vault/doge.png',     main:'images/detail/apepe-main.png' },
-    { num:'0003', name:'NYAN CAT', cat:'VIRAL MEME',      img:'images/vault/nyancat.png',  main:'images/detail/apepe-main.png' },
-    { num:'0004', name:'PEPE',     cat:'REACTION MEME',   img:'images/vault/pepe.png',     main:'images/detail/apepe-main.png' },
-    { num:'0005', name:'CHILL GUY',cat:'RELATABLE MEME',  img:'images/vault/chillguy.png', main:'images/detail/apepe-main.png' },
-    { num:'0006', name:'WOJAK',    cat:'CULTURE MEME',    img:'images/vault/wojak.png',    main:'images/detail/apepe-main.png' },
+
+    /* --- #0002~#0006: currently LOCKED. To reveal, restore the commented data on each line. --- */
+    { num:'0002', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'DOGE',      cat:'INTERNET LEGEND', img:'images/vault/doge.png',     main:'images/detail/apepe-main.png' */
+    { num:'0003', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'NYAN CAT',  cat:'VIRAL MEME',      img:'images/vault/nyancat.png',  main:'images/detail/apepe-main.png' */
+    { num:'0004', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'PEPE',      cat:'REACTION MEME',   img:'images/vault/pepe.png',     main:'images/detail/apepe-main.png' */
+    { num:'0005', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'CHILL GUY', cat:'RELATABLE MEME',  img:'images/vault/chillguy.png', main:'images/detail/apepe-main.png' */
+    { num:'0006', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'WOJAK',     cat:'CULTURE MEME',    img:'images/vault/wojak.png',    main:'images/detail/apepe-main.png' */
 
     /* unrevealed (locked) */
     { num:'0007', name:'???', cat:'UNKNOWN', locked:true },
