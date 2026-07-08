@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — Grade</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --bg:#050505;--panel:#0d0d10;--panel2:#141418;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+    --text:#e8e6e0;--muted:#8d8a82;--dim:#55524b;--gold:#E9B84A;--gold2:#f4d27a;--gold-b:#b8862e;--good:#5ccf92;
+    --sbw:220px;--tbh:70px;--gc:#E9B84A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(1100px 480px at 82% -8%, rgba(233,184,74,.06), transparent 62%)}
+  a{color:inherit;text-decoration:none}
+  .head{position:fixed;top:0;left:0;right:0;height:var(--tbh);display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid var(--line);background:rgba(5,5,5,.9);backdrop-filter:blur(10px);z-index:30}
+  .brand img{height:44px;width:auto;display:block}
+  .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1px;font-family:var(--font-head)}
+  .nav a{color:var(--muted)}.nav a:hover{color:var(--gold)}
+  .hr{display:flex;align-items:center;gap:14px}
+  .soc{display:flex;gap:10px}.soc a{color:var(--muted)}.soc svg{width:17px;height:17px;fill:currentColor}
+  .wbtn{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:12px;letter-spacing:1px;color:#1c1500;background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:none;border-radius:9px;padding:10px 15px;cursor:pointer}
+  .wbtn svg{width:16px;height:16px;fill:none;stroke:#1c1500;stroke-width:1.7}
+  .wicon{width:38px;height:38px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);display:none;align-items:center;justify-content:center;color:var(--gold);cursor:pointer}
+  .wicon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .mpbtn{display:none;align-items:center;gap:8px;font-family:var(--font-head);font-size:12px;letter-spacing:1px;color:#1c1500;background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:none;border-radius:9px;padding:10px 16px;cursor:pointer}
+  body.connected .wbtn{display:none}body.connected .wicon{display:flex}body.connected .mpbtn{display:flex}
+  .shell{display:flex;padding-top:var(--tbh)}
+  .sidebar{position:fixed;top:var(--tbh);bottom:0;left:0;width:var(--sbw);border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;background:linear-gradient(180deg,#0a0a0d,#050505);z-index:20}
+  .mylabel{font-family:var(--font-head);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:4px 12px 14px;font-weight:700;background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .snav{display:flex;flex-direction:column;gap:6px}
+  .snav a{font-family:var(--font-head);padding:11px 12px;border-radius:11px;font-size:14px;color:var(--muted)}
+  .snav a:hover{color:var(--text);background:var(--panel2)}
+  .snav a.on{color:var(--gold);background:rgba(233,184,74,.08);box-shadow:inset 0 0 0 1px rgba(233,184,74,.2)}
+  .side-foot{margin-top:auto}
+  .wchip{padding:11px 13px;border:1px solid var(--line2);border-radius:12px;background:var(--panel)}
+  .wchip .wa{font-size:12.5px;font-weight:600;font-family:var(--font-head)}
+  .wchip .ws{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:3px}
+  .wchip .ws::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--dim)}
+  body.connected .wchip .ws{color:var(--good)}body.connected .wchip .ws::before{background:var(--good)}
+  .main{margin-left:var(--sbw);flex:1;min-width:0}
+  .wrap{max-width:none;margin:0;padding:40px 48px 90px}
+  .back{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:7px;margin-bottom:18px}
+  .back:hover{color:var(--gold)}
+  .gtabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
+  .gtab{font-family:var(--font-head);font-size:13px;font-weight:600;letter-spacing:.5px;color:var(--muted);border:1px solid var(--line2);background:var(--panel);border-radius:10px;padding:9px 17px;cursor:pointer;transition:all .15s}
+  .gtab:hover{color:var(--text)}
+  .ghead{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin-bottom:24px}
+  .gcard{width:150px;aspect-ratio:440/636;border-radius:13px;overflow:hidden;flex-shrink:0;background:#070707}
+  .gcard img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+  .gtitle{font-family:var(--font-head);font-size:30px;font-weight:800;letter-spacing:.5px}
+  .gtitle .gg{color:var(--gc)}
+  .gmeta{color:var(--muted);font-size:14px;margin-top:10px;max-width:560px;line-height:1.5}
+  .gbar{height:8px;border-radius:8px;background:#17171b;margin-top:16px;max-width:520px;overflow:hidden}
+  .gbar>i{display:block;height:100%;border-radius:8px;background:var(--gc);transition:width .3s}
+  .gnums{margin-top:10px;font-size:14px;font-family:var(--font-head)}.gnums b{color:var(--gc);font-size:18px}
+  .rewardbar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:linear-gradient(180deg,var(--panel),#0a0a0d);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:30px;position:relative;overflow:hidden}
+  .rewardbar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold)}
+  .rb-left{display:flex;align-items:center;gap:16px}
+  .rb-reward{display:flex;align-items:center;gap:10px}
+  .rb-reward img.tok{width:32px;height:32px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px var(--gold-b),0 0 12px -4px var(--gold)}
+  .rb-reward .cc{width:26px;height:36px;border-radius:5px;overflow:hidden}
+  .rb-reward .cc img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+  .rc{font-family:var(--font-head);font-size:15px;font-weight:600}.rc b{color:var(--gold)}.rc .cn b{color:var(--gc2,var(--gold))}
+  .rs{font-size:12.5px;color:var(--muted);margin-top:5px}
+  .rbtn{font-family:var(--font-head);font-weight:600;font-size:14px;border:none;border-radius:11px;padding:13px 24px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#1c1500;background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);box-shadow:0 6px 20px -8px rgba(233,184,74,.6)}
+  .rbtn.dis{background:var(--panel2);color:var(--muted);border:1px solid var(--line2);box-shadow:none;cursor:default}
+  .sectlabel{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .sectlabel .sl{font-family:var(--font-head);font-size:13px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  .pgnum{font-size:13px;color:var(--muted)}
+  .cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+  @media(max-width:1300px){.cgrid{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:960px){.sidebar{display:none}.main{margin-left:0}.nav{display:none}.cgrid{grid-template-columns:repeat(3,1fr)}.ghead{grid-template-columns:1fr}}
+  .slot{position:relative;border-radius:11px;overflow:hidden;aspect-ratio:440/636;background:#070707}
+  .slot.own{}
+  .slot.own img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+  .slot.miss{background:repeating-linear-gradient(135deg,#0f0f12,#0f0f12 8px,#0b0b0e 8px,#0b0b0e 16px);box-shadow:inset 0 0 0 1px var(--line)}
+  .slot .lab{position:absolute;left:8px;bottom:8px;font-family:var(--font-head);font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:12px}
+  .slot.own .lab{color:#1c1500;background:var(--gc)}
+  .slot.miss .lab{color:var(--dim);background:rgba(255,255,255,.04);border:1px solid var(--line)}
+  .slot.miss .qm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:30px;font-weight:700;color:#22222a}
+  .pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:26px}
+  .pg{width:38px;height:38px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);color:var(--text);cursor:pointer;font-size:16px}
+  .pg:disabled{opacity:.35;cursor:default}
+  .foot{margin-top:34px;font-size:12px;color:var(--dim);text-align:center}
+
+  @media(max-width:600px){
+    .wrap{padding:22px 14px 70px}
+    .gtitle{font-size:24px}
+    .cgrid{grid-template-columns:repeat(3,1fr);gap:10px}
+    .rewardbar{flex-direction:column;align-items:flex-start;gap:14px}
+    .rbtn{width:100%;justify-content:center}
+    .gtabs{gap:6px}
+    .gtab{padding:8px 13px;font-size:12px}
+  }
+
+  .wchip{position:relative}
+  .wdisc{margin-top:9px;width:100%;font-family:var(--font-head);font-size:11px;letter-spacing:.6px;
+    color:var(--muted);background:transparent;border:1px solid var(--line2);border-radius:8px;
+    padding:7px 8px;cursor:pointer;transition:all .15s;display:none}
+  .wdisc:hover{color:#e0556a;border-color:rgba(224,85,106,.5)}
+  body.connected .wdisc{display:block}
+</style></head>
+<body>
+  <header class="head">
+    <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
+    <nav class="nav">
+      <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a>
+      <a href="index.html#vault">MEMONS VAULT</a><a href="index.html#capsule">OPEN CAPSULE</a>
+      <a href="marketplace.html">MARKETPLACE</a><a href="index.html#contact">CONTACT</a>
+    </nav>
+    <div class="hr">
+      <div class="soc">
+        <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+        <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+      </div>
+      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+      <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+      <button class="mpbtn" id="mpbtn">My Page</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="mylabel">My Page</div>
+      <nav class="snav">
+        <a href="mypage-collection.html" class="on">Collection</a>
+        <a href="mypage-rewards.html">Rewards</a>
+        <a href="mypage-history.html">History</a>
+      </nav>
+      <div class="side-foot"><div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div></div>
+    </aside>
+
+    <div class="main"><div class="wrap">
+      <a class="back" href="mypage-collection.html">&larr; Back to Collection</a>
+      <div class="gtabs" id="gtabs"></div>
+      <div class="ghead">
+        <div class="gcard" id="gcard"><img id="gcardimg" alt=""></div>
+        <div>
+          <div class="gtitle"><span class="gg" id="gname"></span> cards</div>
+          <div class="gmeta" id="gmeta"></div>
+          <div class="gbar"><i id="gbar"></i></div>
+          <div class="gnums" id="gnums"></div>
+        </div>
+      </div>
+      <div class="rewardbar" id="rbar">
+        <div class="rb-left"><div class="rb-reward" id="rreward"></div><div><div class="rc" id="rcond"></div><div class="rs" id="rstate"></div></div></div>
+        <button class="rbtn" id="rbtn"></button>
+      </div>
+      <div class="sectlabel"><div class="sl">Owned &amp; missing</div><div class="pgnum" id="pgnum"></div></div>
+      <div class="cgrid" id="cgrid"></div>
+      <div class="pager" id="pager"></div>
+      <p class="foot">Duplicates count as one kind · Rewards are a bonus for collecting</p>
+    </div></div>
+  </div>
+
+<script src="data/memons.js"></script>
+<script src="data/collection.js"></script>
+<script src="data/rewards.js"></script>
+<script src="gacha-client.js"></script>
+<script>
+  var RAR=MEMONS_DATA.rarities, REW=MEMONS_REWARDS, PER=10;
+  var byKey={}; RAR.forEach(function(r){byKey[r.key]=r;});
+  function el(id){return document.getElementById(id);}
+  function getGrade(){var p=new URLSearchParams(location.search).get('grade');return REW.grades[p]?p:'epic';}
+  var state={grade:getGrade(),page:0};
+
+  function tabs(){
+    var box=el('gtabs');box.innerHTML='';
+    RAR.forEach(function(r){
+      if(!REW.grades[r.key])return;
+      var b=document.createElement('div');b.className='gtab';b.textContent=r.label;
+      if(r.key===state.grade){b.style.background=r.color;b.style.borderColor=r.color;b.style.color='#141018';}
+      b.onclick=function(){state.grade=r.key;state.page=0;render();history.replaceState(null,'','?grade='+r.key);};
+      box.appendChild(b);
+    });
+  }
+  function render(){
+    var key=state.grade, r=byKey[key], g=REW.grades[key];
+    document.documentElement.style.setProperty('--gc', r.color);
+    tabs();
+    el('gcardimg').src='images/mypage/back/'+key+'.png';
+    el('gname').textContent=r.label;
+    var owned=REW.ownedKinds(key);
+    el('gmeta').textContent='Collect distinct '+r.label+' cards. '+g.K+' kinds in total · a reward every '+g.N+' kinds.';
+    el('gbar').style.width=Math.round(owned/g.K*100)+'%';
+    el('gnums').innerHTML='<b>'+owned+'</b> / '+g.K+' kinds collected';
+    // reward
+    var rr=el('rreward');
+    if(g.reward.type==='coin'){
+      rr.innerHTML='<img class="tok" src="'+REW.coinImage+'" alt="APEPE">';
+      el('rcond').innerHTML='<b>'+g.reward.amount.toLocaleString('en-US')+' '+REW.coinSymbol+'</b> every '+g.N+' kinds';
+    }else{
+      var rg=byKey[g.reward.grade];
+      document.documentElement.style.setProperty('--gc2', rg.color);
+      rr.innerHTML='<div class="cc"><img src="images/mypage/back/'+g.reward.grade+'.png" alt=""></div>';
+      el('rcond').innerHTML='<span class="cn">1 <b>'+rg.label+'</b> card</span> every '+g.N+' kinds';
+    }
+    var earned=Math.floor(owned/g.N), btn=el('rbtn');
+    if(earned>0){ el('rstate').textContent=owned+' kinds collected · '+earned+' reward'+(earned>1?'s':'')+' ready';
+      btn.className='rbtn';btn.innerHTML='🎁 Claim reward';btn.disabled=false;
+      btn.onclick=function(){ claimRewards(btn); };
+    }else{ el('rstate').textContent=owned+' kinds collected · '+(g.N-owned)+' more to your first reward';
+      btn.className='rbtn dis';btn.textContent='Keep collecting';btn.disabled=true;btn.onclick=null; }
+    // grid
+    var ownedImgs = (REW.ownedImages ? REW.ownedImages(key) : []);
+    var pages=Math.ceil(g.K/PER), start=state.page*PER, end=Math.min(start+PER,g.K);
+    el('pgnum').textContent='Page '+(state.page+1)+' / '+pages+' · '+owned+' owned';
+    var grid=el('cgrid');grid.innerHTML='';
+    for(var i=start;i<end;i++){
+      var s=document.createElement('div');
+      if(i<owned){
+        var url = ownedImgs[i] || ('images/mypage/back/'+key+'.png');   // real pulled card art
+        s.className='slot own'; s.innerHTML='<img src="'+url+'" alt=""><span class="lab">Owned</span>';
+      }
+      else{ s.className='slot miss'; s.innerHTML='<span class="qm">?</span><span class="lab">Missing</span>'; }
+      grid.appendChild(s);
+    }
+    var pg=el('pager');pg.innerHTML='';
+    var prev=document.createElement('button');prev.className='pg';prev.textContent='‹';prev.disabled=state.page===0;
+    prev.onclick=function(){if(state.page>0){state.page--;render();}};
+    var num=document.createElement('span');num.className='pgnum';num.textContent=(state.page+1)+' / '+pages;
+    var next=document.createElement('button');next.className='pg';next.textContent='›';next.disabled=state.page>=pages-1;
+    next.onclick=function(){if(state.page<pages-1){state.page++;render();}};
+    pg.appendChild(prev);pg.appendChild(num);pg.appendChild(next);
+  }
+  render();
+
+  async function claimRewards(btn){
+    if(!window.MEMONS || !MEMONS.connected){ alert('Connect your wallet first.'); return; }
+    var prev = btn ? btn.innerHTML : '';
+    try{
+      if(btn){ btn.disabled=true; btn.textContent='Requesting…'; }
+      var j = await MEMONS.authFetch('/rewards-claim', {});   // POST with wallet JWT
+      alert(j.requested>0 ? (j.requested+' reward(s) requested. An admin will process the payout.') : 'No new rewards to claim.');
+      await syncOwned();
+    }catch(e){
+      alert('Claim failed: '+(e.message||e));
+      if(btn){ btn.disabled=false; btn.innerHTML=prev; }
+    }
+  }
+
+  async function syncOwned(){
+    if(!window.MEMONS || !MEMONS.connected) return;
+    try{ var s=await MEMONS.state(); REW.loadServerOwned(s.owned||[]); render(); }
+    catch(e){ /* keep current view */ }
+  }
+
+  // wallet
+  function shortAddr(a){return a?(a.slice(0,6)+'…'+a.slice(-4)):'';}
+  async function doConnect(){ if(!window.MEMONS)return;
+    try{var addr=await MEMONS.connect();document.body.classList.add('connected');
+      el('waddr').textContent=shortAddr(addr);el('wstat').textContent='Connected';await syncOwned();}
+    catch(e){alert(e.message||'Wallet connection failed');} }
+  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
+
+  function shortAddr2(a){return a?(a.slice(0,6)+'…'+a.slice(-4)):'';}
+  function setConnectedUI(addr){
+    document.body.classList.add('connected');
+    var w=document.getElementById('waddr'), st=document.getElementById('wstat');
+    if(w) w.textContent=shortAddr2(addr);
+    if(st) st.textContent='Connected';
+  }
+  function setDisconnectedUI(){
+    document.body.classList.remove('connected');
+    var w=document.getElementById('waddr'), st=document.getElementById('wstat');
+    if(w) w.textContent='Not connected';
+    if(st) st.textContent='Connect wallet';
+  }
+  // if a session already exists (connected on another page), use it right away
+  (async function autoConnect(){
+    try{
+      if(window.MEMONS && MEMONS.connected && MEMONS.address){
+        setConnectedUI(MEMONS.address);
+        if(typeof syncOwned==='function') await syncOwned();
+        if(typeof loadMine==='function') await loadMine();
+      }
+    }catch(e){}
+  })();
+  var _wd=document.getElementById('wdisc');
+  if(_wd) _wd.onclick=function(){
+    try{ if(window.MEMONS && MEMONS.resetSession) MEMONS.resetSession(); }catch(e){}
+    try{ if(window.MEMONS_REWARDS && MEMONS_REWARDS.clearServerOwned) MEMONS_REWARDS.clearServerOwned(); }catch(e){}
+    setDisconnectedUI();
+    location.reload();
+  };
+
+</script>
+<script src="mypage-entry.js"></script>
+</body></html>
