@@ -13,12 +13,6 @@
   .title{font-family:var(--font-head);font-weight:800;font-size:28px;letter-spacing:3px;
     background:linear-gradient(180deg,var(--gold-a),var(--gold-b));-webkit-background-clip:text;background-clip:text;color:transparent}
 
-  /* top status bar: pity + session stats */
-  .statusbar{display:flex;gap:22px;align-items:center;font-size:12px;letter-spacing:1px;color:var(--muted);flex-wrap:wrap;justify-content:center}
-  .statusbar b{color:var(--gold);font-weight:700}
-  .pity{display:flex;align-items:center;gap:8px}
-  .pbar{width:120px;height:6px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
-  .pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-b),var(--gold-a));width:0%}
 
   .stage{position:relative;width:min(360px,80vw);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
   .capsule{width:100%;height:100%;object-fit:contain;cursor:pointer;animation:float 4.5s ease-in-out infinite;
@@ -59,16 +53,19 @@
   /* 10-pull result overlay */
   .multi{position:fixed;inset:0;background:rgba(4,4,4,.96);z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:30px}
   .multi.show{display:flex}
+  @media(max-width:1100px){ .mgrid{grid-template-columns:repeat(4,1fr);max-width:94vw} }
+  @media(max-width:760px){ .mgrid{grid-template-columns:repeat(3,1fr);gap:12px} }
+  @media(max-width:480px){ .mgrid{grid-template-columns:repeat(2,1fr);gap:10px} }
   .multi h3{font-size:14px;letter-spacing:3px;color:var(--gold)}
-  .mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:680px;width:100%}
-  .mcard{position:relative;border-radius:9px;overflow:hidden;border:1.5px solid var(--rc,#cfccc4);background:#070707;
-    box-shadow:0 0 14px -6px var(--rc,#cfccc4);opacity:0;transform:scale(.8);animation:pop .4s forwards}
+  .mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;max-width:min(92vw,1280px);width:100%}
+  .mcard{position:relative;border-radius:12px;overflow:hidden;border:1.5px solid var(--rc,#cfccc4);background:#070707;
+    box-shadow:0 0 22px -8px var(--rc,#cfccc4);opacity:0;transform:scale(.8);animation:pop .4s forwards}
   @keyframes pop{to{opacity:1;transform:scale(1)}}
   .mcard img{width:100%;aspect-ratio:958/1280;object-fit:contain;display:block;background:#000}
-  .mcard .mf{text-align:center;padding:5px 2px 7px}
-  .mcard .mn{font-size:10px;color:#fff;font-weight:600}
-  .mcard .mr{font-size:8.5px;color:var(--rc,#cfccc4);letter-spacing:1px}
-  .mcard .mb{position:absolute;top:4px;left:4px;font-size:7.5px;font-weight:700;padding:1px 4px;border-radius:3px}
+  .mcard .mf{text-align:center;padding:7px 3px 9px}
+  .mcard .mn{font-size:12.5px;color:#fff;font-weight:600}
+  .mcard .mr{font-size:10.5px;color:var(--rc,#cfccc4);letter-spacing:1px}
+  .mcard .mb{position:absolute;top:6px;left:6px;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px}
   .mcard .mb.new{background:var(--gold);color:#000}.mcard .mb.dup{background:#555;color:#fff}
   .summary{font-size:12px;color:var(--muted);letter-spacing:1px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
   .summary span b{color:#fff}
@@ -187,11 +184,22 @@
   .lab-note b{color:#5cc8a0}
   .lab-note .miss{color:#c87a7a}
 
+  /* pulls remaining + charge */
+  .pullsbox{display:inline-flex;align-items:center;gap:10px;margin-left:14px;padding:0 4px 0 14px;
+    border-left:1px solid rgba(255,255,255,.14)}
+  .pullsbox .pl{font-size:10px;letter-spacing:2px;color:#8d8a82}
+  .pullsbox .pv{font-weight:700;font-size:17px;color:var(--gold);min-width:22px;text-align:center}
+  .b.charge{padding:8px 13px;font-size:12px;letter-spacing:1px;border:1px solid rgba(233,184,74,.5);
+    color:var(--gold);background:rgba(233,184,74,.08)}
+  .b.charge:hover{background:rgba(233,184,74,.18)}
+  .stage.single ~ .acts .pullsbox{display:none}
+  @media(max-width:700px){ .pullsbox{margin-left:8px;padding-left:10px;gap:7px} .pullsbox .pl{display:none} }
+
   /* ===== BIG CARD REVEAL (single, fullscreen center) ===== */
   @keyframes rvFade{from{opacity:0}to{opacity:1}}
   @keyframes rvPop{0%{opacity:0;transform:scale(.55) translateY(6%)}60%{opacity:1}100%{opacity:1;transform:scale(1) translateY(0)}}
   .stage.single::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(20,16,10,.85),rgba(3,3,3,.96));z-index:38;animation:rvFade .6s ease both}
-  .stage.single .result{position:fixed;top:29vh;left:0;right:var(--panel);margin:0 auto;width:auto;height:44vh;aspect-ratio:958/1280;
+  .stage.single .result{position:fixed;top:4vh;left:0;right:var(--panel);margin:0 auto;width:auto;height:min(70vh, calc(100vh - 210px));max-width:min(46vw,540px);aspect-ratio:958/1280;
     z-index:40;opacity:1;transform:none;animation:cardEmerge .8s cubic-bezier(.16,.84,.28,1) both}
   /* rises from below as a small dark card, grows, then a final shine */
   @keyframes cardEmerge{
@@ -206,14 +214,19 @@
     background-size:260% 100%;background-position:175% 0}
   .stage.single .result .shine{animation:cardShine .6s ease .72s both}
   @keyframes cardShine{0%{opacity:0;background-position:175% 0}25%{opacity:1}100%{opacity:0;background-position:-95% 0}}
-  .stage.single .result img{height:100%;width:auto;aspect-ratio:958/1280;object-fit:contain;
-    border-radius:14px;box-shadow:0 0 70px -6px var(--rc,#E9B84A),0 0 130px -10px var(--rc,#E9B84A)}
+  .stage.single .result img{height:100%;width:auto;max-width:100%;aspect-ratio:958/1280;object-fit:contain;
+    border-radius:16px;box-shadow:0 0 80px -6px var(--rc,#E9B84A),0 0 150px -12px var(--rc,#E9B84A)}
   .stage.single .badge{top:14px;left:14px;font-size:12px;padding:5px 11px}
   /* YOU GOT text + CONTINUE lifted above backdrop */
-  .stage.single ~ .info{position:fixed;left:0;right:var(--panel);bottom:78px;z-index:41;height:auto;animation:rvFade .5s ease .25s both}
+  .stage.single ~ .info{position:fixed !important;left:0;right:var(--panel);top:auto;bottom:96px;z-index:41;height:auto;text-align:center;animation:rvFade .5s ease .25s both}
   .stage.single ~ .info .you{font-size:13px}
   .stage.single ~ .info .got{font-size:24px}
-  .stage.single ~ .acts{position:fixed;left:0;right:var(--panel);bottom:22px;z-index:41;animation:rvFade .5s ease .3s both}
+  .stage.single ~ .acts{position:fixed !important;left:0;right:var(--panel);top:auto;bottom:26px;z-index:41;display:flex;justify-content:center;animation:rvFade .5s ease .3s both}
+
+
+  @media(max-width:900px){
+    .stage.single .result{max-width:84vw;top:5vh;height:min(62vh, calc(100vh - 190px))}
+  }
 
   /* ===== HINGE OPEN SYSTEM ===== */
   .hinge-rig{position:absolute;inset:0;margin:auto;width:84%;height:84%;display:none;perspective:1300px}
@@ -268,17 +281,33 @@
   ::-webkit-scrollbar-thumb:hover{background:rgba(233,184,74,.55)}
   ::-webkit-scrollbar:horizontal{height:0;display:none}
   html{scrollbar-width:thin;scrollbar-color:rgba(233,184,74,.4) transparent}
+  .pm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .pm-overlay.on{display:flex}
+  .pm{width:100%;max-width:370px;background:linear-gradient(180deg,#131009,#0a0805);border:1px solid var(--line);border-radius:16px;padding:24px 22px;font-family:var(--font-body);position:relative}
+  .pm h3{font-family:var(--font-head),'Saira';font-weight:700;font-size:19px;color:#e6c878;letter-spacing:.5px;margin-bottom:4px}
+  .pm .psub{font-size:12px;color:#8d8a82;margin-bottom:18px}
+  .pm-close{position:absolute;top:14px;right:18px;background:none;border:0;color:#8d8a82;font-size:24px;cursor:pointer;line-height:1}
+  .pm-close:hover{color:var(--gold)}
+  .pm-presets{display:flex;gap:8px;margin-bottom:12px}
+  .pm-presets button{flex:1;padding:10px 0;border:1px solid var(--line);border-radius:9px;background:transparent;color:#c9b06a;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+  .pm-presets button:hover,.pm-presets button.on{border-color:var(--gold);background:rgba(233,184,74,.12);color:var(--gold)}
+  .pm-qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:16px}
+  .pm-qty button{width:46px;height:46px;background:transparent;border:0;color:var(--gold);font-size:20px;cursor:pointer}
+  .pm-qty button:hover{background:rgba(233,184,74,.1)}
+  .pm-qty .qn{flex:1;text-align:center;font-weight:600;font-size:16px;color:#fff}
+  .pm-price{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-size:13px;color:#a99d85}
+  .pm-price b{font-family:var(--font-head),'Saira';font-size:26px;color:#fff;font-weight:700}
+  .pm-save{font-size:11px;color:#6fbf73;margin-bottom:16px;min-height:14px}
+  .pm-pay{width:100%;border:0;cursor:pointer;border-radius:9px;font-family:var(--font-body);font-weight:700;font-size:14px;letter-spacing:1px;padding:15px;background:linear-gradient(180deg,var(--gold-a),var(--gold-b));color:#1a1206;transition:.25s}
+  .pm-pay:hover{box-shadow:0 0 30px rgba(233,184,74,.45);filter:brightness(1.05)}
+  .pm-pay:disabled{opacity:.55;cursor:default;box-shadow:none;filter:none}
+  .pm-status{font-size:12px;color:#978b62;margin-top:12px;text-align:center;min-height:16px;line-height:1.5}
+  .pm-bal{font-size:12px;color:#a99d85;margin-top:14px;text-align:center;border-top:1px solid var(--hair);padding-top:12px}
+
 </style></head>
 <body>
   <a class="backlink" href="index.html#capsule">&lsaquo; MAIN</a>
   <div class="title">OPEN CAPSULE</div>
-
-  <div class="statusbar">
-    <div class="pity">Pity in <b id="pityLeft">--</b>
-      <span class="pbar"><i id="pityFill"></i></span></div>
-    <div>Session pulls <b id="sessTotal">0</b></div>
-    <div>Owned <b id="ownTotal">0</b></div>
-  </div>
 
   <div class="stage" id="stage">
     <div class="floor"></div>
@@ -322,6 +351,11 @@
   <div class="acts">
     <button class="b solid" id="open1">OPEN ×1</button>
     <button class="b" id="open10">OPEN ×10</button>
+    <div class="pullsbox" id="pullsbox">
+      <span class="pl">PULLS</span>
+      <span class="pv" id="pullsLeft">–</span>
+      <button class="b charge" id="chargeBtn">＋ CHARGE</button>
+    </div>
     <button class="b ghost hidden" id="again">CONTINUE</button>
   </div>
 
@@ -478,11 +512,7 @@ function rollOne(){
   return item;
 }
 function refreshStatus(){
-  const left=Math.max(0, PITY_MAX-getPity());
-  $('pityLeft').textContent=left;
-  $('pityFill').style.width=(getPity()/PITY_MAX*100)+'%';
-  $('sessTotal').textContent=session.length;
-  $('ownTotal').textContent=MEMONS_COLLECTION.count();
+  // (top status bar removed — pity/session/owned no longer displayed)
   // session rarity tally
   const tally={}; session.forEach(p=>tally[p.rarity]=(tally[p.rarity]||0)+1);
   $('tally').innerHTML = RAR.map(r=> tally[r.label] ? `<div class="t" style="--rc:${r.color}"><b>${r.label}</b> ${tally[r.label]}` + `</div>` : '').join('') || '<div class="t">None yet</div>';
@@ -651,7 +681,26 @@ async function ensureConnected(){
   try{ await MEMONS.connect(); return true; }
   catch(e){ revToast('Wallet connection required: '+(e.message||e)); return false; }
 }
-async function pullServer(){ const r = await MEMONS.pull(); return mapCard(r.card); }
+async function pullServer(){ const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c; }
+
+/* ---- pulls remaining ---- */
+async function refreshPulls(){
+  const el=document.getElementById('pullsLeft');
+  const box=document.getElementById('pullsbox');
+  const chg=document.getElementById('chargeBtn');
+  if(!el) return;
+  if(!window.MEMONS || !MEMONS.connected){
+    el.textContent='–';
+    if(chg) chg.textContent='CONNECT WALLET';
+    if(chg) chg.onclick = async function(){ try{ await MEMONS.connect(); await refreshPulls(); }catch(e){ alert((e&&e.message)||'Wallet connection failed'); } };
+    return;
+  }
+  if(chg && chg.textContent==='CONNECT WALLET'){ chg.textContent='＋ CHARGE'; chg.onclick=null; if(window.__bindCharge) window.__bindCharge(); }
+  try{ const st=await MEMONS.state(); el.textContent = (st && st.pulls_remaining!=null) ? st.pulls_remaining : '–'; }
+  catch(e){ el.textContent='–'; }
+}
+window.refreshPulls=refreshPulls;
+document.addEventListener('DOMContentLoaded', ()=>{ refreshPulls(); });
 
 let busy=false;
 async function single(){
@@ -885,5 +934,92 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
 }; });
 
 
+</script>
+<!-- ===== CHARGE POPUP ===== -->
+<div class="pm-overlay" id="pmOverlay">
+  <div class="pm">
+    <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
+    <h3>CHARGE PULLS</h3>
+    <div class="psub">Buy pull credits with USDT (Polygon). 1 pull = 2 USDT · 10-pack = 18 USDT (10% off)</div>
+    <div class="pm-presets" id="pmPresets">
+      <button data-n="1">1</button>
+      <button data-n="10" class="on">10</button>
+      <button data-n="30">30</button>
+    </div>
+    <div class="pm-qty">
+      <button id="pmMinus" aria-label="Decrease">&minus;</button>
+      <span class="qn" id="pmQn">10</span>
+      <button id="pmPlus" aria-label="Increase">+</button>
+    </div>
+    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">18 USDT</b></div>
+    <div class="pm-save" id="pmSave"></div>
+    <button class="pm-pay" id="pmPay">PAY 18 USDT</button>
+    <div class="pm-status" id="pmStatus"></div>
+    <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
+  </div>
+</div>
+
+<script src="memons-pay.js"></script>
+<script>
+(function(){
+  var overlay=document.getElementById('pmOverlay'),
+      qn=document.getElementById('pmQn'), total=document.getElementById('pmTotal'),
+      pullsLbl=document.getElementById('pmPulls'), save=document.getElementById('pmSave'),
+      payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
+      bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets');
+  var q=10;
+  function price(n){ return (window.MEMONS&&MEMONS.priceUsdt)?MEMONS.priceUsdt(n):(Math.floor(n/10)*18+(n%10)*2); }
+  function render(){
+    qn.textContent=q;
+    var p=price(q), full=q*2;
+    total.textContent=p+' USDT';
+    pullsLbl.textContent=q+(q>1?' pulls':' pull');
+    payBtn.textContent='PAY '+p+' USDT';
+    save.textContent = full>p ? ('Save '+(full-p)+' USDT with 10-pack pricing') : '';
+    Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
+  }
+  function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }
+  document.getElementById('pmMinus').onclick=function(){ set(q-1); };
+  document.getElementById('pmPlus').onclick=function(){ set(q+1); };
+  Array.prototype.forEach.call(presets.children,function(b){ b.onclick=function(){ set(+b.dataset.n); }; });
+
+  async function refreshBal(){
+    try{
+      if(window.MEMONS&&MEMONS.connected){ var s=await MEMONS.state(); bal.innerHTML='Remaining pulls: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>'; }
+      else { bal.textContent='Connect wallet to see balance'; }
+    }catch(e){}
+  }
+  function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; refreshBal(); }
+  function closeModal(){ overlay.classList.remove('on'); }
+  window.__bindCharge=function(){ var b=document.getElementById('chargeBtn'); if(b) b.onclick=openModal; };
+  window.__bindCharge();
+  document.getElementById('pmClose').addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
+
+  payBtn.addEventListener('click', async function(){
+    payBtn.disabled=true; statusEl.style.color='#978b62';
+    try{
+      if(!(window.MEMONS&&MEMONS.connected)){ statusEl.textContent='Connecting wallet…'; await MEMONS.connect(); }
+      var r=await MEMONS.pay(q,{ onStatus:function(s,c,n){
+        if(s==='sending') statusEl.textContent='Confirm the payment in your wallet…';
+        else if(s==='confirming') statusEl.textContent='Confirming on-chain… '+(c!=null?(c+'/'+(n||20)):'');
+        else if(s==='credited') statusEl.textContent='Charged!'; if(window.refreshPulls) refreshPulls();
+      }});
+      statusEl.style.color='#6fbf73';
+      statusEl.textContent='Charged +'+r.granted+' pulls!';
+      await refreshBal();
+    }catch(e){
+      statusEl.style.color='#e0776a';
+      statusEl.textContent=(e&&e.message)?e.message:'Payment failed.';
+    }finally{ payBtn.disabled=false; }
+  });
+  render();
+
+  // header connect button
+  var hw=document.getElementById('headWallet');
+  if(hw){ hw.addEventListener('click', async function(){
+    try{ if(window.MEMONS&&!MEMONS.connected){ await MEMONS.connect(); } var a=(window.MEMONS&&MEMONS.address)||''; if(a){ hw.innerHTML=a.slice(0,6)+'…'+a.slice(-4); } }catch(e){}
+  }); }
+})();
 </script>
 </body></html>
