@@ -1022,4 +1022,24 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
   }); }
 })();
 </script>
+
+<script>
+/* Capsule purchases are closed until the pricing/reward model is confirmed. */
+(function(){
+  function lockPurchases(){
+    if(!window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function') return;
+    if(MEMONS.purchasesEnabled()) return;
+    var btn = document.getElementById('chargeBtn');
+    if(btn && btn.textContent.indexOf('CONNECT') === -1){
+      btn.textContent = 'SOON';
+      btn.disabled = true;
+      btn.style.opacity = '.5';
+      btn.style.cursor = 'not-allowed';
+      btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
+    }
+  }
+  if(document.readyState !== 'loading') setTimeout(lockPurchases, 300);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(lockPurchases, 300); });
+})();
+</script>
 </body></html>

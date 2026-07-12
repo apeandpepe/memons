@@ -324,7 +324,29 @@ if(document.documentElement.classList.contains('embed')){
   }); }
 })();
 </script>
-<script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
+
+<script>
+/* Capsule purchases are closed until the pricing/reward model is confirmed.
+   memons-pay.js holds the switch; the server enforces it independently. */
+(function(){
+  function lockPurchases(){
+    if(!window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function') return;
+    if(MEMONS.purchasesEnabled()) return;                 // open: leave everything as is
+    var btn = document.getElementById('chargeBtn');
+    if(btn){
+      btn.textContent = 'CHARGE PULLS · COMING SOON';
+      btn.disabled = true;
+      btn.style.opacity = '.5';
+      btn.style.cursor = 'not-allowed';
+      btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
+    }
+    var note = document.querySelector('.chargenote');
+    if(note) note.textContent = 'Purchases open once the capsule pricing is finalised.';
+  }
+  if(document.readyState !== 'loading') lockPurchases();
+  else document.addEventListener('DOMContentLoaded', lockPurchases);
+})();
+</script>
 </body>
 </html>

@@ -12,6 +12,10 @@
 //  The deployed verify-payment function must be in the SAME mode.
 // =====================================================================
 (function () {
+  // Capsule purchases are closed until the pricing/reward model is confirmed.
+  // Set to true to open them (the server has the same switch and must match).
+  const PURCHASES_ENABLED = false;
+
   const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
 
   const API = "https://neixdrtamznrooougcda.supabase.co/functions/v1";
@@ -142,7 +146,12 @@
   };
 
   // --- main: pay for N pulls -------------------------------------------
+  M.purchasesEnabled = function () { return PURCHASES_ENABLED; };
+
   M.pay = async function pay(numPulls, opts = {}) {
+    if (!PURCHASES_ENABLED) {
+      throw new Error("Capsule purchases are temporarily closed. Please try again later.");
+    }
     const pulls = parseInt(numPulls, 10);
     if (!Number.isInteger(pulls) || pulls < 1) throw new Error("Invalid pull count.");
     const eth = window.ethereum;
