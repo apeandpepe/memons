@@ -38,6 +38,18 @@
       discBtn.onmouseleave=function(){ discBtn.style.color='#8d8a82'; discBtn.style.borderColor='rgba(255,255,255,.18)'; };
       host.appendChild(discBtn);
     }
+    var switchBtn = document.querySelector('.wallet-switch');
+    if(!switchBtn){
+      switchBtn = makeBtn('wallet-switch','Switch');
+      switchBtn.title = 'Connect a different wallet account';
+      switchBtn.style.cssText='display:none;margin-left:8px;font-family:inherit;font-size:11px;letter-spacing:.6px;'
+        +'color:#8d8a82;background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:7px;'
+        +'padding:9px 12px;cursor:pointer;transition:.15s;';
+      switchBtn.onmouseenter=function(){ switchBtn.style.color='#E9B84A'; switchBtn.style.borderColor='rgba(233,184,74,.5)'; };
+      switchBtn.onmouseleave=function(){ switchBtn.style.color='#8d8a82'; switchBtn.style.borderColor='rgba(255,255,255,.18)'; };
+      host.appendChild(switchBtn);
+    }
+
     var myBtn = document.querySelector('.mypage-entry');
     if(!myBtn){
       myBtn=document.createElement('a');
@@ -53,6 +65,7 @@
       wbtn.title = addr;
       wbtn.classList.add('connected');
       discBtn.style.display = 'inline-block';
+      switchBtn.style.display = 'inline-block';
       myBtn.style.display = 'inline-flex';
       document.body.classList.add('wallet-connected');
     }
@@ -61,6 +74,7 @@
       wbtn.title = '';
       wbtn.classList.remove('connected');
       discBtn.style.display = 'none';
+      switchBtn.style.display = 'none';
       myBtn.style.display = 'none';
       document.body.classList.remove('wallet-connected');
     }
@@ -90,6 +104,19 @@
       doConnect();
     });
     discBtn.addEventListener('click', function(ev){ ev.preventDefault(); doDisconnect(); });
+    switchBtn.addEventListener('click', async function(ev){
+      ev.preventDefault();
+      if(!window.MEMONS || !MEMONS.switchAccount) return;
+      switchBtn.disabled = true; switchBtn.textContent = '…';
+      try{
+        var addr = await MEMONS.switchAccount();
+        renderConnected(addr);
+        location.reload();                       // reload so all data reflects the new wallet
+      }catch(e){
+        alert((e && e.message) || 'Could not switch account');
+        switchBtn.disabled = false; switchBtn.textContent = 'Switch';
+      }
+    });
 
     /* --- reflect the real state on load --- */
     (async function init(){

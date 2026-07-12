@@ -93,9 +93,38 @@
   // --- wallet account/chain changes: drop the stale session so the app re-auths ---
   function resetSession(){ token = null; address = null; persist(); }
 
-  // Clear our session. (We don't call wallet_revokePermissions: some wallets
-  // error on it. To use a different account, switch it in the wallet itself.)
+  // Clear our session. (Wallet permissions are left alone here.)
   async function disconnect(){ resetSession(); }
+
+  // Switch to a different wallet account.
+  // This is deliberately separate from connect(): it asks the wallet to show its
+  // account chooser, and if that fails for any reason the existing session is
+  // left untouched, so connecting can never break because of it.
+  async function switchAccount() {
+    const eth = window.ethereum;
+    if (!eth) throw new Error("A wallet (e.g. MetaMask) is required.");
+
+    const before = address;
+    try {
+      await eth.request({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+      });
+    } catch (e) {
+      // 4001 = user closed the chooser. Anything else = wallet doesn't support it.
+      if (e && e.code === 4001) throw new Error("Account switch cancelled.");
+      throw new Error("This wallet doesn't support switching from the site. Change the account in your wallet, then reconnect.");
+    }
+
+    const accs = await eth.request({ method: "eth_accounts" });
+    const next = (accs && accs[0] ? accs[0] : "").toLowerCase();
+    if (!next) throw new Error("No account selected.");
+    if (next === before) return before;   // same account: nothing to do
+
+    // new account -> drop the old session and authenticate as the new one
+    resetSession();
+    return await connect();
+  }
   if (window.ethereum && window.ethereum.on) {
     window.ethereum.on("accountsChanged", (accs) => {
       const next = (accs && accs[0] ? accs[0] : "").toLowerCase();
@@ -116,6 +145,7 @@
   M.authFetch = authFetch;
   M.resetSession = resetSession;
   M.disconnect = disconnect;
+  M.switchAccount = switchAccount;
   Object.defineProperty(M, "token",     { get(){ return token; },    configurable: true });
   Object.defineProperty(M, "address",   { get(){ return address; },  configurable: true });
   Object.defineProperty(M, "connected", { get(){ return !!token; },  configurable: true });
