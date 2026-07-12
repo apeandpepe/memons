@@ -93,6 +93,7 @@
     padding:7px 8px;cursor:pointer;transition:all .15s;display:none}
   .wdisc:hover{color:#e0556a;border-color:rgba(224,85,106,.5)}
   body.connected .wdisc{display:block}
+  .stu{font-size:11px;color:#e0556a;opacity:.85;font-weight:400}
 </style></head>
 <body>
   <header class="head">
@@ -159,21 +160,24 @@
     var totalOwned=0, totalK=0;
     RAR.forEach(function(r){
       var g=REW.grades[r.key]; if(!g) return;
-      var owned=REW.ownedKinds(r.key), K=g.K, pct=Math.round(owned/K*100);
+      var owned=REW.ownedKinds(r.key), K=g.K, pct=Math.round(owned/K*100);   // dex: all cards
+      var elig=REW.eligibleKinds ? REW.eligibleKinds(r.key) : owned;         // rewards: used excluded
       totalOwned+=owned; totalK+=K;
       var complete = owned>=K;
-      var eligible = owned>=g.N;
+      var eligible = elig>=g.N;
       var tag = complete ? '<span class="tag done">Complete</span>' : (eligible ? '<span class="tag">Reward available</span>' : '');
-      var st  = complete ? '<div class="st d">Complete</div>'
-              : eligible ? '<div class="st a">Reward available</div>'
-              : '<div class="st p">'+(g.N-owned)+' more for a reward</div>';
+      var used = (REW.usedKinds ? REW.usedKinds(r.key) : 0);
+      var st  = eligible ? '<div class="st a">Reward available</div>'
+              : complete ? '<div class="st d">Complete</div>'
+              : '<div class="st p">'+(g.N-elig)+' more for a reward</div>';
       var a=document.createElement('a');
       a.className='tile'+((eligible||complete)?' hi':'');
       a.style.setProperty('--gc', r.color);
       a.href='mypage-grade.html?grade='+r.key;
       a.innerHTML =
         '<div class="cardwrap"><img src="images/mypage/back/'+r.key+'.png" alt="'+r.label+'"></div>'+
-        '<div class="info"><div class="kinds"><b>'+owned+'</b> / '+K+' kinds</div>'+
+        '<div class="info"><div class="kinds"><b>'+owned+'</b> / '+K+' kinds'+
+          (used ? ' <span class="stu">('+used+' used)</span>' : '')+'</div>'+
         '<div class="pbar"><i style="width:'+pct+'%"></i></div>'+st+'</div>';
       grid.appendChild(a);
     });

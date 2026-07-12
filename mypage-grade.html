@@ -99,6 +99,19 @@
     padding:7px 8px;cursor:pointer;transition:all .15s;display:none}
   .wdisc:hover{color:#e0556a;border-color:rgba(224,85,106,.5)}
   body.connected .wdisc{display:block}
+
+  /* reward-claimed stamp: the card was spent on a reward and can't fund another */
+  .slot.used img{filter:grayscale(.75) brightness(.55) contrast(.9)}
+  .slot.used::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.35);pointer-events:none}
+  .stamp{position:absolute;top:50%;left:50%;z-index:3;pointer-events:none;
+    transform:translate(-50%,-50%) rotate(-14deg);
+    font-family:var(--font-head);font-weight:800;letter-spacing:1.2px;
+    font-size:clamp(8px,1.5vw,11px);line-height:1.15;text-align:center;
+    color:#e0556a;border:2.5px solid #e0556a;border-radius:6px;
+    padding:5px 8px;background:rgba(224,85,106,.08);
+    text-shadow:0 1px 2px rgba(0,0,0,.5);box-shadow:0 0 0 1px rgba(224,85,106,.25) inset;
+    opacity:.92;white-space:nowrap}
+  .stamp small{display:block;font-size:.72em;letter-spacing:.6px;opacity:.85;font-weight:600}
 </style></head>
 <body>
   <header class="head">
@@ -180,10 +193,13 @@
     tabs();
     el('gcardimg').src='images/mypage/back/'+key+'.png';
     el('gname').textContent=r.label;
-    var owned=REW.ownedKinds(key);
+    var owned=REW.ownedKinds(key);                                        // dex
+    var elig =REW.eligibleKinds ? REW.eligibleKinds(key) : owned;          // rewards
     el('gmeta').textContent='Collect distinct '+r.label+' cards. '+g.K+' kinds in total · a reward every '+g.N+' kinds.';
     el('gbar').style.width=Math.round(owned/g.K*100)+'%';
-    el('gnums').innerHTML='<b>'+owned+'</b> / '+g.K+' kinds collected';
+    var usedN = (REW.usedKinds ? REW.usedKinds(key) : 0);
+    el('gnums').innerHTML='<b>'+owned+'</b> / '+g.K+' kinds collected'
+      + (usedN ? ' <span style="color:#e0556a;font-size:13px;font-weight:400">('+usedN+' used)</span>' : '');
     // reward
     var rr=el('rreward');
     if(g.reward.type==='coin'){
@@ -199,10 +215,12 @@
     if(earned>0){ el('rstate').textContent=owned+' kinds collected · '+earned+' reward'+(earned>1?'s':'')+' ready';
       btn.className='rbtn';btn.innerHTML='🎁 Claim reward';btn.disabled=false;
       btn.onclick=function(){ claimRewards(btn); };
-    }else{ el('rstate').textContent=owned+' kinds collected · '+(g.N-owned)+' more to your first reward';
+    }else{ el('rstate').textContent=elig+' eligible kinds · '+(g.N-elig)+' more to your next reward';
       btn.className='rbtn dis';btn.textContent='Keep collecting';btn.disabled=true;btn.onclick=null; }
     // grid
     var ownedImgs = (REW.ownedImages ? REW.ownedImages(key) : []);
+    var usedImgs  = (REW.usedImages  ? REW.usedImages(key)  : []);
+    var usedCount = usedImgs.length;
     var pages=Math.ceil(g.K/PER), start=state.page*PER, end=Math.min(start+PER,g.K);
     el('pgnum').textContent='Page '+(state.page+1)+' / '+pages+' · '+owned+' owned';
     var grid=el('cgrid');grid.innerHTML='';
@@ -211,6 +229,14 @@
       if(i<owned){
         var url = ownedImgs[i] || ('images/mypage/back/'+key+'.png');   // real pulled card art
         s.className='slot own'; s.innerHTML='<img src="'+url+'" alt=""><span class="lab">Owned</span>';
+      }
+      else if(i < owned + usedCount){
+        // spent on a reward: still in the wallet, but can never fund another reward
+        var uurl = usedImgs[i-owned] || ('images/mypage/back/'+key+'.png');
+        s.className='slot own used';
+        s.innerHTML='<img src="'+uurl+'" alt="">'+
+                    '<div class="stamp">REWARD<small>CLAIMED</small></div>'+
+                    '<span class="lab">Used</span>';
       }
       else{ s.className='slot miss'; s.innerHTML='<span class="qm">?</span><span class="lab">Missing</span>'; }
       grid.appendChild(s);

@@ -121,6 +121,7 @@
     padding:7px 8px;cursor:pointer;transition:all .15s;display:none}
   .wdisc:hover{color:#e0556a;border-color:rgba(224,85,106,.5)}
   body.connected .wdisc{display:block}
+  .usedn{margin-top:6px;font-size:10.5px;color:#e0556a;opacity:.8;font-family:var(--font-head)}
 </style></head>
 <body>
   <header class="head">
@@ -192,11 +193,12 @@
     var totOwned=0,totK=0,earnedTot=0,availTot=0;
     RAR.forEach(function(r){
       var g=REW.grades[r.key];if(!g)return;
-      var owned=REW.ownedKinds(r.key),K=g.K;totOwned+=owned;totK+=K;
-      var earned=Math.floor(owned/g.N),claimed=0,avail=Math.max(0,earned-claimed);
+      var owned=REW.ownedKinds(r.key),K=g.K;totOwned+=owned;totK+=K;              // dex
+      var elig=REW.eligibleKinds?REW.eligibleKinds(r.key):owned;                    // rewards
+      var earned=Math.floor(elig/g.N),claimed=0,avail=Math.max(0,earned-claimed);
       earnedTot+=earned;availTot+=avail;
       var complete=owned>=K;
-      var pill = complete? '<div class="stt d">'+CHECK+' Complete</div>' : (avail>0? '<div class="stt a">'+avail+' to claim</div>' : '<div class="stt p">In progress</div>');
+      var pill = avail>0? '<div class="stt a">'+avail+' to claim</div>' : (complete? '<div class="stt d">'+CHECK+' Complete</div>' : '<div class="stt p">In progress</div>');
       var rv,cls='';
       if(g.reward.type==='coin'){
         rv='<div class="rrv"><img class="tok" src="'+REW.coinImage+'" alt="APEPE"><div class="amt">'+g.reward.amount.toLocaleString('en-US')+'<small>APEPE</small></div></div>';
@@ -209,12 +211,13 @@
       var act;
       if(avail>0){act='<button class="btn gold">'+GIFT+' Claim reward</button><div class="asub gold">'+avail+' ready to claim</div>';cls='available';}
       else if(complete){act='<button class="btn done">'+CHECK+' Claimed</button>';}
-      else{var to=g.N-owned;act='<button class="btn ghost">Keep collecting</button><div class="asub">'+to+' more to unlock</div>';}
+      else{var to=g.N-elig;act='<button class="btn ghost">Keep collecting</button><div class="asub">'+to+' more to unlock</div>';}
       var row=document.createElement('div');row.className='row'+(cls?' '+cls:'');row.style.setProperty('--gc',r.color);
       row.innerHTML=
         '<div class="thumb"><img src="images/mypage/back/'+r.key+'.png" alt=""></div>'+
         '<div class="rinfo"><div class="rname">'+r.label+' COLLECTION</div><div class="rcond">'+cond+'</div><div class="film">'+film(owned,K,r.key)+'</div></div>'+
-        '<div class="rprog"><div class="pv">'+owned+' / '+K+'<small>kinds</small></div>'+pill+'</div>'+
+        '<div class="rprog"><div class="pv">'+owned+' / '+K+'<small>kinds</small></div>'+pill+
+          ((REW.usedKinds && REW.usedKinds(r.key)) ? '<div class="usedn">'+REW.usedKinds(r.key)+' used</div>' : '')+'</div>'+
         '<div class="rreward"><div class="rrl">Reward</div>'+rv+'</div>'+
         '<div class="act">'+act+'</div>';
       var claimBtn=row.querySelector('.btn.gold'); if(claimBtn) claimBtn.onclick=function(){claimRewards(claimBtn);};
