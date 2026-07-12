@@ -769,7 +769,21 @@ async function refreshPulls(){
     if(chg) chg.onclick = async function(){ try{ await MEMONS.connect(); await refreshPulls(); }catch(e){ alert((e&&e.message)||'Wallet connection failed'); } };
     return;
   }
-  if(chg && chg.textContent==='CONNECT WALLET'){ chg.textContent='＋ CHARGE'; chg.onclick=null; if(window.__bindCharge) window.__bindCharge(); }
+  if(chg && chg.textContent==='CONNECT WALLET'){
+    // purchases can be closed while the pricing model is being confirmed —
+    // in that case the button must stay locked even after connecting
+    const closed = !window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function' || !MEMONS.purchasesEnabled();
+    if(closed){
+      chg.textContent = 'CHARGE COMING SOON';
+      chg.disabled = true;
+      chg.style.opacity = '.5';
+      chg.style.cursor = 'not-allowed';
+      chg.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
+    }else{
+      chg.textContent='＋ CHARGE'; chg.onclick=null;
+      if(window.__bindCharge) window.__bindCharge();
+    }
+  }
   try{ const st=await MEMONS.state(); el.textContent = (st && st.pulls_remaining!=null) ? st.pulls_remaining : '–'; }
   catch(e){ el.textContent='–'; }
 }
@@ -1215,7 +1229,7 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
     if(!window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function') return;
     if(MEMONS.purchasesEnabled()) return;
     var btn = document.getElementById('chargeBtn');
-    if(btn && btn.textContent.indexOf('CONNECT') === -1){
+    if(btn && btn.textContent.indexOf('CONNECT WALLET') === -1){
       btn.textContent = 'CHARGE COMING SOON';
       btn.disabled = true;
       btn.style.opacity = '.5';
