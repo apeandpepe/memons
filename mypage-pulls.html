@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MEMONS — History</title>
+<title>MEMONS — Pull history</title>
 <link rel="stylesheet" href="fonts.css">
 <style>
   :root{
@@ -133,6 +133,31 @@
     padding:7px 8px;cursor:pointer;transition:all .15s;display:none}
   .wdisc:hover{color:#e0556a;border-color:rgba(224,85,106,.5)}
   body.connected .wdisc{display:block}
+
+  .pfilters{display:flex;gap:8px;margin:8px 0 20px;flex-wrap:wrap}
+  .pfilter{font-family:var(--font-head);font-size:12.5px;letter-spacing:.4px;color:var(--muted);
+    border:1px solid var(--line);border-radius:9px;padding:8px 15px;cursor:pointer;background:var(--panel)}
+  .pfilter.on{color:var(--gold);border-color:var(--gold-b);background:rgba(233,184,74,.06)}
+  .psum{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:22px;padding:16px 20px;
+    background:linear-gradient(180deg,var(--panel),#0a0a0d);border:1px solid var(--line);border-radius:14px}
+  .psum .s{display:flex;flex-direction:column;gap:4px}
+  .psum .sl{font-family:var(--font-head);font-size:10px;letter-spacing:1.3px;color:var(--muted);text-transform:uppercase}
+  .psum .sv{font-family:var(--font-head);font-weight:800;font-size:19px}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px}
+  .pcard{position:relative;border-radius:11px;overflow:hidden;background:#070707;border:1px solid var(--gc);
+    box-shadow:0 0 18px -10px var(--gc)}
+  .pcard img{width:100%;aspect-ratio:440/636;object-fit:cover;object-position:top center;display:block}
+  .pbadge{position:absolute;top:7px;left:7px;font-family:var(--font-head);font-size:9.5px;font-weight:700;
+    padding:2px 8px;border-radius:12px;letter-spacing:.4px}
+  .pbadge.new{background:var(--gold);color:#1c1500}
+  .pbadge.dup{background:rgba(255,255,255,.14);color:#cfccc4}
+  .pmeta{padding:9px 10px 11px;background:#0a0a0d}
+  .pname{font-family:var(--font-head);font-size:12.5px;font-weight:600;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prar{font-family:var(--font-head);font-size:10px;letter-spacing:1px;color:var(--gc);margin-top:3px}
+  .pdate{font-size:10.5px;color:var(--dim);margin-top:5px}
+  .pempty{color:var(--dim);text-align:center;padding:60px 0;font-size:14px}
+  @media(max-width:600px){ .pgrid{grid-template-columns:repeat(2,1fr)} }
 </style></head>
 <body>
   <header class="head">
@@ -158,23 +183,25 @@
       <nav class="snav">
         <a href="mypage-collection.html">Collection</a>
         <a href="mypage-rewards.html">Rewards</a>
-        <a href="mypage-history.html" class="on">Rewards history</a>
-        <a href="mypage-pulls.html">Pull history</a>
+        <a href="mypage-history.html">Rewards history</a>
+        <a href="mypage-pulls.html" class="on">Pull history</a>
       </nav>
       <div class="side-foot"><div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div></div>
     </aside>
     <div class="main"><div class="wrap">
-      <div class="eyebrow">MY REWARDS</div>
-      <h1>Reward history</h1>
-      <p class="sub">Your reward requests and their status. Completed rewards have been paid out to your wallet.</p>
-      <div class="hfilters" id="hfilters">
-        <div class="hfilter on" data-f="all">All</div>
-        <div class="hfilter" data-f="pending">Pending</div>
-        <div class="hfilter" data-f="done">Completed</div>
-        <div class="hfilter" data-f="rejected">Rejected</div>
-        <span style="align-self:center;margin-left:8px;font-size:12px;color:var(--muted)" id="hsummary"></span>
+      <div class="eyebrow">PULL HISTORY</div>
+      <h1>Pull history</h1>
+      <p class="sub">Every capsule you have opened, newest first. NEW means it was the first time you pulled that card.</p>
+      <div class="psum" id="psum" style="display:none"></div>
+      <div class="pfilters" id="pfilters">
+        <div class="pfilter on" data-f="all">All</div>
+        <div class="pfilter" data-f="common">COMMON</div>
+        <div class="pfilter" data-f="rare">RARE</div>
+        <div class="pfilter" data-f="epic">EPIC</div>
+        <div class="pfilter" data-f="legendary">LEGENDARY</div>
+        <div class="pfilter" data-f="mythic">MYTHIC</div>
       </div>
-      <div id="hlist"></div>
+      <div id="plist"></div>
     </div></div>
   </div>
 <script src="data/memons.js"></script>
@@ -183,92 +210,104 @@
 <script src="gacha-client.js"></script>
 <script>
 
-  var RAR=MEMONS_DATA.rarities, REW=MEMONS_REWARDS, byKey={};
-  RAR.forEach(function(r){byKey[r.key]=r;});
-  var state={filter:'all', claims:null};
-  function el(id){return document.getElementById(id);}
-  function shortAddr(a){return a?(a.slice(0,6)+'…'+a.slice(-4)):'';}
-  function fmtDate(t){try{return new Date(t).toLocaleString();}catch(e){return t;}}
-  function statusLabel(s){return {pending:'Pending',done:'Completed',rejected:'Rejected'}[s]||s;}
-  function rewardText(cl){
-    if(cl.reward_type==='coin') return '<span class="coin">'+Number(cl.reward_amount||0).toLocaleString('en-US')+' APEPE</span>';
-    var rg=byKey[cl.reward_grade]||{label:(cl.reward_grade||'').toUpperCase(),color:'#aaa'};
-    return '1 <span style="color:'+rg.color+';font-weight:700">'+rg.label+'</span> card';
-  }
-  function render(){
-    var box=el('hlist');
-    if(state.claims===null){ box.innerHTML='<div class="hempty">Connect your wallet to see your reward history.</div>'; el('hsummary').textContent=''; return; }
-    var list = state.filter==='all' ? state.claims : state.claims.filter(function(c){return c.status===state.filter;});
-    if(!list.length){ box.innerHTML='<div class="hempty">No '+(state.filter==='all'?'':statusLabel(state.filter).toLowerCase()+' ')+'reward requests yet.</div>'; }
-    else{
-      box.innerHTML=list.map(function(cl){
-        var g=byKey[cl.grade]||{label:(cl.grade||'').toUpperCase(),color:'#888'};
-        return '<div class="hrow" style="--gc:'+g.color+'">'+
-          '<div class="hthumb"><img src="images/mypage/back/'+cl.grade+'.png" alt=""></div>'+
-          '<div><div class="hname">'+g.label+' COLLECTION</div>'+
-          '<div class="hsub">Reward #'+cl.milestone+' · '+cl.owned_kinds+' kinds owned at request</div>'+
-          '<div class="hdate">'+fmtDate(cl.created_at)+(cl.note?' · <span class="hnote">'+cl.note+'</span>':'')+'</div></div>'+
-          '<div class="hreward">'+rewardText(cl)+'</div>'+
-          '<div><span class="hpill '+cl.status+'">'+statusLabel(cl.status)+'</span></div>'+
-        '</div>';
-      }).join('');
-    }
-    // summary counts
-    var p=state.claims.filter(function(c){return c.status==='pending';}).length;
-    var d=state.claims.filter(function(c){return c.status==='done';}).length;
-    el('hsummary').textContent = state.claims.length+' total · '+p+' pending · '+d+' completed';
-  }
-  el('hfilters').addEventListener('click',function(e){
-    var b=e.target.closest('.hfilter'); if(!b)return;
-    document.querySelectorAll('.hfilter').forEach(function(x){x.classList.remove('on');});
-    b.classList.add('on'); state.filter=b.getAttribute('data-f'); render();
-  });
+  var RAR=MEMONS_DATA.rarities, byKey={};
+  RAR.forEach(function(r){ byKey[r.key]=r; });
+  var state={ filter:'all', pulls:null };
 
-  async function loadMine(){
-    if(!window.MEMONS || !MEMONS.connected) return;
-    try{ var j=await MEMONS.authFetch('/rewards-mine'); state.claims=j.claims||[]; render(); }
-    catch(e){ el('hlist').innerHTML='<div class="hempty">Failed to load: '+(e.message||e)+'</div>'; }
-  }
-  async function doConnect(){ if(!window.MEMONS)return;
-    try{ var addr=await MEMONS.connect(); document.body.classList.add('connected');
-      el('waddr').textContent=shortAddr(addr); el('wstat').textContent='Connected'; await loadMine(); }
-    catch(e){ alert(e.message||'Wallet connection failed'); } }
-  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
-  render();
-  // if a session address exists (connected on another page), try to load
-  try{ if(sessionStorage.getItem('memons_wallet_addr') && window.MEMONS){ /* user still needs to connect for token */ } }catch(e){}
+  function el(id){ return document.getElementById(id); }
+  function shortAddr2(a){ return a?(a.slice(0,6)+'…'+a.slice(-4)):''; }
+  function fmtDate(t){ try{ return new Date(t).toLocaleString(); }catch(e){ return t; } }
 
-
-  function shortAddr2(a){return a?(a.slice(0,6)+'…'+a.slice(-4)):'';}
   function setConnectedUI(addr){
     document.body.classList.add('connected');
-    var w=document.getElementById('waddr'), st=document.getElementById('wstat');
+    var w=el('waddr'), st=el('wstat');
     if(w) w.textContent=shortAddr2(addr);
     if(st) st.textContent='Connected';
   }
   function setDisconnectedUI(){
     document.body.classList.remove('connected');
-    var w=document.getElementById('waddr'), st=document.getElementById('wstat');
+    var w=el('waddr'), st=el('wstat');
     if(w) w.textContent='Not connected';
     if(st) st.textContent='Connect wallet';
   }
-  // if a session already exists (connected on another page), use it right away
+
+  function render(){
+    var box=el('plist');
+    if(state.pulls===null){
+      box.innerHTML='<div class="pempty">Connect your wallet to see your pull history.</div>';
+      el('psum').style.display='none';
+      return;
+    }
+    // summary
+    var total=state.pulls.length;
+    var counts={};
+    state.pulls.forEach(function(p){ var k=(p.rarity||'').toLowerCase(); counts[k]=(counts[k]||0)+1; });
+    var newCnt=state.pulls.filter(function(p){ return !p.dup; }).length;
+    el('psum').style.display='flex';
+    el('psum').innerHTML =
+      '<div class="s"><span class="sl">Total pulls</span><span class="sv">'+total+'</span></div>'+
+      '<div class="s"><span class="sl">New cards</span><span class="sv" style="color:var(--gold)">'+newCnt+'</span></div>'+
+      RAR.filter(function(r){ return counts[r.key]; }).map(function(r){
+        return '<div class="s"><span class="sl">'+r.label+'</span>'+
+               '<span class="sv" style="color:'+r.color+'">'+counts[r.key]+'</span></div>';
+      }).join('');
+
+    var list = state.filter==='all'
+      ? state.pulls
+      : state.pulls.filter(function(p){ return (p.rarity||'').toLowerCase()===state.filter; });
+
+    if(!list.length){ box.innerHTML='<div class="pempty">No pulls in this filter yet.</div>'; return; }
+
+    box.innerHTML='<div class="pgrid">'+list.map(function(p){
+      var r=byKey[(p.rarity||'').toLowerCase()]||{label:(p.rarity||'').toUpperCase(),color:'#888'};
+      var img=p.image_url || ('images/mypage/back/'+(p.rarity||'common')+'.png');
+      return '<div class="pcard" style="--gc:'+r.color+'">'+
+        '<span class="pbadge '+(p.dup?'dup':'new')+'">'+(p.dup?'DUP':'NEW')+'</span>'+
+        '<img src="'+img+'" alt="">'+
+        '<div class="pmeta">'+
+          '<div class="pname">'+(p.name||'MEMONS CARD')+'</div>'+
+          '<div class="prar">'+r.label+'</div>'+
+          '<div class="pdate">'+fmtDate(p.pulled_at)+'</div>'+
+        '</div>'+
+      '</div>';
+    }).join('')+'</div>';
+  }
+
+  el('pfilters').addEventListener('click', function(e){
+    var b=e.target.closest('.pfilter'); if(!b) return;
+    document.querySelectorAll('.pfilter').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on'); state.filter=b.getAttribute('data-f'); render();
+  });
+
+  async function loadPulls(){
+    if(!window.MEMONS || !MEMONS.connected) return;
+    try{ var j=await MEMONS.authFetch('/pulls-mine'); state.pulls=j.pulls||[]; render(); }
+    catch(e){ el('plist').innerHTML='<div class="pempty">Failed to load: '+(e.message||e)+'</div>'; }
+  }
+
+  async function doConnect(){
+    if(!window.MEMONS) return;
+    try{ var addr=await MEMONS.connect(); setConnectedUI(addr); await loadPulls(); }
+    catch(e){ alert(e.message||'Wallet connection failed'); }
+  }
+  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect;
+  el('mpbtn').onclick=function(){ location.href='mypage-collection.html'; };
+
+  var _wd=el('wdisc');
+  if(_wd) _wd.onclick=function(){
+    try{ if(window.MEMONS && MEMONS.disconnect) MEMONS.disconnect(); }catch(e){}
+    setDisconnectedUI(); location.reload();
+  };
+
+  render();
   (async function autoConnect(){
     try{
       if(window.MEMONS && MEMONS.connected && MEMONS.address){
         setConnectedUI(MEMONS.address);
-        if(typeof syncOwned==='function') await syncOwned();
-        if(typeof loadMine==='function') await loadMine();
+        await loadPulls();
       }
     }catch(e){}
   })();
-  var _wd=document.getElementById('wdisc');
-  if(_wd) _wd.onclick=function(){
-    try{ if(window.MEMONS && MEMONS.resetSession) MEMONS.resetSession(); }catch(e){}
-    try{ if(window.MEMONS_REWARDS && MEMONS_REWARDS.clearServerOwned) MEMONS_REWARDS.clearServerOwned(); }catch(e){}
-    setDisconnectedUI();
-    location.reload();
-  };
 
 </script>
 <script src="mypage-entry.js"></script>
