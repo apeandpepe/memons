@@ -30,3 +30,7 @@ images/reveal/*.mp4
 !images/reveal/open.mp4
 !images/reveal/fx-fire.mp4
 !images/reveal/fx-leak.mp4
+
+
+admin-rewards.html
+verify-payment.ts
