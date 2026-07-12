@@ -24,6 +24,7 @@ window.MEMONS_REWARDS = {
 
   _live: null,
   _imgs: null,
+  _used: null,   // Set of card_ids already consumed by a reward
 
   _keyOf: function(v){
     if(v==null) return null;
@@ -35,6 +36,16 @@ window.MEMONS_REWARDS = {
       });
       return hit?hit.key:null;
     }catch(e){ return null; }
+  },
+
+  // Cards already spent on a reward. They stay in the wallet (and can be sold),
+  // but they can never fund another reward — so they don't count here either.
+  setUsedCards: function(ids){
+    this._used = new Set((ids||[]).map(String));
+    return this;
+  },
+  isUsed: function(cardId){
+    return !!(this._used && this._used.has(String(cardId)));
   },
 
   loadServerOwned: function(owned){
@@ -50,6 +61,7 @@ window.MEMONS_REWARDS = {
              (nested.card_id!=null?nested.card_id:
              (nested.id!=null?nested.id:null)))));
       if(!rk || id==null){ skipped++; return; }
+      if(self.isUsed(id)) return;                 // consumed by a previous reward
       var set=(live[rk]=live[rk]||new Set());
       if(!set.has(String(id))){
         set.add(String(id));
