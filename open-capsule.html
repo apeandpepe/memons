@@ -105,6 +105,11 @@
   .pm .psub{font-size:12px;color:#8d8a82;margin-bottom:18px}
   .pm-close{position:absolute;top:14px;right:18px;background:none;border:0;color:#8d8a82;font-size:24px;cursor:pointer;line-height:1}
   .pm-close:hover{color:var(--gold)}
+  .pm-label{font-size:10.5px;letter-spacing:1.4px;color:#8c8264;text-transform:uppercase;margin:2px 0 7px}
+  .pm-chains{display:flex;gap:8px;margin-bottom:14px}
+  .pm-chains button{flex:1;padding:10px 0;border:1px solid var(--line);border-radius:9px;background:transparent;
+    color:#c9b06a;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;transition:.15s}
+  .pm-chains button:hover,.pm-chains button.on{border-color:var(--gold);background:rgba(233,184,74,.12);color:var(--gold)}
   .pm-presets{display:flex;gap:8px;margin-bottom:12px}
   .pm-presets button{flex:1;padding:10px 0;border:1px solid var(--line);border-radius:9px;background:transparent;color:#c9b06a;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
   .pm-presets button:hover,.pm-presets button.on{border-color:var(--gold);background:rgba(233,184,74,.12);color:var(--gold)}
@@ -242,7 +247,10 @@ if(document.documentElement.classList.contains('embed')){
   <div class="pm">
     <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
     <h3>CHARGE PULLS</h3>
-    <div class="psub">Buy pull credits with USDT (Polygon). 1 pull = 2 USDT · 10-pack = 18 USDT (10% off)</div>
+    <div class="psub">Buy pull credits with USDT. 1 pull = 2 USDT · 10-pack = 18 USDT (10% off)</div>
+    <div class="pm-label">Network</div>
+    <div class="pm-chains" id="pmChains"></div>
+    <div class="pm-label">Quantity</div>
     <div class="pm-presets" id="pmPresets">
       <button data-n="1">1</button>
       <button data-n="10" class="on">10</button>
@@ -269,8 +277,27 @@ if(document.documentElement.classList.contains('embed')){
       qn=document.getElementById('pmQn'), total=document.getElementById('pmTotal'),
       pullsLbl=document.getElementById('pmPulls'), save=document.getElementById('pmSave'),
       payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
-      bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets');
+      bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets'),
+      chainsBox=document.getElementById('pmChains');
   var q=10;
+
+  // ---- network selector (USDT on Polygon / Ethereum / BNB Chain) ----
+  function renderChains(){
+    if(!chainsBox || !window.MEMONS || !MEMONS.chains) return;
+    var list = MEMONS.chains(), cur = MEMONS.getChain();
+    chainsBox.innerHTML = '';
+    list.forEach(function(c){
+      var b=document.createElement('button');
+      b.type='button'; b.textContent=c.label; b.dataset.chain=c.key;
+      if(c.key===cur) b.classList.add('on');
+      b.onclick=function(){
+        try{ MEMONS.setChain(c.key); }catch(e){ return; }
+        Array.prototype.forEach.call(chainsBox.children,function(x){ x.classList.toggle('on', x.dataset.chain===c.key); });
+        statusEl.textContent='';
+      };
+      chainsBox.appendChild(b);
+    });
+  }
   function price(n){ return (window.MEMONS&&MEMONS.priceUsdt)?MEMONS.priceUsdt(n):(Math.floor(n/10)*18+(n%10)*2); }
   function render(){
     qn.textContent=q;
@@ -292,7 +319,7 @@ if(document.documentElement.classList.contains('embed')){
       else { bal.textContent='Connect wallet to see balance'; }
     }catch(e){}
   }
-  function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; refreshBal(); }
+  function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; renderChains(); refreshBal(); }
   function closeModal(){ overlay.classList.remove('on'); }
   document.getElementById('chargeBtn').addEventListener('click', openModal);
   document.getElementById('pmClose').addEventListener('click', closeModal);
