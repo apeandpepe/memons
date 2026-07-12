@@ -15,12 +15,8 @@
   body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
   a{color:inherit;text-decoration:none}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
-
-  /* ===== HEADER ===== */
-  .head{display:flex;align-items:center;justify-content:space-between;gap:20px;
-    padding:13px 34px;border-bottom:1px solid var(--hair)}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 34px;border-bottom:1px solid var(--hair)}
   .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-head);font-weight:800;letter-spacing:2px;font-size:19px}
-  .brand .mk{width:30px;height:30px;border:2px solid var(--gold);border-radius:7px;display:grid;place-items:center;color:var(--gold);font-family:var(--font-head);font-weight:800;font-size:15px}
   .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1.3px;color:#cfccc4;font-weight:500}
   .nav a{position:relative;padding:6px 0;transition:color .2s}
   .nav a:hover{color:#fff}
@@ -31,122 +27,104 @@
   .soc a{display:grid;place-items:center;transition:color .2s}
   .soc a:hover{color:var(--gold)}
   .soc svg{width:17px;height:17px;fill:currentColor}
-  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:9px 15px;border-radius:7px;
-    font-family:var(--font-body);font-weight:500;font-size:11.5px;letter-spacing:1.3px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:9px 15px;border-radius:7px;font-family:var(--font-body);font-weight:500;font-size:11.5px;letter-spacing:1.3px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
   .wbtn:hover{background:var(--gold);color:#000}
   .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
   @media(max-width:1040px){.nav,.soc{display:none}}
-
-  /* ===== OPEN CAPSULE PAGE ===== */
   body{position:relative}
   header.head{position:relative;z-index:5}
   .foot{position:relative;z-index:1}
-  .ocwrap{display:grid;grid-template-columns:230px minmax(0,520px) 245px;gap:18px;align-items:center;justify-content:center;
-    width:100%;max-width:1090px;margin:0 auto;padding:18px 28px 0;flex:1 1 auto;position:relative;z-index:1}
-
-  /* left info */
+  .ocwrap{display:grid;grid-template-columns:230px minmax(0,520px) 245px;gap:18px;align-items:center;justify-content:center;width:100%;max-width:1090px;margin:0 auto;padding:18px 28px 0;flex:1 1 auto;position:relative;z-index:1}
   .left{align-self:center}
   .title{font-family:var(--font-head),'Saira Condensed';font-weight:400;font-size:51px;line-height:.92;letter-spacing:1.5px}
   .title .a{display:block;background:linear-gradient(180deg,#e3b462,#b5873a);-webkit-background-clip:text;background-clip:text;color:transparent}
   .title .b{display:block;background:linear-gradient(180deg,#cb9a44,#8f6324);-webkit-background-clip:text;background-clip:text;color:transparent}
   .s1{font-family:var(--font-body);font-size:19px;font-weight:500;color:#a99d85;line-height:1.4;margin-top:18px}
-  .aboutbox{margin-top:18px;max-width:214px;border:1px solid var(--line);border-radius:13px;padding:14px 15px;
-    background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+  .aboutbox{margin-top:18px;max-width:214px;border:1px solid var(--line);border-radius:13px;padding:14px 15px;background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
   .aboutbox .abh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
   .aboutbox .abh .ic{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center}
   .aboutbox .abh .ic svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.3}
   .aboutbox .abh h4{font-size:11.5px;letter-spacing:2px;color:var(--gold);font-weight:600}
   .aboutbox p{font-family:var(--font-body);font-size:13.5px;color:#837c68;font-weight:400;line-height:1.5}
-
-  /* center video frame: video layered over the frame PNG (739x628) */
   .capframe{position:relative;width:100%;max-width:520px;aspect-ratio:739/628;margin:0 auto;justify-self:center;cursor:pointer}
   .capframe .capframeimg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
-  /* inner window (video area): aligned to the frame's black panel */
   .capframe .capwin{position:absolute;left:5.0%;top:5.9%;width:92.2%;height:87.6%;overflow:hidden;border-radius:9px;z-index:2}
   .capframe .capwin .capposter{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;z-index:1}
   .capframe .capwin .capvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:2;background:transparent}
-
-  /* right purchase panel */
-  .buybox{align-self:center;font-family:var(--font-body);border:1px solid var(--line);border-radius:14px;padding:20px 18px;
-    background:linear-gradient(180deg,rgba(255,255,255,.014),transparent)}
+  .buybox{align-self:center;font-family:var(--font-body);border:1px solid var(--line);border-radius:14px;padding:20px 18px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent)}
   .buybox .bt{font-family:var(--font-head),'Saira';font-weight:700;font-size:17px;color:#e6c878;letter-spacing:.5px}
   .buybox .ql{font-size:11px;letter-spacing:2px;color:#a4905a;margin:16px 0 9px;font-weight:600}
   .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden}
   .qty button{flex:none;width:46px;height:46px;background:transparent;border:0;color:var(--gold);font-size:20px;cursor:pointer;transition:.15s}
   .qty button:hover{background:rgba(233,184,74,.1)}
   .qty .qn{flex:1;text-align:center;font-family:var(--font-body);font-weight:600;font-size:16px;color:#fff}
-  .obtn{width:100%;margin-top:16px;border:0;cursor:pointer;border-radius:9px;font-family:var(--font-body);font-weight:700;
-    font-size:14px;letter-spacing:1.2px;padding:15px;transition:.25s;white-space:nowrap}
+  .obtn{width:100%;margin-top:16px;border:0;cursor:pointer;border-radius:9px;font-family:var(--font-body);font-weight:700;font-size:14px;letter-spacing:1.2px;padding:15px;transition:.25s;white-space:nowrap}
   .obtn.gold{background:linear-gradient(180deg,var(--gold-a),var(--gold-b));color:#1a1206}
   .obtn.gold:hover{box-shadow:0 0 30px rgba(233,184,74,.45);filter:brightness(1.05)}
-  .obtn.ghost{background:transparent;border:1px solid var(--line);color:#c9b06a;font-size:13px;letter-spacing:.6px;padding:9px 12px;
-    display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
+  .obtn.ghost{background:transparent;border:1px solid var(--line);color:#c9b06a;font-size:13px;letter-spacing:.6px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
   .obtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
-  .obtn.ghost .off{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    width:34px;height:34px;border-radius:7px;color:#1a1206;background:var(--gold);
-    font-size:9.5px;font-weight:800;letter-spacing:0;line-height:1.05}
+  .obtn.ghost .off{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;color:#1a1206;background:var(--gold);font-size:9.5px;font-weight:800;letter-spacing:0;line-height:1.05}
   .bnote{display:flex;gap:9px;align-items:flex-start;margin-top:16px}
   .bnote .ic{width:18px;height:18px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:11px;font-style:italic;font-family:var(--font-body)}
   .bnote p{font-size:11px;color:#978b62;font-weight:400;line-height:1.5}
-
-  /* bottom rarity cards */
-  .rarity{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;
-    width:100%;max-width:1500px;margin:14px auto 0;padding:0 28px 20px;position:relative;z-index:1}
-  .rc{width:192px;height:300px;border-radius:13px;position:relative;
-    border:1.5px solid var(--rc,#888);background:linear-gradient(180deg,#131313,#070707);color:var(--rc,#888);
-    box-shadow:0 0 36px -4px var(--rc,#888), 0 30px 50px -16px var(--rc,#888), inset 0 0 0 1px rgba(255,255,255,.06), inset 0 0 64px rgba(0,0,0,.5);
-    display:flex;flex-direction:column;padding:15px 16px}
+  .rarity{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;width:100%;max-width:1500px;margin:14px auto 0;padding:0 28px 20px;position:relative;z-index:1}
+  .rc{width:192px;height:300px;border-radius:13px;position:relative;border:1.5px solid var(--rc,#888);background:linear-gradient(180deg,#131313,#070707);color:var(--rc,#888);box-shadow:0 0 36px -4px var(--rc,#888), 0 30px 50px -16px var(--rc,#888), inset 0 0 0 1px rgba(255,255,255,.06), inset 0 0 64px rgba(0,0,0,.5);display:flex;flex-direction:column;padding:15px 16px}
   .rc:not(.hasimg){-webkit-box-reflect:below 9px linear-gradient(transparent,transparent 38%,rgba(255,255,255,.24))}
-  .rc::before{content:"";position:absolute;inset:0;z-index:0;opacity:.2;border-radius:12px;
-    background:radial-gradient(78% 55% at 50% 46%, var(--rc,#888) 0%, transparent 64%)}
+  .rc::before{content:"";position:absolute;inset:0;z-index:0;opacity:.2;border-radius:12px;background:radial-gradient(78% 55% at 50% 46%, var(--rc,#888) 0%, transparent 64%)}
   .rc .rl{position:relative;z-index:1;display:flex;align-items:center;gap:8px;font-family:var(--font-body);font-weight:700;font-size:11px;letter-spacing:1.5px;color:var(--rc,#888)}
   .rc .rl::before{content:"";width:9px;height:9px;background:var(--rc,#888);box-shadow:0 0 8px var(--rc,#888);transform:rotate(45deg)}
   .rc .rm{position:relative;z-index:1;flex:1;display:grid;place-items:center;padding:4px 0}
   .rc .rm svg{width:104px;height:104px;filter:drop-shadow(0 0 16px var(--rc,#888))}
-  /* whole card = user image (only when present) */
   .rc .rcimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:13px;z-index:3;display:block}
   .rc.hasimg .rl,.rc.hasimg .rm,.rc.hasimg .rf{display:none}
   .rc.hasimg::before,.rc.hasimg::after{display:none}
-  .rc.hasimg{border:0;background:none;box-shadow:none;padding:0;
-    -webkit-box-reflect:below 9px linear-gradient(transparent,transparent 62%,rgba(255,255,255,.28))}
+  .rc.hasimg{border:0;background:none;box-shadow:none;padding:0;-webkit-box-reflect:below 9px linear-gradient(transparent,transparent 62%,rgba(255,255,255,.28))}
   .rc .rf{position:relative;z-index:1;text-align:center;font-size:9.5px;letter-spacing:2px;color:var(--rc,#888);opacity:.85;font-weight:600}
   .rc.holo{border-color:#8a7a9a}
-  .rc.holo::after{content:"";position:absolute;inset:-1.5px;z-index:0;border-radius:12px;padding:1.5px;
-    background:linear-gradient(135deg,#e0556a,#E9B84A,#5b9bd5,#c468d8,#e0556a);
-    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-    -webkit-mask-composite:xor;mask-composite:exclude}
+  .rc.holo::after{content:"";position:absolute;inset:-1.5px;z-index:0;border-radius:12px;padding:1.5px;background:linear-gradient(135deg,#e0556a,#E9B84A,#5b9bd5,#c468d8,#e0556a);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
   .rc.holo .rl,.rc.holo .rf{color:#d9b8ff}
   .rc.holo .rl::before{background:#c46bff;box-shadow:0 0 8px #c46bff}
   .rc.holo .rm svg{filter:drop-shadow(0 0 14px rgba(196,107,255,.6))}
-
-
-  @media(max-width:980px){
-    .ocwrap{grid-template-columns:1fr;gap:26px;max-width:680px;text-align:center}
-    .left{order:2;text-align:left} .capframe{order:1} .buybox{order:3;text-align:left}
-    .title{font-size:42px}
-  }
-  @media(max-width:560px){
-    .rc{width:150px;height:182px} .rc .rm{font-size:66px}
-  }
-
-  /* ===== FOOTER ===== */
+  @media(max-width:980px){.ocwrap{grid-template-columns:1fr;gap:26px;max-width:680px;text-align:center}.left{order:2;text-align:left}.capframe{order:1}.buybox{order:3;text-align:left}.title{font-size:42px}}
+  @media(max-width:560px){.rc{width:150px;height:182px}.rc .rm{font-size:66px}}
   .foot{text-align:center;padding:12px 20px 14px;margin-top:6px}
   .foot span{font-size:11px;letter-spacing:2.5px;color:#6a675f}
   .foot b{color:#8d8a82;font-weight:500}
   html.embed .head{display:none!important}
-  /* ===== Scrollbar: thin subtle gold (horizontal bar hidden) ===== */
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:rgba(233,184,74,.30);border-radius:8px}
   ::-webkit-scrollbar-thumb:hover{background:rgba(233,184,74,.55)}
   ::-webkit-scrollbar:horizontal{height:0;display:none}
   html{scrollbar-width:thin;scrollbar-color:rgba(233,184,74,.4) transparent}
+  /* ===== charge popup ===== */
+  .pm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .pm-overlay.on{display:flex}
+  .pm{width:100%;max-width:370px;background:linear-gradient(180deg,#131009,#0a0805);border:1px solid var(--line);border-radius:16px;padding:24px 22px;font-family:var(--font-body);position:relative}
+  .pm h3{font-family:var(--font-head),'Saira';font-weight:700;font-size:19px;color:#e6c878;letter-spacing:.5px;margin-bottom:4px}
+  .pm .psub{font-size:12px;color:#8d8a82;margin-bottom:18px}
+  .pm-close{position:absolute;top:14px;right:18px;background:none;border:0;color:#8d8a82;font-size:24px;cursor:pointer;line-height:1}
+  .pm-close:hover{color:var(--gold)}
+  .pm-presets{display:flex;gap:8px;margin-bottom:12px}
+  .pm-presets button{flex:1;padding:10px 0;border:1px solid var(--line);border-radius:9px;background:transparent;color:#c9b06a;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+  .pm-presets button:hover,.pm-presets button.on{border-color:var(--gold);background:rgba(233,184,74,.12);color:var(--gold)}
+  .pm-qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:16px}
+  .pm-qty button{width:46px;height:46px;background:transparent;border:0;color:var(--gold);font-size:20px;cursor:pointer}
+  .pm-qty button:hover{background:rgba(233,184,74,.1)}
+  .pm-qty .qn{flex:1;text-align:center;font-weight:600;font-size:16px;color:#fff}
+  .pm-price{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-size:13px;color:#a99d85}
+  .pm-price b{font-family:var(--font-head),'Saira';font-size:26px;color:#fff;font-weight:700}
+  .pm-save{font-size:11px;color:#6fbf73;margin-bottom:16px;min-height:14px}
+  .pm-pay{width:100%;border:0;cursor:pointer;border-radius:9px;font-family:var(--font-body);font-weight:700;font-size:14px;letter-spacing:1px;padding:15px;background:linear-gradient(180deg,var(--gold-a),var(--gold-b));color:#1a1206;transition:.25s}
+  .pm-pay:hover{box-shadow:0 0 30px rgba(233,184,74,.45);filter:brightness(1.05)}
+  .pm-pay:disabled{opacity:.55;cursor:default;box-shadow:none;filter:none}
+  .pm-status{font-size:12px;color:#978b62;margin-top:12px;text-align:center;min-height:16px;line-height:1.5}
+  .pm-bal{font-size:12px;color:#a99d85;margin-top:14px;text-align:center;border-top:1px solid var(--hair);padding-top:12px}
+  .pm-bal b{color:var(--gold)}
 </style>
 <script>/*embed-mode*/if(location.hash.indexOf("embed")>=0)document.documentElement.classList.add("embed");</script>
 </head>
 <body>
-
-<!-- HEADER -->
 <header class="head">
   <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
   <nav class="nav">
@@ -164,8 +142,6 @@
     <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
   </div>
 </header>
-
-<!-- OPEN CAPSULE -->
 <section class="ocwrap">
   <div class="left">
     <h1 class="title"><span class="a">MEMONS</span><span class="b">CAPSULE</span></h1>
@@ -178,9 +154,6 @@
       <p>Each capsule contains<br>a randomized MEMONS card.<br>The rarity is based on probability.<br>Better luck, bigger memes.</p>
     </div>
   </div>
-
-  <!-- center video frame (1120x1056 ratio, video fills the frame). video: images/open-capsule/capsule.mp4 -->
-  <!-- center video frame: video layered over the frame PNG. video: images/open-capsule/capsule.mp4 -->
   <div class="capframe" id="capFrame">
     <div class="capwin">
       <img class="capposter" src="images/open-capsule/capsule.png" alt="">
@@ -190,7 +163,6 @@
     </div>
     <img class="capframeimg" src="images/open-capsule/frame.png" alt="">
   </div>
-
   <div class="buybox">
     <div class="bt">MEMONS CAPSULE 001</div>
     <div class="ql">QUANTITY</div>
@@ -201,14 +173,13 @@
     </div>
     <button class="obtn gold" id="openOne">OPEN CAPSULE</button>
     <button class="obtn ghost" id="openTen"><span class="lbl">OPEN 10 CAPSULES</span><span class="off">10%<br>OFF</span></button>
+    <button class="obtn gold" id="chargeBtn" style="margin-top:12px">CHARGE PULLS · USDT</button>
     <div class="bnote">
       <span class="ic">i</span>
-      <p>Opening a capsule will consume the selected quantity.</p>
+      <p>Charge pull credits with USDT, then open capsules anytime.</p>
     </div>
   </div>
 </section>
-
-<!-- RARITY -->
 <section class="rarity">
   <div class="rc" style="--rc:#cfccc4"><img class="rcimg" src="images/open-capsule/card-common.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
   <div class="rc" style="--rc:#5b9bd5"><img class="rcimg" src="images/open-capsule/card-rare.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
@@ -216,28 +187,20 @@
   <div class="rc" style="--rc:#E9B84A"><img class="rcimg" src="images/open-capsule/card-legendary.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
   <div class="rc holo" style="--rc:#e0556a"><img class="rcimg" src="images/open-capsule/card-mythic.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
 </section>
-
-<!-- FOOTER -->
 <footer class="foot"><span><b>MEMONS CAPSULE</b>&nbsp;&nbsp;|&nbsp;&nbsp;POWERED BY APEPE</span></footer>
-
 <script>
-/* quantity +/- */
 (function(){
   const qn=document.getElementById('qn'); let q=1;
   const set=v=>{ q=Math.max(1,Math.min(99,v)); qn.textContent=q; };
   document.getElementById('qMinus').onclick=()=>set(q-1);
   document.getElementById('qPlus').onclick=()=>set(q+1);
 })();
-
-/* open capsule -> standalone pull page (click frame/M/button) */
 (function(){
   const go=()=>{ var u='capsule-reveal.html'; if(window.top!==window.self){ try{ window.top.location.href=u; return; }catch(e){} } location.href=u; };
   document.getElementById('capFrame').addEventListener('click', go);
   document.getElementById('openOne').addEventListener('click', go);
   document.getElementById('openTen').addEventListener('click', go);
 })();
-
-/* video mute toggle (stops frame-click propagation) */
 (function(){
   const vid=document.getElementById('capVid'), mute=document.getElementById('capMute');
   if(vid && matchMedia('(prefers-reduced-motion: reduce)').matches){ try{vid.pause();}catch(e){} }
@@ -258,9 +221,8 @@ if(document.documentElement.classList.contains('embed')){
 }
 </script>
 <script>
-/* horizontal slider: scroll self vertically; at vertical edge, forward wheel to parent to change slide */
 (function(){
-  if(window.top===window.self) return; // only when embedded
+  if(window.top===window.self) return;
   var lock=false;
   window.addEventListener('wheel', function(e){
     var de=document.scrollingElement||document.documentElement;
@@ -268,12 +230,101 @@ if(document.documentElement.classList.contains('embed')){
     var canV=de.scrollHeight>de.clientHeight+2;
     var atBottom=de.scrollTop+de.clientHeight>=de.scrollHeight-2;
     var atTop=de.scrollTop<=2;
-    if(canV && ((dir>0&&!atBottom)||(dir<0&&!atTop))) return; // scroll within this page first
+    if(canV && ((dir>0&&!atBottom)||(dir<0&&!atTop))) return;
     e.preventDefault();
     if(lock) return; lock=true; setTimeout(function(){lock=false;},700);
     try{ parent.postMessage({navSlide:dir}, '*'); }catch(_){}
   }, {passive:false});
 })();
 </script>
+<!-- ===== CHARGE POPUP ===== -->
+<div class="pm-overlay" id="pmOverlay">
+  <div class="pm">
+    <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
+    <h3>CHARGE PULLS</h3>
+    <div class="psub">Buy pull credits with USDT (Polygon). 1 pull = 2 USDT · 10-pack = 18 USDT (10% off)</div>
+    <div class="pm-presets" id="pmPresets">
+      <button data-n="1">1</button>
+      <button data-n="10" class="on">10</button>
+      <button data-n="30">30</button>
+    </div>
+    <div class="pm-qty">
+      <button id="pmMinus" aria-label="Decrease">&minus;</button>
+      <span class="qn" id="pmQn">10</span>
+      <button id="pmPlus" aria-label="Increase">+</button>
+    </div>
+    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">18 USDT</b></div>
+    <div class="pm-save" id="pmSave"></div>
+    <button class="pm-pay" id="pmPay">PAY 18 USDT</button>
+    <div class="pm-status" id="pmStatus"></div>
+    <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
+  </div>
+</div>
+
+<script src="gacha-client.js"></script>
+<script src="memons-pay.js"></script>
+<script>
+(function(){
+  var overlay=document.getElementById('pmOverlay'),
+      qn=document.getElementById('pmQn'), total=document.getElementById('pmTotal'),
+      pullsLbl=document.getElementById('pmPulls'), save=document.getElementById('pmSave'),
+      payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
+      bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets');
+  var q=10;
+  function price(n){ return (window.MEMONS&&MEMONS.priceUsdt)?MEMONS.priceUsdt(n):(Math.floor(n/10)*18+(n%10)*2); }
+  function render(){
+    qn.textContent=q;
+    var p=price(q), full=q*2;
+    total.textContent=p+' USDT';
+    pullsLbl.textContent=q+(q>1?' pulls':' pull');
+    payBtn.textContent='PAY '+p+' USDT';
+    save.textContent = full>p ? ('Save '+(full-p)+' USDT with 10-pack pricing') : '';
+    Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
+  }
+  function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }
+  document.getElementById('pmMinus').onclick=function(){ set(q-1); };
+  document.getElementById('pmPlus').onclick=function(){ set(q+1); };
+  Array.prototype.forEach.call(presets.children,function(b){ b.onclick=function(){ set(+b.dataset.n); }; });
+
+  async function refreshBal(){
+    try{
+      if(window.MEMONS&&MEMONS.connected){ var s=await MEMONS.state(); bal.innerHTML='Remaining pulls: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>'; }
+      else { bal.textContent='Connect wallet to see balance'; }
+    }catch(e){}
+  }
+  function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; refreshBal(); }
+  function closeModal(){ overlay.classList.remove('on'); }
+  document.getElementById('chargeBtn').addEventListener('click', openModal);
+  document.getElementById('pmClose').addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
+
+  payBtn.addEventListener('click', async function(){
+    payBtn.disabled=true; statusEl.style.color='#978b62';
+    try{
+      if(!(window.MEMONS&&MEMONS.connected)){ statusEl.textContent='Connecting wallet…'; await MEMONS.connect(); }
+      var r=await MEMONS.pay(q,{ onStatus:function(s,c,n){
+        if(s==='sending') statusEl.textContent='Confirm the payment in your wallet…';
+        else if(s==='confirming') statusEl.textContent='Confirming on-chain… '+(c!=null?(c+'/'+(n||20)):'');
+        else if(s==='credited') statusEl.textContent='Charged!';
+      }});
+      statusEl.style.color='#6fbf73';
+      statusEl.textContent='Charged +'+r.granted+' pulls!';
+      await refreshBal();
+    }catch(e){
+      statusEl.style.color='#e0776a';
+      statusEl.textContent=(e&&e.message)?e.message:'Payment failed.';
+    }finally{ payBtn.disabled=false; }
+  });
+  render();
+
+  // header connect button
+  var hw=document.getElementById('headWallet');
+  if(hw){ hw.addEventListener('click', async function(){
+    try{ if(window.MEMONS&&!MEMONS.connected){ await MEMONS.connect(); } var a=(window.MEMONS&&MEMONS.address)||''; if(a){ hw.innerHTML=a.slice(0,6)+'…'+a.slice(-4); } }catch(e){}
+  }); }
+})();
+</script>
+<script src="gacha-client.js"></script>
+<script src="mypage-entry.js"></script>
 </body>
 </html>

@@ -1,0 +1,226 @@
+// =====================================================================
+//  MEMONS - USDT payment (frontend add-on for gacha-client)
+//  Package A pricing: 1 pull = 2 USDT, 10-pack = 18 USDT (10% off).
+//    price(N) = floor(N/10)*18 + (N%10)*2   (USDT)
+//  Flow: pay -> on-chain transfer -> verify-payment -> pulls credited.
+//  Requires window.ethereum + MEMONS.connect() (session JWT via MEMONS.token).
+//  Exposes: MEMONS.priceUsdt(N), MEMONS.pay(N, {onStatus}).
+//
+//  NETWORK SWITCH (single line):
+//    TESTNET = true  -> Polygon Amoy testnet, test USDC  (free, use faucet)
+//    TESTNET = false -> Polygon mainnet, real USDT       (production)
+//  The deployed verify-payment function must be in the SAME mode.
+// =====================================================================
+(function () {
+  const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
+
+  const API = "https://neixdrtamznrooougcda.supabase.co/functions/v1";
+  const RECEIVER = "0xcCe26E367aC0c04e0a9ADD40e1141d6eaBF93b8c";
+  const USDT_DECIMALS = 6;     // mainnet USDT and Amoy test USDC both use 6
+  const SINGLE_USDT = 2;       // 1 pull
+  const BUNDLE10_USDT = 18;    // 10 pulls (10% off)
+  const TRANSFER_SELECTOR = "0xa9059cbb"; // transfer(address,uint256)
+
+  // --- network config, selected by TESTNET -----------------------------
+  const NET = TESTNET ? {
+    token: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582", // Amoy test USDC (6 dec)
+    params: {
+      chainId: "0x13882", // 80002
+      chainName: "Polygon Amoy Testnet",
+      nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+      rpcUrls: ["https://polygon-amoy.g.alchemy.com/v2/XU8qT9N97sRNDsl5mK07n"],
+      blockExplorerUrls: ["https://amoy.polygonscan.com"]
+    }
+  } : {
+    token: "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", // mainnet USDT (6 dec)
+    params: {
+      chainId: "0x89", // 137
+      chainName: "Polygon Mainnet",
+      nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+      rpcUrls: ["https://polygon-mainnet.g.alchemy.com/v2/XU8qT9N97sRNDsl5mK07n"],
+      blockExplorerUrls: ["https://polygonscan.com"]
+    }
+  };
+  const TOKEN_ADDR = NET.token;
+  const CHAIN_ID = NET.params.chainId;
+
+  const M = (window.MEMONS = window.MEMONS || {});
+
+  // --- pricing (must mirror the server) --------------------------------
+  function priceUsdt(pulls) {
+    const n = parseInt(pulls, 10) || 0;
+    return Math.floor(n / 10) * BUNDLE10_USDT + (n % 10) * SINGLE_USDT;
+  }
+  function priceRaw(pulls) {
+    const dec = 10n ** BigInt(USDT_DECIMALS);
+    const n = BigInt(parseInt(pulls, 10) || 0);
+    return (n / 10n) * BigInt(BUNDLE10_USDT) * dec + (n % 10n) * BigInt(SINGLE_USDT) * dec;
+  }
+  M.priceUsdt = priceUsdt;
+
+  // --- helpers ---------------------------------------------------------
+  function pad32(h) { return h.padStart(64, "0"); }
+  function encodeTransfer(to, amount) {
+    return TRANSFER_SELECTOR + pad32(to.toLowerCase().replace(/^0x/, "")) + pad32(amount.toString(16));
+  }
+  function getToken() {
+    return (M.token || M._session || localStorage.getItem("memons_jwt") || "").trim();
+  }
+  async function ensureNetwork(eth) {
+    const cid = await eth.request({ method: "eth_chainId" });
+    if (cid === CHAIN_ID) return;
+    try {
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_ID }] });
+    } catch (e) {
+      const code = e && (e.code || (e.data && e.data.originalError && e.data.originalError.code));
+      if (code === 4902) {
+        // chain not added to the wallet yet -> add it (this also switches to it)
+        await eth.request({ method: "wallet_addEthereumChain", params: [NET.params] });
+      } else {
+        throw new Error("Please switch your wallet to " + NET.params.chainName + ".");
+      }
+    }
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // --- pending payments: survive refresh / closed tab -------------------
+  // A sent tx is money already spent. We store it locally the moment it is
+  // sent, and retry verification until the server credits it. Nothing is lost
+  // if the user closes the browser mid-confirmation.
+  const PENDING_KEY = "memons_pending_payments_v1";
+  function loadPending() {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function savePending(list) {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function addPending(txHash, pulls, from) {
+    const list = loadPending();
+    if (!list.some((p) => p.tx === txHash)) {
+      list.push({ tx: txHash, pulls, from, at: Date.now() });
+      savePending(list);
+    }
+  }
+  function removePending(txHash) {
+    savePending(loadPending().filter((p) => p.tx !== txHash));
+  }
+  M.pendingPayments = loadPending;
+
+  // verify one tx (used both by pay() and by the auto-recovery below)
+  async function verifyTx(txHash, token) {
+    const res = await fetch(`${API}/verify-payment`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tx_hash: txHash }),
+    });
+    const j = await res.json().catch(() => ({}));
+    return { res, j };
+  }
+
+  // Retry every unfinished payment. Safe to call any time: the server is
+  // idempotent (already-credited txs just return duplicate:true).
+  M.recoverPayments = async function recoverPayments(opts = {}) {
+    const onStatus = opts.onStatus || (() => {});
+    const token = getToken();
+    if (!token) return { recovered: 0, pending: loadPending().length };
+    let recovered = 0;
+    for (const p of loadPending()) {
+      try {
+        const { res, j } = await verifyTx(p.tx, token);
+        if (res.ok && j.ok) { removePending(p.tx); recovered += j.granted || 0; onStatus("credited", p.tx, j.granted); continue; }
+        // still confirming -> keep it for next time
+        if (res.status === 202 || j.error === "TX_NOT_FOUND" || j.error === "PENDING_CONFIRMATIONS") { onStatus("pending", p.tx); continue; }
+        // permanently rejected (failed tx / wrong amount) -> stop retrying
+        if (j.error === "TX_FAILED" || j.error === "AMOUNT_NO_MATCHING_PACKAGE" ||
+            j.error === "NO_TOKEN_TRANSFER_TO_RECEIVER" || j.error === "SENDER_MISMATCH") {
+          removePending(p.tx); onStatus("rejected", p.tx, j.error); continue;
+        }
+        onStatus("pending", p.tx);   // unknown/transient error -> retry later
+      } catch (e) { /* network hiccup: keep it and retry later */ }
+    }
+    return { recovered, pending: loadPending().length };
+  };
+
+  // --- main: pay for N pulls -------------------------------------------
+  M.pay = async function pay(numPulls, opts = {}) {
+    const pulls = parseInt(numPulls, 10);
+    if (!Number.isInteger(pulls) || pulls < 1) throw new Error("Invalid pull count.");
+    const eth = window.ethereum;
+    if (!eth) throw new Error("No wallet found. Install MetaMask.");
+    const token = getToken();
+    if (!token) throw new Error("Please connect your wallet first.");
+
+    await ensureNetwork(eth);
+    const [from] = await eth.request({ method: "eth_requestAccounts" });
+    const amount = priceRaw(pulls);
+    const data = encodeTransfer(RECEIVER, amount);
+
+    const onStatus = opts.onStatus || (() => {});
+    onStatus("sending");
+    // Polygon (both mainnet and Amoy) enforces a minimum priority fee of
+    // ~25 gwei; wallets often default below this and the RPC rejects the tx.
+    // We set an explicit floor. With EIP-1559 you are only charged
+    // baseFee + priorityFee (never the max), so a generous ceiling is safe.
+    const txParams = {
+      from,
+      to: TOKEN_ADDR,
+      data,
+      value: "0x0",
+      // Polygon mainnet enforces a ~25 gwei minimum priority fee; wallets often
+      // default below it and the RPC rejects the tx. With EIP-1559 you only pay
+      // baseFee + priorityFee (never the max), so a generous ceiling is safe.
+      maxPriorityFeePerGas: "0x6FC23AC00", // 30 gwei (>= 25 gwei floor)
+      maxFeePerGas: "0x174876E800",        // 100 gwei ceiling
+    };
+    const txHash = await eth.request({
+      method: "eth_sendTransaction",
+      params: [txParams],
+    });
+    // money has left the wallet -> record it immediately so a refresh/close
+    // can never lose the receipt
+    addPending(txHash, pulls, from);
+
+    onStatus("confirming");
+    const deadline = Date.now() + 5 * 60 * 1000;
+    while (Date.now() < deadline) {
+      const { res, j } = await verifyTx(txHash, token);
+      if (res.ok && j.ok) {
+        removePending(txHash);
+        onStatus("credited");
+        return { ok: true, granted: j.granted, txHash, duplicate: !!j.duplicate };
+      }
+      if (res.status === 202 || j.error === "TX_NOT_FOUND" || j.error === "PENDING_CONFIRMATIONS") {
+        onStatus("confirming", j.confirmations, j.need); await sleep(5000); continue;
+      }
+      // definitive rejection -> stop retrying this tx
+      removePending(txHash);
+      throw new Error(j.error || "Payment verification failed.");
+    }
+    // Not confirmed within the window. The tx is SAVED and will be retried
+    // automatically on the next page load — the payment is not lost.
+    onStatus("pending", txHash);
+    return { ok: false, pending: true, txHash,
+             message: "Payment sent but not confirmed yet. It will be credited automatically — you can safely leave this page." };
+  };
+
+  // --- auto-recovery on page load --------------------------------------
+  // If the user paid but the tab was closed before confirmation, credit it now.
+  function autoRecover() {
+    if (!loadPending().length) return;
+    // wait until a wallet session exists, then retry quietly
+    let tries = 0;
+    const t = setInterval(async () => {
+      tries++;
+      if (getToken()) {
+        clearInterval(t);
+        try {
+          const r = await M.recoverPayments();
+          if (r.recovered > 0 && window.console) console.info("[MEMONS] recovered pending payment(s): +" + r.recovered + " pulls");
+          if (r.recovered > 0) document.dispatchEvent(new CustomEvent("memons:payment-recovered", { detail: r }));
+        } catch (e) {}
+      } else if (tries > 20) { clearInterval(t); }   // ~20s: user never connected
+    }, 1000);
+  }
+  if (document.readyState !== "loading") autoRecover();
+  else document.addEventListener("DOMContentLoaded", autoRecover);
+})();
