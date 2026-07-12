@@ -58,10 +58,10 @@
   @media(max-width:480px){ .mgrid{grid-template-columns:repeat(2,1fr);gap:10px} }
   .multi h3{font-size:14px;letter-spacing:3px;color:var(--gold)}
   .mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;max-width:min(92vw,1280px);width:100%}
-  .mcard{position:relative;border-radius:12px;overflow:hidden;border:1.5px solid var(--rc,#cfccc4);background:#070707;
-    box-shadow:0 0 22px -8px var(--rc,#cfccc4);opacity:0;transform:scale(.8);animation:pop .4s forwards}
+  .mcard{position:relative;opacity:0;transform:scale(.8);animation:pop .4s forwards}
   @keyframes pop{to{opacity:1;transform:scale(1)}}
-  .mcard img{width:100%;aspect-ratio:958/1280;object-fit:contain;display:block;background:#000}
+  .mcard img{width:100%;height:auto;display:block;
+    border-radius:10px;box-shadow:0 0 42px -4px var(--rc,#E9B84A)}
   .mcard .mf{text-align:center;padding:7px 3px 9px}
   .mcard .mn{font-size:12.5px;color:#fff;font-weight:600}
   .mcard .mr{font-size:10.5px;color:var(--rc,#cfccc4);letter-spacing:1px}
@@ -183,6 +183,68 @@
   .lab-note{font-size:9px;color:#7a7a7a;margin-top:4px;line-height:1.4}
   .lab-note b{color:#5cc8a0}
   .lab-note .miss{color:#c87a7a}
+
+  /* ---- ten-pull reveal styles: A (split) and B (sequential) ---- */
+
+  /* shine sweep on each card as it lands (mirrors the single-card reveal) */
+  .mshine{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;border-radius:10px;
+    background:linear-gradient(115deg,transparent 34%,rgba(255,255,255,.45) 48%,rgba(255,255,255,.75) 52%,transparent 66%);
+    mix-blend-mode:screen;transform:translateX(-120%);
+    animation:mshineSweep .55s ease-out forwards}
+  @keyframes mshineSweep{
+    0%   {opacity:0; transform:translateX(-120%)}
+    18%  {opacity:1}
+    100% {opacity:0; transform:translateX(120%)}
+  }
+  /* final flash once all ten have landed */
+  .mgrid.done .mcard img{animation:mland .55s ease-out}
+  @keyframes mland{
+    0%   {box-shadow:0 0 42px -4px var(--rc,#E9B84A)}
+    40%  {box-shadow:0 0 70px 2px var(--rc,#E9B84A)}
+    100% {box-shadow:0 0 42px -4px var(--rc,#E9B84A)}
+  }
+
+  /* B: cards appear one after another, flipping up into place */
+  .mcard.seq{
+    animation:none !important;
+    opacity:0;
+    transform: perspective(900px) rotateY(-70deg) scale(.92);
+    transform-origin:center;
+    animation: seqIn .42s cubic-bezier(.2,.85,.3,1) forwards !important;
+  }
+  @keyframes seqIn{
+    0%   { opacity:0; transform: perspective(900px) rotateY(-70deg) scale(.92); }
+    60%  { opacity:1; }
+    100% { opacity:1; transform: perspective(900px) rotateY(0) scale(1); }
+  }
+
+  /* ten-pull: one card in the middle, then it splits into the ten */
+  .mcard.split{
+    animation:none;   /* override the default pop */
+    opacity:0;
+    transform: translate(var(--dx,0), var(--dy,0)) scale(1.35);
+    animation: splitOut .5s cubic-bezier(.2,.9,.25,1) forwards !important;
+  }
+  @keyframes splitOut{
+    0%   { opacity:0; transform: translate(var(--dx,0), var(--dy,0)) scale(1.35); }
+    12%  { opacity:1; transform: translate(var(--dx,0), var(--dy,0)) scale(1.35); }
+    100% { opacity:1; transform: translate(0,0) scale(1); }
+  }
+
+  /* while the 10-pull result is open, the stage buttons underneath must not show */
+  body.multi-open .acts{display:none !important}
+
+  /* 10-pull result footer: share + continue side by side */
+  .macts{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:18px;flex-wrap:wrap}
+
+  /* share on X */
+  .b.share{border:1px solid rgba(255,255,255,.22);color:#e8e6e0;background:rgba(255,255,255,.04)}
+  .b.share:hover{border-color:#fff;background:rgba(255,255,255,.1)}
+  /* rare pulls are worth bragging about: make the button pop */
+  .b.share.hot{border-color:var(--rc,#E9B84A);color:var(--rc,#E9B84A);
+    background:color-mix(in srgb, var(--rc,#E9B84A) 12%, transparent);
+    box-shadow:0 0 22px -8px var(--rc,#E9B84A)}
+  .b.share.hot:hover{background:color-mix(in srgb, var(--rc,#E9B84A) 22%, transparent)}
 
   /* pulls remaining + charge */
   .pullsbox{display:inline-flex;align-items:center;gap:10px;margin-left:14px;padding:0 4px 0 14px;
@@ -344,7 +406,7 @@
 
   <div class="info">
     <div class="hint" id="hint">CLICK THE CAPSULE · OR OPEN ×10</div>
-    <div class="you" id="you">YOU GOT</div>
+    <div class="you" id="you">OPENED</div>
     <div class="got" id="got"><span id="cName">APEPE</span> <b id="rr">LEGENDARY</b></div>
   </div>
 
@@ -356,6 +418,11 @@
       <span class="pv" id="pullsLeft">–</span>
       <button class="b charge" id="chargeBtn">＋ CHARGE</button>
     </div>
+    <button class="b share hidden" id="shareBtn" title="Share on X">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="vertical-align:-2px;margin-right:6px">
+        <path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/>
+      </svg>SHARE
+    </button>
     <button class="b ghost hidden" id="again">CONTINUE</button>
   </div>
 
@@ -370,10 +437,17 @@
 
   <!-- 10-pull result -->
   <div class="multi" id="multi">
-    <h3>YOU GOT ×10</h3>
+    <h3>OPENED ×10</h3>
     <div class="mgrid" id="mgrid"></div>
     <div class="summary" id="msum"></div>
-    <button class="b solid" id="mclose">CONTINUE</button>
+    <div class="macts">
+      <button class="b share" id="mshareBtn" title="Share on X">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="vertical-align:-2px;margin-right:6px">
+          <path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/>
+        </svg>SHARE
+      </button>
+      <button class="b solid" id="mclose">CONTINUE</button>
+    </div>
   </div>
 
 
@@ -728,10 +802,11 @@ function singleReveal(it){
   $('cName').textContent=it.char; $('rr').textContent=it.rarity;
   [ $('result'),$('got') ].forEach(el=>el.style.setProperty('--rc',it.color));
   $('rr').style.color=it.color;
-  const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'DUP':'NEW';
+  const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'COLLECTED':'NEW';
   const reveal=()=>{
     $('stage').classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
+    showShareSingle(it);
     refreshStatus(); busy=false;
   };
   const src = LAB.testCard || it.img;
@@ -748,7 +823,7 @@ async function ten(){
     if(!await ensureConnected()) return;
     busy=true; closeResult();
     items=[];
-    try{ for(let i=0;i<10;i++){ const r=await MEMONS.pull(); items.push(mapCard(r.card)); } }
+    try{ for(let i=0;i<10;i++){ const r=await MEMONS.pull(); items.push(mapCard(r.card)); refreshPulls(); } }
     catch(e){ busy=false; revToast(pullErrMsg(e) + (items.length?` (${items.length} succeeded)`:'')); if(!items.length) return; }
   } else {
     busy=true; closeResult();
@@ -761,16 +836,59 @@ async function ten(){
   playOpen(()=>{ tenReveal(items); });
 }
 function tenReveal(items){
+  document.body.classList.add('multi-open');   // hide the stage buttons behind the result
   const grid=$('mgrid');
   grid.innerHTML=items.map((it,i)=>`
-    <div class="mcard" style="--rc:${it.color};animation-delay:${i*0.06}s">
-      <span class="mb ${it.dup?'dup':'new'}">${it.dup?'DUP':'NEW'}</span>
+    <div class="mcard" style="--rc:${it.color}">
+      <span class="mb ${it.dup?'dup':'new'}">${it.dup?'COLLECTED':'NEW'}</span>
       <img src="${LAB.testCard || it.img}" alt="">
-      <div class="mf"><div class="mn">${it.char}</div><div class="mr">${it.rarity}</div></div>
     </div>`).join('');
+
+  /* Reveal style:
+       'split'  (A) one card in the middle, then it splits into the ten
+       'seq'    (B) the ten are revealed one after another                    */
+  const MODE = (window.TEN_REVEAL_MODE || 'seq');   // B: one card at a time
+
+  requestAnimationFrame(()=>{
+    const cards = [...grid.children];
+
+    if (MODE === 'seq') {
+      cards.forEach((el,i)=>{
+        const delay = i * 0.13;
+        el.style.animationDelay = delay + 's';
+        el.classList.add('seq');
+        // a shine sweeps across each card as it lands, like the single reveal
+        const sh = document.createElement('span');
+        sh.className = 'mshine';
+        sh.style.animationDelay = (delay + 0.30) + 's';
+        el.appendChild(sh);
+      });
+      // once every card has landed, flash the whole set
+      const last = (cards.length - 1) * 0.13 + 0.55;
+      setTimeout(()=>{ grid.classList.add('done'); }, last * 1000);
+      return;
+    }
+
+    // A: every card starts stacked on the centre of the grid, then flies out
+    const gb = grid.getBoundingClientRect();
+    const cx = gb.width  / 2;
+    const cy = gb.height / 2;
+    cards.forEach((el,i)=>{
+      const r  = el.getBoundingClientRect();
+      const ex = (r.left - gb.left) + r.width  / 2;
+      const ey = (r.top  - gb.top ) + r.height / 2;
+      el.style.setProperty('--dx', (cx - ex) + 'px');
+      el.style.setProperty('--dy', (cy - ey) + 'px');
+      el.style.animationDelay = (0.45 + i * 0.05) + 's';
+      el.classList.add('split');
+    });
+  });
   const tal={}; items.forEach(p=>tal[p.rarity]=(tal[p.rarity]||0)+1);
   $('msum').innerHTML=RAR.filter(r=>tal[r.label]).map(r=>`<span style="color:${r.color}">${r.label} <b>×${tal[r.label]}</b></span>`).join('');
   $('multi').classList.add('show'); $('stage').classList.remove('opening');
+  // the 10-pull screen has its own footer -> hide the stage buttons behind it
+  document.body.classList.add('multi-open');
+  showShareTen(items);
   refreshStatus(); busy=false;
 }
 function __oldSingle(){
@@ -782,9 +900,10 @@ function __oldSingle(){
     $('art').src = LAB.testCard || it.img; $('cName').textContent=it.char; $('rr').textContent=it.rarity;
     [ $('result'),$('got') ].forEach(el=>el.style.setProperty('--rc',it.color));
     $('rr').style.color=it.color;
-    const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'DUP':'NEW';
+    const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'COLLECTED':'NEW';
     $('stage').classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
+    showShareSingle(it);
     refreshStatus(); busy=false;
   });
 }
@@ -799,9 +918,8 @@ function __oldTen(){
     const grid=$('mgrid');
     grid.innerHTML=items.map((it,i)=>`
       <div class="mcard" style="--rc:${it.color};animation-delay:${i*0.06}s">
-        <span class="mb ${it.dup?'dup':'new'}">${it.dup?'DUP':'NEW'}</span>
+        <span class="mb ${it.dup?'dup':'new'}">${it.dup?'COLLECTED':'NEW'}</span>
         <img src="${LAB.testCard || it.img}" alt="">
-        <div class="mf"><div class="mn">${it.char}</div><div class="mr">${it.rarity}</div></div>
       </div>`).join('');
     const tal={}; items.forEach(p=>tal[p.rarity]=(tal[p.rarity]||0)+1);
     $('msum').innerHTML=RAR.filter(r=>tal[r.label]).map(r=>`<span style="color:${r.color}">${r.label} <b>×${tal[r.label]}</b></span>`).join('');
@@ -809,22 +927,89 @@ function __oldTen(){
     refreshStatus(); busy=false;
   });
 }
+
+/* ---- share on X --------------------------------------------------------
+   Fires straight after a reveal, while the pull still feels exciting.
+   Rare pulls get a highlighted button (people brag about those).           */
+const SHARE_URL  = location.origin + '/open-capsule.html';
+const SHARE_TAGS = 'MEMONS,APEPE';
+const HOT = ['epic','legendary','mythic'];   // worth bragging about
+
+function openShare(text, it){
+  // Share through /api/share so X can read Open Graph tags and render the
+  // card artwork. The page itself just redirects a human to the capsule.
+  let url = SHARE_URL;
+  if (it) {
+    const q = new URLSearchParams();
+    if (it.img)    q.set('img', it.img);
+    if (it.rarity) q.set('r', it.rarity);
+    url = location.origin + '/api/share?' + q.toString();
+  }
+  const u = 'https://twitter.com/intent/tweet'
+    + '?text=' + encodeURIComponent(text)
+    + '&url='  + encodeURIComponent(url)
+    + '&hashtags=' + encodeURIComponent(SHARE_TAGS);
+  window.open(u, '_blank', 'noopener,noreferrer,width=600,height=520');
+}
+
+function showShareSingle(it){
+  const b = $('shareBtn'); if(!b) return;
+  const hot = HOT.indexOf(it.rkey) >= 0;
+  b.classList.remove('hidden');
+  b.classList.toggle('hot', hot);
+  b.style.setProperty('--rc', it.color || '#E9B84A');
+  b.onclick = () => openShare(
+    `I just pulled a ${it.rarity} card from a MEMONS capsule` + (hot ? ' 🔥' : ''),
+    it
+  );
+}
+
+function showShareTen(items){
+  const b = $('mshareBtn'); if(!b) return;
+  // headline the best card of the ten
+  const order = RAR.map(r => r.key);
+  let best = items[0];
+  items.forEach(it => { if(order.indexOf(it.rkey) > order.indexOf(best.rkey)) best = it; });
+  const hot = HOT.indexOf(best.rkey) >= 0;
+  b.classList.remove('hidden');
+  b.classList.toggle('hot', hot);
+  b.style.setProperty('--rc', best.color || '#E9B84A');
+  b.onclick = () => openShare(
+    `Opened 10 MEMONS capsules — best pull: a ${best.rarity} card` + (hot ? ' 🔥' : ''),
+    best
+  );
+}
+
+function hideShare(){
+  const b = $('shareBtn'); if(!b) return;
+  b.classList.add('hidden'); b.classList.remove('hot'); b.onclick = null;
+}
+
 function closeResult(){
+  document.body.classList.remove('multi-open');
   $('stage').classList.remove('opening','single','charging','zoomp','pillar-on','spin-on');
   document.body.classList.remove('shakep');
   const lk=$('leakvid'); if(lk){ lk.style.transition='none'; lk.style.opacity=0; try{lk.pause();lk.currentTime=0;}catch(e){} }
   $('stage')._wantPillar=false;
   $('stage').style.setProperty('--burst','#E9B84A');
   $('again').classList.add('hidden'); $('open1').classList.remove('hidden'); $('open10').classList.remove('hidden');
+  hideShare();
   $('hint').style.display='';
-  const cap=$('capvideo'); if(cap){ cap.style.transition='none'; cap.style.opacity=1; }
+  const cap=$('capvideo');
+  if(cap){
+    cap.style.transition='none'; cap.style.opacity=1;
+    // rewind to the closed capsule: the open animation ends on the *open* frame,
+    // so without this the idle state shows a capsule that is already cracked open
+    try{ cap.pause(); cap.currentTime=0; cap.load(); }catch(e){}
+  }
   const fx=$('fxvid'); if(fx){ fx.style.transition='none'; fx.style.opacity=0; try{fx.pause();fx.currentTime=0;}catch(e){} }
+  refreshPulls();          // keep the remaining-pulls counter live
 }
 $('capsule').addEventListener('click', single);
 $('open1').addEventListener('click', single);
 $('open10').addEventListener('click', ten);
 $('again').addEventListener('click', closeResult);
-$('mclose').addEventListener('click', ()=>{ $('multi').classList.remove('show'); closeResult(); });
+$('mclose').addEventListener('click', ()=>{ $('multi').classList.remove('show'); document.body.classList.remove('multi-open'); closeResult(); });
 refreshStatus();
 
 /* ---- effects lab wiring ---- */
@@ -1031,7 +1216,7 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
     if(MEMONS.purchasesEnabled()) return;
     var btn = document.getElementById('chargeBtn');
     if(btn && btn.textContent.indexOf('CONNECT') === -1){
-      btn.textContent = 'SOON';
+      btn.textContent = 'CHARGE COMING SOON';
       btn.disabled = true;
       btn.style.opacity = '.5';
       btn.style.cursor = 'not-allowed';
