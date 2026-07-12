@@ -245,8 +245,14 @@
 
   async function syncOwned(){
     if(!window.MEMONS || !MEMONS.connected) return;
-    try{ var s=await MEMONS.state(); REW.loadServerOwned(s.owned||[]); render(); }
-    catch(e){ /* keep current view */ }
+    try{
+      // cards already spent on a reward no longer count toward new rewards,
+      // so fetch them first and let the reward layer exclude them
+      try{ var mine=await MEMONS.authFetch('/rewards-mine'); REW.setUsedCards(mine.used_cards||[]); }catch(e){}
+      var s=await MEMONS.state();
+      REW.loadServerOwned(s.owned||[]);
+      render();
+    }catch(e){ /* keep current view */ }
   }
   function shortAddr(a){return a?(a.slice(0,6)+'…'+a.slice(-4)):'';}
   async function doConnect(){if(!window.MEMONS)return;try{var addr=await MEMONS.connect();document.body.classList.add('connected');document.getElementById('waddr').textContent=shortAddr(addr);document.getElementById('wstat').textContent='Connected';await syncOwned();}catch(e){alert(e.message||'Wallet connection failed');}}

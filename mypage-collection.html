@@ -190,8 +190,14 @@
 
   async function syncOwned(){
     if(!window.MEMONS || !MEMONS.connected) return;
-    try{ var s=await MEMONS.state(); REW.loadServerOwned(s.owned||[]); render(); }
-    catch(e){ /* keep current view */ }
+    try{
+      // cards already spent on a reward no longer count toward new rewards,
+      // so fetch them first and let the reward layer exclude them
+      try{ var mine=await MEMONS.authFetch('/rewards-mine'); REW.setUsedCards(mine.used_cards||[]); }catch(e){}
+      var s=await MEMONS.state();
+      REW.loadServerOwned(s.owned||[]);
+      render();
+    }catch(e){ /* keep current view */ }
   }
 
   // wallet connect (uses existing gacha-client)
