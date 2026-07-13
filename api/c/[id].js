@@ -13,7 +13,7 @@
 // =====================================================================
 
 const SITE = "MEMONS";
-const CAPSULE_PATH = "/open-capsule.html";
+const CAPSULE_PATH = "/";
 
 // Card artwork: <bucket>/<rarity>/<card_id>.png
 // Card ids look like "common_mrh1jqh8pqo", so the rarity is the prefix.
