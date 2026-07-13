@@ -2,6 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/c/:id", "destination": "/api/c/:id" },
     { "source": "/communityflow", "destination": "https://apepe-communityflow.vercel.app/" },
     { "source": "/communityflow/:path*", "destination": "https://apepe-communityflow.vercel.app/:path*" },
     { "source": "/memeaistudio", "destination": "https://apepe-meme-ai-studio-nu.vercel.app/memeaistudio" },

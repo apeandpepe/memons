@@ -950,14 +950,12 @@ const SHARE_TAGS = 'MEMONS,APEPE';
 const HOT = ['epic','legendary','mythic'];   // worth bragging about
 
 function openShare(text, it){
-  // Share through /api/share so X can read Open Graph tags and render the
-  // card artwork. The page itself just redirects a human to the capsule.
+  // Short share link: /c/<card id>. The endpoint resolves the artwork from the
+  // id and serves Open Graph tags, so X shows the card itself and the tweet
+  // stays clean.
   let url = SHARE_URL;
-  if (it) {
-    const q = new URLSearchParams();
-    if (it.img)    q.set('img', it.img);
-    if (it.rarity) q.set('r', it.rarity);
-    url = location.origin + '/api/share?' + q.toString();
+  if (it && it.num) {
+    url = location.origin + '/c/' + encodeURIComponent(it.num);
   }
   const u = 'https://twitter.com/intent/tweet'
     + '?text=' + encodeURIComponent(text)
@@ -973,7 +971,7 @@ function showShareSingle(it){
   b.classList.toggle('hot', hot);
   b.style.setProperty('--rc', it.color || '#E9B84A');
   b.onclick = () => openShare(
-    `I just pulled a ${it.rarity} card from MEMONS` + (hot ? ' 🔥' : ''),
+    `I just pulled a ${it.rarity} card from MEMONS 🔥`,
     it
   );
 }
@@ -989,7 +987,7 @@ function showShareTen(items){
   b.classList.toggle('hot', hot);
   b.style.setProperty('--rc', best.color || '#E9B84A');
   b.onclick = () => openShare(
-    `Opened 10 capsules from MEMONS — best pull: a ${best.rarity} card` + (hot ? ' 🔥' : ''),
+    `Opened 10 capsules from MEMONS — best pull: a ${best.rarity} card 🔥`,
     best
   );
 }
