@@ -149,8 +149,8 @@
 </header>
 
 <main>
-  <div class="vtitle"><h1>MEMONS VAULT</h1><span class="i">i</span></div>
-  <div class="vsub">The official archive of internet-born monsters.</div>
+  <div class="vtitle"><h1>MEMONS VAULT</h1></div>
+  <div class="vsub">The official archive of internet-born characters.</div>
 
   <div class="bar">
     <div class="search">
@@ -163,7 +163,7 @@
         <option value="">ALL CATEGORIES</option>
       </select>
     </div>
-    <div class="collected">COLLECTED <b id="collected">0 / 9999</b></div>
+    <div class="collected">COLLECTED <b id="collected">0 / ???</b></div>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -258,7 +258,12 @@ function renderPager(pages){
 function markOwned(){
   const owned = (MC ? MC.ownedNums() : new Set());
   const el=document.getElementById('collected');
-  if(el) el.textContent = owned.size + ' / ' + ((MD&&MD.total)||9999);
+  // how many characters have actually been revealed so far — the full roster
+  // size is intentionally not disclosed
+  if(el){
+    const revealed = ((MD && MD.characters) || []).filter(c => c && c.revealed !== false && c.name && c.name !== '???').length;
+    el.textContent = revealed + ' / ???';
+  }
   document.querySelectorAll('.card').forEach(c=>{
     const numEl=c.querySelector('.num'); if(!numEl) return;
     if(owned.has(numEl.textContent.replace('#',''))) c.classList.add('owned');

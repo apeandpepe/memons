@@ -742,10 +742,19 @@ function pullErrMsg(e){
 }
 /* map a server card -> reveal item structure */
 function mapCard(card){
-  const r = RAR.find(x=>x.key===card.rarity) || RAR[0];
-  const dup = MEMONS_COLLECTION.all().some(x=>x.num===card.card_id && x.rarity===r.label);
-  const it = { num:card.card_id, char:card.name, rarity:r.label, rkey:r.key, color:r.color,
-               img:card.image_url || r.card, dup };
+  // the API returns the card either flat ({card_id, rarity, image_url}) or with
+  // the artwork nested under cards{} — accept both
+  const c = card || {};
+  const n = c.cards || c.card || {};
+  const rarity = (c.rarity || n.rarity || '').toLowerCase();
+  const name   = c.name || n.name || '';
+  const image  = c.image_url || c.img || n.image_url || n.img || '';
+
+  const r = RAR.find(x=>x.key===rarity) || RAR[0];
+  const id = c.card_id != null ? c.card_id : (c.num != null ? c.num : n.card_id);
+  const dup = MEMONS_COLLECTION.all().some(x=>x.num===id && x.rarity===r.label);
+  const it = { num:id, char:name, rarity:r.label, rkey:r.key, color:r.color,
+               img: image || r.card, dup };
   MEMONS_COLLECTION.add(it); session.push(it);
   return it;
 }
@@ -770,19 +779,10 @@ async function refreshPulls(){
     return;
   }
   if(chg && chg.textContent==='CONNECT WALLET'){
-    // purchases can be closed while the pricing model is being confirmed —
-    // in that case the button must stay locked even after connecting
-    const closed = !window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function' || !MEMONS.purchasesEnabled();
-    if(closed){
-      chg.textContent = 'CHARGE COMING SOON';
-      chg.disabled = true;
-      chg.style.opacity = '.5';
-      chg.style.cursor = 'not-allowed';
-      chg.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
-    }else{
-      chg.textContent='＋ CHARGE'; chg.onclick=null;
-      if(window.__bindCharge) window.__bindCharge();
-    }
+    // the button keeps its normal look; the actual payment is blocked by
+    // memons-pay.js and again by the server, so nothing can be charged
+    chg.textContent='＋ CHARGE'; chg.onclick=null;
+    if(window.__bindCharge) window.__bindCharge();
   }
   try{ const st=await MEMONS.state(); el.textContent = (st && st.pulls_remaining!=null) ? st.pulls_remaining : '–'; }
   catch(e){ el.textContent='–'; }
@@ -973,7 +973,7 @@ function showShareSingle(it){
   b.classList.toggle('hot', hot);
   b.style.setProperty('--rc', it.color || '#E9B84A');
   b.onclick = () => openShare(
-    `I just pulled a ${it.rarity} card from a MEMONS capsule` + (hot ? ' 🔥' : ''),
+    `I just pulled a ${it.rarity} card from MEMONS` + (hot ? ' 🔥' : ''),
     it
   );
 }
@@ -989,7 +989,7 @@ function showShareTen(items){
   b.classList.toggle('hot', hot);
   b.style.setProperty('--rc', best.color || '#E9B84A');
   b.onclick = () => openShare(
-    `Opened 10 MEMONS capsules — best pull: a ${best.rarity} card` + (hot ? ' 🔥' : ''),
+    `Opened 10 capsules from MEMONS — best pull: a ${best.rarity} card` + (hot ? ' 🔥' : ''),
     best
   );
 }
@@ -1222,23 +1222,4 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
 })();
 </script>
 
-<script>
-/* Capsule purchases are closed until the pricing/reward model is confirmed. */
-(function(){
-  function lockPurchases(){
-    if(!window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function') return;
-    if(MEMONS.purchasesEnabled()) return;
-    var btn = document.getElementById('chargeBtn');
-    if(btn && btn.textContent.indexOf('CONNECT WALLET') === -1){
-      btn.textContent = 'CHARGE COMING SOON';
-      btn.disabled = true;
-      btn.style.opacity = '.5';
-      btn.style.cursor = 'not-allowed';
-      btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
-    }
-  }
-  if(document.readyState !== 'loading') setTimeout(lockPurchases, 300);
-  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(lockPurchases, 300); });
-})();
-</script>
 </body></html>
