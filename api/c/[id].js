@@ -37,9 +37,9 @@ export default function handler(req, res) {
   const id = String(req.query.id || "").replace(/[^a-zA-Z0-9_]/g, "").slice(0, 64);
   const rarity = RARITIES.find((r) => id.startsWith(r + "_")) || "";
 
-  const image = rarity
-    ? `${STORAGE_BASE}/${rarity}/${id}.png`
-    : `${origin}/images/detail/common.png`;
+  // The raw card is portrait; X crops it. /api/og composes it onto a
+  // 1200x630 canvas so the whole card survives the crop.
+  const image = `${origin}/api/og?id=${encodeURIComponent(id)}`;
 
   const RARITY = rarity ? rarity.toUpperCase() : "MEMONS";
   const title = rarity ? `${RARITY} card — ${SITE}` : `${SITE} Capsule`;
@@ -64,6 +64,8 @@ export default function handler(req, res) {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${esc(image)}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="${esc(RARITY)} MEMONS card">
 <meta property="og:url" content="${esc(origin)}/c/${esc(id)}">
 

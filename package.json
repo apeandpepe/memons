@@ -1,0 +1,9 @@
+{
+  "name": "memons",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MEMONS — static site. This file exists only so Vercel installs the dependency used by the /api/og image endpoint; there is no build step.",
+  "dependencies": {
+    "@vercel/og": "^0.6.3"
+  }
+}
