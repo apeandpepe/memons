@@ -59,7 +59,7 @@ export default function handler(req) {
         src: card,
         style: {
           // 630 - 80px of breathing room top and bottom
-          height: "470px",
+          height: "430px",
           objectFit: "contain",
           borderRadius: "16px",
           // identical to the reveal screen's card glow
