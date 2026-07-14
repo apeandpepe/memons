@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — Enhance</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --bg:#050505;--panel:#0d0d10;--panel2:#141418;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+    --text:#e8e6e0;--muted:#8d8a82;--dim:#55524b;
+    --gold:#E9B84A;--gold2:#f4d27a;--gold-b:#b8862e;--good:#5ccf92;--bad:#e0556a;
+    --c-common:#cfccc4;--c-rare:#5b9bd5;--c-epic:#c468d8;--c-legendary:#E9B84A;--c-mythic:#e0556a;
+    --sbw:220px;--tbh:70px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(1100px 480px at 82% -8%, rgba(233,184,74,.06), transparent 62%)}
+  a{color:inherit;text-decoration:none}
+
+  .head{position:fixed;top:0;left:0;right:0;height:var(--tbh);display:flex;align-items:center;justify-content:space-between;
+    padding:0 34px;border-bottom:1px solid var(--line);background:rgba(5,5,5,.9);backdrop-filter:blur(10px);z-index:30}
+  .brand img{height:44px;width:auto;display:block}
+  .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1px;font-family:var(--font-head)}
+  .nav a{color:var(--muted)}.nav a:hover,.nav a.on{color:var(--gold)}
+  .hr{display:flex;align-items:center;gap:14px}
+  .wbtn{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:12px;letter-spacing:1px;color:#1c1500;
+    background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:none;border-radius:9px;padding:10px 15px;cursor:pointer}
+  .wbtn svg{width:16px;height:16px;fill:none;stroke:#1c1500;stroke-width:1.7}
+
+  .shell{display:flex;padding-top:var(--tbh)}
+  .sidebar{position:fixed;top:var(--tbh);bottom:0;left:0;width:var(--sbw);border-right:1px solid var(--line);
+    padding:24px 16px;display:flex;flex-direction:column;background:linear-gradient(180deg,#0a0a0d,#050505);z-index:20}
+  .mylabel{font-family:var(--font-head);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:4px 12px 14px;font-weight:700;
+    background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .snav{display:flex;flex-direction:column;gap:6px}
+  .snav a{font-family:var(--font-head);padding:11px 12px;border-radius:11px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:11px}
+  .snav a i{font-size:18px;width:20px;text-align:center}
+  .snav a:hover{color:var(--text);background:var(--panel2)}
+  .snav a.on{color:var(--gold);background:rgba(233,184,74,.08);box-shadow:inset 0 0 0 1px rgba(233,184,74,.2)}
+  .side-foot{margin-top:auto}
+  .wchip{padding:11px 13px;border:1px solid var(--line2);border-radius:12px;background:var(--panel)}
+  .wchip .wa{font-size:12.5px;font-weight:600;font-family:var(--font-head)}
+  .wchip .ws{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:3px}
+
+  .main{margin-left:var(--sbw);flex:1;min-width:0}
+  .wrap{max-width:none;margin:0;padding:30px 48px 90px}
+  .eyebrow{font-family:var(--font-head);font-size:11px;letter-spacing:5px;color:var(--gold-b);margin-bottom:10px}
+  h1{font-family:var(--font-head);font-weight:800;font-size:28px;letter-spacing:1px}
+  .sub{color:var(--muted);font-size:13px;margin-top:10px;max-width:560px;line-height:1.55}
+
+  /* grade selector */
+  .grades{display:flex;gap:10px;margin:22px 0 18px}
+  .gtab{flex:1;position:relative;padding:14px 10px 13px;border-radius:12px;background:linear-gradient(180deg,#111114,#0c0c0f);
+    border:1px solid var(--line);cursor:pointer;transition:.18s cubic-bezier(.2,.8,.2,1);overflow:hidden;text-align:center}
+  .gtab::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:currentColor;opacity:.35;transition:.18s}
+  .gtab .gname{font-family:var(--font-head);font-size:14px;letter-spacing:2px;font-weight:600;display:block}
+  .gtab .gto{font-family:var(--font-head);font-size:10px;letter-spacing:1px;color:var(--muted);margin-top:5px;display:block}
+  .gtab .gto b{font-weight:600}
+  .gtab:hover{transform:translateY(-2px);border-color:var(--line2)}
+  .gtab:hover::before{opacity:.7}
+  .gtab.on{transform:translateY(-2px)}
+  .gtab.on::before{opacity:1;height:3px}
+
+  /* forge stage */
+  .stage{background:linear-gradient(180deg,#101012,#0a0a0d);border:1px solid #232326;border-radius:16px;
+    padding:30px 32px;position:relative;overflow:hidden}
+  .stage-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:460px;height:460px;
+    border-radius:50%;pointer-events:none;opacity:.5;transition:.3s}
+  .forge{display:flex;align-items:center;justify-content:center;gap:24px;position:relative;min-height:180px}
+  .slots{display:flex;gap:10px}
+  .slot{width:82px;height:112px;border-radius:9px;border:1.5px dashed var(--line2);background:#0e0e11;
+    display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:26px;position:relative;transition:.15s;overflow:hidden}
+  .slot .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.16;filter:grayscale(.3)}
+  .slot .plus{position:relative;z-index:1;color:var(--dim)}
+  .slot.filled{border-style:solid;border-width:1.5px}
+  .slot.filled .ghost,.slot.filled .plus{display:none}
+  .slot.over{border-style:solid;transform:scale(1.04)}
+  .slot img.pick{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:8px;z-index:1}
+  .slot .rm{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#1a1a1a;
+    border:1px solid var(--line2);color:var(--muted);font-size:14px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+  .slot.filled .rm{display:flex}
+  .arrowbox{display:flex;flex-direction:column;align-items:center;color:var(--gold)}
+  .arrowbox .a{font-size:26px;line-height:1}
+  .arrowbox .l{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px}
+  .result{width:118px;height:162px;border-radius:9px;position:relative;overflow:hidden;
+    border:1.5px dashed var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .result img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.16;filter:grayscale(.3)}
+  .result .q{position:relative;font-size:34px;font-family:var(--font-head)}
+  .result .rl{position:relative;font-size:10px;letter-spacing:1px;margin-top:4px}
+
+  /* meta + button */
+  .metarow{display:flex;align-items:center;justify-content:space-between;margin-top:18px;flex-wrap:wrap;gap:18px}
+  .metas{display:flex;gap:28px}
+  .meta .k{font-family:var(--font-head);font-size:10px;letter-spacing:1px;color:var(--dim)}
+  .meta .v{font-size:16px;font-weight:600;margin-top:3px}
+  .enhbtn{font-family:var(--font-head);font-size:15px;letter-spacing:3px;color:#221800;font-weight:700;
+    background:linear-gradient(135deg,#f9dd8f 0%,var(--gold2) 40%,var(--gold) 75%,var(--gold-b) 100%);
+    border:none;border-radius:12px;padding:16px 46px;cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 6px 22px -6px rgba(233,184,74,.6), inset 0 1px 0 rgba(255,255,255,.5);
+    transition:transform .12s, box-shadow .2s}
+  .enhbtn::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-20deg);transition:none}
+  .enhbtn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 10px 28px -6px rgba(233,184,74,.75), inset 0 1px 0 rgba(255,255,255,.6)}
+  .enhbtn:not(:disabled):hover::after{animation:shine .7s ease}
+  .enhbtn:not(:disabled):active{transform:translateY(0) scale(.98)}
+  .enhbtn:disabled{background:#18181c;color:var(--dim);cursor:not-allowed;box-shadow:inset 0 0 0 1px var(--line)}
+  .enhbtn:disabled::after{display:none}
+  @keyframes shine{to{left:130%}}
+  .warn{margin-top:12px;padding:9px 14px;background:rgba(224,85,106,.08);border:1px solid rgba(224,85,106,.25);
+    border-radius:9px;color:#e0808f;font-size:12px}
+
+  /* inventory */
+  .invhead{display:flex;align-items:center;justify-content:space-between;margin:24px 0 14px}
+  .invhead h2{font-family:var(--font-head);font-size:15px;letter-spacing:1px}
+  .invhead .cnt{color:var(--muted);font-size:12.5px}
+  .inv{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:12px;
+    scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+  .inv::-webkit-scrollbar{height:8px}
+  .inv::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+  .inv::-webkit-scrollbar-track{background:transparent}
+  .icard{flex:0 0 auto;width:120px;border-radius:9px;overflow:hidden;border:1.5px solid transparent;cursor:grab;position:relative;
+    aspect-ratio:945/1280;transition:.12s;background:#0e0e11}
+  .icard img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .icard:hover{transform:translateY(-2px)}
+  .icard:active{cursor:grabbing}
+  .icard.dragging{opacity:.35}
+  .icard.used{opacity:.3;pointer-events:none;filter:grayscale(.6)}
+  .icard.sel{border-color:var(--gold)}
+  .icard.sel::after{content:'✓';position:absolute;top:5px;right:6px;width:20px;height:20px;border-radius:50%;
+    background:var(--gold);color:#1c1500;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .icard.dupe::before{content:attr(data-dupe);position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.7);
+    color:var(--text);font-size:10px;padding:2px 6px;border-radius:4px}
+  .empty{color:var(--dim);font-size:13px;padding:30px 0;text-align:center}
+
+  /* overlay result */
+  .overlay{position:fixed;inset:0;background:rgba(4,4,5,.94);backdrop-filter:blur(12px);z-index:50;
+    display:none;align-items:center;justify-content:center;flex-direction:column}
+  .overlay.show{display:flex}
+  .ov-glow{position:absolute;width:680px;height:680px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .8s}
+  .ov-glow.show{opacity:.55}
+  .ov-eyebrow{font-family:var(--font-head);font-size:12px;letter-spacing:6px;color:var(--muted);
+    margin-bottom:26px;opacity:0;transition:.5s;z-index:1;height:15px}
+  .ov-eyebrow.show{opacity:1}
+  .flipwrap{width:min(420px,86vw);aspect-ratio:958/1280;perspective:2000px;position:relative;z-index:1}
+  .flipcard{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.4,.1,.2,1)}
+  .flipcard.flipped{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;overflow:hidden;border:2px solid var(--line2)}
+  .face img{width:100%;height:100%;object-fit:contain;background:#0a0a0d}
+  .face.front{transform:rotateY(180deg);opacity:0}
+  .flipcard.flipped .face.front{opacity:1;transition:opacity 0s .5s}
+  .flipcard.revealed{animation:cardpop .7s cubic-bezier(.2,1.3,.4,1)}
+  .flipcard.revealed .face.front{box-shadow:0 0 90px -2px var(--rc,#E9B84A)}
+  @keyframes cardpop{0%{transform:rotateY(180deg) scale(1)}45%{transform:rotateY(180deg) scale(1.08)}100%{transform:rotateY(180deg) scale(1)}}
+
+  .ovbadge{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:34px;
+    opacity:0;transform:translateY(16px);transition:.6s cubic-bezier(.2,.9,.2,1);z-index:1}
+  .ovbadge.show{opacity:1;transform:none}
+  .ovbadge .txt{font-family:var(--font-head);font-size:40px;font-weight:700;letter-spacing:10px;padding-left:10px;line-height:1}
+  .ovbadge .rule{display:flex;align-items:center;gap:12px}
+  .ovbadge .rule i{width:36px;height:1px;background:currentColor;opacity:.4;display:block}
+  .ovbadge .rule span{font-family:var(--font-body);font-size:11px;letter-spacing:3px;color:var(--muted)}
+  .ovclose{margin-top:38px;font-family:var(--font-head);font-size:12.5px;letter-spacing:3px;color:var(--text);
+    border:1px solid var(--line2);background:var(--panel);border-radius:11px;padding:14px 50px;cursor:pointer;
+    opacity:0;transition:.5s .3s;z-index:1}
+  .ovclose.show{opacity:1}
+  .ovclose:hover{border-color:var(--gold);color:var(--gold)}
+  @keyframes burn{0%{filter:none;opacity:1}60%{filter:brightness(1.6) sepia(1) hue-rotate(-20deg)}100%{filter:brightness(.2);opacity:.15}}
+  .flipcard.burning{animation:burn 1.1s forwards}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+  @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:30px 20px 70px}
+    .forge{flex-wrap:wrap}.slots{flex-wrap:wrap;justify-content:center}}
+  @media(max-width:560px){
+    .grades{gap:5px}
+    .gtab{padding:11px 3px 10px}
+    .gtab .gname{font-size:9.5px;letter-spacing:.3px}
+    .gtab .gto{font-size:7.5px;letter-spacing:.2px}
+  }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <a class="brand" href="index.html"><img src="images/logo.png" alt="MEMONS"></a>
+  <nav class="nav">
+    <a href="index.html">HOME</a>
+    <a href="about.html">ABOUT</a>
+    <a href="vault.html">MEMONS VAULT</a>
+    <a href="open-capsule.html">OPEN CAPSULE</a>
+    <a href="marketplace.html">MARKETPLACE</a>
+  
+    <a href="notice.html">NOTICE</a>
+  </nav>
+  <div class="hr">
+    <button class="wbtn" id="headWallet">
+      <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>
+      CONNECT WALLET
+    </button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="mylabel">My Page</div>
+        <nav class="snav">
+      <a href="mypage-dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
+      <a href="mypage-missions.html"><i class="ti ti-flag"></i>Event Mission</a>
+      <a href="mypage-collection.html"><i class="ti ti-cards"></i>Collection</a>
+      <a href="mypage-inventory.html"><i class="ti ti-box"></i>Inventory</a>
+      <a href="mypage-enhance.html" class="on"><i class="ti ti-arrow-up-circle"></i>Enhancement</a>
+      <a href="mypage-rewards.html"><i class="ti ti-gift"></i>Reward</a>
+      <a href="mypage-referral.html"><i class="ti ti-users"></i>Referral</a>
+      <a href="mypage-kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
+    </nav>
+    <div class="side-foot">
+      <div class="wchip"><div class="wa" id="sideAddr">Not connected</div><div class="ws" id="sideStat">offline</div></div>
+    </div>
+  </aside>
+
+  <main class="main"><div class="wrap">
+    <div class="eyebrow">MY PAGE</div>
+    <h1>Card Enhance</h1>
+    <p class="sub">Select duplicate cards of one grade and forge them into a higher grade. Materials are consumed whether the enhancement succeeds or fails — choose carefully.</p>
+
+    <div class="grades" id="grades"></div>
+
+    <div class="stage">
+      <div class="stage-glow" id="stageGlow"></div>
+      <div class="forge">
+        <div class="slots" id="slots"></div>
+        <div class="arrowbox"><div class="a">→</div><div class="l">FORGE</div></div>
+        <div class="result" id="result"><img class="rback" src="" alt=""><span class="q">?</span><span class="rl" id="resultLabel">—</span></div>
+      </div>
+      <div class="metarow">
+        <div class="metas">
+          <div class="meta"><div class="k">MATERIALS</div><div class="v" id="mMat">—</div></div>
+          <div class="meta"><div class="k">SUCCESS RATE</div><div class="v" id="mRate" style="color:var(--good)">—</div></div>
+          <div class="meta"><div class="k">ON FAIL</div><div class="v" style="color:var(--bad)">Burn all</div></div>
+        </div>
+        <button class="enhbtn" id="enhBtn" disabled>ENHANCE</button>
+      </div>
+      <div class="warn" id="warn">Select <b id="needN">—</b> cards to enhance. Failure burns them all with no return.</div>
+    </div>
+
+    <div class="invhead"><h2 id="invTitle">Your cards</h2><div class="cnt" id="invCnt"></div></div>
+    <div class="inv" id="inv"></div>
+    <div class="empty" id="invEmpty" style="display:none">No cards of this grade to enhance.</div>
+  </div></main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="ov-glow" id="ovGlow"></div>
+  <div class="ov-eyebrow" id="ovEyebrow"></div>
+  <div class="flipwrap"><div class="flipcard" id="flipcard">
+    <div class="face back"><img id="faceBack" src="" alt=""></div>
+    <div class="face front"><img id="faceFront" src="" alt=""></div>
+  </div></div>
+  <div class="ovbadge" id="ovBadge">
+    <span class="txt" id="ovText"></span>
+    <span class="rule"><i></i><span id="ovRule"></span><i></i></span>
+  </div>
+  <button class="ovclose" id="ovClose">CONTINUE</button>
+</div>
+
+<script src="gacha-client.js"></script>
+<script src="mypage-entry.js"></script>
+<script>
+(function(){
+  var GRADE_ORDER=['common','rare','epic','legendary','mythic'];
+  var COLOR={common:'#cfccc4',rare:'#5b9bd5',epic:'#c468d8',legendary:'#E9B84A',mythic:'#e0556a'};
+  var BACK=function(g){return 'images/mypage/back/'+g+'.png';};
+
+  var config=[], owned=[], current=null, selected=[];
+
+  var $=function(id){return document.getElementById(id);};
+
+  function cfgFor(g){ return config.find(function(c){return c.from_grade===g;}); }
+
+  // group owned by rarity, count duplicates by card_id
+  function cardsOfGrade(g){
+    return owned.filter(function(o){ return (o.cards&&o.cards.rarity)===g; });
+  }
+  function dupeCount(g){
+    var m={};
+    cardsOfGrade(g).forEach(function(o){ m[o.card_id]=(m[o.card_id]||0)+1; });
+    return m;
+  }
+
+  function renderGrades(){
+    var el=$('grades'); el.innerHTML='';
+    config.slice().sort(function(a,b){return GRADE_ORDER.indexOf(a.from_grade)-GRADE_ORDER.indexOf(b.from_grade);})
+    .forEach(function(c){
+      var d=document.createElement('div'); d.className='gtab';
+      var col=COLOR[c.from_grade];
+      d.style.color=col;
+      d.innerHTML='<span class="gname" style="color:'+col+'">'+c.from_grade.toUpperCase()+'</span>'+
+        '<span class="gto">→ <b>'+c.to_grade.toUpperCase()+'</b></span>';
+      d.onclick=function(){ selectGrade(c.from_grade); };
+      d.dataset.g=c.from_grade;
+      el.appendChild(d);
+    });
+  }
+
+  function selectGrade(g){
+    current=g; selected=[];
+    var c=cfgFor(g);
+    document.querySelectorAll('.gtab').forEach(function(t){
+      var on=t.dataset.g===g; t.classList.toggle('on',on);
+      var col=COLOR[t.dataset.g];
+      t.style.background=on?('linear-gradient(180deg,'+col+'1f,'+col+'08)'):'';
+      t.style.borderColor=on?col:'';
+      t.style.boxShadow=on?('0 6px 22px -10px '+col):'';
+    });
+    // stage glow + result preview
+    $('stageGlow').style.background='radial-gradient(circle,'+COLOR[c.to_grade]+'33,transparent 62%)';
+    var res=$('result'); res.style.borderColor=COLOR[c.to_grade];
+    res.querySelector('.q').style.color=COLOR[c.to_grade];
+    var rimg=res.querySelector('img.rback');
+    if(!rimg){ rimg=document.createElement('img'); rimg.className='rback'; res.insertBefore(rimg,res.firstChild); }
+    rimg.src=BACK(c.to_grade);
+    $('resultLabel').textContent=c.to_grade.toUpperCase();
+    $('resultLabel').style.color=COLOR[c.to_grade];
+    // meta
+    $('mMat').textContent=g.toUpperCase()+' ×'+c.need_count;
+    $('mRate').textContent=Math.round(c.success_rate*100)+'%';
+    $('needN').textContent=c.need_count;
+    renderSlots(); renderInv();
+  }
+
+  function frontOf(id){
+    var o=owned.find(function(x){return x.id===id;});
+    return o&&o.cards&&o.cards.image_url ? o.cards.image_url : BACK(current);
+  }
+
+  function renderSlots(){
+    var c=cfgFor(current); var el=$('slots'); el.innerHTML='';
+    for(var i=0;i<c.need_count;i++){
+      var s=document.createElement('div'); s.className='slot'; s.dataset.slot=i;
+      var pick=selected[i];
+      if(pick){
+        s.className='slot filled'; s.style.borderColor=COLOR[current];
+        s.style.boxShadow='0 4px 16px -8px '+COLOR[current];
+        s.innerHTML='<img class="pick" src="'+frontOf(pick)+'" alt="">'+
+          '<div class="rm" data-id="'+pick+'">×</div>';
+      }else{
+        s.style.borderColor=''; s.style.boxShadow='';
+        s.innerHTML='<img class="ghost" src="'+BACK(current)+'" alt=""><span class="plus">+</span>';
+      }
+      // drop target
+      s.addEventListener('dragover',function(e){ e.preventDefault(); this.classList.add('over'); });
+      s.addEventListener('dragleave',function(){ this.classList.remove('over'); });
+      s.addEventListener('drop',function(e){
+        e.preventDefault(); this.classList.remove('over');
+        var id=parseInt(e.dataTransfer.getData('text/plain'),10);
+        if(!isNaN(id)) addCard(id);
+      });
+      el.appendChild(s);
+    }
+    el.querySelectorAll('.rm').forEach(function(b){
+      b.onclick=function(e){ e.stopPropagation(); removeCard(parseInt(b.dataset.id,10)); };
+    });
+    updateBtn();
+  }
+
+  function renderInv(){
+    var c=cfgFor(current);
+    var list=cardsOfGrade(current);
+    var dupes=dupeCount(current);
+    $('invTitle').textContent='Your '+current.toUpperCase()+' cards';
+    $('invCnt').textContent=list.length+' owned · need '+c.need_count+' to enhance';
+    var el=$('inv'); el.innerHTML='';
+    $('invEmpty').style.display=list.length?'none':'block';
+    list.forEach(function(o){
+      var d=document.createElement('div'); d.className='icard'; d.draggable=true;
+      var picked=selected.indexOf(o.id)>=0;
+      if(picked) d.classList.add('used');   // already in a slot → dim, not selectable again
+      if(dupes[o.card_id]>1){ d.classList.add('dupe'); d.dataset.dupe='×'+dupes[o.card_id]; }
+      var front=(o.cards&&o.cards.image_url)?o.cards.image_url:BACK(current);
+      d.innerHTML='<img src="'+front+'" alt="">';
+      d.addEventListener('dragstart',function(e){
+        e.dataTransfer.setData('text/plain',String(o.id));
+        e.dataTransfer.effectAllowed='move'; d.classList.add('dragging');
+      });
+      d.addEventListener('dragend',function(){ d.classList.remove('dragging'); });
+      d.onclick=function(){ if(!picked) addCard(o.id); };  // click also works
+      el.appendChild(d);
+    });
+  }
+
+  function addCard(id){
+    var c=cfgFor(current);
+    if(selected.indexOf(id)>=0) return;
+    if(selected.length>=c.need_count) return;
+    selected.push(id);
+    renderSlots(); renderInv();
+  }
+  function removeCard(id){
+    var i=selected.indexOf(id);
+    if(i>=0){ selected.splice(i,1); renderSlots(); renderInv(); }
+  }
+
+  function updateBtn(){
+    var c=cfgFor(current);
+    $('enhBtn').disabled = selected.length!==c.need_count;
+  }
+
+  // ---- forge animation + call ----
+  var busy=false;
+  async function doEnhance(){
+    if(busy) return; var c=cfgFor(current);
+    if(selected.length!==c.need_count) return;
+    busy=true; $('enhBtn').disabled=true;
+
+    var ids=selected.slice();
+    var ov=$('overlay'), fc=$('flipcard');
+    // reset overlay
+    fc.className='flipcard'; fc.style.transition=''; $('ovBadge').className='ovbadge'; $('ovClose').className='ovclose';
+    $('ovGlow').className='ov-glow'; $('ovEyebrow').className='ov-eyebrow';
+    $('ovEyebrow').textContent='FORGING'; $('ovEyebrow').classList.add('show');
+    $('faceBack').src=BACK(current);
+    ov.classList.add('show');
+
+    var res;
+    try{
+      res=await MEMONS.authFetch('/enhance',{from_grade:current,owned_ids:ids});
+    }catch(e){
+      ov.classList.remove('show'); busy=false; updateBtn();
+      alert('Enhance failed: '+(e.message||e)); return;
+    }
+
+    setTimeout(function(){
+      if(res.success && res.card){
+        var col=COLOR[res.card.rarity];
+        $('faceFront').src=(res.card.image_url||BACK(res.card.rarity));
+        fc.style.setProperty('--rc',col);
+        $('ovGlow').style.background='radial-gradient(circle,'+col+'55,transparent 60%)';
+        fc.classList.add('flipped');
+        setTimeout(function(){
+          fc.style.transition='none';
+          fc.classList.add('revealed');
+          $('ovGlow').classList.add('show');
+          $('ovEyebrow').classList.remove('show');
+          $('ovText').textContent='SUCCESS';
+          $('ovText').style.color=col;
+          $('ovBadge').style.color=col;
+          $('ovRule').textContent=res.card.rarity.toUpperCase()+' OBTAINED';
+          $('ovBadge').classList.add('show');
+          $('ovClose').classList.add('show');
+        },1050);
+      }else{
+        fc.classList.add('burning');
+        setTimeout(function(){
+          $('ovEyebrow').classList.remove('show');
+          $('ovText').textContent='FAILED';
+          $('ovText').style.color='var(--bad)';
+          $('ovBadge').style.color='var(--bad)';
+          $('ovRule').textContent='MATERIALS LOST';
+          $('ovBadge').classList.add('show');
+          $('ovClose').classList.add('show');
+        },1100);
+      }
+    },600);
+  }
+
+  $('ovClose').onclick=async function(){
+    $('overlay').classList.remove('show');
+    busy=false; selected=[];
+    await reload();          // refresh inventory from server
+    selectGrade(current);
+  };
+  $('enhBtn').onclick=doEnhance;
+
+  // ---- data ----
+  async function reload(){
+    var d=await MEMONS.authFetch('/enhance');   // GET
+    config=d.config||[]; owned=d.owned||[];
+  }
+
+  async function boot(){
+    // wait for wallet session (mypage-entry wires the button)
+    if(!MEMONS.connected){
+      $('inv').innerHTML=''; $('invEmpty').style.display='block';
+      $('invEmpty').textContent='Connect your wallet to enhance cards.';
+      // retry when connected
+      var t=setInterval(function(){ if(MEMONS.connected){ clearInterval(t); boot(); } },800);
+      return;
+    }
+    try{
+      await reload();
+      renderGrades();
+      if(config.length) selectGrade(config[0].from_grade);
+    }catch(e){
+      $('invEmpty').style.display='block';
+      $('invEmpty').textContent='Could not load cards: '+(e.message||e);
+    }
+  }
+  boot();
+})();
+</script>
+<style>
+  .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+  .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
+  .m-overlay.open{opacity:1;pointer-events:auto}
+  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
+  .m-drawer.open{transform:translateX(0)}
+  .m-drawer .m-close{align-self:flex-end;background:transparent;border:0;color:#8d8a82;cursor:pointer;padding:4px;margin-bottom:2px}
+  .m-drawer .m-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-drawer .m-sec{font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;color:#E9B84A;font-weight:700;padding:12px 12px 6px}
+  .m-drawer a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;color:#8d8a82;font-family:var(--font-head,inherit);text-decoration:none}
+  .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
+  .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
+  .m-drawer a i{font-size:18px;width:20px;text-align:center}
+  html,body{overflow-x:hidden;max-width:100vw}
+  @media(max-width:1040px){
+    .head nav{display:none !important}
+    .m-burger{display:flex}
+    .sidebar{display:none !important}
+    .main{margin-left:0 !important}
+    .shell .wrap,.main .wrap{padding-left:16px !important;padding-right:16px !important}
+    .head .soc{display:none !important}
+    .head{padding-left:14px !important;padding-right:14px !important;gap:10px !important;justify-content:flex-start !important}
+    .head .hr{gap:8px !important;margin-left:auto !important}
+    .head .brand img{height:32px !important}
+    .mypage-entry,.mpbtn{display:none !important}
+    .wrap{margin-left:auto !important;margin-right:auto !important}
+    .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
+    .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
+    .head .brand{font-size:15px !important}
+  }
+</style>
+<button class="m-burger" id="mBurger" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="m-overlay" id="mOverlay"></div>
+<nav class="m-drawer" id="mDrawer"></nav>
+<script>
+(function(){
+  var drawer=document.getElementById('mDrawer'), overlay=document.getElementById('mOverlay'), burger=document.getElementById('mBurger');
+  if(!drawer) return;
+  var close=document.createElement('button'); close.className='m-close'; close.setAttribute('aria-label','Close menu');
+  close.innerHTML='<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+  drawer.appendChild(close);
+  var snav=document.querySelector('.snav');
+  var myBox=null;
+  if(snav){ var s1=document.createElement('div'); s1.className='m-sec'; s1.textContent='MY PAGE'; drawer.appendChild(s1);
+    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  else {
+    myBox=document.createElement('div');
+    var ms=document.createElement('div'); ms.className='m-sec'; ms.textContent='MY PAGE'; myBox.appendChild(ms);
+    var ml=document.createElement('a'); ml.href='mypage-dashboard.html'; ml.textContent='Go to My Page'; ml.style.color='#E9B84A'; ml.style.fontWeight='700'; myBox.appendChild(ml);
+    myBox.style.display='none'; drawer.appendChild(myBox);
+  }
+  var topnav=document.querySelector('.head nav');
+  if(topnav){ var s2=document.createElement('div'); s2.className='m-sec'; s2.textContent='MENU'; drawer.appendChild(s2);
+    Array.prototype.forEach.call(topnav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  var head=document.querySelector('.head');
+  if(head && burger){ head.insertBefore(burger, head.firstChild); } else if(burger){ burger.style.display='none'; }
+  function syncMy(){ if(myBox){ myBox.style.display = document.body.classList.contains('wallet-connected') ? 'block' : 'none'; } }
+  function openD(){ syncMy(); drawer.classList.add('open'); overlay.classList.add('open'); }
+  function closeD(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  if(burger) burger.addEventListener('click',openD);
+  close.addEventListener('click',closeD); overlay.addEventListener('click',closeD);
+})();
+</script>
+
+</body>
+</html>
