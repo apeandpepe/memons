@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — Referral</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --bg:#050505;--panel:#0d0d10;--panel2:#141418;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+    --text:#e8e6e0;--muted:#8d8a82;--dim:#55524b;
+    --gold:#E9B84A;--gold2:#f4d27a;--gold-b:#b8862e;--good:#5ccf92;--bad:#e0556a;--x:#4aa3ff;--pur:#b884ff;
+    --sbw:220px;--tbh:70px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(1100px 480px at 82% -8%, rgba(233,184,74,.06), transparent 62%)}
+  a{color:inherit;text-decoration:none}
+
+  .head{position:fixed;top:0;left:0;right:0;height:var(--tbh);display:flex;align-items:center;justify-content:space-between;
+    padding:0 34px;border-bottom:1px solid var(--line);background:rgba(5,5,5,.9);backdrop-filter:blur(10px);z-index:30}
+  .brand img{height:44px;width:auto;display:block}
+  .nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1px;font-family:var(--font-head)}
+  .nav a{color:var(--muted)}.nav a:hover,.nav a.on{color:var(--gold)}
+  .hr{display:flex;align-items:center;gap:14px}
+  .soc{display:flex;gap:10px}
+  .soc a{color:var(--muted)} .soc svg{width:17px;height:17px;fill:currentColor}
+  .wbtn{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:12px;letter-spacing:1px;color:#1c1500;
+    background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:none;border-radius:9px;padding:10px 15px;cursor:pointer}
+  .wbtn svg{width:16px;height:16px;fill:none;stroke:#1c1500;stroke-width:1.7}
+  .wicon{width:38px;height:38px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);display:none;align-items:center;justify-content:center;color:var(--gold);cursor:pointer}
+  .wicon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .mpbtn{display:none;align-items:center;gap:8px;font-family:var(--font-head);font-size:12px;letter-spacing:1px;color:#1c1500;
+    background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:none;border-radius:9px;padding:10px 15px;cursor:pointer}
+  body.connected .wbtn{display:none} body.connected .wicon{display:flex} body.connected .mpbtn{display:flex}
+
+  .shell{display:flex;padding-top:var(--tbh)}
+  .sidebar{position:fixed;top:var(--tbh);bottom:0;left:0;width:var(--sbw);border-right:1px solid var(--line);
+    padding:24px 16px;display:flex;flex-direction:column;background:linear-gradient(180deg,#0a0a0d,#050505);z-index:20}
+  .mylabel{font-family:var(--font-head);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:4px 12px 14px;font-weight:700;
+    background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .snav{display:flex;flex-direction:column;gap:6px}
+  .snav a{font-family:var(--font-head);padding:11px 12px;border-radius:11px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:11px}
+  .snav a i{font-size:18px;width:20px;text-align:center}
+  .snav a:hover{color:var(--text);background:var(--panel2)}
+  .snav a.on{color:var(--gold);background:rgba(233,184,74,.08);box-shadow:inset 0 0 0 1px rgba(233,184,74,.2)}
+  .side-foot{margin-top:auto}
+  .wchip{padding:11px 13px;border:1px solid var(--line2);border-radius:12px;background:var(--panel)}
+  .wchip .wa{font-size:12.5px;font-weight:600;font-family:var(--font-head)}
+  .wchip .ws{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:3px}
+  .wchip .ws::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--dim)}
+  body.connected .wchip .ws{color:var(--good)} body.connected .wchip .ws::before{background:var(--good)}
+  .wdisc{margin-top:9px;width:100%;font-family:var(--font-head);font-size:11px;letter-spacing:.6px;display:none;
+    background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:9px;padding:8px;cursor:pointer}
+  .wdisc:hover{color:#e0556a;border-color:rgba(224,85,106,.5)} body.connected .wdisc{display:block}
+
+  .main{margin-left:var(--sbw);flex:1;min-width:0;display:flex;justify-content:center}
+  .wrap{padding:36px 40px 90px;width:100%;max-width:1240px}
+  .eyebrow{font-family:var(--font-head);font-size:11px;letter-spacing:5px;color:var(--gold-b);margin-bottom:12px}
+  h1{font-family:var(--font-head);font-weight:800;font-size:30px;letter-spacing:1px}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:12px}
+  .titlerow2{display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .rbanner{height:190px;width:auto;max-width:60%;object-fit:contain;margin:-10px -10px -20px 0;filter:drop-shadow(0 12px 34px rgba(233,184,74,.2))}
+
+  .panel{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:26px;margin-top:22px}
+  .lbl{font-family:var(--font-head);font-size:12px;letter-spacing:1.8px;color:var(--muted);margin-bottom:18px}
+
+  /* overview: 4 big stat cards (left) + link (right) */
+  .ov{display:grid;grid-template-columns:repeat(4,1fr) 1.25fr;gap:16px;align-items:stretch}
+  .stat{border:1px solid var(--line);border-radius:14px;background:#0a0a0c;padding:20px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .stat .sl{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.5px;color:var(--muted);font-family:var(--font-head)}
+  .stat .sl i{font-size:19px}
+  .stat.c1 .sl i{color:#4aa3ff}
+  .stat.c2 .sl i{color:#2fd0c4}
+  .stat.c3 .sl i{color:var(--gold)}
+  .stat.c4 .sl i{color:var(--pur)}
+  .stat .sv{font-family:var(--font-head);font-weight:800;font-size:34px;margin-top:12px;line-height:1}
+  .stat .sv.good{color:var(--good)}
+  .stat .sub2{font-size:11.5px;color:var(--muted);margin-top:8px}
+  .stat .sub2.pur{color:var(--pur)}
+  .linkcol{display:flex;flex-direction:column;justify-content:center;padding-left:6px}
+  .linkcol .lh{font-family:var(--font-head);font-size:12px;letter-spacing:1.5px;color:var(--muted)}
+  .linkcol .lhd{font-size:12px;color:var(--muted);margin:8px 0 12px}
+  .linkbox{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:11px;background:#0a0a0c;padding:12px 14px}
+  .linkbox input{flex:1;background:transparent;border:0;outline:none;color:var(--text);font-family:var(--font-body);font-size:12.5px}
+  .linkbox button{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:17px} .linkbox button:hover{color:var(--gold)}
+  .sharerow{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .sharerow .st{font-size:11.5px;color:var(--muted)}
+  .sharerow .sb{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#0a0a0c;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer}
+  .sharerow .sb:hover{color:var(--gold);border-color:var(--gold-b)} .sharerow .sb i{font-size:17px}
+  .locked{border:1px dashed var(--line2);border-radius:11px;background:rgba(255,255,255,.02);padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
+  .locked b{color:var(--gold)}
+  @media(max-width:1050px){.ov{grid-template-columns:repeat(2,1fr)}.linkcol{grid-column:1/-1}}
+
+  .cols{display:grid;grid-template-columns:1.05fr 1fr;gap:22px;margin-top:22px}
+  @media(max-width:1050px){.cols{grid-template-columns:1fr}}
+  @media(max-width:1040px){
+    .miles{display:grid !important;grid-template-columns:repeat(2,1fr) !important;gap:9px}
+    .miles .arrow{display:none !important}
+    .amb{grid-template-columns:repeat(3,1fr) !important;gap:9px}
+  }
+  @media(max-width:560px){
+    .amb{gap:8px}
+    .ambc{padding:14px 6px}
+    .ambc img{width:52px;height:52px;margin-bottom:8px}
+    .ambc .at{font-size:9.5px;letter-spacing:.2px}
+    .ambc .ad{font-size:8px;margin-top:4px;line-height:1.25}
+    .ambc .al{margin-top:8px;font-size:9px}
+    .ambc .al i{font-size:11px}
+  }
+  .ptitle{font-family:var(--font-head);font-weight:800;font-size:15px;letter-spacing:.5px;color:var(--gold)}
+  .ptitle .cs{font-size:11px;letter-spacing:1px;color:var(--gold);margin-left:8px}
+  .pdesc{color:var(--muted);font-size:12px;margin-top:6px}
+
+  .milebox{border:1px solid color-mix(in srgb,var(--pur) 34%, var(--line));border-radius:14px;
+    background:linear-gradient(180deg,rgba(184,132,255,.08),transparent);padding:18px;margin-top:18px}
+  .milehead{font-family:var(--font-head);font-weight:800;font-size:13px;letter-spacing:.5px;color:#c9a5ff}
+  .milehead span{color:var(--muted);font-weight:600;font-size:11px}
+  .milesub{color:var(--muted);font-size:11.5px;margin-top:5px}
+  .miles{display:flex;gap:9px;margin-top:16px;align-items:stretch}
+  .mile{flex:1;border:1px solid var(--line2);border-radius:12px;background:linear-gradient(180deg,#12101a,#0b0910);padding:14px 10px;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center}
+  .mile .mtag{font-family:var(--font-head);font-size:9px;letter-spacing:.5px;color:var(--muted);border:1px solid var(--line2);border-radius:20px;padding:4px 10px;line-height:1.2}
+  .mile .micap{width:56px;height:56px;object-fit:contain;margin:14px auto 8px}
+  .mile .micap-fb{width:48px;height:48px;border-radius:10px;background:var(--panel2);margin:14px auto 8px;display:none}
+  .mile.nocap .micap-fb{display:block} .mile.nocap .micap{display:none}
+  .mile .mrew{font-family:var(--font-head);font-weight:700;font-size:12px;line-height:1.35}
+  .mile .mrew b{color:#fff;font-size:16px;display:block}
+  .mile .mstate{margin-top:12px;font-family:var(--font-head);font-size:11px;letter-spacing:.5px;padding:8px 10px;border-radius:9px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+  .mile .mstate i{font-size:15px}
+  .mile .mstate.claimed{color:var(--good);background:rgba(92,207,146,.14);border:1px solid rgba(92,207,146,.45)}
+  .mile .mstate.locked2{color:var(--dim);border:1px solid var(--line2)}
+  .mile .mstate.claim{color:var(--gold);border:1px solid var(--gold-b);cursor:pointer}
+  .mile .mstate.claim:hover{background:rgba(233,184,74,.12)}
+  .arrow{align-self:center;color:var(--dim);font-size:20px}
+
+  .amb{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .ambc{border:1px solid var(--line2);border-radius:14px;background:linear-gradient(180deg,#101014,#0a0a0c);padding:24px 14px;text-align:center;transition:.15s}
+  .ambc:hover{transform:translateY(-2px)}
+  .ambc img{width:88px;height:88px;object-fit:contain;margin:0 auto 14px;filter:drop-shadow(0 8px 22px rgba(233,184,74,.28))}
+  .ambc .aimg-fb{width:72px;height:72px;border-radius:14px;background:var(--panel2);margin:0 auto 14px;display:none}
+  .ambc.noimg .aimg-fb{display:block} .ambc.noimg img{display:none}
+  .ambc .at{font-family:var(--font-head);font-weight:800;font-size:13px;letter-spacing:.5px}
+  .ambc .ad{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+  .ambc .al{margin-top:14px;font-family:var(--font-head);font-size:11px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px}
+  .ambc .al i{font-size:14px}
+
+  .note{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.02);padding:14px 16px;margin-top:18px;color:var(--muted);font-size:12.5px}
+  .note i{color:var(--dim);font-size:17px}
+  @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:24px 16px 70px}.rbanner{display:none}.titlerow2{display:block}}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
+  <nav class="nav">
+    <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a><a href="index.html#vault">MEMONS VAULT</a>
+    <a href="index.html#capsule">OPEN CAPSULE</a><a href="marketplace.html">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
+  </nav>
+  <div class="hr">
+    <div class="soc">
+      <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+    </div>
+    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+    <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+    <button class="mpbtn" id="mpbtn">My Page</button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="mylabel">My Page</div>
+    <nav class="snav">
+      <a href="mypage-dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
+      <a href="mypage-missions.html"><i class="ti ti-flag"></i>Event Mission</a>
+      <a href="mypage-collection.html"><i class="ti ti-cards"></i>Collection</a>
+      <a href="mypage-inventory.html"><i class="ti ti-box"></i>Inventory</a>
+      <a href="mypage-enhance.html"><i class="ti ti-arrow-up-circle"></i>Enhancement</a>
+      <a href="mypage-rewards.html"><i class="ti ti-gift"></i>Reward</a>
+      <a href="mypage-referral.html" class="on"><i class="ti ti-users"></i>Referral</a>
+      <a href="mypage-kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
+    </nav>
+    <div class="side-foot"><div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div></div>
+  </aside>
+
+  <main class="main"><div class="wrap">
+    <div class="titlerow2">
+      <div><div class="eyebrow">MY PAGE</div><h1>Referral</h1><p class="sub">Invite friends and earn exclusive rewards together.</p></div>
+      <img class="rbanner" src="images/mypage/referral/banner.png" alt="" onerror="this.style.display='none'">
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="panel">
+      <div class="lbl">REFERRAL OVERVIEW</div>
+      <div class="ov">
+        <div class="stat c1"><div class="sl"><i class="ti ti-users-group"></i>TOTAL INVITES</div><div class="sv" id="stTotal">—</div><div class="sub2">Friends</div></div>
+        <div class="stat c2"><div class="sl"><i class="ti ti-shield-check-filled"></i>SUCCESSFUL INVITES</div><div class="sv good" id="stValid">—</div><div class="sub2" style="color:var(--good)">Friends</div></div>
+        <div class="stat c3"><div class="sl"><i class="ti ti-gift-filled"></i>TOTAL REWARDS EARNED</div><div class="sv" id="stEarned">—</div><div class="sub2">Event Capsules</div></div>
+        <div class="stat c4"><div class="sl"><i class="ti ti-trophy-filled"></i>MY RANK</div><div class="sv" id="stRank">—</div><div class="sub2 pur" id="stRankSub">&nbsp;</div></div>
+        <div class="linkcol">
+          <div class="lh">YOUR REFERRAL LINK</div>
+          <div class="lhd">Share your link and earn rewards when your friends join MEMONS.</div>
+          <div id="linkArea">
+            <div class="linkbox"><input id="refLink" type="text" readonly value="—"><button id="copyBtn" title="Copy"><i class="ti ti-copy"></i></button></div>
+            <div class="sharerow"><span class="st">or share via</span>
+              <div class="sb" id="shX"><i class="ti ti-brand-x"></i></div>
+              <div class="sb" id="shTg"><i class="ti ti-brand-telegram"></i></div>
+              <div class="sb" id="shDc"><i class="ti ti-brand-discord"></i></div>
+              <div class="sb" id="shCp"><i class="ti ti-link"></i></div>
+            </div>
+          </div>
+          <div id="lockArea" class="locked" style="display:none">Complete <b>missions 1&ndash;5</b> to unlock your referral link.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <div class="ptitle">REFERRAL REWARDS</div>
+        <div class="pdesc">Complete referral milestones and unlock special rewards.</div>
+        <div class="milebox">
+          <div class="milehead">EVENT REFERRAL REWARDS <span>· MAX 4 TIMES</span></div>
+          <div class="milesub">Earn up to 4 Event Capsules during the event!</div>
+          <div class="miles" id="miles"></div>
+        </div>
+        <div class="note"><i class="ti ti-info-circle"></i>Rewards are sent after the event ends or when you become an ambassador.</div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">AMBASSADOR REWARDS <span class="cs">COMING SOON</span></div>
+        <div class="pdesc">Become an Ambassador (top 5 referrers) and unlock exclusive rewards.</div>
+        <div class="amb">
+          <div class="ambc"><img src="images/mypage/referral/special-card.png" alt="" onerror="this.closest('.ambc').classList.add('noimg')"><span class="aimg-fb"></span><div class="at">SPECIAL CARD</div><div class="ad">Exclusive Ambassador Card</div><div class="al"><i class="ti ti-lock"></i>Locked</div></div>
+          <div class="ambc"><img src="images/mypage/referral/ambassador.png" alt="" onerror="this.closest('.ambc').classList.add('noimg')"><span class="aimg-fb"></span><div class="at">AMBASSADOR BENEFITS</div><div class="ad">Exclusive Access &amp; Privileges</div><div class="al"><i class="ti ti-lock"></i>Locked</div></div>
+          <div class="ambc"><img src="images/mypage/referral/apepe-token.png" alt="" onerror="this.closest('.ambc').classList.add('noimg')"><span class="aimg-fb"></span><div class="at">APEPE TOKEN</div><div class="ad">$APEPE Rewards</div><div class="al"><i class="ti ti-lock"></i>Locked</div></div>
+        </div>
+      </div>
+    </div>
+  </div></main>
+</div>
+
+<script src="gacha-client.js"></script>
+<script src="mypage-entry.js"></script>
+<script>
+(function(){
+  var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
+  var SS_TOKEN="memons_jwt_v1";
+  var MAX_MILE=4, REWARD_EACH=5;
+  function $(id){return document.getElementById(id);}
+  function token(){return sessionStorage.getItem(SS_TOKEN);}
+  var stats=null, link='';
+
+  function toast(msg){
+    var t=document.createElement('div'); t.textContent=msg;
+    t.style.cssText='position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#161616;border:1px solid var(--line2);color:var(--text);font-size:13px;padding:12px 18px;border-radius:11px;z-index:90';
+    document.body.appendChild(t); setTimeout(function(){t.remove();},2600);
+  }
+  async function get(){ var r=await fetch(API+'/referral',{headers:{Authorization:'Bearer '+token()}}); return await r.json(); }
+  async function post(b){ var r=await fetch(API+'/referral',{method:'POST',headers:{Authorization:'Bearer '+token(),'content-type':'application/json'},body:JSON.stringify(b)}); return await r.json(); }
+  function shareText(){ return 'Join MEMONS and open capsules with me! '+link; }
+
+  function render(){
+    var claimed=stats.referral_claims||0, valid=stats.valid_ref||0;
+    $('stTotal').textContent=stats.total_referees||0;
+    $('stValid').textContent=valid;
+    $('stEarned').textContent=(claimed*REWARD_EACH);
+    $('stRank').textContent=stats.rank?('#'+stats.rank):'—';
+    $('stRankSub').innerHTML=stats.rank?('Top Referrer'):'&nbsp;';
+
+    if(stats.eligible && stats.code){
+      link=location.origin+'/r/'+stats.code;
+      $('linkArea').style.display='block'; $('lockArea').style.display='none'; $('refLink').value=link;
+    } else { $('linkArea').style.display='none'; $('lockArea').style.display='block'; }
+
+    var html='';
+    for(var i=0;i<MAX_MILE;i++){
+      var state,cls,inner;
+      if(i<claimed){ cls='claimed'; inner='<i class="ti ti-circle-check"></i>Claimed'; }
+      else if(i<valid){ cls='claim'; inner='Claim'; }
+      else { cls='locked2'; inner='<i class="ti ti-lock"></i>Locked'; }
+      html+='<div class="mile" data-i="'+i+'"><span class="mtag">REWARD '+(i+1)+'</span>'+
+        '<img class="micap" src="images/mypage/referral/capsule.png" alt="" onerror="this.closest(\'.mile\').classList.add(\'nocap\')"><span class="micap-fb"></span>'+
+        '<div class="mrew">Event Capsule <b>x'+REWARD_EACH+'</b></div>'+
+        '<div class="mstate '+cls+'">'+inner+'</div></div>';
+      if(i<MAX_MILE-1) html+='<div class="arrow"><i class="ti ti-chevron-right"></i></div>';
+    }
+    $('miles').innerHTML=html;
+    Array.prototype.forEach.call(document.querySelectorAll('.mstate.claim'),function(b){ b.onclick=claimOne; });
+  }
+
+  async function claimOne(){
+    try{ await MEMONS.authFetch('/missions',{key:'referral'}); toast('+'+REWARD_EACH+' capsules'); stats=await get(); render(); }
+    catch(e){ var m=(e&&e.message)?e.message:String(e);
+      if(m.indexOf('NO_VALID_REFERRALS')>=0) toast('Need more valid referrals first',true);
+      else if(m.indexOf('MAXED')>=0) toast('All referral rewards claimed');
+      else toast('Claim failed',true); }
+  }
+  function copy(){ if(!link) return; navigator.clipboard.writeText(link).then(function(){toast('Link copied');}); }
+
+  async function load(){
+    if(!(window.MEMONS && MEMONS.connected)){ $('linkArea').style.display='none'; $('lockArea').style.display='block';
+      $('lockArea').textContent='Connect your wallet to see your referral link.'; return; }
+    stats=await get();
+    if(stats.eligible && !stats.code){ var r=await post({action:'issue'}); if(r.code) stats.code=r.code; }
+    render();
+    $('copyBtn').onclick=copy; $('shCp').onclick=copy;
+    $('shX').onclick=function(){ if(link) window.open('https://x.com/intent/tweet?text='+encodeURIComponent(shareText()),'_blank'); };
+    $('shTg').onclick=function(){ if(link) window.open('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent('Join MEMONS and open capsules with me!'),'_blank'); };
+    $('shDc').onclick=copy;
+  }
+  load();
+  var iv=setInterval(function(){ if(window.MEMONS && MEMONS.connected){ clearInterval(iv); load(); } }, 800);
+})();
+</script>
+<style>
+  .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+  .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
+  .m-overlay.open{opacity:1;pointer-events:auto}
+  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
+  .m-drawer.open{transform:translateX(0)}
+  .m-drawer .m-close{align-self:flex-end;background:transparent;border:0;color:#8d8a82;cursor:pointer;padding:4px;margin-bottom:2px}
+  .m-drawer .m-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-drawer .m-sec{font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;color:#E9B84A;font-weight:700;padding:12px 12px 6px}
+  .m-drawer a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;color:#8d8a82;font-family:var(--font-head,inherit);text-decoration:none}
+  .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
+  .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
+  .m-drawer a i{font-size:18px;width:20px;text-align:center}
+  html,body{overflow-x:hidden;max-width:100vw}
+  @media(max-width:1040px){
+    .head nav{display:none !important}
+    .m-burger{display:flex}
+    .sidebar{display:none !important}
+    .main{margin-left:0 !important}
+    .shell .wrap,.main .wrap{padding-left:16px !important;padding-right:16px !important}
+    .head .soc{display:none !important}
+    .head{padding-left:14px !important;padding-right:14px !important;gap:10px !important;justify-content:flex-start !important}
+    .head .hr{gap:8px !important;margin-left:auto !important}
+    .head .brand img{height:32px !important}
+    .mypage-entry,.mpbtn{display:none !important}
+    .wrap{margin-left:auto !important;margin-right:auto !important}
+    .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
+    .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
+    .head .brand{font-size:15px !important}
+  }
+</style>
+<button class="m-burger" id="mBurger" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="m-overlay" id="mOverlay"></div>
+<nav class="m-drawer" id="mDrawer"></nav>
+<script>
+(function(){
+  var drawer=document.getElementById('mDrawer'), overlay=document.getElementById('mOverlay'), burger=document.getElementById('mBurger');
+  if(!drawer) return;
+  var close=document.createElement('button'); close.className='m-close'; close.setAttribute('aria-label','Close menu');
+  close.innerHTML='<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+  drawer.appendChild(close);
+  var snav=document.querySelector('.snav');
+  var myBox=null;
+  if(snav){ var s1=document.createElement('div'); s1.className='m-sec'; s1.textContent='MY PAGE'; drawer.appendChild(s1);
+    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  else {
+    myBox=document.createElement('div');
+    var ms=document.createElement('div'); ms.className='m-sec'; ms.textContent='MY PAGE'; myBox.appendChild(ms);
+    var ml=document.createElement('a'); ml.href='mypage-dashboard.html'; ml.textContent='Go to My Page'; ml.style.color='#E9B84A'; ml.style.fontWeight='700'; myBox.appendChild(ml);
+    myBox.style.display='none'; drawer.appendChild(myBox);
+  }
+  var topnav=document.querySelector('.head nav');
+  if(topnav){ var s2=document.createElement('div'); s2.className='m-sec'; s2.textContent='MENU'; drawer.appendChild(s2);
+    Array.prototype.forEach.call(topnav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  var head=document.querySelector('.head');
+  if(head && burger){ head.insertBefore(burger, head.firstChild); } else if(burger){ burger.style.display='none'; }
+  function syncMy(){ if(myBox){ myBox.style.display = document.body.classList.contains('wallet-connected') ? 'block' : 'none'; } }
+  function openD(){ syncMy(); drawer.classList.add('open'); overlay.classList.add('open'); }
+  function closeD(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  if(burger) burger.addEventListener('click',openD);
+  close.addEventListener('click',closeD); overlay.addEventListener('click',closeD);
+})();
+</script>
+
+</body>
+</html>
