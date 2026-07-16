@@ -65,8 +65,17 @@
     .cards{grid-template-columns:1fr}
     .fcard p{max-width:none}
   }
-  /* ===== Scrollbar: thin subtle gold (horizontal bar hidden) ===== */
-  ::-webkit-scrollbar{width:8px;height:8px}
+  @media(max-width:560px){
+    .feats{flex-wrap:nowrap;gap:6px}
+    .feat{gap:6px;min-width:0}
+    .feat .ic{width:26px;height:30px;flex:0 0 26px}
+    .feat .ic .sym{width:16px;height:16px}
+    .feat b{font-size:10px;letter-spacing:.2px}
+    .feat span span{font-size:8.5px;white-space:normal;line-height:1.15}
+    .fcard .body{padding:20px 22px;justify-content:center}
+    .fcard .fic{margin-bottom:10px;width:40px;height:46px}
+    .fcard p{font-size:13px}
+  }
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:rgba(233,184,74,.30);border-radius:8px}
   ::-webkit-scrollbar-thumb:hover{background:rgba(233,184,74,.55)}
