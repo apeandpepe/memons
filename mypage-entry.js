@@ -87,7 +87,7 @@
         document.dispatchEvent(new CustomEvent('memons:connected',{detail:{address:addr}}));
       }catch(e){ alert((e && e.message) || 'Wallet connection failed'); }
     }
-    async function doDisconnect(){
+    async function doDisconnect(reload){
       try{
         if(window.MEMONS && MEMONS.disconnect) await MEMONS.disconnect();
         else if(window.MEMONS && MEMONS.resetSession) MEMONS.resetSession();
@@ -95,7 +95,7 @@
       try{ if(window.MEMONS_REWARDS && MEMONS_REWARDS.clearServerOwned) MEMONS_REWARDS.clearServerOwned(); }catch(e){}
       renderDisconnected();
       document.dispatchEvent(new CustomEvent('memons:disconnected'));
-      location.reload();
+      if(reload) location.reload();   // only on user-initiated disconnect; auto paths must NOT reload (loop)
     }
 
     wbtn.addEventListener('click', function(ev){
@@ -103,7 +103,7 @@
       if(window.MEMONS && MEMONS.connected) return;    // already connected: use Disconnect
       doConnect();
     });
-    discBtn.addEventListener('click', function(ev){ ev.preventDefault(); doDisconnect(); });
+    discBtn.addEventListener('click', function(ev){ ev.preventDefault(); doDisconnect(true); });
     switchBtn.addEventListener('click', async function(ev){
       ev.preventDefault();
       if(!window.MEMONS || !MEMONS.switchAccount) return;
@@ -126,7 +126,7 @@
           if(window.ethereum){
             var accs = await window.ethereum.request({ method:'eth_accounts' });
             var cur = (accs && accs[0] ? accs[0] : '').toLowerCase();
-            if(cur && cur !== String(MEMONS.address).toLowerCase()){ doDisconnect(); return; }
+            if(cur && cur !== String(MEMONS.address).toLowerCase()){ doDisconnect(false); return; }
           }
           renderConnected(MEMONS.address);
         }else{
@@ -137,8 +137,8 @@
 
     /* --- wallet changes --- */
     if(window.ethereum && window.ethereum.on){
-      window.ethereum.on('accountsChanged', function(){ doDisconnect(); });
-      window.ethereum.on('chainChanged', function(){ doDisconnect(); });
+      window.ethereum.on('accountsChanged', function(){ doDisconnect(false); });
+      window.ethereum.on('chainChanged', function(){ doDisconnect(false); });
     }
   }
 
