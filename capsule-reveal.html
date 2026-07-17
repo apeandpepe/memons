@@ -735,6 +735,7 @@ function revToast(msg){
 }
 function pullErrMsg(e){
   const m=(e&&e.message)?e.message:String(e);
+  if(m.includes('MISSIONS_INCOMPLETE')) return 'Complete missions 1–3 first to open capsules.';
   if(m.includes('NO_PULLS_LEFT'))    return 'You have used all your pulls.';
   if(m.includes('WALLET_NOT_FOUND')) return 'This wallet has no pulls yet.';
   if(m.includes('wallet')||m.includes('MetaMask')) return m;

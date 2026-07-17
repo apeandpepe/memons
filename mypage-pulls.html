@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MEMONS — Pull history</title>
 <link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
 <style>
   :root{
     --bg:#050505;--panel:#0d0d10;--panel2:#141418;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
@@ -27,7 +28,8 @@
   .sidebar{position:fixed;top:var(--tbh);bottom:0;left:0;width:var(--sbw);border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;background:linear-gradient(180deg,#0a0a0d,#050505);z-index:20}
   .mylabel{font-family:var(--font-head);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:4px 12px 14px;font-weight:700;background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
   .snav{display:flex;flex-direction:column;gap:6px}
-  .snav a{font-family:var(--font-head);padding:11px 12px;border-radius:11px;font-size:14px;color:var(--muted)}
+  .snav a{font-family:var(--font-head);padding:11px 12px;border-radius:11px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:11px}
+  .snav a i{font-size:18px;width:20px;text-align:center}
   .snav a:hover{color:var(--text);background:var(--panel2)}
   .snav a.on{color:var(--gold);background:rgba(233,184,74,.08);box-shadow:inset 0 0 0 1px rgba(233,184,74,.2)}
   .side-foot{margin-top:auto}
@@ -165,7 +167,7 @@
     <nav class="nav">
       <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a>
       <a href="index.html#vault">MEMONS VAULT</a><a href="index.html#capsule">OPEN CAPSULE</a>
-      <a href="marketplace.html">MARKETPLACE</a><a href="index.html#contact">CONTACT</a>
+      <a href="marketplace.html">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
     </nav>
     <div class="hr">
       <div class="soc">
@@ -180,12 +182,16 @@
   <div class="shell">
     <aside class="sidebar">
       <div class="mylabel">My Page</div>
-      <nav class="snav">
-        <a href="mypage-collection.html">Collection</a>
-        <a href="mypage-rewards.html">Rewards</a>
-        <a href="mypage-history.html">Rewards history</a>
-        <a href="mypage-pulls.html" class="on">Pull history</a>
-      </nav>
+          <nav class="snav">
+      <a href="mypage-dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
+      <a href="mypage-missions.html"><i class="ti ti-flag"></i>Event Mission</a>
+      <a href="mypage-collection.html"><i class="ti ti-cards"></i>Collection</a>
+      <a href="mypage-inventory.html"><i class="ti ti-box"></i>Inventory</a>
+      <a href="mypage-enhance.html"><i class="ti ti-arrow-up-circle"></i>Enhancement</a>
+      <a href="mypage-rewards.html"><i class="ti ti-gift"></i>Reward</a>
+      <a href="mypage-referral.html"><i class="ti ti-users"></i>Referral</a>
+      <a href="mypage-kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
+    </nav>
       <div class="side-foot"><div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div></div>
     </aside>
     <div class="main"><div class="wrap">
@@ -311,4 +317,69 @@
 
 </script>
 <script src="mypage-entry.js"></script>
+<style>
+  .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+  .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
+  .m-overlay.open{opacity:1;pointer-events:auto}
+  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
+  .m-drawer.open{transform:translateX(0)}
+  .m-drawer .m-close{align-self:flex-end;background:transparent;border:0;color:#8d8a82;cursor:pointer;padding:4px;margin-bottom:2px}
+  .m-drawer .m-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-drawer .m-sec{font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;color:#E9B84A;font-weight:700;padding:12px 12px 6px}
+  .m-drawer a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;color:#8d8a82;font-family:var(--font-head,inherit);text-decoration:none}
+  .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
+  .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
+  .m-drawer a i{font-size:18px;width:20px;text-align:center}
+  html,body{overflow-x:hidden;max-width:100vw}
+  @media(max-width:1040px){
+    .head nav{display:none !important}
+    .m-burger{display:flex}
+    .sidebar{display:none !important}
+    .main{margin-left:0 !important}
+    .shell .wrap,.main .wrap{padding-left:16px !important;padding-right:16px !important}
+    .head .soc{display:none !important}
+    .head{padding-left:14px !important;padding-right:14px !important;gap:10px !important;justify-content:flex-start !important}
+    .head .hr{gap:8px !important;margin-left:auto !important}
+    .head .brand img{height:32px !important}
+    .mypage-entry,.mpbtn{display:none !important}
+    .wrap{margin-left:auto !important;margin-right:auto !important}
+    .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
+    .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
+    .head .brand{font-size:15px !important}
+  }
+</style>
+<button class="m-burger" id="mBurger" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="m-overlay" id="mOverlay"></div>
+<nav class="m-drawer" id="mDrawer"></nav>
+<script>
+(function(){
+  var drawer=document.getElementById('mDrawer'), overlay=document.getElementById('mOverlay'), burger=document.getElementById('mBurger');
+  if(!drawer) return;
+  var close=document.createElement('button'); close.className='m-close'; close.setAttribute('aria-label','Close menu');
+  close.innerHTML='<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+  drawer.appendChild(close);
+  var snav=document.querySelector('.snav');
+  var myBox=null;
+  if(snav){ var s1=document.createElement('div'); s1.className='m-sec'; s1.textContent='MY PAGE'; drawer.appendChild(s1);
+    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  else {
+    myBox=document.createElement('div');
+    var ms=document.createElement('div'); ms.className='m-sec'; ms.textContent='MY PAGE'; myBox.appendChild(ms);
+    var ml=document.createElement('a'); ml.href='mypage-dashboard.html'; ml.textContent='Go to My Page'; ml.style.color='#E9B84A'; ml.style.fontWeight='700'; myBox.appendChild(ml);
+    myBox.style.display='none'; drawer.appendChild(myBox);
+  }
+  var topnav=document.querySelector('.head nav');
+  if(topnav){ var s2=document.createElement('div'); s2.className='m-sec'; s2.textContent='MENU'; drawer.appendChild(s2);
+    Array.prototype.forEach.call(topnav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  var head=document.querySelector('.head');
+  if(head && burger){ head.insertBefore(burger, head.firstChild); } else if(burger){ burger.style.display='none'; }
+  function syncMy(){ if(myBox){ myBox.style.display = document.body.classList.contains('wallet-connected') ? 'block' : 'none'; } }
+  function openD(){ syncMy(); drawer.classList.add('open'); overlay.classList.add('open'); }
+  function closeD(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  if(burger) burger.addEventListener('click',openD);
+  close.addEventListener('click',closeD); overlay.addEventListener('click',closeD);
+})();
+</script>
+
 </body></html>
