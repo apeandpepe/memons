@@ -26,6 +26,20 @@
   .foot .rr{color:var(--rc,#cfccc4);font-weight:600;font-size:10.5px;letter-spacing:1.4px;margin-top:3px}
   .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:70px 0}
   .empty a{color:var(--gold)}
+  @media(max-width:1040px){
+    .wrap{padding:30px 18px 70px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  }
+  @media(max-width:560px){
+    .wrap{padding:24px 14px 64px}
+    h1{font-size:24px}
+    .sub{font-size:13px}
+    .top{margin-bottom:18px;gap:10px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:11px;max-width:360px;margin:0 auto}
+    .foot{padding:8px 4px 10px}
+    .foot .nm{font-size:12px}
+    .foot .rr{font-size:9.5px}
+  }
 </style></head>
 <body>
   <header class="head">
@@ -34,7 +48,7 @@
       <a href="index.html">HOME</a>
       <a href="vault.html">MEMONS VAULT</a>
       <a href="open-capsule.html">OPEN CAPSULE</a>
-      <a href="marketplace.html">MARKETPLACE</a>
+      <a href="index.html#marketplace">MARKETPLACE</a>
       <a href="notice.html">NOTICE</a>
       <a href="index.html#contact">CONTACT</a>
     </nav>

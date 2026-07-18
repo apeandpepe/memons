@@ -62,7 +62,15 @@
   .collected{margin-left:auto;font-size:13px;letter-spacing:1.5px;color:var(--muted)}
   .collected b{color:var(--gold);font-weight:600;margin-left:8px;font-size:15px}
   @media(max-width:720px){.bar{flex-wrap:wrap}.collected{margin-left:0;width:100%}}
-  @media(max-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)) !important;justify-content:center !important;gap:12px;max-width:360px;margin:0 auto}.grid .card{width:auto !important}}
+  @media(max-width:1040px){
+    .grid{grid-template-columns:repeat(auto-fit,minmax(150px,180px)) !important;justify-content:center !important;gap:14px !important;max-width:none !important;margin:0 auto !important}
+    .grid .card{width:auto !important}
+    .grid .art{width:100% !important;height:auto !important;aspect-ratio:1/1}
+  }
+  @media(max-width:560px){
+    .grid{grid-template-columns:repeat(auto-fit,minmax(140px,168px)) !important;gap:11px !important}
+    .grid .card{padding:11px 12px 13px !important}
+  }
 
   /* ===== GRID ===== */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,204px);justify-content:center;gap:18px 14px}
@@ -137,7 +145,7 @@
     <a href="index.html">HOME</a>
     <a href="vault.html" class="on">MEMONS VAULT</a>
     <a href="open-capsule.html">OPEN CAPSULE</a>
-    <a href="marketplace.html">MARKETPLACE</a>
+    <a href="index.html#marketplace">MARKETPLACE</a>
     <a href="notice.html">NOTICE</a>
     <a href="index.html#contact">CONTACT</a>
   </nav>
