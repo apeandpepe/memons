@@ -179,12 +179,29 @@
   </div>
   <div class="capframe" id="capFrame">
     <div class="capwin">
-      <img class="capposter" src="images/open-capsule/capsule.png" alt="">
-      <video class="capvid" id="capVid" autoplay muted loop playsinline preload="metadata">
-        <source src="images/open-capsule/capsule.mp4" type="video/mp4">
-      </video>
+      <img class="capposter" src="images/open-capsule/capsule.webp" alt="">
+      <video class="capvid" id="capVid" autoplay muted loop playsinline preload="metadata"
+             data-src="images/open-capsule/capsule.mp4"
+             data-src-mobile="images/open-capsule/capsule-mobile.mp4"></video>
+<script>
+(function(){
+  /* pick the light video on phones/tablets, the full-quality one on desktop */
+  function pick(el){
+    if(!el) return;
+    var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
+    var src = small ? el.getAttribute('data-src-mobile') : el.getAttribute('data-src');
+    if(!src) return;
+    var s = document.createElement('source');
+    s.src = src; s.type = 'video/mp4';
+    el.appendChild(s);
+    el.load();
+    var p = el.play(); if(p && p.catch) p.catch(function(){});
+  }
+  pick(document.getElementById('capVid'));
+})();
+</script>
     </div>
-    <img class="capframeimg" src="images/open-capsule/frame.png" alt="">
+    <img class="capframeimg" src="images/open-capsule/frame.webp" alt="">
   </div>
   <div class="buybox">
     <div class="bt">MEMONS CAPSULE 001</div>
@@ -208,11 +225,11 @@
   </div>
 </section>
 <section class="rarity">
-  <div class="rc" style="--rc:#cfccc4"><img class="rcimg" src="images/open-capsule/card-common.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#5b9bd5"><img class="rcimg" src="images/open-capsule/card-rare.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#c468d8"><img class="rcimg" src="images/open-capsule/card-epic.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#E9B84A"><img class="rcimg" src="images/open-capsule/card-legendary.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc holo" style="--rc:#e0556a"><img class="rcimg" src="images/open-capsule/card-mythic.png" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#cfccc4"><img class="rcimg" src="images/open-capsule/card-common.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#5b9bd5"><img class="rcimg" src="images/open-capsule/card-rare.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#c468d8"><img class="rcimg" src="images/open-capsule/card-epic.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc" style="--rc:#E9B84A"><img class="rcimg" src="images/open-capsule/card-legendary.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div class="rc holo" style="--rc:#e0556a"><img class="rcimg" src="images/open-capsule/card-mythic.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
 </section>
 <footer class="foot"><span><b>MEMONS CAPSULE</b>&nbsp;&nbsp;|&nbsp;&nbsp;POWERED BY APEPE</span></footer>
 <script>

@@ -235,12 +235,29 @@
 </header>
 
 <!-- VIDEO INTRO (HOME) -->
-<!-- swap video: images/home/intro.mp4 (optional), poster: images/home/intro-poster.jpg -->
+<!-- swap video: images/home/intro.mp4 (optional), poster: images/home/intro-poster.webp -->
 <section class="vhero" id="home">
   <video id="introVid" class="vbg" autoplay muted loop playsinline preload="auto"
-         poster="images/home/intro-poster.jpg">
-    <source src="images/home/intro.mp4" type="video/mp4">
-  </video>
+         poster="images/home/intro-poster.webp"
+         data-src="images/home/intro.mp4"
+         data-src-mobile="images/home/intro-mobile.mp4"></video>
+<script>
+(function(){
+  /* pick the light video on phones/tablets, the full-quality one on desktop */
+  function pick(el){
+    if(!el) return;
+    var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
+    var src = small ? el.getAttribute('data-src-mobile') : el.getAttribute('data-src');
+    if(!src) return;
+    var s = document.createElement('source');
+    s.src = src; s.type = 'video/mp4';
+    el.appendChild(s);
+    el.load();
+    var p = el.play(); if(p && p.catch) p.catch(function(){});
+  }
+  pick(document.getElementById('introVid'));
+})();
+</script>
   <div class="vshade"></div>
 
   <button class="vmute" id="vMute" aria-label="Toggle sound"></button>
