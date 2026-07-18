@@ -79,8 +79,49 @@
       document.body.classList.remove('wallet-connected');
     }
 
+    function isMobileDevice(){
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent||'');
+    }
+
+    /* Mobile browsers have no wallet extension, so window.ethereum is missing.
+       Offer to reopen this page inside a wallet app's built-in browser. */
+    function showWalletSheet(){
+      if(document.getElementById('mmSheet')) return;
+      var here = location.host + location.pathname + location.search;
+      var full = location.href;
+      var wrap = document.createElement('div');
+      wrap.id = 'mmSheet';
+      wrap.style.cssText='position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6)';
+      wrap.innerHTML =
+        '<div style="width:100%;max-width:460px;background:linear-gradient(180deg,#111114,#0a0a0c);border:1px solid rgba(233,184,74,.3);border-radius:20px 20px 0 0;padding:24px 20px 28px;box-shadow:0 -20px 60px rgba(0,0,0,.7)">'+
+          '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:17px;letter-spacing:1px;color:#E9B84A;text-align:center">CONNECT WALLET</div>'+
+          '<div style="color:#a99d85;font-size:13px;line-height:1.6;text-align:center;margin:10px 0 20px">Mobile browsers cannot reach your wallet directly.<br>Open this page inside your wallet app.</div>'+
+          '<a id="mmGo" href="https://metamask.app.link/dapp/'+here+'" style="display:block;text-align:center;text-decoration:none;font-weight:800;font-size:14px;padding:15px;border-radius:13px;background:linear-gradient(135deg,#f4d27a,#E9B84A 55%,#b8862e);color:#1c1500;margin-bottom:10px">Open in MetaMask</a>'+
+          '<a id="twGo" href="https://link.trustwallet.com/open_url?coin_id=60&url='+encodeURIComponent(full)+'" style="display:block;text-align:center;text-decoration:none;font-weight:700;font-size:14px;padding:15px;border-radius:13px;border:1px solid rgba(233,184,74,.4);color:#E9B84A;margin-bottom:10px">Open in Trust Wallet</a>'+
+          '<button id="mmCopy" style="width:100%;text-align:center;font-weight:600;font-size:13px;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8d8a82;cursor:pointer;margin-bottom:10px">Copy link</button>'+
+          '<button id="mmClose" style="width:100%;text-align:center;font-size:13px;padding:11px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>'+
+        '</div>';
+      document.body.appendChild(wrap);
+      function close(){ wrap.remove(); }
+      wrap.addEventListener('click', function(e){ if(e.target===wrap) close(); });
+      wrap.querySelector('#mmClose').onclick = close;
+      wrap.querySelector('#mmCopy').onclick = function(){
+        var btn = this;
+        try{
+          navigator.clipboard.writeText(full);
+          btn.textContent = 'Link copied';
+          setTimeout(function(){ btn.textContent = 'Copy link'; }, 1600);
+        }catch(err){ btn.textContent = full; }
+      };
+    }
+
     async function doConnect(){
       if(!window.MEMONS){ alert('Wallet client not loaded'); return; }
+      if(!window.ethereum){
+        if(isMobileDevice()){ showWalletSheet(); return; }
+        alert('No wallet detected. Please install MetaMask and reload this page.');
+        return;
+      }
       try{
         var addr = await MEMONS.connect();
         renderConnected(addr);
