@@ -6,13 +6,13 @@
    ============================================================ */
 
 /* headings (current: Chakra Petch) */
-@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-Regular.ttf')  format('truetype');font-weight:400;font-display:swap}
-@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-Medium.ttf')   format('truetype');font-weight:500;font-display:swap}
-@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
-@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-Bold.ttf')     format('truetype');font-weight:700 900;font-display:swap}
+@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-Regular.woff2') format('woff2'),url('fonts/ChakraPetch-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-Medium.woff2') format('woff2'),url('fonts/ChakraPetch-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-SemiBold.woff2') format('woff2'),url('fonts/ChakraPetch-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+@font-face{font-family:'ChakraPetch';src:url('fonts/ChakraPetch-Bold.woff2') format('woff2'),url('fonts/ChakraPetch-Bold.ttf') format('truetype');font-weight:700 900;font-display:swap}
 
 /* body (current: Inter) */
-@font-face{font-family:'Inter';src:url('fonts/Inter.ttf') format('truetype');font-weight:300 800;font-display:swap}
+@font-face{font-family:'Inter';src:url('fonts/Inter.woff2') format('woff2'),url('fonts/Inter.ttf') format('truetype');font-weight:300 800;font-display:swap}
 
 :root{
   --font-head:'ChakraPetch','Rajdhani',sans-serif;  /* headings - logo - menu - buttons */
