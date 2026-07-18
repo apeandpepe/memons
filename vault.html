@@ -63,13 +63,29 @@
   .collected b{color:var(--gold);font-weight:600;margin-left:8px;font-size:15px}
   @media(max-width:720px){.bar{flex-wrap:wrap}.collected{margin-left:0;width:100%}}
   @media(max-width:1040px){
-    .grid{grid-template-columns:repeat(auto-fit,minmax(150px,180px)) !important;justify-content:center !important;gap:14px !important;max-width:none !important;margin:0 auto !important}
-    .grid .card{width:auto !important}
+    main{padding-left:12px !important;padding-right:12px !important}
+    .grid{grid-template-columns:repeat(5,1fr) !important;justify-content:stretch !important;gap:10px 7px !important;max-width:none !important;margin:0 !important}
+    .grid .card{width:auto !important;min-width:0;padding:7px 6px 8px !important;border-radius:9px}
+    .grid .card .num{font-size:9px !important;margin:0 1px 5px !important}
     .grid .art{width:100% !important;height:auto !important;aspect-ratio:1/1}
+    .grid .pic{border-radius:6px}
+    .grid .cn{width:9px !important;height:9px !important;border-width:1.5px !important}
+    .grid .cn.tl{border-radius:6px 0 0 0}
+    .grid .cn.tr{border-radius:0 6px 0 0}
+    .grid .cn.bl{border-radius:0 0 0 6px}
+    .grid .cn.br{border-radius:0 0 6px 0}
+    .grid .card.owned::after{font-size:6px !important;padding:1px 3px !important;top:4px !important;right:4px !important;border-radius:3px}
+    .grid .name{font-size:9px !important;letter-spacing:.2px !important;margin-top:7px !important}
+    .grid .ccat{font-size:6.5px !important;letter-spacing:.3px !important;margin-top:3px !important}
   }
   @media(max-width:560px){
-    .grid{grid-template-columns:repeat(auto-fit,minmax(140px,168px)) !important;gap:11px !important}
-    .grid .card{padding:11px 12px 13px !important}
+    main{padding-left:8px !important;padding-right:8px !important}
+    .grid{gap:8px 5px !important}
+    .grid .card{padding:5px 4px 6px !important}
+    .grid .card .num{font-size:7.5px !important;margin:0 0 4px !important}
+    .grid .name{font-size:7.5px !important;margin-top:5px !important}
+    .grid .ccat{font-size:5.5px !important;margin-top:2px !important}
+    .grid .cn{width:7px !important;height:7px !important;border-width:1.2px !important}
   }
 
   /* ===== GRID ===== */
@@ -220,7 +236,7 @@ function matches(d, query){
   return false;
 }
 
-const PAGE_SIZE=(window.matchMedia&&window.matchMedia('(max-width:640px)').matches)?10:18;            /* cards per page (mobile 10 = 2x5) */
+const PAGE_SIZE=(window.matchMedia&&window.matchMedia('(max-width:1040px)').matches)?10:18;            /* cards per page (mobile 10 = 5x2) */
 let curPage=1, curList=[];
 function render(){
   const query=q.value, cat=catSel.value;
