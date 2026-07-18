@@ -140,6 +140,7 @@
 
   /* top referrers */
   .lb{display:flex;flex-direction:column}
+  .lbempty{padding:26px 12px;text-align:center;color:var(--muted);font-size:13px}
   .lbrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
   .lbrow:first-child{border-top:0}
   .lbrow .lrank{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:800;font-size:12px;flex-shrink:0;background:var(--panel2);color:var(--muted)}
@@ -160,7 +161,7 @@
   <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
   <nav class="nav">
     <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a><a href="index.html#vault">MEMONS VAULT</a>
-    <a href="index.html#capsule">OPEN CAPSULE</a><a href="marketplace.html">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
+    <a href="index.html#capsule">OPEN CAPSULE</a><a href="index.html#marketplace">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
   </nav>
   <div class="hr">
     <div class="soc">
@@ -262,7 +263,7 @@
 
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
-<script src="leaderboard-dummy.js"></script>
+<script src="leaderboard.js"></script>
 <script>
 (function(){
   var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
@@ -281,6 +282,11 @@
 
   function renderLeaderboard(){
     var data=(window.MEMONS_LEADERBOARD||[]).slice(0,5);
+    if(!data.length){
+      $('lb').innerHTML='<div class="lbempty">'+(window.MEMONS_LB_READY
+        ? 'No referrers yet.' : 'Loading...')+'</div>';
+      return;
+    }
     $('lb').innerHTML=data.map(function(e){
       var cls=e.rank<=3?(' top'+e.rank):'';
       return '<div class="lbrow'+cls+'"><div class="lrank">'+e.rank+'</div>'+
@@ -288,6 +294,7 @@
         '<div class="laddr">'+e.address+'</div><div class="lref">'+e.referrals+' Users</div></div>';
     }).join('');
   }
+  window.MEMONS_LB_ONLOAD=function(){ renderLeaderboard(); };
 
   function renderCollection(){
     var seen={}, d={common:0,rare:0,epic:0,legendary:0,mythic:0};

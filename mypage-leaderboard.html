@@ -61,6 +61,7 @@
   .back:hover{color:var(--gold)}
 
   .panel{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:10px 22px;margin-top:22px}
+  .lbempty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13.5px}
   .lbrow{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
   .lbrow:first-child{border-top:0}
   .lbrow .lrank{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:800;font-size:13px;flex-shrink:0;background:var(--panel2);color:var(--muted)}
@@ -88,7 +89,7 @@
   <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
   <nav class="nav">
     <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a><a href="index.html#vault">MEMONS VAULT</a>
-    <a href="index.html#capsule">OPEN CAPSULE</a><a href="marketplace.html">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
+    <a href="index.html#capsule">OPEN CAPSULE</a><a href="index.html#marketplace">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
   </nav>
   <div class="hr">
     <div class="soc">
@@ -131,7 +132,7 @@
 
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
-<script src="leaderboard-dummy.js"></script>
+<script src="leaderboard.js"></script>
 <script>
 (function(){
   var PER=10, page=1;
@@ -140,6 +141,13 @@
 
   function render(){
     var total=data.length, pages=Math.max(1,Math.ceil(total/PER));
+    if(total===0){
+      $('lb').innerHTML='<div class="lbempty">'+(window.MEMONS_LB_READY
+        ? 'No referrers yet. Rankings update once a day.'
+        : 'Loading rankings...')+'</div>';
+      $('pager').innerHTML=''; $('note').textContent='';
+      return;
+    }
     if(page>pages) page=pages;
     var start=(page-1)*PER, slice=data.slice(start,start+PER);
     $('lb').innerHTML=slice.map(function(e){
@@ -161,7 +169,9 @@
     }
     $('note').textContent='Showing '+(start+1)+'–'+(start+slice.length)+' of '+total+' referrers';
   }
+  window.MEMONS_LB_ONLOAD=function(rows){ data=rows||[]; page=1; render(); };
   render();
+  if(window.MEMONS_LB_READY) window.MEMONS_LB_ONLOAD(window.MEMONS_LEADERBOARD);
 })();
 </script>
 <style>
