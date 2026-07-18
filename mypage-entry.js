@@ -118,9 +118,21 @@
     async function doConnect(){
       if(!window.MEMONS){ alert('Wallet client not loaded'); return; }
       if(!window.ethereum){
-        if(isMobileDevice()){ showWalletSheet(); return; }
-        alert('No wallet detected. Please install MetaMask and reload this page.');
-        return;
+        /* No browser wallet: fall back to WalletConnect (QR on desktop,
+           wallet picker + deep link on mobile). */
+        if(window.MEMONS_WC){
+          try{
+            await window.MEMONS_WC.connect();
+          }catch(e){
+            if(e && (e.message||'').indexOf('load') !== -1 && isMobileDevice()){ showWalletSheet(); return; }
+            return;   // user closed the modal
+          }
+        }else if(isMobileDevice()){
+          showWalletSheet(); return;
+        }else{
+          alert('No wallet detected. Please install MetaMask and reload this page.');
+          return;
+        }
       }
       try{
         var addr = await MEMONS.connect();
@@ -133,6 +145,7 @@
         if(window.MEMONS && MEMONS.disconnect) await MEMONS.disconnect();
         else if(window.MEMONS && MEMONS.resetSession) MEMONS.resetSession();
       }catch(e){}
+      try{ if(window.MEMONS_WC) await window.MEMONS_WC.disconnect(); }catch(e){}
       try{ if(window.MEMONS_REWARDS && MEMONS_REWARDS.clearServerOwned) MEMONS_REWARDS.clearServerOwned(); }catch(e){}
       renderDisconnected();
       document.dispatchEvent(new CustomEvent('memons:disconnected'));
