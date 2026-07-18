@@ -144,6 +144,22 @@
   function closeD(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
   if(burger) burger.addEventListener('click',openD);
   close.addEventListener('click',closeD); overlay.addEventListener('click',closeD);
+  drawer.addEventListener('click',function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if(!a) return;
+    var href = a.getAttribute('href') || '';
+    closeD();
+    if(href.charAt(0) === '#' && href.length > 1){
+      var t = null;
+      try{ t = document.querySelector(href); }catch(err){}
+      if(t){
+        e.preventDefault();
+        setTimeout(function(){
+          t.scrollIntoView({behavior:'smooth', inline:'start', block:'start'});
+        }, 200);
+      }
+    }
+  });
 })();
 </script>
 
