@@ -117,6 +117,14 @@
     .quote{border-left:0;padding-left:0;border-top:1px solid var(--hair);padding-top:22px}
     .rarity-row{grid-template-columns:repeat(2,1fr)}
     .coll-foot{flex-direction:column;align-items:flex-start}
+    .memoria-row{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+    .mcol{min-width:0}
+    .mlabel{font-size:9px;letter-spacing:.3px;margin-bottom:8px}
+  }
+  @media(max-width:560px){
+    .memoria-row{gap:6px}
+    .mlabel{font-size:7.5px;letter-spacing:.1px;margin-bottom:6px}
+    .mcard .mart{transform:none}
   }
   /* render the finished card image directly (no frame overlay) */
   .mcard{background:transparent!important;border:none!important;border-radius:0;overflow:visible;box-shadow:none!important}
