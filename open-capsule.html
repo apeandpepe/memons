@@ -499,8 +499,11 @@ if(document.documentElement.classList.contains('embed')){
       if(t){
         e.preventDefault();
         setTimeout(function(){
-          var sc = document.scrollingElement || document.documentElement;
-          if(sc.scrollWidth > sc.clientWidth + 4){
+          var sc = document.body;
+          if(!(sc && sc.scrollWidth > sc.clientWidth + 4)){
+            sc = document.scrollingElement || document.documentElement;
+          }
+          if(sc && sc.scrollWidth > sc.clientWidth + 4){
             sc.scrollTo({ left: t.offsetLeft, top: 0, behavior:'smooth' });
           } else {
             t.scrollIntoView({ behavior:'smooth', block:'start' });
