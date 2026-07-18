@@ -229,8 +229,13 @@
       if(t){
         e.preventDefault();
         setTimeout(function(){
-          t.scrollIntoView({behavior:'smooth', inline:'start', block:'start'});
-        }, 200);
+          var sc = document.scrollingElement || document.documentElement;
+          if(sc.scrollWidth > sc.clientWidth + 4){
+            sc.scrollTo({ left: t.offsetLeft, top: 0, behavior:'smooth' });
+          } else {
+            t.scrollIntoView({ behavior:'smooth', block:'start' });
+          }
+        }, 220);
       }
     }
   });
