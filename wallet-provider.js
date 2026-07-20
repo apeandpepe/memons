@@ -11,30 +11,63 @@
 // =====================================================================
 (function () {
   var PROJECT_ID = "21c80dea3961259c6e5473c2531a5a39";
+  var VERSION = "2.17.0";
 
-  // Pinned version. An unpinned major can ship a breaking change overnight.
-  // Two independent CDNs: jsDelivr has been blocked by Korean ISPs before.
-  var CDNS = [
-    "https://esm.sh/@walletconnect/ethereum-provider@2.17.0",
-    "https://cdn.skypack.dev/@walletconnect/ethereum-provider@2.17.0"
-  ];
+  // A plain script tag from unpkg, not a dynamic ESM import.
+  // The ESM route pulls a dependency graph across the network and, when a CDN
+  // is unreachable, the import can stall instead of rejecting. That left the
+  // connect button waiting forever with no modal and no error. unpkg is the
+  // CDN already proven to work on this audience's networks.
+  var UMD = "https://unpkg.com/@walletconnect/ethereum-provider@" + VERSION + "/dist/index.umd.js";
+  var ESM = "https://esm.sh/@walletconnect/ethereum-provider@" + VERSION;
+  var UMD_GLOBAL = "@walletconnect/ethereum-provider";
+
+  var LOAD_TIMEOUT = 15000;
 
   var initPromise = null;
   var injectedAtLoad = !!window.ethereum;
 
+  function timeout(ms, label) {
+    return new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error(label)); }, ms);
+    });
+  }
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error("SCRIPT_ERROR")); };
+      (document.head || document.documentElement).appendChild(s);
+    });
+  }
+
+  function fromGlobal() {
+    var g = window[UMD_GLOBAL];
+    var EP = g && (g.EthereumProvider || (g.default && g.default.EthereumProvider));
+    return EP && typeof EP.init === "function" ? EP : null;
+  }
+
   async function loadLib() {
-    var lastErr = null;
-    for (var i = 0; i < CDNS.length; i++) {
-      try {
-        var mod = await import(CDNS[i]);
-        var EP = mod.EthereumProvider || (mod.default && mod.default.EthereumProvider) || mod.default;
-        if (EP && typeof EP.init === "function") return EP;
-        lastErr = new Error("WC_BAD_MODULE");
-      } catch (e) { lastErr = e; }
-    }
-    var err = new Error("WC_LOAD_FAILED");
-    err.cause = lastErr;
-    throw err;
+    var existing = fromGlobal();
+    if (existing) return existing;
+
+    try {
+      await Promise.race([loadScript(UMD), timeout(LOAD_TIMEOUT, "UMD_TIMEOUT")]);
+      var EP = fromGlobal();
+      if (EP) return EP;
+    } catch (e) {}
+
+    // Last resort. Also raced, so a stalled request cannot hang the caller.
+    try {
+      var mod = await Promise.race([import(ESM), timeout(LOAD_TIMEOUT, "ESM_TIMEOUT")]);
+      var EP2 = mod.EthereumProvider || (mod.default && mod.default.EthereumProvider) || mod.default;
+      if (EP2 && typeof EP2.init === "function") return EP2;
+    } catch (e) {}
+
+    throw new Error("WC_LOAD_FAILED");
   }
 
   async function init() {
@@ -44,8 +77,8 @@
       projectId: PROJECT_ID,
 
       // No required namespace. Wallets that cannot commit to a specific chain
-      // up front reject the session proposal outright, which is the single
-      // biggest cause of failed mobile connections.
+      // up front reject the session proposal outright, which is a common cause
+      // of failed mobile connections.
       optionalChains: [1, 137, 56],
 
       optionalMethods: [
@@ -73,6 +106,18 @@
     });
   }
 
+  // Never let one failure poison every later attempt. A rejected or stalled
+  // init used to stay cached, so the second tap awaited the same dead promise.
+  function ensureInit() {
+    if (!initPromise) {
+      initPromise = init().catch(function (e) {
+        initPromise = null;
+        throw e;
+      });
+    }
+    return initPromise;
+  }
+
   function adopt(p) {
     try { p.__memonsWC = true; } catch (e) {}
     api.provider = p;
@@ -82,30 +127,31 @@
     return p;
   }
 
+  // WalletConnect keeps its session under wc@2:* keys. Checking first means a
+  // visitor who has never connected does not pay to download the library.
+  function hasStoredSession() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("wc@2:") === 0) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   var api = {
     provider: null,
     available: true,
 
     // true when a browser wallet injected itself before we ran
-    hasInjected: function () {
-      return injectedAtLoad;
-    },
+    hasInjected: function () { return injectedAtLoad; },
 
     // the provider the app should actually talk to
-    active: function () {
-      return api.provider || window.ethereum || null;
-    },
+    active: function () { return api.provider || window.ethereum || null; },
 
     // opens the WalletConnect modal (QR on desktop, app list on mobile)
     connect: async function () {
-      if (!initPromise) initPromise = init();
-      var p;
-      try {
-        p = await initPromise;
-      } catch (e) {
-        initPromise = null;          // let the next attempt retry the CDNs
-        throw e;
-      }
+      var p = await ensureInit();
       await p.enable();
       return adopt(p);
     },
@@ -125,14 +171,11 @@
     // in the relay but the page has no handle on it, and every signature or
     // payment after the first navigation fails.
     restore: async function () {
-      if (injectedAtLoad) return null;
+      if (injectedAtLoad || !hasStoredSession()) return null;
       try {
-        if (!initPromise) initPromise = init();
-        var p = await initPromise;
+        var p = await ensureInit();
         if (p.session && p.accounts && p.accounts.length) return adopt(p);
-      } catch (e) {
-        initPromise = null;
-      }
+      } catch (e) {}
       return null;
     }
   };
@@ -146,8 +189,5 @@
   // This lives here rather than in the header script because capsule-reveal.html
   // takes payments but has no header, so it never loads mypage-entry.js. Pages
   // that need to wait can await MEMONS_WC.ready.
-  api.ready = (async function () {
-    if (injectedAtLoad) return null;
-    try { return await api.restore(); } catch (e) { return null; }
-  })();
+  api.ready = api.restore();
 })();

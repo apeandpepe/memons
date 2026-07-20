@@ -155,12 +155,20 @@
         if (!activeProvider()) {
           if (window.MEMONS_WC) {
             try {
-              await window.MEMONS_WC.connect();
+              // Hard ceiling on the whole handshake. If the library or the
+              // relay is unreachable the button must recover on its own
+              // rather than sitting on 'Connecting' forever.
+              await Promise.race([
+                window.MEMONS_WC.connect(),
+                new Promise(function (_, rj) {
+                  setTimeout(function () { rj(new Error('WC_TIMEOUT')); }, 20000);
+                })
+              ]);
             } catch (e) {
               var msg = (e && e.message) || '';
-              if (msg === 'WC_LOAD_FAILED') {
+              if (msg === 'WC_LOAD_FAILED' || msg === 'WC_TIMEOUT') {
                 if (isMobileDevice()) showWalletSheet();
-                else alert('Could not reach the WalletConnect service. Check your network and reload.');
+                else alert('Could not reach the WalletConnect service. Check your network and try again.');
               }
               return;   // user closed the modal, or the library failed
             }
