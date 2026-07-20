@@ -21,6 +21,25 @@
     var host = wbtn.parentElement || hr;
     var busy = false;
 
+    /* Signing in costs two trips to the wallet app: approve the session, then
+       approve the signature. After the first trip the wallet sends the browser
+       back through the universal link, which reloads the page and drops the
+       half-finished login. Leaving a marker lets the reloaded page pick the
+       signature step up on its own instead of asking the user to tap again. */
+    var PENDING = 'memons_connecting_v1', PENDING_TTL = 5 * 60 * 1000;
+    function markPending() {
+      try { localStorage.setItem(PENDING, String(Date.now())); } catch (e) {}
+    }
+    function clearPending() {
+      try { localStorage.removeItem(PENDING); } catch (e) {}
+    }
+    function isPending() {
+      try {
+        var t = parseInt(localStorage.getItem(PENDING) || '0', 10);
+        return !!t && (Date.now() - t) < PENDING_TTL;
+      } catch (e) { return false; }
+    }
+
     function makeBtn(cls, text) {
       var b = document.createElement('button');
       b.className = cls; b.type = 'button'; b.textContent = text;
@@ -174,6 +193,7 @@
           if (!window.MEMONS_WC) throw new Error('WC_LOAD_FAILED');
           // Hard ceiling on the handshake. The relay connection can stall
           // before the modal ever appears, which looks like a frozen button.
+          markPending();
           await Promise.race([
             window.MEMONS_WC.connect(),
             new Promise(function (_, rj) {
@@ -201,6 +221,7 @@
         }
       } finally {
         busy = false;
+        clearPending();
         hideHint();
         if (!(window.MEMONS && window.MEMONS.connected)) renderDisconnected();
       }
@@ -294,7 +315,21 @@
           }
           renderConnected(window.MEMONS.address);
           document.dispatchEvent(new CustomEvent('memons:connected', { detail: { address: window.MEMONS.address } }));
+          return;
         }
+
+        /* Came back from the wallet mid-login: the session is live but the
+           signature step never ran. Finish it rather than making the user
+           work out that they have to tap connect a second time. */
+        var wc = window.MEMONS_WC;
+        var live = wc && wc.provider && wc.provider.accounts && wc.provider.accounts.length;
+        if (isPending() && live && !(window.MEMONS && window.MEMONS.connected)) {
+          clearPending();          // one attempt only, never a loop
+          showHint('Finishing sign-in - approve the signature in your wallet.');
+          connectViaWalletConnect();
+          return;
+        }
+        clearPending();
       } catch (e) { renderDisconnected(); }
     })();
   }

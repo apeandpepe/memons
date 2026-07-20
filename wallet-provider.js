@@ -182,6 +182,10 @@
     }
   };
 
+  // Bumped whenever this file changes, so the deployed build can be identified
+  // from the console without diffing sources: MEMONS_WC.build
+  api.build = 3;
+
   window.MEMONS_WC = api;
 
   // Single accessor used by gacha-client.js and memons-pay.js.
