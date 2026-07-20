@@ -22,7 +22,7 @@
   var ESM = "https://esm.sh/@walletconnect/ethereum-provider@" + VERSION;
   var UMD_GLOBAL = "@walletconnect/ethereum-provider";
 
-  var LOAD_TIMEOUT = 15000;
+  var LOAD_TIMEOUT = 10000;
 
   var initPromise = null;
   var injectedAtLoad = !!window.ethereum;
@@ -101,7 +101,9 @@
         // Without this the wallet app has no way to hand control back to the
         // browser after the user approves. On mobile the user approves, then
         // sits on the wallet screen wondering why nothing happened.
-        redirect: { native: "", universal: location.origin }
+        // `native` is deliberately omitted: an empty string is treated as a
+        // real scheme by some Android wallets and breaks the return trip.
+        redirect: { universal: location.origin }
       }
     });
   }

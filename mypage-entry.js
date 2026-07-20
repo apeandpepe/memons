@@ -110,27 +110,45 @@
       setTimeout(hideHint, 7000);
     });
 
-    /* ---- deep link sheet: last resort when WalletConnect cannot load ---- */
-    function showWalletSheet() {
+    /* ---- mobile wallet chooser ----------------------------------------
+       Opening the site inside the wallet app's own browser injects
+       window.ethereum and needs no relay, no WebSocket and no QR. That path is
+       far more reliable on Android, where the WalletConnect relay connection
+       often stalls before the modal can appear, so it is offered up front
+       rather than only after a timeout. */
+    function showWalletSheet(opts) {
+      opts = opts || {};
       if (document.getElementById('mmSheet')) return;
       var here = location.host + location.pathname + location.search;
       var full = location.href;
+
       var wrap = document.createElement('div');
       wrap.id = 'mmSheet';
       wrap.style.cssText = 'position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6)';
+
+      var note = opts.note || 'Open this page in your wallet app to connect.';
+      var wcRow = opts.showWalletConnect === false ? '' :
+        '<button id="mmWc" style="width:100%;text-align:center;font-weight:700;font-size:13px;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#a99d85;cursor:pointer;margin-bottom:10px">Use WalletConnect instead</button>';
+
       wrap.innerHTML =
         '<div style="width:100%;max-width:460px;background:linear-gradient(180deg,#111114,#0a0a0c);border:1px solid rgba(233,184,74,.3);border-radius:20px 20px 0 0;padding:24px 20px 28px;box-shadow:0 -20px 60px rgba(0,0,0,.7)">' +
-        '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:17px;letter-spacing:1px;color:#E9B84A;text-align:center">CONNECT WALLET</div>' +
-        '<div style="color:#a99d85;font-size:13px;line-height:1.6;text-align:center;margin:10px 0 20px">Open this page inside your wallet app to connect.</div>' +
-        '<a id="mmGo" href="https://metamask.app.link/dapp/' + here + '" style="display:block;text-align:center;text-decoration:none;font-weight:800;font-size:14px;padding:15px;border-radius:13px;background:linear-gradient(135deg,#f4d27a,#E9B84A 55%,#b8862e);color:#1c1500;margin-bottom:10px">Open in MetaMask</a>' +
-        '<a id="twGo" href="https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(full) + '" style="display:block;text-align:center;text-decoration:none;font-weight:700;font-size:14px;padding:15px;border-radius:13px;border:1px solid rgba(233,184,74,.4);color:#E9B84A;margin-bottom:10px">Open in Trust Wallet</a>' +
-        '<button id="mmCopy" style="width:100%;text-align:center;font-weight:600;font-size:13px;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8d8a82;cursor:pointer;margin-bottom:10px">Copy link</button>' +
-        '<button id="mmClose" style="width:100%;text-align:center;font-size:13px;padding:11px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>' +
+          '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:17px;letter-spacing:1px;color:#E9B84A;text-align:center">CONNECT WALLET</div>' +
+          '<div style="color:#a99d85;font-size:13px;line-height:1.6;text-align:center;margin:10px 0 20px">' + note + '</div>' +
+          '<a id="mmGo" href="https://metamask.app.link/dapp/' + here + '" style="display:block;text-align:center;text-decoration:none;font-weight:800;font-size:14px;padding:15px;border-radius:13px;background:linear-gradient(135deg,#f4d27a,#E9B84A 55%,#b8862e);color:#1c1500;margin-bottom:10px">Open in MetaMask</a>' +
+          '<a id="twGo" href="https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(full) + '" style="display:block;text-align:center;text-decoration:none;font-weight:700;font-size:14px;padding:15px;border-radius:13px;border:1px solid rgba(233,184,74,.4);color:#E9B84A;margin-bottom:10px">Open in Trust Wallet</a>' +
+          wcRow +
+          '<button id="mmCopy" style="width:100%;text-align:center;font-weight:600;font-size:13px;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8d8a82;cursor:pointer;margin-bottom:10px">Copy link</button>' +
+          '<button id="mmClose" style="width:100%;text-align:center;font-size:13px;padding:11px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>' +
         '</div>';
       document.body.appendChild(wrap);
+
       function close() { wrap.remove(); }
       wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
       wrap.querySelector('#mmClose').onclick = close;
+
+      var wc = wrap.querySelector('#mmWc');
+      if (wc) wc.onclick = function () { close(); connectViaWalletConnect(); };
+
       wrap.querySelector('#mmCopy').onclick = function () {
         var btn = this;
         try {
@@ -145,52 +163,81 @@
       return (window.MEMONS_ETH && window.MEMONS_ETH()) || window.ethereum || null;
     }
 
-    async function doConnect() {
+    /* Runs the WalletConnect handshake and then signs in. Split out so the
+       chooser can call it directly. */
+    async function connectViaWalletConnect() {
       if (busy) return;
-      if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
       busy = true;
       renderBusy('Connecting\u2026');
-
       try {
         if (!activeProvider()) {
-          if (window.MEMONS_WC) {
-            try {
-              // Hard ceiling on the whole handshake. If the library or the
-              // relay is unreachable the button must recover on its own
-              // rather than sitting on 'Connecting' forever.
-              await Promise.race([
-                window.MEMONS_WC.connect(),
-                new Promise(function (_, rj) {
-                  setTimeout(function () { rj(new Error('WC_TIMEOUT')); }, 20000);
-                })
-              ]);
-            } catch (e) {
-              var msg = (e && e.message) || '';
-              if (msg === 'WC_LOAD_FAILED' || msg === 'WC_TIMEOUT') {
-                if (isMobileDevice()) showWalletSheet();
-                else alert('Could not reach the WalletConnect service. Check your network and try again.');
-              }
-              return;   // user closed the modal, or the library failed
-            }
-          } else if (isMobileDevice()) {
-            showWalletSheet(); return;
-          } else {
-            alert('No wallet detected. Please install MetaMask and reload this page.');
-            return;
-          }
+          if (!window.MEMONS_WC) throw new Error('WC_LOAD_FAILED');
+          // Hard ceiling on the handshake. The relay connection can stall
+          // before the modal ever appears, which looks like a frozen button.
+          await Promise.race([
+            window.MEMONS_WC.connect(),
+            new Promise(function (_, rj) {
+              setTimeout(function () { rj(new Error('WC_TIMEOUT')); }, 15000);
+            })
+          ]);
         }
-
         if (window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
         var addr = await window.MEMONS.connect();
         renderConnected(addr);
         document.dispatchEvent(new CustomEvent('memons:connected', { detail: { address: addr } }));
       } catch (e) {
-        if (!(e && e.code === 4001)) alert((e && e.message) || 'Wallet connection failed');
+        var msg = (e && e.message) || '';
+        if (msg === 'WC_LOAD_FAILED' || msg === 'WC_TIMEOUT') {
+          if (isMobileDevice()) {
+            showWalletSheet({
+              showWalletConnect: false,
+              note: 'WalletConnect could not be reached. Open this page in your wallet app instead.'
+            });
+          } else {
+            alert('Could not reach the WalletConnect service. Check your network and try again.');
+          }
+        } else if (!(e && e.code === 4001) && msg) {
+          alert(msg);
+        }
       } finally {
         busy = false;
         hideHint();
         if (!(window.MEMONS && window.MEMONS.connected)) renderDisconnected();
       }
+    }
+
+    async function doConnect() {
+      if (busy) return;
+      if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
+
+      // A wallet is already injected (extension, or the wallet app's own
+      // browser). Nothing to choose.
+      if (activeProvider()) {
+        busy = true;
+        renderBusy('Connecting\u2026');
+        try {
+          if (window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
+          var addr = await window.MEMONS.connect();
+          renderConnected(addr);
+          document.dispatchEvent(new CustomEvent('memons:connected', { detail: { address: addr } }));
+        } catch (e) {
+          if (!(e && e.code === 4001)) alert((e && e.message) || 'Wallet connection failed');
+        } finally {
+          busy = false;
+          hideHint();
+          if (!(window.MEMONS && window.MEMONS.connected)) renderDisconnected();
+        }
+        return;
+      }
+
+      // Mobile browser with no injected wallet: let the user pick. The deep
+      // link into a wallet app is listed first because it does not depend on
+      // the WalletConnect relay.
+      if (isMobileDevice()) { showWalletSheet(); return; }
+
+      // Desktop with no extension: WalletConnect QR is the only route.
+      if (window.MEMONS_WC) { connectViaWalletConnect(); return; }
+      alert('No wallet detected. Please install MetaMask and reload this page.');
     }
 
     async function doDisconnect(reload) {
