@@ -58,7 +58,13 @@
   .cbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
 
   @media(max-width:1080px){
-    .hero{min-height:0;padding:54px 0 28px}
+    /* Centering a flex column that is taller than its box overflows BOTH ends,
+       and the part above the start edge cannot be reached by scrolling. Anchor
+       to the top instead so every element stays reachable. */
+    .page{justify-content:flex-start;min-height:100svh;padding-top:24px;padding-bottom:24px}
+    /* When embedded in index.html the parent's fixed header sits over us. */
+    html.embedded .page{padding-top:74px}
+    .hero{min-height:0;padding:12px 0 24px}
     .copy{max-width:none;padding-left:0}
     .hero .art{position:static;width:100%;margin-top:28px}
     .htitle{font-size:clamp(46px,11vw,70px)}
@@ -66,15 +72,31 @@
     .fcard p{max-width:none}
   }
   @media(max-width:560px){
+    .page{padding-bottom:20px}
+    html.embedded .page{padding-top:68px}
+    .hero{padding:8px 0 18px}
+    .htitle{font-size:clamp(40px,10.5vw,58px)}
+    .hlead{margin-top:16px;font-size:14.5px;line-height:1.6}
+    .hrule{margin:18px 0}
+    .hero .art{margin-top:18px}
+    .cards{gap:12px;padding:0 0 4px}
     .feats{flex-wrap:nowrap;gap:6px}
     .feat{gap:6px;min-width:0}
     .feat .ic{width:26px;height:30px;flex:0 0 26px}
     .feat .ic .sym{width:16px;height:16px}
     .feat b{font-size:10px;letter-spacing:.2px}
     .feat span span{font-size:8.5px;white-space:normal;line-height:1.15}
-    .fcard .body{padding:20px 22px;justify-content:center}
-    .fcard .fic{margin-bottom:10px;width:40px;height:46px}
-    .fcard p{font-size:13px}
+    /* A fixed aspect ratio makes the card shorter than the stack of icon,
+       heading, copy and button it contains, so the button was being clipped by
+       the card edge. Let the card take the height its content needs. */
+    .fcard{aspect-ratio:auto}
+    .fcard .body{position:relative;padding:16px 18px;justify-content:flex-start}
+    .fcard .fic{margin-bottom:8px;width:32px;height:36px}
+    .fcard .fic .sym{width:20px;height:20px}
+    .fcard h3{font-size:23px;margin-bottom:8px}
+    .fcard p{font-size:12.5px;line-height:1.45}
+    .cbtn{padding:9px 16px;font-size:11px;margin-top:12px}
+    .hero .art img{max-height:132px;object-fit:contain;object-position:left center}
   }
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:rgba(233,184,74,.30);border-radius:8px}
@@ -84,6 +106,10 @@
 </style>
 </head>
 <body>
+<script>
+  /* Set before paint so the header offset never flashes. */
+  if (window.top !== window.self) document.documentElement.className += " embedded";
+</script>
 <div class="page">
 
   <!-- HERO -->

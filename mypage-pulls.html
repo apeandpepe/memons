@@ -267,7 +267,7 @@
 
     box.innerHTML='<div class="pgrid">'+list.map(function(p){
       var r=byKey[(p.rarity||'').toLowerCase()]||{label:(p.rarity||'').toUpperCase(),color:'#888'};
-      var img=p.image_url || ('images/mypage/back/'+(p.rarity||'common')+'.png');
+      var img=p.image_url || ('images/mypage/back/'+(p.rarity||'common')+'.webp');
       return '<div class="pcard" style="--gc:'+r.color+'">'+
         '<span class="pbadge '+(p.dup?'dup':'new')+'">'+(p.dup?'DUP':'NEW')+'</span>'+
         '<img src="'+img+'" alt="">'+

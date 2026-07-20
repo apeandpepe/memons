@@ -265,7 +265,7 @@
     var order=['common','rare','epic','legendary','mythic'];
     $('chips').innerHTML=order.map(function(r){
       return '<div class="chip" data-r="'+r+'" style="--cc:'+RCOL[r]+';cursor:pointer">'+
-        '<img class="chipbg" src="images/mypage/chip/'+r+'.png" alt="" onerror="this.closest(\'.chip\').classList.add(\'noimg\');this.remove();">'+
+        '<img class="chipbg" src="images/mypage/chip/'+r+'.webp" alt="" onerror="this.closest(\'.chip\').classList.add(\'noimg\');this.remove();">'+
         '<span class="cl">'+r.toUpperCase()+'</span>'+
         '<span class="cn">'+rc[r]+'</span></div>';
     }).join('');

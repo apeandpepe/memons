@@ -141,7 +141,7 @@
       var n=j.notice;
       document.title='MEMONS — '+n.title;
       var badge = n.pinned ? '<span class="badge pinned">PINNED</span>' : '<span class="badge '+n.category+'">'+n.category.toUpperCase()+'</span>';
-      var bannerSrc = n.banner_url ? esc(n.banner_url) : 'images/notice/banner.png';
+      var bannerSrc = n.banner_url ? esc(n.banner_url) : 'images/notice/banner.webp';
       var bannerHtml = '<img class="banner" src="'+bannerSrc+'" alt="" onerror="this.style.display=\'none\'">';
       var bodyHtml = n.body_md||'';
       $('view').innerHTML=

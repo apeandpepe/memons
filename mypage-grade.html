@@ -199,7 +199,7 @@
     var key=state.grade, r=byKey[key], g=REW.grades[key];
     document.documentElement.style.setProperty('--gc', r.color);
     tabs();
-    el('gcardimg').src='images/mypage/back/'+key+'.png';
+    el('gcardimg').src='images/mypage/back/'+key+'.webp';
     el('gname').textContent=r.label;
     var owned=REW.ownedKinds(key);                                        // dex
     var elig =REW.eligibleKinds ? REW.eligibleKinds(key) : owned;          // rewards
@@ -216,7 +216,7 @@
     }else{
       var rg=byKey[g.reward.grade];
       document.documentElement.style.setProperty('--gc2', rg.color);
-      rr.innerHTML='<div class="cc"><img src="images/mypage/back/'+g.reward.grade+'.png" alt=""></div>';
+      rr.innerHTML='<div class="cc"><img src="images/mypage/back/'+g.reward.grade+'.webp" alt=""></div>';
       el('rcond').innerHTML='<span class="cn">1 <b>'+rg.label+'</b> card</span> every '+g.N+' kinds';
     }
     var earned=Math.floor(owned/g.N), btn=el('rbtn');
@@ -235,12 +235,12 @@
     for(var i=start;i<end;i++){
       var s=document.createElement('div');
       if(i<owned){
-        var url = ownedImgs[i] || ('images/mypage/back/'+key+'.png');   // real pulled card art
+        var url = ownedImgs[i] || ('images/mypage/back/'+key+'.webp');   // real pulled card art
         s.className='slot own'; s.innerHTML='<img src="'+url+'" alt=""><span class="lab">Owned</span>';
       }
       else if(i < owned + usedCount){
         // spent on a reward: still in the wallet, but can never fund another reward
-        var uurl = usedImgs[i-owned] || ('images/mypage/back/'+key+'.png');
+        var uurl = usedImgs[i-owned] || ('images/mypage/back/'+key+'.webp');
         s.className='slot own used';
         s.innerHTML='<img src="'+uurl+'" alt="">'+
                     '<div class="stamp">REWARD<small>CLAIMED</small></div>'+

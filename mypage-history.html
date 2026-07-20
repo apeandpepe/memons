@@ -211,7 +211,7 @@
       box.innerHTML=list.map(function(cl){
         var g=byKey[cl.grade]||{label:(cl.grade||'').toUpperCase(),color:'#888'};
         return '<div class="hrow" style="--gc:'+g.color+'">'+
-          '<div class="hthumb"><img src="images/mypage/back/'+cl.grade+'.png" alt=""></div>'+
+          '<div class="hthumb"><img src="images/mypage/back/'+cl.grade+'.webp" alt=""></div>'+
           '<div><div class="hname">'+g.label+' COLLECTION</div>'+
           '<div class="hsub">Reward #'+cl.milestone+' · '+cl.owned_kinds+' kinds owned at request</div>'+
           '<div class="hdate">'+fmtDate(cl.created_at)+(cl.note?' · <span class="hnote">'+cl.note+'</span>':'')+'</div></div>'+

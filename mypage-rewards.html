@@ -280,7 +280,7 @@
       var have=d[r], tot=TOTAL[r], pct=tot?Math.min(100,have/tot*100):0;
       return '<div class="pcard" style="--cc:var(--c-'+r+')">'+
         '<div class="pc-top">'+
-          '<img class="pc-hex" src="images/mypage/hex/'+r+'.png" alt="" onerror="this.closest(\'.pcard\').classList.add(\'nohex\')">'+
+          '<img class="pc-hex" src="images/mypage/hex/'+r+'.webp" alt="" onerror="this.closest(\'.pcard\').classList.add(\'nohex\')">'+
           '<span class="pc-hex-fb"></span><span class="pc-name">'+r.toUpperCase()+'</span></div>'+
         '<div class="pc-num">'+have+' <span>/ '+tot+'</span></div>'+
         '<div class="pc-bar"><i style="width:'+pct+'%"></i></div>'+
@@ -288,7 +288,7 @@
     }).join('');
     var totalCards=owned.length;
     rows+='<div class="totcard"><div class="tt">TOTAL CARDS OWNED</div>'+
-      '<div class="tmid"><img src="images/mypage/reward/total-cards.png" alt="" onerror="this.style.display=\'none\'">'+
+      '<div class="tmid"><img src="images/mypage/reward/total-cards.webp" alt="" onerror="this.style.display=\'none\'">'+
       '<div class="tn">'+totalCards+'<small>Cards</small></div></div>'+
       '<a class="tbtn" href="mypage-collection.html">View Collection</a></div>';
     $('prow').innerHTML=rows;
@@ -298,7 +298,7 @@
       var have=d[r], tot=TOTAL[r], done=have>=tot;
       return '<div class="rcard'+(done?' ready':'')+'" style="--cc:var(--c-'+r+')" data-r="'+r+'">'+
         '<div class="rtop">'+
-          '<img class="rbox" src="images/mypage/reward/box-'+r+'.png" alt="" onerror="this.closest(\'.rcard\').classList.add(\'nobox\')">'+
+          '<img class="rbox" src="images/mypage/reward/box-'+r+'.webp" alt="" onerror="this.closest(\'.rcard\').classList.add(\'nobox\')">'+
           '<span class="rbox-fb"></span>'+
           '<div><div class="rttl">'+r.toUpperCase()+' COLLECTION</div>'+
           '<div class="rprog">'+have+' <span>/ '+tot+'</span></div></div></div>'+
@@ -315,7 +315,7 @@
       ? '<span class="good">Yes</span>' : '<span>—</span>';
     $('evKyc').textContent = 'Not verified';
     $('pgrid').innerHTML=POT.map(function(p){
-      var img = p.coin ? 'images/mypage/event/apepe-'+p.r+'.png' : 'images/mypage/event/reward-'+p.r+'.png';
+      var img = p.coin ? 'images/mypage/event/apepe-'+p.r+'.webp' : 'images/mypage/event/reward-'+p.r+'.webp';
       var rewInner = p.coin
         ? '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv">'+p.rewardText+'<small>APEPE</small></div>'
         : '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv" style="font-size:12px">'+p.rewardText+'</div>';
@@ -326,7 +326,7 @@
         : '<div class="pstv no"><i class="ti ti-circle-x"></i>Not Eligible</div>';
       return '<div class="pot'+hi+'" style="--cc:var(--c-'+p.r+')">'+
         '<div class="ptop">'+
-          '<img class="pbox" src="images/mypage/event/box-'+p.r+'.png" alt="" onerror="this.closest(\'.pot\').classList.add(\'nobox\')">'+
+          '<img class="pbox" src="images/mypage/event/box-'+p.r+'.webp" alt="" onerror="this.closest(\'.pot\').classList.add(\'nobox\')">'+
           '<span class="pbox-fb"></span>'+
           '<div><div class="pt">'+p.title+'</div><div class="ph">'+p.holder+'</div><div class="pw">'+p.winners+'</div></div></div>'+
         '<div class="prow2"><div class="prew"><div class="prewl">Reward</div><div class="prewv">'+rewInner+'</div></div>'+

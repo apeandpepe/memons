@@ -197,17 +197,17 @@
     <!-- ROW 1: stat cards -->
     <div class="row1">
       <div class="bigcard capcolor" id="capCard">
-        <img class="bimg" src="images/mypage/dash/capsule.png" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-ball-american"></i></span>
+        <img class="bimg" src="images/mypage/dash/capsule.webp" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-ball-american"></i></span>
         <div><div class="bl">MY CAPSULES</div><div class="bv" id="capNum">—<small> / 80</small></div><div class="bsub">Max 80</div>
           <a class="bbtn" href="open-capsule.html">OPEN CAPSULE <i class="ti ti-arrow-right"></i></a></div>
       </div>
       <div class="bigcard cardcolor" id="cardCard">
-        <img class="bimg" src="images/mypage/dash/cards.png" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-cards"></i></span>
+        <img class="bimg" src="images/mypage/dash/cards.webp" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-cards"></i></span>
         <div><div class="bl">CARDS OWNED</div><div class="bv" id="cardNum">—<span class="u">Cards</span></div>
           <a class="link" href="mypage-collection.html" style="margin-top:8px">View Collection <i class="ti ti-arrow-right"></i></a></div>
       </div>
       <div class="bigcard refcolor" id="refCard">
-        <img class="bimg" src="images/mypage/dash/users.png" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-users"></i></span>
+        <img class="bimg" src="images/mypage/dash/users.webp" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-users"></i></span>
         <div><div class="bl">VALID REFERRALS</div><div class="bv" id="refNum">—<span class="u">Users</span></div>
           <a class="link" href="mypage-referral.html" style="margin-top:8px">View Referral <i class="ti ti-arrow-right"></i></a></div>
       </div>
@@ -217,9 +217,9 @@
     <div class="row2">
       <div class="panel">
         <div class="phead"><div class="ptitle">EVENT MISSION</div><a class="link" href="mypage-missions.html">View Mission <i class="ti ti-arrow-right"></i></a></div>
-        <div class="mrow"><div class="mi"><i class="ti ti-repeat"></i></div><div><div class="mt">Retweet Official Post</div><div class="md">Retweet the event post on X (Twitter)</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.png" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+10</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
-        <div class="mrow"><div class="mi"><i class="ti ti-share-3"></i></div><div><div class="mt">Share Your Card</div><div class="md">Share your acquired card on X (Twitter)</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.png" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+10</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
-        <div class="mrow"><div class="mi"><i class="ti ti-user-circle"></i></div><div><div class="mt">Apply MEMONS Card as X Profile</div><div class="md">Set MEMONS card as your profile picture</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.png" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+20</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
+        <div class="mrow"><div class="mi"><i class="ti ti-repeat"></i></div><div><div class="mt">Retweet Official Post</div><div class="md">Retweet the event post on X (Twitter)</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+10</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
+        <div class="mrow"><div class="mi"><i class="ti ti-share-3"></i></div><div><div class="mt">Share Your Card</div><div class="md">Share your acquired card on X (Twitter)</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+10</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
+        <div class="mrow"><div class="mi"><i class="ti ti-user-circle"></i></div><div><div class="mt">Apply MEMONS Card as X Profile</div><div class="md">Set MEMONS card as your profile picture</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+20</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
         <div class="mnote"><i class="ti ti-info-circle"></i>Complete missions to get more capsules!</div>
       </div>
 
@@ -294,7 +294,7 @@
     $('lb').innerHTML=data.map(function(e){
       var cls=e.rank<=3?(' top'+e.rank):'';
       return '<div class="lbrow'+cls+'"><div class="lrank">'+e.rank+'</div>'+
-        '<img class="lav" src="images/mypage/dash/avatar.png" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<img class="lav" src="images/mypage/dash/avatar.webp" alt="" onerror="this.style.visibility=\'hidden\'">'+
         '<div class="laddr">'+e.address+'</div><div class="lref">'+e.referrals+' Users</div></div>';
     }).join('');
   }
@@ -307,7 +307,7 @@
     $('coGrid').innerHTML=ORDER.map(function(r){
       var have=d[r], tot=TOTAL[r], pct=tot?Math.min(100,have/tot*100):0;
       return '<div class="cocard" style="--cc:var(--c-'+r+')">'+
-        '<img class="coimg" src="images/mypage/collection/'+r+'.png" alt="" onerror="this.closest(\'.cocard\').classList.add(\'noimg\');this.remove();">'+
+        '<img class="coimg" src="images/mypage/collection/'+r+'.webp" alt="" onerror="this.closest(\'.cocard\').classList.add(\'noimg\');this.remove();">'+
         '<div class="conum">'+have+' <span>/ '+tot+'</span></div>'+
         '<div class="cobar"><i style="width:'+pct+'%"></i></div></div>';
     }).join('');
@@ -319,7 +319,7 @@
     $('resBody').innerHTML=prizes.map(function(p){
       var r=p[0], c=cnt[r], elig=c>0;
       return '<tr><td><span class="g" style="--cc:var(--c-'+r+')">'+
-        '<img src="images/mypage/dash/grade-'+r+'.png" alt="" onerror="this.outerHTML=\'<span class=&quot;gfb&quot; style=&quot;background:var(--c-'+r+')&quot;></span>\'">'+
+        '<img src="images/mypage/dash/grade-'+r+'.webp" alt="" onerror="this.outerHTML=\'<span class=&quot;gfb&quot; style=&quot;background:var(--c-'+r+')&quot;></span>\'">'+
         '<span style="color:var(--c-'+r+')">'+p[1]+'</span> <span style="color:var(--dim);font-weight:400">('+p[2]+')</span></span></td>'+
         '<td>'+c+'</td><td>'+c+(c===1?' Entry':' Entries')+'</td>'+
         '<td>'+(elig?'<span class="st ok"><i class="ti ti-circle-check"></i>Auto Entered</span>':'<span class="st no"><i class="ti ti-circle-x"></i>Not Eligible</span>')+'</td></tr>';
