@@ -77,7 +77,7 @@
   .lbl{font-family:var(--font-head);font-size:12px;letter-spacing:1.5px;color:var(--muted);margin:22px 0 14px}
 
   /* progress row (5 rarities) + total-owned */
-  .prow{display:grid;grid-template-columns:repeat(5,1fr) 200px;gap:14px}
+  .prow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) 200px;gap:14px}
   .pcard{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:15px 16px}
   .pcard .pc-top{display:flex;align-items:center;gap:9px}
   .pcard .pc-hex{width:26px;height:26px;object-fit:contain;flex-shrink:0}
@@ -99,7 +99,7 @@
   .totcard .tbtn:hover{color:var(--gold);border-color:var(--gold-b)}
 
   /* available rewards (claim) */
-  .rgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .rgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
   .rcard{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px;display:flex;flex-direction:column}
   .rcard .rtop{display:flex;align-items:center;gap:10px}
   .rcard .rbox{width:52px;height:52px;object-fit:contain;flex-shrink:0}
@@ -128,7 +128,7 @@
   .est .ev{font-family:var(--font-head);font-weight:800;font-size:15px;margin-top:6px}
   .est .ev.good{color:var(--good)} .est .ev.bad{color:var(--bad)}
 
-  .pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .pgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
   .pot{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;position:relative}
   .pot.hi{border-color:color-mix(in srgb,var(--cc) 45%, var(--line))}
   .pot .ptop{display:flex;align-items:center;gap:10px;padding:15px}
@@ -162,6 +162,19 @@
     .totcard{padding:12px}
   }
   @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:24px 16px 70px}}
+
+  /* Mobile overflow guard.
+     .main centres its child, and .wrap had no min-width:0, so once the content
+     was wider than the screen the wrap grew past 100% and the centring pushed
+     its left edge off-screen, where overflow-x:hidden clipped it. Anchor to the
+     start and let the wrap shrink so nothing can be pushed sideways out of view. */
+  @media(max-width:900px){
+    .main{justify-content:flex-start}
+    .wrap{min-width:0;max-width:100%}
+  }
+  @media(max-width:560px){
+    .panel{padding:16px 13px}
+  }
 </style>
 </head>
 <body>

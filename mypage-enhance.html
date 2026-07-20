@@ -176,6 +176,19 @@
     .gtab .gname{font-size:9.5px;letter-spacing:.3px}
     .gtab .gto{font-size:7.5px;letter-spacing:.2px}
   }
+
+  /* Mobile overflow guard.
+     .main centres its child, and .wrap had no min-width:0, so once the content
+     was wider than the screen the wrap grew past 100% and the centring pushed
+     its left edge off-screen, where overflow-x:hidden clipped it. Anchor to the
+     start and let the wrap shrink so nothing can be pushed sideways out of view. */
+  @media(max-width:900px){
+    .main{justify-content:flex-start}
+    .wrap{min-width:0;max-width:100%}
+  }
+  @media(max-width:560px){
+    .panel{padding:16px 13px}
+  }
 </style>
 </head>
 <body>

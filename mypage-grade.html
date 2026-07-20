@@ -46,7 +46,7 @@
   .gtabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
   .gtab{font-family:var(--font-head);font-size:13px;font-weight:600;letter-spacing:.5px;color:var(--muted);border:1px solid var(--line2);background:var(--panel);border-radius:10px;padding:9px 17px;cursor:pointer;transition:all .15s}
   .gtab:hover{color:var(--text)}
-  .ghead{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin-bottom:24px}
+  .ghead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;margin-bottom:24px}
   .gcard{width:150px;aspect-ratio:440/636;border-radius:13px;overflow:hidden;flex-shrink:0;background:#070707}
   .gcard img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
   .gtitle{font-family:var(--font-head);font-size:30px;font-weight:800;letter-spacing:.5px}
@@ -69,9 +69,9 @@
   .sectlabel{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
   .sectlabel .sl{font-family:var(--font-head);font-size:13px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
   .pgnum{font-size:13px;color:var(--muted)}
-  .cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
-  @media(max-width:1300px){.cgrid{grid-template-columns:repeat(4,1fr)}}
-  @media(max-width:960px){.sidebar{display:none}.main{margin-left:0}.nav{display:none}.cgrid{grid-template-columns:repeat(3,1fr)}.ghead{grid-template-columns:1fr}}
+  .cgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+  @media(max-width:1300px){.cgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media(max-width:960px){.sidebar{display:none}.main{margin-left:0}.nav{display:none}.cgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.ghead{grid-template-columns:minmax(0,1fr)}}
   .slot{position:relative;border-radius:11px;overflow:hidden;aspect-ratio:440/636;background:#070707}
   .slot.own{}
   .slot.own img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
@@ -88,7 +88,7 @@
   @media(max-width:600px){
     .wrap{padding:22px 14px 70px}
     .gtitle{font-size:24px}
-    .cgrid{grid-template-columns:repeat(3,1fr);gap:10px}
+    .cgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
     .rewardbar{flex-direction:column;align-items:flex-start;gap:14px}
     .rbtn{width:100%;justify-content:center}
     .gtabs{gap:6px}
@@ -114,6 +114,19 @@
     text-shadow:0 1px 2px rgba(0,0,0,.5);box-shadow:0 0 0 1px rgba(224,85,106,.25) inset;
     opacity:.92;white-space:nowrap}
   .stamp small{display:block;font-size:.72em;letter-spacing:.6px;opacity:.85;font-weight:600}
+
+  /* Mobile overflow guard.
+     .main centres its child, and .wrap had no min-width:0, so once the content
+     was wider than the screen the wrap grew past 100% and the centring pushed
+     its left edge off-screen, where overflow-x:hidden clipped it. Anchor to the
+     start and let the wrap shrink so nothing can be pushed sideways out of view. */
+  @media(max-width:900px){
+    .main{justify-content:flex-start}
+    .wrap{min-width:0;max-width:100%}
+  }
+  @media(max-width:560px){
+    .panel{padding:16px 13px}
+  }
 </style></head>
 <body>
   <header class="head">

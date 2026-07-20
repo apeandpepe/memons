@@ -64,7 +64,7 @@
   .lbl{font-family:var(--font-head);font-size:12px;letter-spacing:1.8px;color:var(--muted);margin-bottom:18px}
 
   /* overview: 4 big stat cards (left) + link (right) */
-  .ov{display:grid;grid-template-columns:repeat(4,1fr) 1.25fr;gap:16px;align-items:stretch}
+  .ov{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 1.25fr;gap:16px;align-items:stretch}
   .stat{border:1px solid var(--line);border-radius:14px;background:#0a0a0c;padding:20px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
   .stat .sl{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.5px;color:var(--muted);font-family:var(--font-head)}
   .stat .sl i{font-size:19px}
@@ -88,14 +88,14 @@
   .sharerow .sb:hover{color:var(--gold);border-color:var(--gold-b)} .sharerow .sb i{font-size:17px}
   .locked{border:1px dashed var(--line2);border-radius:11px;background:rgba(255,255,255,.02);padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
   .locked b{color:var(--gold)}
-  @media(max-width:1050px){.ov{grid-template-columns:repeat(2,1fr)}.linkcol{grid-column:1/-1}}
+  @media(max-width:1050px){.ov{grid-template-columns:repeat(2,minmax(0,1fr))}.linkcol{grid-column:1/-1}}
 
-  .cols{display:grid;grid-template-columns:1.05fr 1fr;gap:22px;margin-top:22px}
-  @media(max-width:1050px){.cols{grid-template-columns:1fr}}
+  .cols{display:grid;grid-template-columns:1.05fr minmax(0,1fr);gap:22px;margin-top:22px}
+  @media(max-width:1050px){.cols{grid-template-columns:minmax(0,1fr)}}
   @media(max-width:1040px){
-    .miles{display:grid !important;grid-template-columns:repeat(2,1fr) !important;gap:9px}
+    .miles{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:9px}
     .miles .arrow{display:none !important}
-    .amb{grid-template-columns:repeat(3,1fr) !important;gap:9px}
+    .amb{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:9px}
   }
   @media(max-width:560px){
     .amb{gap:8px}
@@ -131,7 +131,7 @@
   .mile .mstate.claim:hover{background:rgba(233,184,74,.12)}
   .arrow{align-self:center;color:var(--dim);font-size:20px}
 
-  .amb{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .amb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
   .ambc{border:1px solid var(--line2);border-radius:14px;background:linear-gradient(180deg,#101014,#0a0a0c);padding:24px 14px;text-align:center;transition:.15s}
   .ambc:hover{transform:translateY(-2px)}
   .ambc img{width:88px;height:88px;object-fit:contain;margin:0 auto 14px;filter:drop-shadow(0 8px 22px rgba(233,184,74,.28))}
@@ -145,6 +145,19 @@
   .note{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.02);padding:14px 16px;margin-top:18px;color:var(--muted);font-size:12.5px}
   .note i{color:var(--dim);font-size:17px}
   @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:24px 16px 70px}.rbanner{display:none}.titlerow2{display:block}}
+
+  /* Mobile overflow guard.
+     .main centres its child, and .wrap had no min-width:0, so once the content
+     was wider than the screen the wrap grew past 100% and the centring pushed
+     its left edge off-screen, where overflow-x:hidden clipped it. Anchor to the
+     start and let the wrap shrink so nothing can be pushed sideways out of view. */
+  @media(max-width:900px){
+    .main{justify-content:flex-start}
+    .wrap{min-width:0;max-width:100%}
+  }
+  @media(max-width:560px){
+    .panel{padding:16px 13px}
+  }
 </style>
 </head>
 <body>

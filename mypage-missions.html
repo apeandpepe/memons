@@ -76,7 +76,7 @@
   .earn a:hover::after{animation:shine .7s ease}
 
   /* mission list */
-  .mhead{display:grid;grid-template-columns:1fr 220px 220px;gap:24px;padding:0 30px 14px;
+  .mhead{display:grid;grid-template-columns:minmax(0,1fr) 220px 220px;gap:24px;padding:0 30px 14px;
     font-family:var(--font-head);font-size:11px;letter-spacing:2px;color:var(--dim)}
   .mhead .c{text-align:center}
   .mtable{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}
@@ -101,7 +101,7 @@
     background:linear-gradient(180deg,#fff3d6,#E9B84A 60%,#c8922f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .el-sub{color:#a99d85;font-size:13.5px;margin-top:14px;line-height:1.6;max-width:300px;margin-left:auto;margin-right:auto}
   @media(max-width:560px){.el-card{padding:32px 24px 28px}.el-title{font-size:25px;letter-spacing:3px}.el-badge{width:58px;height:58px}}
-  .mrow{display:grid;grid-template-columns:1fr 220px 220px;gap:24px;align-items:center;padding:20px 30px;border-bottom:1px solid var(--line)}
+  .mrow{display:grid;grid-template-columns:minmax(0,1fr) 220px 220px;gap:24px;align-items:center;padding:20px 30px;border-bottom:1px solid var(--line)}
   .mrow:last-child{border-bottom:none}
   .mrow:hover{background:rgba(255,255,255,.015)}
   .mrow .mL{display:flex;align-items:center;gap:18px}
@@ -169,7 +169,7 @@
   .toast.bad{border-color:var(--bad)}
 
   @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:26px 18px 70px}
-    .mrow{grid-template-columns:1fr;gap:12px}.act{min-width:0}}
+    .mrow{grid-template-columns:minmax(0,1fr);gap:12px}.act{min-width:0}}
   @media(max-width:640px){
     .topbar{margin:8px 0 22px;justify-content:stretch}
     .earn{width:100%;flex-wrap:wrap;gap:12px 14px;padding:14px 16px}
@@ -177,11 +177,24 @@
     .earn .n{font-size:24px}
     .earn a{margin-left:auto}
     .mhead{display:none}
-    .mrow{grid-template-columns:1fr !important;gap:14px;text-align:center;justify-items:center;padding:20px 16px}
+    .mrow{grid-template-columns:minmax(0,1fr) !important;gap:14px;text-align:center;justify-items:center;padding:20px 16px}
     .mrow .mL{flex-direction:column;text-align:center;gap:10px}
     .mrow .mrew{justify-content:center}
     .mrow .act{width:100%;max-width:280px}
     .mrow .act a,.mrow .act button{width:100%}
+  }
+
+  /* Mobile overflow guard.
+     .main centres its child, and .wrap had no min-width:0, so once the content
+     was wider than the screen the wrap grew past 100% and the centring pushed
+     its left edge off-screen, where overflow-x:hidden clipped it. Anchor to the
+     start and let the wrap shrink so nothing can be pushed sideways out of view. */
+  @media(max-width:900px){
+    .main{justify-content:flex-start}
+    .wrap{min-width:0;max-width:100%}
+  }
+  @media(max-width:560px){
+    .panel{padding:16px 13px}
   }
 </style>
 </head>
