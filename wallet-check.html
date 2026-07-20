@@ -43,7 +43,9 @@
 
 <div class="card">
   <h2>Injected wallet</h2>
-  <div class="row"><div class="k">window.ethereum</div><div class="v" id="w-present">-</div></div>
+  <div class="row"><div class="k">window.ethereum (at load)</div><div class="v" id="w-present">-</div></div>
+  <div class="row"><div class="k">After async detect</div><div class="v wait" id="w-detect">testing...</div></div>
+  <div class="row"><div class="k">EIP-6963 announce</div><div class="v wait" id="w-6963">testing...</div></div>
   <div class="row"><div class="k">Reports MetaMask</div><div class="v" id="w-mm">-</div></div>
   <div class="row"><div class="k">Chain id</div><div class="v" id="w-chain">-</div></div>
   <div class="row"><div class="k">Accounts visible</div><div class="v" id="w-acc">-</div></div>
@@ -122,6 +124,36 @@
   // ---- injected provider -------------------------------------------------
   var eth = window.ethereum;
   set("w-present", eth ? "present" : "absent", eth ? "ok" : "bad");
+
+  /* Wallet browsers often inject after page scripts run, and some only
+     announce through EIP-6963. Reading window.ethereum once at load reports
+     "no wallet" inside the wallet's own browser. */
+  var announced = null;
+  try {
+    window.addEventListener("eip6963:announceProvider", function (e) {
+      var p = e && e.detail && e.detail.provider;
+      var info = e && e.detail && e.detail.info;
+      if (!p) return;
+      announced = p;
+      set("w-6963", "yes" + (info && info.name ? " (" + info.name + ")" : ""), "ok");
+    });
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+  } catch (err) {}
+
+  var dt0 = Date.now();
+  var dIv = setInterval(function () {
+    if (window.ethereum || announced) {
+      clearInterval(dIv);
+      set("w-detect", "found after " + (Date.now() - dt0) + "ms", "ok");
+    } else if (Date.now() - dt0 > 3000) {
+      clearInterval(dIv);
+      set("w-detect", "still absent after 3000ms", "bad");
+      if ($("w-6963").textContent === "testing...") set("w-6963", "no", "bad");
+    }
+  }, 120);
+  setTimeout(function () {
+    if ($("w-6963").textContent === "testing...") set("w-6963", "no", "bad");
+  }, 3200);
   set("w-mm", eth ? (eth.isMetaMask ? "yes" : "no") : "-");
   if (eth && eth.request) {
     eth.request({ method: "eth_chainId" })

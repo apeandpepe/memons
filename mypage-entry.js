@@ -262,6 +262,13 @@
       if (busy) return;
       if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
 
+      // Wallet browsers inject late. Deciding before detection finishes made
+      // the site offer to open the very wallet app it was already running in.
+      if (window.MEMONS_WC && window.MEMONS_WC.detect && !activeProvider()) {
+        renderBusy('Connecting\u2026');
+        try { await window.MEMONS_WC.detect(); } catch (e) {}
+      }
+
       // A wallet is already injected (extension, or the wallet app's own
       // browser). Nothing to choose.
       if (activeProvider()) {
@@ -330,8 +337,9 @@
         // Rebuild the WalletConnect provider before anything reads it.
         // Every navigation on this site is a full reload, so without this the
         // session exists on the relay but the page cannot use it.
-        if (window.MEMONS_WC && window.MEMONS_WC.ready) {
-          try { await window.MEMONS_WC.ready; } catch (e) {}
+        if (window.MEMONS_WC) {
+          if (window.MEMONS_WC.detect) { try { await window.MEMONS_WC.detect(); } catch (e) {} }
+          if (window.MEMONS_WC.ready)  { try { await window.MEMONS_WC.ready;  } catch (e) {} }
         }
         if (window.MEMONS && window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
 
