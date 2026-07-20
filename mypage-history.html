@@ -61,7 +61,7 @@
   .tab.on{color:var(--gold);border-color:var(--gold-b);background:rgba(233,184,74,.06)}
   .rowgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
   @media(max-width:1000px){.rowgrid{grid-template-columns:minmax(0,1fr)}}
-  @media(max-width:960px){.sidebar{display:none}.main{margin-left:0}.nav{display:none}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:1040px){.sidebar{display:none}.main{margin-left:0}.nav{display:none}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:center;gap:18px;min-height:118px;background:linear-gradient(180deg,var(--panel),#0a0a0d);border:1px solid var(--line);border-radius:16px;padding:18px 20px;position:relative;overflow:hidden;transition:transform .18s,border-color .18s,box-shadow .18s}
   .row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gc),transparent 85%);box-shadow:0 0 18px -2px var(--gc)}
   .row:hover{transform:translateY(-2px);border-color:var(--line2)}

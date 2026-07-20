@@ -196,6 +196,17 @@
   @media(max-width:560px){
     .panel{padding:16px 13px}
   }
+
+  /* The capsule box is pulled up beside the page title on wide screens with
+     margin-top:-52px. That offset was only released below 640px, so on a
+     folded-open phone (968px) the box came to rest on top of the subtitle.
+     Release it wherever the header has already switched to its mobile form,
+     which is 1040px - the width that has to cover the fold. */
+  @media(max-width:1040px){
+    .topbar{margin:8px 0 22px;justify-content:stretch}
+    .earn{width:100%}
+    .earn a{margin-left:auto}
+  }
 </style>
 </head>
 <body>
