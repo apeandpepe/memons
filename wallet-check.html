@@ -39,6 +39,7 @@
   <div class="row"><div class="k">In-app browser</div><div class="v" id="e-inapp">-</div></div>
   <div class="row"><div class="k">Viewport</div><div class="v" id="e-view">-</div></div>
   <div class="row"><div class="k">Page origin</div><div class="v" id="e-origin">-</div></div>
+  <div class="row"><div class="k">Hostname (must be allowlisted)</div><div class="v" id="e-host">-</div></div>
 </div>
 
 <div class="card">
@@ -46,6 +47,7 @@
   <div class="row"><div class="k">window.ethereum (at load)</div><div class="v" id="w-present">-</div></div>
   <div class="row"><div class="k">After async detect</div><div class="v wait" id="w-detect">testing...</div></div>
   <div class="row"><div class="k">EIP-6963 announce</div><div class="v wait" id="w-6963">testing...</div></div>
+  <div class="row"><div class="k">Wallets installed</div><div class="v wait" id="w-list">testing...</div></div>
   <div class="row"><div class="k">Reports MetaMask</div><div class="v" id="w-mm">-</div></div>
   <div class="row"><div class="k">Chain id</div><div class="v" id="w-chain">-</div></div>
   <div class="row"><div class="k">Accounts visible</div><div class="v" id="w-acc">-</div></div>
@@ -123,6 +125,9 @@
   set("e-inapp", inApp ? "yes" : "no", inApp ? "wait" : "ok");
   set("e-view", window.innerWidth + " x " + window.innerHeight + "  dpr " + (window.devicePixelRatio || 1));
   set("e-origin", location.origin + location.pathname);
+  // The allowed-domain list in WalletConnect Cloud is matched exactly, so
+  // www.example.com and example.com are two different entries.
+  set("e-host", location.hostname);
 
   // ---- injected provider -------------------------------------------------
   var eth = window.ethereum;
@@ -132,16 +137,27 @@
      announce through EIP-6963. Reading window.ethereum once at load reports
      "no wallet" inside the wallet's own browser. */
   var announced = null;
+  var names = [];
   try {
     window.addEventListener("eip6963:announceProvider", function (e) {
       var p = e && e.detail && e.detail.provider;
       var info = e && e.detail && e.detail.info;
       if (!p) return;
       announced = p;
-      set("w-6963", "yes" + (info && info.name ? " (" + info.name + ")" : ""), "ok");
+      var nm = (info && info.name) || "unnamed";
+      if (names.indexOf(nm) === -1) names.push(nm);
+      set("w-6963", "yes", "ok");
+      // More than one means the site must ask which to use: they all compete
+      // for window.ethereum and the winner is whichever loaded first.
+      set("w-list", names.length + " - " + names.join(", "), names.length > 1 ? "wait" : "ok");
     });
     window.dispatchEvent(new Event("eip6963:requestProvider"));
   } catch (err) {}
+  setTimeout(function () {
+    if ($("w-list").textContent === "testing...") {
+      set("w-list", window.ethereum ? "1 - legacy window.ethereum only" : "none", window.ethereum ? "ok" : "bad");
+    }
+  }, 3200);
 
   var dt0 = Date.now();
   var dIv = setInterval(function () {
@@ -229,14 +245,30 @@
       set("c-ws", "no response in " + T + "ms (likely blocked)", "bad");
       try { sock.close(); } catch (e) {}
     }, T);
+    var opened = false;
     sock.onopen = function () {
+      opened = true;
       if (settled) return; settled = true; clearTimeout(timer);
       set("c-ws", "connected in " + ms(t2), "ok");
       try { sock.close(); } catch (e) {}
     };
-    sock.onerror = function () {
+    // The close code separates "never reached the server" from "server said no".
+    // A 4xxx code with a reason means the relay answered and rejected us, which
+    // points at the project id or its allowed-domain list rather than the network.
+    sock.onclose = function (ev) {
       if (settled) return; settled = true; clearTimeout(timer);
-      set("c-ws", "connection error", "bad");
+      var why = "closed code " + (ev && ev.code);
+      if (ev && ev.reason) why += " - " + ev.reason;
+      if (!opened && ev && ev.code === 1006) why += " (no server response: blocked or unreachable)";
+      else if (ev && ev.code >= 4000) why += " (relay refused this project or origin)";
+      set("c-ws", why, "bad");
+    };
+    sock.onerror = function () {
+      // onclose carries the detail, so only report here if it never fires.
+      setTimeout(function () {
+        if (settled) return; settled = true; clearTimeout(timer);
+        set("c-ws", "connection error, no close code", "bad");
+      }, 300);
     };
   } catch (e) {
     set("c-ws", "WebSocket unavailable: " + (e && e.message), "bad");

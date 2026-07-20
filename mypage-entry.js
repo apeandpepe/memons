@@ -209,6 +209,81 @@
       };
     }
 
+    /* ---- wallet picker -------------------------------------------------
+       With more than one extension installed there is no way to tell which
+       one the user means: they all compete for window.ethereum and some
+       report isMetaMask even when they are not. Ask instead of guessing. */
+    function showWalletPicker(list) {
+      if (document.getElementById('wPick')) return;
+
+      var wrap = document.createElement('div');
+      wrap.id = 'wPick';
+      wrap.style.cssText = 'position:fixed;inset:0;z-index:2100;display:flex;align-items:center;'
+        + 'justify-content:center;background:rgba(0,0,0,.66);padding:20px';
+
+      var rows = list.map(function (w, i) {
+        var name = (w.info && w.info.name) || 'Wallet ' + (i + 1);
+        var icon = (w.info && w.info.icon) || '';
+        return '<button class="wp-row" data-i="' + i + '" style="display:flex;align-items:center;gap:12px;'
+          + 'width:100%;text-align:left;font-family:inherit;font-size:14px;font-weight:600;color:#e8e6e0;'
+          + 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);border-radius:12px;'
+          + 'padding:13px 14px;margin-bottom:9px;cursor:pointer">'
+          + (icon ? '<img src="' + icon + '" alt="" style="width:26px;height:26px;border-radius:7px;flex:0 0 26px">'
+                  : '<span style="width:26px;height:26px;border-radius:7px;background:rgba(233,184,74,.18);flex:0 0 26px"></span>')
+          + '<span>' + name + '</span></button>';
+      }).join('');
+
+      wrap.innerHTML =
+        '<div style="width:100%;max-width:360px;background:linear-gradient(180deg,#131317,#0a0a0c);'
+        + 'border:1px solid rgba(233,184,74,.28);border-radius:18px;padding:22px 20px 18px;'
+        + 'box-shadow:0 24px 70px rgba(0,0,0,.7)">'
+        + '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:15px;letter-spacing:1px;'
+        + 'color:#E9B84A;text-align:center;margin-bottom:4px">SELECT WALLET</div>'
+        + '<div style="color:#8d8a82;font-size:12px;text-align:center;margin-bottom:16px">'
+        + list.length + ' wallets found in this browser</div>'
+        + rows
+        + '<button id="wpWc" style="width:100%;font-family:inherit;font-size:12.5px;font-weight:600;color:#a99d85;'
+        + 'background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;'
+        + 'margin-top:4px;cursor:pointer">Use WalletConnect</button>'
+        + '<button id="wpX" style="width:100%;font-size:12.5px;color:#6b6862;background:transparent;border:0;'
+        + 'padding:11px;margin-top:2px;cursor:pointer">Cancel</button>'
+        + '</div>';
+
+      document.body.appendChild(wrap);
+      function close() { wrap.remove(); }
+      wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+      wrap.querySelector('#wpX').onclick = close;
+      wrap.querySelector('#wpWc').onclick = function () { close(); connectViaWalletConnect(); };
+
+      Array.prototype.forEach.call(wrap.querySelectorAll('.wp-row'), function (b) {
+        b.onclick = function () {
+          var picked = list[parseInt(b.getAttribute('data-i'), 10)];
+          close();
+          if (!picked) return;
+          window.MEMONS_WC.choose(picked.provider);
+          connectInjected();
+        };
+      });
+    }
+
+    async function connectInjected() {
+      if (busy) return;
+      busy = true;
+      renderBusy('Connecting\u2026');
+      try {
+        if (window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
+        var addr = await window.MEMONS.connect();
+        renderConnected(addr);
+        document.dispatchEvent(new CustomEvent('memons:connected', { detail: { address: addr } }));
+      } catch (e) {
+        if (!(e && e.code === 4001)) alert((e && e.message) || 'Wallet connection failed');
+      } finally {
+        busy = false;
+        hideHint();
+        if (!(window.MEMONS && window.MEMONS.connected)) renderDisconnected();
+      }
+    }
+
     function activeProvider() {
       return (window.MEMONS_ETH && window.MEMONS_ETH()) || window.ethereum || null;
     }
@@ -262,42 +337,31 @@
       if (busy) return;
       if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
 
-      // Wallet browsers inject late. Deciding before detection finishes made
-      // the site offer to open the very wallet app it was already running in.
+      // Extensions announce a frame or two after load, so wait before deciding.
       if (window.MEMONS_WC && window.MEMONS_WC.detect && !activeProvider()) {
         renderBusy('Connecting\u2026');
         try { await window.MEMONS_WC.detect(); } catch (e) {}
+        renderDisconnected();
       }
 
-      // A wallet is already injected (extension, or the wallet app's own
-      // browser). Nothing to choose.
-      if (activeProvider()) {
-        busy = true;
-        renderBusy('Connecting\u2026');
-        try {
-          if (window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
-          var addr = await window.MEMONS.connect();
-          renderConnected(addr);
-          document.dispatchEvent(new CustomEvent('memons:connected', { detail: { address: addr } }));
-        } catch (e) {
-          if (!(e && e.code === 4001)) alert((e && e.message) || 'Wallet connection failed');
-        } finally {
-          busy = false;
-          hideHint();
-          if (!(window.MEMONS && window.MEMONS.connected)) renderDisconnected();
-        }
+      // Already settled on a wallet, or connected through one.
+      if (activeProvider()) { connectInjected(); return; }
+
+      var found = (window.MEMONS_WC && window.MEMONS_WC.list) ? window.MEMONS_WC.list() : [];
+
+      // More than one extension: the user has to say which. Picking for them
+      // is a coin toss, since window.ethereum goes to whichever loaded first.
+      if (found.length > 1) { showWalletPicker(found); return; }
+
+      if (found.length === 1) {
+        window.MEMONS_WC.choose(found[0].provider);
+        connectInjected();
         return;
       }
 
-      // No injected wallet. WalletConnect handles both cases: a QR on desktop,
-      // and its own wallet list with per-wallet deep links on mobile. It keeps
-      // those link formats up to date across hundreds of wallets, which is far
-      // more reliable than the hand-written links in the sheet below.
-      //
-      // The sheet is kept only as a fallback, and connectViaWalletConnect falls
-      // back to it when the library or the relay cannot be reached. Sending
-      // people to a wallet's in-app browser first turned out to be a dead end:
-      // the measured behaviour is that it no longer injects a provider.
+      // Nothing installed. WalletConnect covers desktop QR and mobile wallets,
+      // and keeps per-wallet deep links current across hundreds of wallets.
+      // The sheet below stays only as a fallback when it cannot be reached.
       if (window.MEMONS_WC) { connectViaWalletConnect(); return; }
       if (isMobileDevice()) { showWalletSheet(); return; }
       alert('No wallet detected. Please install MetaMask and reload this page.');

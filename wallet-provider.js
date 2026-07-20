@@ -35,37 +35,73 @@
   }
 
   // --- injected wallet discovery -------------------------------------------
+  // Several extensions fight over window.ethereum and whichever loads first
+  // wins, so reading that property alone silently picks a wallet for the user.
+  // Worse, some wallets set isMetaMask on themselves, so the winner cannot even
+  // be identified by name. EIP-6963 exists for this: every installed wallet
+  // announces itself separately, which is what lets us offer a choice.
+  var wallets = [];          // [{ info, provider }]
+  var chosen  = null;        // the one the user picked, or the only one present
+
+  function addWallet(info, provider) {
+    if (!provider) return;
+    for (var i = 0; i < wallets.length; i++) {
+      if (wallets[i].provider === provider) return;
+      if (info && wallets[i].info && wallets[i].info.uuid === info.uuid) return;
+    }
+    wallets.push({ info: info || null, provider: provider });
+  }
+
   var detectPromise = new Promise(function (resolve) {
     var done = false;
-    function finish(p) {
+    function finish() {
       if (done) return;
       done = true;
-      injected = p || window.ethereum || null;
-      resolve(injected);
+      // The legacy provider counts too, but only when no announcement already
+      // covered it, otherwise the same wallet appears twice.
+      if (window.ethereum) {
+        var seen = false;
+        for (var i = 0; i < wallets.length; i++) {
+          if (wallets[i].provider === window.ethereum) { seen = true; break; }
+        }
+        if (!seen) {
+          addWallet({ name: window.ethereum.isMetaMask ? "MetaMask" : "Browser wallet", uuid: "legacy" },
+                    window.ethereum);
+        }
+      }
+      // Only settle automatically when there is nothing to choose between.
+      // Falling back to the first entry would reintroduce the very problem
+      // this is here to solve: silently picking a wallet for the user.
+      if (wallets.length === 1) chosen = wallets[0].provider;
+      injected = chosen;
+      resolve(wallets);
     }
 
-    if (window.ethereum) return finish(window.ethereum);
-
-    // EIP-6963: wallets answer a request event with their provider.
-    function onAnnounce(e) {
-      var p = e && e.detail && e.detail.provider;
-      if (p) finish(p);
-    }
     try {
-      window.addEventListener("eip6963:announceProvider", onAnnounce);
+      window.addEventListener("eip6963:announceProvider", function (e) {
+        var d = e && e.detail;
+        if (d) addWallet(d.info, d.provider);
+      });
       window.dispatchEvent(new Event("eip6963:requestProvider"));
     } catch (err) {}
 
-    // Legacy signal used by wallets that inject late.
     try {
-      window.addEventListener("ethereum#initialized", function () { finish(); }, { once: true });
+      window.addEventListener("ethereum#initialized", function () {
+        try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
+      }, { once: true });
     } catch (err) {}
 
-    // Wallet browsers that do neither still get picked up by polling.
+    // Announcements arrive within a frame or two. Wallet browsers that inject
+    // late and never announce are covered by the poll.
     var started = Date.now();
     var iv = setInterval(function () {
-      if (window.ethereum) { clearInterval(iv); finish(window.ethereum); return; }
-      if (Date.now() - started > DETECT_TIMEOUT) { clearInterval(iv); finish(null); }
+      if (wallets.length || window.ethereum) {
+        // Give any slower extension a moment to announce before settling.
+        clearInterval(iv);
+        setTimeout(finish, 250);
+        return;
+      }
+      if (Date.now() - started > DETECT_TIMEOUT) { clearInterval(iv); finish(); }
     }, 120);
   });
 
@@ -134,7 +170,7 @@
   function adopt(p) {
     try { p.__memonsWC = true; } catch (e) {}
     api.provider = p;
-    if (!injected) { try { window.ethereum = p; } catch (e) {} }
+    if (!wallets.length) { try { window.ethereum = p; } catch (e) {} }
     return p;
   }
 
@@ -149,16 +185,27 @@
   }
 
   var api = {
-    build: 4,
+    build: 5,
     provider: null,
     available: true,
 
-    // Resolves once the injected wallet has had a fair chance to appear.
+    // Resolves once every installed wallet has had a fair chance to announce.
     detect: function () { return detectPromise; },
 
-    hasInjected: function () { return !!injected; },
+    // [{ info, provider }] for each wallet found. info.name and info.icon come
+    // from the wallet itself, so no list of known wallets has to be maintained.
+    list: function () { return wallets.slice(); },
 
-    active: function () { return api.provider || injected || window.ethereum || null; },
+    // The wallet the user settled on. Set automatically when only one exists.
+    choose: function (provider) {
+      chosen = provider || null;
+      injected = chosen;
+      return chosen;
+    },
+
+    hasInjected: function () { return wallets.length > 0; },
+
+    active: function () { return api.provider || chosen || injected || null; },
 
     connect: async function () {
       var p = await ensureInit();
@@ -168,7 +215,7 @@
 
     disconnect: async function () {
       try { if (api.provider && api.provider.disconnect) await api.provider.disconnect(); } catch (e) {}
-      if (!injected && window.ethereum && window.ethereum.__memonsWC) {
+      if (!wallets.length && window.ethereum && window.ethereum.__memonsWC) {
         try { delete window.ethereum; } catch (e) { window.ethereum = undefined; }
       }
       api.provider = null;
@@ -179,7 +226,7 @@
     // has to be re-attached or signing and payments break after the first hop.
     restore: async function () {
       await detectPromise;
-      if (injected || !hasStoredSession()) return null;
+      if (wallets.length || !hasStoredSession()) return null;
       try {
         var p = await ensureInit();
         if (p.session && p.accounts && p.accounts.length) return adopt(p);
