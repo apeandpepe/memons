@@ -55,8 +55,11 @@
   <h2>WalletConnect</h2>
   <div class="row"><div class="k">Library (unpkg)</div><div class="v wait" id="c-umd">testing...</div></div>
   <div class="row"><div class="k">Library (esm.sh)</div><div class="v wait" id="c-esm">testing...</div></div>
-  <div class="row"><div class="k">Relay websocket</div><div class="v wait" id="c-ws">testing...</div></div>
+  <div class="row"><div class="k">Relay websocket (raw)</div><div class="v wait" id="c-ws">testing...</div></div>
+  <div class="row"><div class="k">Real handshake</div><div class="v" id="c-hs">not run</div></div>
   <div class="row"><div class="k">Stored session</div><div class="v" id="c-sess">-</div></div>
+  <button class="btn" id="run-hs" style="margin-top:12px">Run real WalletConnect test</button>
+  <div class="sub" style="margin-top:8px">The raw probe above can report a false failure. This runs the real library and asks it for a pairing URI, which is what actually matters.</div>
 </div>
 
 <div class="card">
@@ -238,6 +241,47 @@
   } catch (e) {
     set("c-ws", "WebSocket unavailable: " + (e && e.message), "bad");
   }
+
+  // ---- real WalletConnect handshake --------------------------------------
+  // A bare WebSocket to the relay can be refused even where the SDK works,
+  // so the honest test is to run the SDK and see whether it produces a
+  // pairing URI. Getting a URI means the relay round trip succeeded.
+  $("run-hs").onclick = async function () {
+    var btn = this;
+    btn.disabled = true;
+    set("c-hs", "running...", "wait");
+    var t = Date.now();
+    try {
+      var mod = await Promise.race([import(ESM), timeout("library timed out")]);
+      var EP = mod.EthereumProvider || (mod.default && mod.default.EthereumProvider);
+      if (!EP) throw new Error("library has no EthereumProvider export");
+
+      var provider = await Promise.race([
+        EP.init({
+          projectId: PROJECT_ID,
+          optionalChains: [1, 137, 56],
+          showQrModal: false,
+          metadata: {
+            name: "MEMONS", description: "environment check",
+            url: location.origin, icons: [location.origin + "/images/logo.png"]
+          }
+        }),
+        timeout("init timed out")
+      ]);
+
+      var got = new Promise(function (resolve) {
+        provider.on("display_uri", function (uri) { resolve(uri); });
+      });
+      provider.connect().catch(function () {});   // resolves only on approval
+      var uri = await Promise.race([got, timeout("no pairing uri in " + T + "ms")]);
+
+      set("c-hs", "URI received in " + (Date.now() - t) + "ms - relay works", "ok");
+      $("lnk-dump").textContent = "pairing uri: " + String(uri).slice(0, 60) + "...";
+    } catch (e) {
+      set("c-hs", "FAILED: " + (e && e.message), "bad");
+    }
+    btn.disabled = false;
+  };
 
   // ---- deep links --------------------------------------------------------
   var target = location.origin + location.pathname;
