@@ -296,17 +296,30 @@
   var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
-  var _eventActive=null;
+  var _eventActive=null, _testers=null;
   async function checkEvent(){
     try{
-      var r=await fetch(SB_URL+"/rest/v1/event_settings?id=eq.1&select=mission_active",
+      var r=await fetch(SB_URL+"/rest/v1/event_settings?id=eq.1&select=mission_active,test_addresses",
         {headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
       var rows=await r.json();
-      var active=Array.isArray(rows)&&rows[0]&&rows[0].mission_active===true;
-      applyEventState(active);
+      var row=Array.isArray(rows)&&rows[0]?rows[0]:null;
+      _testers=(row&&Array.isArray(row.test_addresses))?row.test_addresses:[];
+      applyEventState(row&&row.mission_active===true);
     }catch(e){ /* on error, leave as-is (fail open only if never set) */ }
   }
+  /* Wallets on the tester list see the event while it is still closed, so the
+     flow can be walked end to end before launch. */
+  function isTester(){
+    if(!_testers||!_testers.length) return false;
+    var a=(window.MEMONS&&MEMONS.address)?String(MEMONS.address).toLowerCase():'';
+    if(!a) return false;
+    for(var i=0;i<_testers.length;i++){
+      if(String(_testers[i]||'').toLowerCase()===a) return true;
+    }
+    return false;
+  }
   function applyEventState(active){
+    active = !!active || isTester();
     if(active===_eventActive) return;
     _eventActive=active;
     var zone=document.getElementById('mzone'), lock=document.getElementById('eventLock');
@@ -314,6 +327,11 @@
     if(active){ zone.classList.remove('locked'); lock.hidden=true; }
     else { zone.classList.add('locked'); lock.hidden=false; }
   }
+  /* The wallet usually connects after the first poll, so re-evaluate then. */
+  document.addEventListener('memons:connected', function(){
+    if(isTester()){ _eventActive=null; applyEventState(true); }
+  });
+
   var SS_TOKEN="memons_jwt_v1";
 
   var ICON={

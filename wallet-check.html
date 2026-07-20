@@ -69,6 +69,7 @@
   <div class="sub" style="margin-bottom:10px">Tapping these tells us which link format your device accepts.</div>
   <a class="btn" id="lnk-mm-intent">MetaMask via intent://</a>
   <a class="btn" id="lnk-mm-https">MetaMask via https</a>
+  <a class="btn" id="lnk-mm-scheme">MetaMask via metamask:// scheme</a>
   <a class="btn" id="lnk-tw">Trust Wallet</a>
   <pre id="lnk-dump"></pre>
 </div>
@@ -215,10 +216,17 @@
                  encodeURIComponent(mmHttps) + ";end";
   var twHttps = "https://link.trustwallet.com/open_url?coin_id=60&url=" + encodeURIComponent(target);
 
+  // Custom scheme. Skips app-link verification entirely, which is what
+  // Samsung Internet appears not to honour: it falls through to the https
+  // link, and the link resolver then sends the visitor to the store.
+  var mmScheme = "metamask://dapp/" + bare;
+
   $("lnk-mm-intent").href = mmIntent;
   $("lnk-mm-https").href = mmHttps;
+  $("lnk-mm-scheme").href = mmScheme;
   $("lnk-tw").href = twHttps;
-  $("lnk-dump").textContent = "intent: " + mmIntent + "\n\nhttps: " + mmHttps + "\n\ntrust: " + twHttps;
+  $("lnk-dump").textContent = "intent: " + mmIntent + "\n\nhttps: " + mmHttps +
+                              "\n\nscheme: " + mmScheme + "\n\ntrust: " + twHttps;
 
   // ---- report ------------------------------------------------------------
   $("copy").onclick = function () {
