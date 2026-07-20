@@ -57,17 +57,13 @@
     function finish() {
       if (done) return;
       done = true;
-      // The legacy provider counts too, but only when no announcement already
-      // covered it, otherwise the same wallet appears twice.
-      if (window.ethereum) {
-        var seen = false;
-        for (var i = 0; i < wallets.length; i++) {
-          if (wallets[i].provider === window.ethereum) { seen = true; break; }
-        }
-        if (!seen) {
-          addWallet({ name: window.ethereum.isMetaMask ? "MetaMask" : "Browser wallet", uuid: "legacy" },
-                    window.ethereum);
-        }
+      // window.ethereum is only worth adding when nothing announced at all.
+      // Otherwise it is one of the wallets already listed, reached through a
+      // different object, and it would show up twice under a misleading name:
+      // several wallets set isMetaMask on themselves even when they are not.
+      if (!wallets.length && window.ethereum) {
+        addWallet({ name: window.ethereum.isMetaMask ? "MetaMask" : "Browser wallet", uuid: "legacy" },
+                  window.ethereum);
       }
       // Only settle automatically when there is nothing to choose between.
       // Falling back to the first entry would reintroduce the very problem
@@ -185,7 +181,7 @@
   }
 
   var api = {
-    build: 5,
+    build: 6,
     provider: null,
     available: true,
 

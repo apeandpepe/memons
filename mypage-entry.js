@@ -284,8 +284,14 @@
       }
     }
 
+    /* Only fall back to window.ethereum when the accessor is missing entirely.
+       Reading it as an "or else" defeats the picker: with several extensions
+       installed window.ethereum is whichever loaded first, so a null answer
+       from MEMONS_ETH (meaning "the user has not chosen yet") was being
+       overruled by an arbitrary wallet. */
     function activeProvider() {
-      return (window.MEMONS_ETH && window.MEMONS_ETH()) || window.ethereum || null;
+      if (window.MEMONS_ETH) return window.MEMONS_ETH();
+      return window.ethereum || null;
     }
 
     /* Runs the WalletConnect handshake and then signs in. Split out so the

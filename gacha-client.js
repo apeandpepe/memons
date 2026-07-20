@@ -21,7 +21,10 @@
   // WalletConnect one, and some wallets make window.ethereum non-writable, so
   // the provider layer cannot always place itself there.
   function eth() {
-    return (window.MEMONS_ETH && window.MEMONS_ETH()) || window.ethereum || null;
+    // Same rule as the header: never let window.ethereum override a deliberate
+    // null from the accessor, which means no wallet has been chosen yet.
+    if (window.MEMONS_ETH) return window.MEMONS_ETH();
+    return window.ethereum || null;
   }
 
   // localStorage, not sessionStorage. Mobile browsers discard the tab while the
