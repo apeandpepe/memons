@@ -103,6 +103,18 @@
   @media(max-width:560px){
     .panel{padding:16px 13px}
   }
+  /* Two states the mock never covered: waiting on a decision, and a refusal
+     the user can do nothing about on their own. */
+  .kcard.pending .kico{border-color:rgba(233,184,74,.4);color:var(--gold)}
+  .kcard.pending .badge{color:var(--gold);border-color:var(--gold-b)}
+  .kcard.pending .badge .dot{background:var(--gold);animation:kpulse 1.4s ease-in-out infinite}
+  .kcard.rejected .kico{border-color:rgba(224,85,106,.45);color:#e0556a}
+  .kcard.rejected .badge{color:#e0556a;border-color:rgba(224,85,106,.4)}
+  .kcard.rejected .badge .dot{background:#e0556a}
+  @keyframes kpulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .knote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--muted);
+    border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:rgba(255,255,255,.02)}
+  .knote.bad{border-color:rgba(224,85,106,.3);color:#e8a0aa}
 </style>
 </head>
 <body>
@@ -181,36 +193,119 @@
 <script>
 (function(){
   function $(id){return document.getElementById(id);}
+  var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
+  var polling=null;
 
-  // States (wired later to real winner data):
-  //   'locked'   — draw not done / not a winner  (default)
-  //   'eligible' — winner, needs KYC
-  //   'done'     — KYC completed
-  function setState(state, info){
-    info=info||{};
-    var card=$('kcard');
-    card.className='kcard '+state;
-    if(state==='eligible'){
-      $('kico').textContent='🪪';
-      $('stTitle').textContent='Verification required';
-      $('stDesc').textContent='Your wallet was selected as a reward winner. Complete identity verification to receive your APEPE.';
-      $('badgeText').textContent='ELIGIBLE';
-      $('startBtn').textContent='START VERIFICATION';
-      $('startBtn').disabled=false;
-      $('startBtn').onclick=function(){ /* Didit flow attaches here later */ alert('Verification will be available soon.'); };
-    } else if(state==='done'){
-      $('kico').textContent='✓';
-      $('stTitle').textContent='Verified';
-      $('stDesc').textContent='Your identity has been verified. Rewards will be sent to your wallet.';
-      $('badgeText').textContent='VERIFIED';
-      $('startBtn').textContent='VERIFICATION COMPLETE';
-      $('startBtn').disabled=true;
+  /* Server states, straight from kyc_status:
+       locked    review not passed yet, or withdrawn
+       invited   reviewer passed this wallet; verification can start
+       pending   a session exists and Didit has not decided
+       approved  done
+       rejected  declined, or a duplicate identity
+       expired   the session lapsed before it was finished           */
+  var VIEW={
+    locked:  {cls:'locked',  icon:'\uD83D\uDD12', badge:'LOCKED',
+              title:'Not required yet',
+              desc:'Verification opens after the reward draw. If your wallet is selected as a winner, this page will unlock automatically.',
+              btn:'VERIFICATION NOT OPEN', disabled:true},
+    invited: {cls:'eligible', icon:'\uD83E\uDEAA', badge:'ELIGIBLE',
+              title:'Verification required',
+              desc:'Your wallet was selected as a reward winner. Complete identity verification to receive your rewards.',
+              btn:'START VERIFICATION', disabled:false},
+    pending: {cls:'pending',  icon:'\u23F3', badge:'IN PROGRESS',
+              title:'Verification in progress',
+              desc:'Finish the check in the verification window, then come back. This page updates on its own once a decision arrives.',
+              btn:'CONTINUE VERIFICATION', disabled:false},
+    approved:{cls:'done',     icon:'\u2713', badge:'VERIFIED',
+              title:'Verified',
+              desc:'Your identity has been verified. Rewards will be sent to your wallet.',
+              btn:'VERIFICATION COMPLETE', disabled:true},
+    rejected:{cls:'rejected', icon:'\u2715', badge:'DECLINED',
+              title:'Verification not approved',
+              desc:'The check did not pass. Contact the team if you believe this is a mistake; a new attempt can be granted.',
+              btn:'VERIFICATION CLOSED', disabled:true},
+    expired: {cls:'rejected', icon:'\u23F1', badge:'EXPIRED',
+              title:'Verification expired',
+              desc:'The verification window closed before the check was finished. Contact the team to be given another attempt.',
+              btn:'VERIFICATION CLOSED', disabled:true}
+  };
+
+  function render(state, info){
+    info = info || {};
+    var v = VIEW[state] || VIEW.locked;
+    $('kcard').className = 'kcard ' + v.cls;
+    $('kico').textContent = v.icon;
+    $('stTitle').textContent = v.title;
+    $('stDesc').textContent = v.desc;
+    $('badgeText').textContent = v.badge;
+
+    var b = $('startBtn');
+    b.textContent = v.btn;
+    b.disabled = !!v.disabled;
+    b.onclick = v.disabled ? null : start;
+
+    var host = $('kcard').querySelector('.body');
+    var old = host.querySelector('.knote');
+    if(old) old.remove();
+    if(info.note){
+      var n = document.createElement('div');
+      n.className = 'knote' + (state==='rejected' ? ' bad' : '');
+      n.textContent = info.note;
+      host.appendChild(n);
     }
   }
 
-  // Default: locked. Later this will query winner status from the server
-  // (e.g. /kyc-status) and call setState('eligible'|'done'). Header + chip
-  // are painted by mypage-entry.js.
+  async function load(){
+    if(!(window.MEMONS && MEMONS.connected)){ render('locked'); return; }
+    try{
+      var r = await MEMONS.authFetch('/kyc/status');
+      render(r.state || 'locked', { note: r.note });
+      /* Didit reports through a webhook, so the page has no way of knowing a
+         decision landed except by asking again. Only while it can change. */
+      if(r.state === 'pending'){ startPolling(); } else { stopPolling(); }
+    }catch(e){ render('locked'); }
+  }
+
+  function startPolling(){ if(!polling) polling = setInterval(load, 8000); }
+  function stopPolling(){ if(polling){ clearInterval(polling); polling = null; } }
+
+  async function start(){
+    var b = $('startBtn'), old = b.textContent;
+    b.disabled = true; b.textContent = 'OPENING\u2026';
+    try{
+      var r = await MEMONS.authFetch('/kyc/start', {});
+      if(r && r.url){
+        /* Same tab: the flow needs the camera, and a popup asking for it is
+           the first thing a browser blocks. */
+        location.href = r.url;
+        return;
+      }
+      throw new Error('no url');
+    }catch(e){
+      var m = (e && e.message) || '';
+      if(m.indexOf('NOT_INVITED') >= 0)        alert('Verification is not open for this wallet yet.');
+      else if(m.indexOf('ALREADY_APPROVED') >= 0) alert('This wallet is already verified.');
+      else if(m.indexOf('REJECTED') >= 0)      alert('This wallet cannot start a new verification.');
+      else                                     alert('Could not open verification. Please try again shortly.');
+      b.disabled = false; b.textContent = old;
+      load();
+    }
+  }
+
+  /* Coming back from Didit: the callback carries the outcome, but the webhook
+     is what we trust, so this only prompts an immediate re-read. */
+  (function(){
+    var q = new URLSearchParams(location.search);
+    if(q.get('status') || q.get('verificationSessionId')){
+      history.replaceState({}, '', location.pathname);
+    }
+  })();
+
+  render('locked');
+  load();
+  document.addEventListener('memons:connected', load);
+  document.addEventListener('memons:disconnected', function(){ stopPolling(); render('locked'); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
 })();
 </script>
 <style>

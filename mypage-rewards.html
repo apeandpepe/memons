@@ -175,6 +175,8 @@
   @media(max-width:560px){
     .panel{padding:16px 13px}
   }
+  /* .good and .bad already exist; this is the waiting colour. */
+  .gold{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -322,11 +324,30 @@
       b.onclick=function(){ toast('Reward payout is being prepared. It will be distributed after the event.'); };
     });
 
+  /* KYC state, read rather than hard-coded. It used to always read
+     "Not verified", which was wrong the moment anyone was verified. */
+  var KYC_LABEL={
+    locked:   ['Not required yet', ''],
+    invited:  ['Action required',  'gold'],
+    pending:  ['In progress',      'gold'],
+    approved: ['Verified',         'good'],
+    rejected: ['Not approved',     'bad'],
+    expired:  ['Expired',          'bad']
+  };
+  async function loadKycStatus(){
+    var el=$('evKyc'); if(!el) return;
+    try{
+      var r=await MEMONS.authFetch('/kyc/status');
+      var v=KYC_LABEL[r.state]||KYC_LABEL.locked;
+      el.innerHTML = v[1] ? '<span class="'+v[1]+'">'+v[0]+'</span>' : v[0];
+    }catch(e){ el.textContent='—'; }
+  }
+
     // event rewards — placeholder statuses until lottery/snapshot (step 10)
     $('evEntries').textContent = totalCards;
     $('evEligible').innerHTML = (d.epic+d.legendary+d.mythic>0)
       ? '<span class="good">Yes</span>' : '<span>—</span>';
-    $('evKyc').textContent = 'Not verified';
+    loadKycStatus();
     $('pgrid').innerHTML=POT.map(function(p){
       var img = p.coin ? 'images/mypage/event/apepe-'+p.r+'.webp' : 'images/mypage/event/reward-'+p.r+'.webp';
       var rewInner = p.coin
