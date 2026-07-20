@@ -200,8 +200,11 @@
     }
     const pulls = parseInt(numPulls, 10);
     if (!Number.isInteger(pulls) || pulls < 1) throw new Error("Invalid pull count.");
-    const eth = window.ethereum;
-    if (!eth) throw new Error("No wallet found. Install MetaMask.");
+    // Read the active provider through the shared accessor. On mobile this is
+    // the WalletConnect provider, which cannot always be placed on
+    // window.ethereum, so reading the global directly fails after a page load.
+    const eth = (window.MEMONS_ETH && window.MEMONS_ETH()) || window.ethereum;
+    if (!eth) throw new Error("No wallet found. Connect your wallet first.");
     const token = getToken();
     if (!token) throw new Error("Please connect your wallet first.");
 

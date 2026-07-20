@@ -273,7 +273,10 @@
   var ORDER=['common','rare','epic','legendary','mythic'];
   var CAP=80;
   function $(id){return document.getElementById(id);}
-  function token(){return sessionStorage.getItem(SS_TOKEN);}
+  // Read through the client, which owns session storage and expiry.
+  // Reading storage directly here missed token expiry and broke when the
+  // session moved off sessionStorage to survive mobile tab eviction.
+  function token(){ return (window.MEMONS && window.MEMONS.token) || null; }
   function shortAddr(a){ return a? (a.slice(0,6)+'...'+a.slice(-4)) : ''; }
   var owned=[], link='';
 

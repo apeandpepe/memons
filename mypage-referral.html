@@ -247,7 +247,10 @@
   var SS_TOKEN="memons_jwt_v1";
   var MAX_MILE=4, REWARD_EACH=5;
   function $(id){return document.getElementById(id);}
-  function token(){return sessionStorage.getItem(SS_TOKEN);}
+  // Read through the client, which owns session storage and expiry.
+  // Reading storage directly here missed token expiry and broke when the
+  // session moved off sessionStorage to survive mobile tab eviction.
+  function token(){ return (window.MEMONS && window.MEMONS.token) || null; }
   var stats=null, link='';
 
   function toast(msg){

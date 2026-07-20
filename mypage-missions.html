@@ -334,7 +334,10 @@
   function $(id){return document.getElementById(id);}
   function toast(msg,bad){var t=$('toast');t.textContent=msg;t.className='toast show'+(bad?' bad':'');
     setTimeout(function(){t.className='toast'+(bad?' bad':'');},2200);}
-  function token(){return sessionStorage.getItem(SS_TOKEN);}
+  // Read through the client, which owns session storage and expiry.
+  // Reading storage directly here missed token expiry and broke when the
+  // session moved off sessionStorage to survive mobile tab eviction.
+  function token(){ return (window.MEMONS && window.MEMONS.token) || null; }
 
   function handleReturnParams(){
     var q=new URLSearchParams(location.search);
