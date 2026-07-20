@@ -166,6 +166,14 @@
   @media(max-width:560px){
     .panel{padding:16px 13px}
   }
+  /* Mission rows are drawn from the server now, so the action reflects the
+     real state instead of always inviting the user to go and verify. */
+  .mrow .mdone{font-family:var(--font-head);font-size:11px;letter-spacing:.5px;
+    color:var(--good);background:rgba(92,207,146,.1);border:1px solid rgba(92,207,146,.35);
+    border-radius:8px;padding:8px 13px;white-space:nowrap}
+  .mrow .mprog{font-family:var(--font-head);font-size:10.5px;color:var(--muted);
+    margin-left:6px;white-space:nowrap}
+  .mempty{color:var(--muted);font-size:12px;padding:16px 0;text-align:center}
 </style>
 </head>
 <body>
@@ -230,9 +238,7 @@
     <div class="row2">
       <div class="panel">
         <div class="phead"><div class="ptitle">EVENT MISSION</div><a class="link" href="mypage-missions.html">View Mission <i class="ti ti-arrow-right"></i></a></div>
-        <div class="mrow"><div class="mi"><i class="ti ti-repeat"></i></div><div><div class="mt">Retweet Official Post</div><div class="md">Retweet the event post on X (Twitter)</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+10</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
-        <div class="mrow"><div class="mi"><i class="ti ti-share-3"></i></div><div><div class="mt">Share Your Card</div><div class="md">Share your acquired card on X (Twitter)</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+10</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
-        <div class="mrow"><div class="mi"><i class="ti ti-user-circle"></i></div><div><div class="mt">Apply MEMONS Card as X Profile</div><div class="md">Set MEMONS card as your profile picture</div></div><div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" onerror="this.outerHTML=&#39;<i class=&quot;ti ti-ticket&quot;></i>&#39;">+20</div><a class="mvf" href="mypage-missions.html">Verify</a></div>
+        <div id="dashMissions"></div>
         <div class="mnote"><i class="ti ti-info-circle"></i>Complete missions to get more capsules!</div>
       </div>
 
@@ -354,6 +360,52 @@
 
   function copy(){ if(!link) return; navigator.clipboard.writeText(link).then(function(){toast('Link copied');}); }
 
+  /* Dashboard mission summary.
+     These three rows used to be fixed markup: the reward figures drifted away
+     from the missions table, and the action always read Verify no matter how
+     much the user had already done. Reading the same endpoint the missions
+     page uses keeps both honest. */
+  var DASH_ICON={x_connect:'ti-brand-x',follow:'ti-user-plus',retweet:'ti-repeat',
+                 share:'ti-share-3',pfp:'ti-user-circle',referral:'ti-users'};
+  var DASH_NAME={x_connect:'Connect Wallet & X',follow:'Follow APEPE on X',
+                 retweet:'Retweet Official Post',share:'Share Your Card',
+                 pfp:'Apply MEMONS Card as X Profile',referral:'Invite Friends'};
+  var DASH_DESC={x_connect:'Create a wallet, connect X, and add your email',
+                 follow:'Follow @APEPE_MEME on X',
+                 retweet:'Retweet the event post on X (Twitter)',
+                 share:'Share your acquired card on X (Twitter)',
+                 pfp:'Set MEMONS card as your profile picture',
+                 referral:'Invite friends and have them join'};
+
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  async function loadMissions(){
+    var host=document.getElementById('dashMissions');
+    if(!host) return;
+    var d;
+    try{ d=await MEMONS.authFetch('/missions'); }
+    catch(e){ host.innerHTML='<div class="mempty">Could not load missions</div>'; return; }
+
+    var list=(d.missions||[]).slice(0,4);
+    if(!list.length){ host.innerHTML='<div class="mempty">No missions available</div>'; return; }
+
+    host.innerHTML=list.map(function(m){
+      var icon=DASH_ICON[m.key]||'ti-target';
+      var name=DASH_NAME[m.key]||m.key;
+      var desc=DASH_DESC[m.key]||'';
+      var prog=(m.max_claims>1) ? '<span class="mprog">'+m.claimed+' / '+m.max_claims+'</span>' : '';
+      var action=m.done
+        ? '<span class="mdone"><i class="ti ti-check"></i> Done</span>'
+        : '<a class="mvf" href="mypage-missions.html">Verify</a>';
+      return '<div class="mrow"><div class="mi"><i class="ti '+icon+'"></i></div>'
+        +'<div><div class="mt">'+esc(name)+'</div><div class="md">'+esc(desc)+'</div></div>'
+        +'<div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" '
+        +'onerror="this.outerHTML=\'<i class=&quot;ti ti-ticket&quot;></i>\'">+'+m.reward+prog+'</div>'
+        +action+'</div>';
+    }).join('');
+  }
+
   async function load(){
     if(!(window.MEMONS && MEMONS.connected)){ renderLeaderboard(); return; }
     $('welcome').textContent='Welcome back, '+shortAddr(MEMONS.address)+'!';
@@ -364,6 +416,7 @@
     }catch(e){}
     renderCollection();
     renderLeaderboard();
+    await loadMissions();
     await loadReferral();
     $('roCopy').onclick=copy; $('roCopy2').onclick=copy;
   }

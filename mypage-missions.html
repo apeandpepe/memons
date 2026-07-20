@@ -212,6 +212,21 @@
     .earn{width:100%}
     .earn a{margin-left:auto}
   }
+
+  /* Proof field for the missions that leave a public post. Kept in the sheet
+     rather than inline so the mobile rules below can reach it. */
+  .proofbox{margin-top:8px;display:flex;flex-direction:column;gap:6px;width:100%;min-width:0}
+  .proofbox input{width:100%;min-width:0;font-family:inherit;font-size:12.5px;color:var(--text);
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.14);
+    border-radius:9px;padding:11px 12px;outline:none;transition:border-color .15s}
+  .proofbox input:focus{border-color:rgba(233,184,74,.5)}
+  .proofbox input::placeholder{color:var(--muted)}
+  .proofbox input.bad{border-color:rgba(224,85,106,.55)}
+  @media(max-width:1040px){
+    /* iOS zooms the page when a field smaller than 16px takes focus, which
+       throws the layout around. 16px is the threshold that avoids it. */
+    .proofbox input{font-size:16px;padding:12px}
+  }
 </style>
 </head>
 <body>
@@ -488,15 +503,52 @@
 
   function showClaim(A,m){
     if(A.querySelector('.claim')) return;
+
+    /* Missions that leave a public post ask for its link. Pressing CLAIM on
+       its own proved nothing, and share can be claimed ten times, so the
+       reward was ten taps on one button. The link costs a paste and lets the
+       server check the post is real, is this user's, and has not been used. */
+    if(m.requires_proof){
+      var box=document.createElement('div');
+      box.className='claim proofbox';
+
+      var inp=document.createElement('input');
+      inp.type='url';
+      inp.placeholder='Paste your post link';
+      inp.setAttribute('autocomplete','off');
+      inp.setAttribute('autocapitalize','off');
+      inp.setAttribute('autocorrect','off');
+      inp.setAttribute('spellcheck','false');
+
+      var b=document.createElement('button');
+      b.className='btn'; b.textContent='CLAIM +'+m.reward; b.disabled=true;
+
+      var RE=/^https?:\/\/(www\.)?(x|twitter)\.com\/[A-Za-z0-9_]{1,15}\/status/i;
+      function chk(){
+        var v=inp.value.trim(), ok=RE.test(v);
+        b.disabled=!ok;
+        inp.classList.toggle('bad', v.length>0 && !ok);
+      }
+      inp.oninput=chk;
+      inp.onkeydown=function(e){ if(e.key==='Enter' && !b.disabled) claim(m,b,inp.value.trim()); };
+      b.onclick=function(){ claim(m,b,inp.value.trim()); };
+
+      box.appendChild(inp); box.appendChild(b);
+      A.appendChild(box);
+      return;
+    }
+
     var c=document.createElement('button'); c.className='btn claim'; c.style.marginTop='8px'; c.textContent='CLAIM +'+m.reward;
     c.onclick=function(){ claim(m,c); };
     A.appendChild(c);
   }
 
-  async function claim(m,btn){
+  async function claim(m,btn,proof){
     btn.disabled=true; var old=btn.textContent; btn.textContent='...';
     try{
-      var r=await MEMONS.authFetch('/missions',{key:m.key});
+      var body={key:m.key};
+      if(proof) body.proof=proof;
+      var r=await MEMONS.authFetch('/missions',body);
       toast('+'+r.granted+' capsules · '+r.capsules_total+' total');
       await load();
     }catch(e){
@@ -506,6 +558,11 @@
       else if(msg.includes('NO_VALID_REFERRALS')) toast('Need more valid referrals first',true);
       else if(msg.includes('EVENT_CLOSED')) toast('The event is not open yet',true);
       else if(msg.includes('EVENT_CAP_REACHED')) toast('All event capsules have been issued',true);
+      else if(msg.includes('PROOF_ALREADY_USED')) toast('That post has already been used',true);
+      else if(msg.includes('PROOF_NOT_YOURS')) toast('That post is not from your linked X account',true);
+      else if(msg.includes('PROOF_INVALID')) toast('Paste the full link to your post on X',true);
+      else if(msg.includes('PROOF_REQUIRED')) toast('Paste the link to your post first',true);
+      else if(msg.includes('X_NOT_LINKED')) toast('Connect your X account first',true);
       else toast('Claim failed: '+msg,true);
       btn.disabled=false; btn.textContent=old;
     }
