@@ -83,6 +83,11 @@
   .mzone{position:relative}
   .mzone.locked .mhead,.mzone.locked .mtable{filter:blur(4px) brightness(.42) saturate(.7);pointer-events:none;user-select:none;transition:filter .3s}
   .event-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;padding:20px}
+  /* An author display value beats the browser's [hidden] rule, so this
+     overlay stayed in the layer above the missions even after being
+     hidden. It covered the whole zone at inset:0, which left the buttons
+     visible but swallowed every tap. */
+  .event-lock[hidden]{display:none}
   .el-card{position:relative;text-align:center;padding:40px 40px 36px;border-radius:22px;max-width:400px;width:100%;
     background:radial-gradient(120% 120% at 50% 0%,rgba(40,33,16,.96),rgba(12,12,15,.97));
     border:1px solid rgba(233,184,74,.34);
@@ -335,8 +340,17 @@
     _eventActive=active;
     var zone=document.getElementById('mzone'), lock=document.getElementById('eventLock');
     if(!zone||!lock) return;
-    if(active){ zone.classList.remove('locked'); lock.hidden=true; }
-    else { zone.classList.add('locked'); lock.hidden=false; }
+    if(active){
+      zone.classList.remove('locked');
+      lock.hidden=true;
+      lock.style.display='none';          // belt and braces if a stylesheet wins
+      lock.style.pointerEvents='none';
+    } else {
+      zone.classList.add('locked');
+      lock.hidden=false;
+      lock.style.display='';
+      lock.style.pointerEvents='';
+    }
   }
   /* The wallet usually connects after the first poll, so re-evaluate then. */
   document.addEventListener('memons:connected', function(){
