@@ -289,13 +289,17 @@
         return;
       }
 
-      // Mobile browser with no injected wallet: let the user pick. The deep
-      // link into a wallet app is listed first because it does not depend on
-      // the WalletConnect relay.
-      if (isMobileDevice()) { showWalletSheet(); return; }
-
-      // Desktop with no extension: WalletConnect QR is the only route.
+      // No injected wallet. WalletConnect handles both cases: a QR on desktop,
+      // and its own wallet list with per-wallet deep links on mobile. It keeps
+      // those link formats up to date across hundreds of wallets, which is far
+      // more reliable than the hand-written links in the sheet below.
+      //
+      // The sheet is kept only as a fallback, and connectViaWalletConnect falls
+      // back to it when the library or the relay cannot be reached. Sending
+      // people to a wallet's in-app browser first turned out to be a dead end:
+      // the measured behaviour is that it no longer injects a provider.
       if (window.MEMONS_WC) { connectViaWalletConnect(); return; }
+      if (isMobileDevice()) { showWalletSheet(); return; }
       alert('No wallet detected. Please install MetaMask and reload this page.');
     }
 
