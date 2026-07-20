@@ -503,6 +503,9 @@
       var msg=e.message||''+e;
       if(msg.includes('MISSION_MAXED')) toast('Already completed',true);
       else if(msg.includes('ACCOUNT_CAP_REACHED')) toast('Account capsule cap reached',true);
+      else if(msg.includes('NO_VALID_REFERRALS')) toast('Need more valid referrals first',true);
+      else if(msg.includes('EVENT_CLOSED')) toast('The event is not open yet',true);
+      else if(msg.includes('EVENT_CAP_REACHED')) toast('All event capsules have been issued',true);
       else toast('Claim failed: '+msg,true);
       btn.disabled=false; btn.textContent=old;
     }
