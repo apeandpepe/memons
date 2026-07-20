@@ -11,6 +11,38 @@
   function isMobileDevice() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent || '');
   }
+  function isAndroid() { return /Android/i.test(navigator.userAgent || ''); }
+
+  /* Deep link target. Deliberately origin + path only.
+     A query string here is ambiguous: metamask.app.link cannot tell where its
+     own parameters end and the destination's begin, and it answers with "this
+     page does not exist". The cost is one extra tap on connect once the wallet
+     browser has opened, which is worth paying for a link that actually opens. */
+  function targetUrl() {
+    try {
+      var u = new URL(location.href);
+      return u.origin + u.pathname;
+    } catch (e) { return location.origin + location.pathname; }
+  }
+
+  /* Android shows an app chooser for plain https links, because the browser and
+     the wallet can both handle them. An intent:// URL names the package
+     outright, so the wallet opens directly with no chooser in between. */
+  function walletLink(pkg, httpsUrl) {
+    if (!isAndroid()) return httpsUrl;
+    return 'intent://' + httpsUrl.replace(/^https?:\/\//, '') +
+           '#Intent;scheme=https;package=' + pkg +
+           ';S.browser_fallback_url=' + encodeURIComponent(httpsUrl) + ';end';
+  }
+
+  function metamaskLink() {
+    return walletLink('io.metamask',
+      'https://metamask.app.link/dapp/' + targetUrl().replace(/^https?:\/\//, ''));
+  }
+  function trustLink() {
+    return walletLink('com.wallet.crypto.trustapp',
+      'https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(targetUrl()));
+  }
 
   function ready() {
     var hr = document.querySelector('header .hr') || document.querySelector('.hr')
@@ -138,8 +170,7 @@
     function showWalletSheet(opts) {
       opts = opts || {};
       if (document.getElementById('mmSheet')) return;
-      var here = location.host + location.pathname + location.search;
-      var full = location.href;
+      var full = targetUrl();
 
       var wrap = document.createElement('div');
       wrap.id = 'mmSheet';
@@ -153,8 +184,8 @@
         '<div style="width:100%;max-width:460px;background:linear-gradient(180deg,#111114,#0a0a0c);border:1px solid rgba(233,184,74,.3);border-radius:20px 20px 0 0;padding:24px 20px 28px;box-shadow:0 -20px 60px rgba(0,0,0,.7)">' +
           '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:17px;letter-spacing:1px;color:#E9B84A;text-align:center">CONNECT WALLET</div>' +
           '<div style="color:#a99d85;font-size:13px;line-height:1.6;text-align:center;margin:10px 0 20px">' + note + '</div>' +
-          '<a id="mmGo" href="https://metamask.app.link/dapp/' + here + '" style="display:block;text-align:center;text-decoration:none;font-weight:800;font-size:14px;padding:15px;border-radius:13px;background:linear-gradient(135deg,#f4d27a,#E9B84A 55%,#b8862e);color:#1c1500;margin-bottom:10px">Open in MetaMask</a>' +
-          '<a id="twGo" href="https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(full) + '" style="display:block;text-align:center;text-decoration:none;font-weight:700;font-size:14px;padding:15px;border-radius:13px;border:1px solid rgba(233,184,74,.4);color:#E9B84A;margin-bottom:10px">Open in Trust Wallet</a>' +
+          '<a id="mmGo" href="' + metamaskLink() + '" style="display:block;text-align:center;text-decoration:none;font-weight:800;font-size:14px;padding:15px;border-radius:13px;background:linear-gradient(135deg,#f4d27a,#E9B84A 55%,#b8862e);color:#1c1500;margin-bottom:10px">Open in MetaMask</a>' +
+          '<a id="twGo" href="' + trustLink() + '" style="display:block;text-align:center;text-decoration:none;font-weight:700;font-size:14px;padding:15px;border-radius:13px;border:1px solid rgba(233,184,74,.4);color:#E9B84A;margin-bottom:10px">Open in Trust Wallet</a>' +
           wcRow +
           '<button id="mmCopy" style="width:100%;text-align:center;font-weight:600;font-size:13px;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8d8a82;cursor:pointer;margin-bottom:10px">Copy link</button>' +
           '<button id="mmClose" style="width:100%;text-align:center;font-size:13px;padding:11px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>' +

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Wallet environment check</title>
+<style>
+  :root{--bg:#0a0a0c;--panel:#121216;--line:rgba(255,255,255,.12);--gold:#E9B84A;
+        --text:#e8e6e0;--muted:#8d8a82;--ok:#5ccf92;--bad:#e0556a;--wait:#d9a441}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font:14px/1.6 system-ui,-apple-system,sans-serif;padding:18px}
+  h1{font-size:17px;letter-spacing:.5px;color:var(--gold);margin-bottom:4px}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+  .card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;margin-bottom:12px}
+  .card h2{font-size:12px;letter-spacing:1px;color:var(--gold);margin-bottom:10px;text-transform:uppercase}
+  .row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:flex-start}
+  .row:last-child{border-bottom:0}
+  .k{flex:0 0 42%;color:var(--muted);font-size:12px}
+  .v{flex:1;font-size:12px;word-break:break-all;font-family:ui-monospace,monospace}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .wait{color:var(--wait)}
+  a.btn,button.btn{display:block;width:100%;text-align:center;text-decoration:none;font-size:13px;font-weight:600;
+    padding:13px;border-radius:10px;border:1px solid rgba(233,184,74,.45);color:var(--gold);
+    background:transparent;margin-bottom:8px;cursor:pointer;font-family:inherit}
+  #copy{border-color:var(--line);color:var(--muted)}
+  pre{white-space:pre-wrap;word-break:break-all;font-size:11px;color:var(--muted);
+      background:#08080a;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<h1>Wallet environment check</h1>
+<div class="sub">Open this page on a device where connecting fails, wait for every row to settle, then send a screenshot or use Copy report.</div>
+
+<div class="card">
+  <h2>Environment</h2>
+  <div class="row"><div class="k">Browser</div><div class="v" id="e-browser">-</div></div>
+  <div class="row"><div class="k">Platform</div><div class="v" id="e-platform">-</div></div>
+  <div class="row"><div class="k">In-app browser</div><div class="v" id="e-inapp">-</div></div>
+  <div class="row"><div class="k">Viewport</div><div class="v" id="e-view">-</div></div>
+  <div class="row"><div class="k">Page origin</div><div class="v" id="e-origin">-</div></div>
+</div>
+
+<div class="card">
+  <h2>Injected wallet</h2>
+  <div class="row"><div class="k">window.ethereum</div><div class="v" id="w-present">-</div></div>
+  <div class="row"><div class="k">Reports MetaMask</div><div class="v" id="w-mm">-</div></div>
+  <div class="row"><div class="k">Chain id</div><div class="v" id="w-chain">-</div></div>
+  <div class="row"><div class="k">Accounts visible</div><div class="v" id="w-acc">-</div></div>
+</div>
+
+<div class="card">
+  <h2>WalletConnect</h2>
+  <div class="row"><div class="k">Library (unpkg)</div><div class="v wait" id="c-umd">testing...</div></div>
+  <div class="row"><div class="k">Library (esm.sh)</div><div class="v wait" id="c-esm">testing...</div></div>
+  <div class="row"><div class="k">Relay websocket</div><div class="v wait" id="c-ws">testing...</div></div>
+  <div class="row"><div class="k">Stored session</div><div class="v" id="c-sess">-</div></div>
+</div>
+
+<div class="card">
+  <h2>Storage</h2>
+  <div class="row"><div class="k">localStorage</div><div class="v" id="s-local">-</div></div>
+  <div class="row"><div class="k">sessionStorage</div><div class="v" id="s-sess">-</div></div>
+  <div class="row"><div class="k">Cookies</div><div class="v" id="s-cookie">-</div></div>
+</div>
+
+<div class="card">
+  <h2>Deep links</h2>
+  <div class="sub" style="margin-bottom:10px">Tapping these tells us which link format your device accepts.</div>
+  <a class="btn" id="lnk-mm-intent">MetaMask via intent://</a>
+  <a class="btn" id="lnk-mm-https">MetaMask via https</a>
+  <a class="btn" id="lnk-tw">Trust Wallet</a>
+  <pre id="lnk-dump"></pre>
+</div>
+
+<button class="btn" id="copy">Copy report</button>
+
+<script>
+(function () {
+  var PROJECT_ID = "21c80dea3961259c6e5473c2531a5a39";
+  var UMD = "https://unpkg.com/@walletconnect/ethereum-provider@2.17.0/dist/index.umd.js";
+  var ESM = "https://esm.sh/@walletconnect/ethereum-provider@2.17.0";
+  var T = 12000;
+
+  function $(id) { return document.getElementById(id); }
+  function set(id, text, cls) {
+    var el = $(id); if (!el) return;
+    el.textContent = text;
+    el.className = "v" + (cls ? " " + cls : "");
+  }
+  function ms(t0) { return (Date.now() - t0) + "ms"; }
+
+  // ---- environment -------------------------------------------------------
+  var ua = navigator.userAgent || "";
+  function browserName() {
+    if (/SamsungBrowser/i.test(ua)) return "Samsung Internet";
+    if (/NAVER|Whale/i.test(ua)) return "Naver / Whale";
+    if (/KAKAOTALK/i.test(ua)) return "KakaoTalk";
+    if (/FBAN|FBAV|Instagram/i.test(ua)) return "Meta in-app";
+    if (/EdgA|Edg/i.test(ua)) return "Edge";
+    if (/CriOS/i.test(ua)) return "Chrome (iOS)";
+    if (/Firefox|FxiOS/i.test(ua)) return "Firefox";
+    if (/MetaMaskMobile/i.test(ua)) return "MetaMask browser";
+    if (/Chrome/i.test(ua)) return "Chrome";
+    if (/Safari/i.test(ua)) return "Safari";
+    return "unknown";
+  }
+  function platform() {
+    if (/Android/i.test(ua)) return "Android";
+    if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
+    return "desktop or other";
+  }
+  var inApp = /KAKAOTALK|NAVER|FBAN|FBAV|Instagram|Line|DaumApps|MetaMaskMobile|TrustWallet/i.test(ua);
+
+  set("e-browser", browserName());
+  set("e-platform", platform());
+  set("e-inapp", inApp ? "yes" : "no", inApp ? "wait" : "ok");
+  set("e-view", window.innerWidth + " x " + window.innerHeight + "  dpr " + (window.devicePixelRatio || 1));
+  set("e-origin", location.origin + location.pathname);
+
+  // ---- injected provider -------------------------------------------------
+  var eth = window.ethereum;
+  set("w-present", eth ? "present" : "absent", eth ? "ok" : "bad");
+  set("w-mm", eth ? (eth.isMetaMask ? "yes" : "no") : "-");
+  if (eth && eth.request) {
+    eth.request({ method: "eth_chainId" })
+      .then(function (c) { set("w-chain", String(c), "ok"); })
+      .catch(function (e) { set("w-chain", "error: " + (e && e.message), "bad"); });
+    eth.request({ method: "eth_accounts" })
+      .then(function (a) { set("w-acc", (a && a.length ? a.length + " (" + a[0].slice(0, 10) + "...)" : "0 (not authorised yet)"), a && a.length ? "ok" : ""); })
+      .catch(function (e) { set("w-acc", "error: " + (e && e.message), "bad"); });
+  } else {
+    set("w-chain", "-"); set("w-acc", "-");
+  }
+
+  // ---- storage -----------------------------------------------------------
+  function probe(store) {
+    try { store.setItem("__p", "1"); store.removeItem("__p"); return "writable"; }
+    catch (e) { return "blocked: " + (e && e.name); }
+  }
+  var ls = probe(window.localStorage || {});
+  set("s-local", ls, ls === "writable" ? "ok" : "bad");
+  var ss = probe(window.sessionStorage || {});
+  set("s-sess", ss, ss === "writable" ? "ok" : "bad");
+  set("s-cookie", navigator.cookieEnabled ? "enabled" : "disabled", navigator.cookieEnabled ? "ok" : "bad");
+
+  var stored = 0;
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      if ((localStorage.key(i) || "").indexOf("wc@2:") === 0) stored++;
+    }
+  } catch (e) {}
+  set("c-sess", stored ? stored + " wc@2 keys" : "none");
+
+  // ---- library load ------------------------------------------------------
+  function timeout(msg) {
+    return new Promise(function (_, rj) { setTimeout(function () { rj(new Error(msg)); }, T); });
+  }
+
+  var t0 = Date.now();
+  Promise.race([
+    new Promise(function (res, rej) {
+      var s = document.createElement("script");
+      s.src = UMD; s.async = true;
+      s.onload = res; s.onerror = function () { rej(new Error("script error")); };
+      document.head.appendChild(s);
+    }),
+    timeout("timed out after " + T + "ms")
+  ]).then(function () {
+    var g = window["@walletconnect/ethereum-provider"];
+    var ok = g && g.EthereumProvider;
+    set("c-umd", ok ? "loaded in " + ms(t0) : "loaded but no export", ok ? "ok" : "bad");
+  }).catch(function (e) {
+    set("c-umd", "FAILED: " + (e && e.message), "bad");
+  });
+
+  var t1 = Date.now();
+  Promise.race([import(ESM), timeout("timed out after " + T + "ms")])
+    .then(function (m) {
+      var ok = m && (m.EthereumProvider || m.default);
+      set("c-esm", ok ? "loaded in " + ms(t1) : "loaded but no export", ok ? "ok" : "bad");
+    })
+    .catch(function (e) { set("c-esm", "FAILED: " + (e && e.message), "bad"); });
+
+  // ---- relay reachability ------------------------------------------------
+  var t2 = Date.now();
+  try {
+    var url = "wss://relay.walletconnect.com/?projectId=" + PROJECT_ID + "&version=2";
+    var sock = new WebSocket(url);
+    var settled = false;
+    var timer = setTimeout(function () {
+      if (settled) return; settled = true;
+      set("c-ws", "no response in " + T + "ms (likely blocked)", "bad");
+      try { sock.close(); } catch (e) {}
+    }, T);
+    sock.onopen = function () {
+      if (settled) return; settled = true; clearTimeout(timer);
+      set("c-ws", "connected in " + ms(t2), "ok");
+      try { sock.close(); } catch (e) {}
+    };
+    sock.onerror = function () {
+      if (settled) return; settled = true; clearTimeout(timer);
+      set("c-ws", "connection error", "bad");
+    };
+  } catch (e) {
+    set("c-ws", "WebSocket unavailable: " + (e && e.message), "bad");
+  }
+
+  // ---- deep links --------------------------------------------------------
+  var target = location.origin + location.pathname;
+  var bare = target.replace(/^https?:\/\//, "");
+  var mmHttps = "https://metamask.app.link/dapp/" + bare;
+  var mmIntent = "intent://metamask.app.link/dapp/" + bare +
+                 "#Intent;scheme=https;package=io.metamask;S.browser_fallback_url=" +
+                 encodeURIComponent(mmHttps) + ";end";
+  var twHttps = "https://link.trustwallet.com/open_url?coin_id=60&url=" + encodeURIComponent(target);
+
+  $("lnk-mm-intent").href = mmIntent;
+  $("lnk-mm-https").href = mmHttps;
+  $("lnk-tw").href = twHttps;
+  $("lnk-dump").textContent = "intent: " + mmIntent + "\n\nhttps: " + mmHttps + "\n\ntrust: " + twHttps;
+
+  // ---- report ------------------------------------------------------------
+  $("copy").onclick = function () {
+    var lines = ["MEMONS wallet check", "ua: " + ua, ""];
+    Array.prototype.forEach.call(document.querySelectorAll(".card"), function (card) {
+      lines.push("[" + card.querySelector("h2").textContent + "]");
+      Array.prototype.forEach.call(card.querySelectorAll(".row"), function (r) {
+        lines.push("  " + r.querySelector(".k").textContent + ": " + r.querySelector(".v").textContent);
+      });
+      lines.push("");
+    });
+    var txt = lines.join("\n");
+    var btn = this;
+    try {
+      navigator.clipboard.writeText(txt);
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = "Copy report"; }, 1600);
+    } catch (e) {
+      $("lnk-dump").textContent = txt;
+      btn.textContent = "Copy failed - text shown above";
+    }
+  };
+})();
+</script>
+</body>
+</html>
