@@ -166,7 +166,10 @@
   function adopt(p) {
     try { p.__memonsWC = true; } catch (e) {}
     api.provider = p;
-    if (!wallets.length) { try { window.ethereum = p; } catch (e) {} }
+    // Only fill the legacy global when nothing else claims it. Detection may
+    // still be running, so window.ethereum is checked directly rather than
+    // relying on the wallet list being final.
+    if (!wallets.length && !window.ethereum) { try { window.ethereum = p; } catch (e) {} }
     return p;
   }
 
@@ -181,7 +184,7 @@
   }
 
   var api = {
-    build: 6,
+    build: 7,
     provider: null,
     available: true,
 
@@ -221,13 +224,21 @@
     // Every navigation is a full page load, so a live WalletConnect session
     // has to be re-attached or signing and payments break after the first hop.
     restore: async function () {
-      await detectPromise;
-      if (wallets.length || !hasStoredSession()) return null;
-      try {
-        var p = await ensureInit();
-        if (p.session && p.accounts && p.accounts.length) return adopt(p);
-      } catch (e) {}
-      return null;
+      // Deliberately not waiting on detection first. On a phone there is no
+      // extension to find, so detection runs its full 2.5s timeout, and a
+      // stored WalletConnect session sat unrestored for that whole time. The
+      // page had already decided it was disconnected by then, which is what
+      // made a refresh look like a logout.
+      if (!hasStoredSession()) { await detectPromise; return null; }
+
+      var p = null;
+      try { p = await ensureInit(); } catch (e) { return null; }
+      if (!(p.session && p.accounts && p.accounts.length)) { await detectPromise; return null; }
+
+      // Adopted straight away. A live session is what the user chose last
+      // time, and active() reads api.provider before anything an extension
+      // might announce, so a late arrival cannot displace it.
+      return adopt(p);
     }
   };
 

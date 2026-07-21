@@ -33,6 +33,13 @@
 <div class="sub">Open this page on a device where connecting fails, wait for every row to settle, then send a screenshot or use Copy report.</div>
 
 <div class="card">
+  <h2>Deployed build</h2>
+  <div class="row"><div class="k">wallet-provider.js</div><div class="v wait" id="b-wp">checking...</div></div>
+  <div class="row"><div class="k">gacha-client.js</div><div class="v wait" id="b-gc">checking...</div></div>
+  <div class="row"><div class="k">mypage-entry.js</div><div class="v wait" id="b-me">checking...</div></div>
+</div>
+
+<div class="card">
   <h2>Environment</h2>
   <div class="row"><div class="k">Browser</div><div class="v" id="e-browser">-</div></div>
   <div class="row"><div class="k">Platform</div><div class="v" id="e-platform">-</div></div>
@@ -97,6 +104,41 @@
     el.className = "v" + (cls ? " " + cls : "");
   }
   function ms(t0) { return (Date.now() - t0) + "ms"; }
+
+  // ---- which build is actually on the server ------------------------------
+  // Checking this from a phone is otherwise painful: a .js URL opens blank in
+  // mobile browsers, and there is no console to read a version from.
+  (async function () {
+    async function grab(url) {
+      try {
+        const r = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+        return r.ok ? await r.text() : null;
+      } catch (e) { return null; }
+    }
+
+    const wp = await grab("/wallet-provider.js");
+    if (!wp) set("b-wp", "could not fetch", "bad");
+    else {
+      const m = wp.match(/build\s*:\s*(\d+)/);
+      const b = m ? parseInt(m[1], 10) : 0;
+      set("b-wp", b ? ("build " + b + (b >= 6 ? " (current)" : " (OUTDATED, expected 6)")) : "no build marker (OUTDATED)",
+          b >= 6 ? "ok" : "bad");
+    }
+
+    const gc = await grab("/gacha-client.js");
+    if (!gc) set("b-gc", "could not fetch", "bad");
+    else {
+      const ok = gc.indexOf("expiresAt") >= 0 && gc.indexOf("SESSION_EXPIRED") >= 0;
+      set("b-gc", ok ? "has expiry handling (current)" : "missing expiry handling (OUTDATED)", ok ? "ok" : "bad");
+    }
+
+    const me = await grab("/mypage-entry.js");
+    if (!me) set("b-me", "could not fetch", "bad");
+    else {
+      const ok = me.indexOf("showWalletPicker") >= 0;
+      set("b-me", ok ? "has wallet picker (current)" : "missing wallet picker (OUTDATED)", ok ? "ok" : "bad");
+    }
+  })();
 
   // ---- environment -------------------------------------------------------
   var ua = navigator.userAgent || "";

@@ -411,9 +411,17 @@
         // Rebuild the WalletConnect provider before anything reads it.
         // Every navigation on this site is a full reload, so without this the
         // session exists on the relay but the page cannot use it.
+        //
+        // ready comes first on purpose. Waiting on detect first cost 2.5s on a
+        // phone, where there is no extension to find and the poll runs to its
+        // timeout, and the header sat showing "not connected" for all of it.
         if (window.MEMONS_WC) {
-          if (window.MEMONS_WC.detect) { try { await window.MEMONS_WC.detect(); } catch (e) {} }
-          if (window.MEMONS_WC.ready)  { try { await window.MEMONS_WC.ready;  } catch (e) {} }
+          if (window.MEMONS_WC.ready) { try { await window.MEMONS_WC.ready; } catch (e) {} }
+          // Only worth waiting for detection when no session was restored,
+          // since that is the only case where an extension still matters here.
+          if (!activeProvider() && window.MEMONS_WC.detect) {
+            try { await window.MEMONS_WC.detect(); } catch (e) {}
+          }
         }
         if (window.MEMONS && window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
 
