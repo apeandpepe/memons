@@ -121,8 +121,8 @@
     else {
       const m = wp.match(/build\s*:\s*(\d+)/);
       const b = m ? parseInt(m[1], 10) : 0;
-      set("b-wp", b ? ("build " + b + (b >= 6 ? " (current)" : " (OUTDATED, expected 6)")) : "no build marker (OUTDATED)",
-          b >= 6 ? "ok" : "bad");
+      set("b-wp", b ? ("build " + b + (b >= 9 ? " (current)" : " (OUTDATED, expected 9)")) : "no build marker (OUTDATED)",
+          b >= 9 ? "ok" : "bad");
     }
 
     const gc = await grab("/gacha-client.js");

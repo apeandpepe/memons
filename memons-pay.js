@@ -120,7 +120,9 @@
     const cid = await eth.request({ method: "eth_chainId" });
     if (cid === cfg.params.chainId) return;
     try {
-      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: cfg.params.chainId }] });
+      const swReq = eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: cfg.params.chainId }] });
+      try { if (window.MEMONS_WC && window.MEMONS_WC.openWallet) window.MEMONS_WC.openWallet(); } catch (e) {}
+      await swReq;
     } catch (e) {
       const code = e && (e.code || (e.data && e.data.originalError && e.data.originalError.code));
       if (code === 4902) {
@@ -229,10 +231,14 @@
     // some chains (Polygon) need an explicit fee floor; others are left to the wallet
     if (cfg.gas) Object.assign(txParams, cfg.gas);
 
-    const txHash = await eth.request({
+    const txReq = eth.request({
       method: "eth_sendTransaction",
       params: [txParams],
     });
+    // Over WalletConnect the prompt appears in an app that is not on screen.
+    // Bring it forward, or the page waits on a confirmation the user cannot see.
+    try { if (window.MEMONS_WC && window.MEMONS_WC.openWallet) window.MEMONS_WC.openWallet(); } catch (e) {}
+    const txHash = await txReq;
     // money has left the wallet -> record it immediately so a refresh/close
     // can never lose the receipt
     addPending(txHash, pulls, from, CHAIN);

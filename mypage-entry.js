@@ -13,6 +13,39 @@
   }
   function isAndroid() { return /Android/i.test(navigator.userAgent || ''); }
 
+  /* A timeout that only counts while the page is on screen.
+     Connecting means leaving for the wallet app, approving, and coming back,
+     which is easily more than a plain 15 seconds. A wall-clock timer gave up
+     mid-approval and greeted the returning user with a failure sheet for a
+     connection the wallet had in fact accepted. Time spent in the wallet is
+     not the site hanging, so it is not counted. */
+  function activeTimeout(ms, label) {
+    return new Promise(function (_, reject) {
+      var left = ms, timer = null, mark = Date.now();
+
+      function stop() {
+        if (timer) { clearTimeout(timer); timer = null; }
+        document.removeEventListener('visibilitychange', onVis);
+      }
+      function tick() {
+        left -= (Date.now() - mark);
+        mark = Date.now();
+        if (left <= 0) { stop(); reject(new Error(label)); return; }
+        timer = setTimeout(tick, Math.min(left, 1000));
+      }
+      function onVis() {
+        if (document.hidden) {
+          if (timer) { left -= (Date.now() - mark); clearTimeout(timer); timer = null; }
+        } else if (!timer) {
+          mark = Date.now();
+          timer = setTimeout(tick, Math.min(left, 1000));
+        }
+      }
+      document.addEventListener('visibilitychange', onVis);
+      timer = setTimeout(tick, Math.min(left, 1000));
+    });
+  }
+
   /* Deep link target. Deliberately origin + path only.
      A query string here is ambiguous: metamask.app.link cannot tell where its
      own parameters end and the destination's begin, and it answers with "this
@@ -148,6 +181,12 @@
       document.body.appendChild(hint);
     }
     function hideHint() { if (hint) { hint.remove(); hint = null; } }
+    /* Returning to the tab without a reload does not re-run init, so the
+       resume check has to hang off visibility as well. */
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) resumeIfPending();
+    });
+
     document.addEventListener('memons:signing', function () {
       showHint('Approve the signature request in your wallet app, then return here.');
     });
@@ -294,6 +333,38 @@
       return window.ethereum || null;
     }
 
+    /* Came back from the wallet with the approval done but this page having
+       already given up, or simply mid-login. The session is live on the relay
+       either way, so pick the sign-in back up instead of leaving the user
+       staring at a failure for something their wallet accepted. */
+    async function resumeIfPending() {
+      if (busy) return false;
+      if (!isPending()) return false;
+      if (window.MEMONS && window.MEMONS.connected) { clearPending(); return false; }
+      if (!window.MEMONS_WC) return false;
+
+      var wc = window.MEMONS_WC;
+      var live = wc.provider && wc.provider.accounts && wc.provider.accounts.length;
+      if (!live) {
+        // The provider object is gone but the session may still be on the
+        // relay, which is exactly the case after this page gave up early.
+        try { await wc.restore(); } catch (e) {}
+        live = wc.provider && wc.provider.accounts && wc.provider.accounts.length;
+      }
+      if (!live) return false;
+
+      clearPending();               // one attempt only, never a loop
+      hideSheet();
+      showHint('Finishing sign-in - approve the signature in your wallet.');
+      connectViaWalletConnect();
+      return true;
+    }
+
+    function hideSheet() {
+      var s1 = document.getElementById('mmSheet'); if (s1) s1.remove();
+      var s2 = document.getElementById('wPick');   if (s2) s2.remove();
+    }
+
     /* Runs the WalletConnect handshake and then signs in. Split out so the
        chooser can call it directly. */
     async function connectViaWalletConnect() {
@@ -306,12 +377,18 @@
           // Hard ceiling on the handshake. The relay connection can stall
           // before the modal ever appears, which looks like a frozen button.
           markPending();
+          // The wallet app takes over the screen from here. Say so, or the
+          // page looks frozen behind whatever the wallet is showing.
+          if (isMobileDevice()) {
+            showHint('Approve the connection in your wallet app, then return here.');
+          }
+          // 45s of the user actually looking at this page. The wallet modal
+          // and the trip to the wallet app do not eat into it.
           await Promise.race([
             window.MEMONS_WC.connect(),
-            new Promise(function (_, rj) {
-              setTimeout(function () { rj(new Error('WC_TIMEOUT')); }, 15000);
-            })
+            activeTimeout(45000, 'WC_TIMEOUT')
           ]);
+          hideHint();
         }
         if (window.MEMONS.bindWalletEvents) window.MEMONS.bindWalletEvents();
         var addr = await window.MEMONS.connect();
@@ -439,17 +516,7 @@
           return;
         }
 
-        /* Came back from the wallet mid-login: the session is live but the
-           signature step never ran. Finish it rather than making the user
-           work out that they have to tap connect a second time. */
-        var wc = window.MEMONS_WC;
-        var live = wc && wc.provider && wc.provider.accounts && wc.provider.accounts.length;
-        if (isPending() && live && !(window.MEMONS && window.MEMONS.connected)) {
-          clearPending();          // one attempt only, never a loop
-          showHint('Finishing sign-in - approve the signature in your wallet.');
-          connectViaWalletConnect();
-          return;
-        }
+        if (await resumeIfPending()) return;
         clearPending();
       } catch (e) { renderDisconnected(); }
     })();

@@ -173,6 +173,57 @@
     return p;
   }
 
+  /* Where to send the user so the wallet comes to the front.
+     WalletConnect carries this in the session the wallet itself published, so
+     one path covers every wallet rather than a list of hard-coded schemes.
+     The modal also records which entry was tapped, which is the fallback when
+     a wallet publishes no redirect of its own. */
+  function walletLink() {
+    try {
+      var meta = api.provider && api.provider.session &&
+                 api.provider.session.peer && api.provider.session.peer.metadata;
+      var r = meta && meta.redirect;
+      if (r) {
+        // native first: a scheme opens the app directly, while a universal
+        // link can be intercepted by the browser and go nowhere useful.
+        if (r.native && String(r.native).trim()) return String(r.native).trim();
+        if (r.universal && String(r.universal).trim()) return String(r.universal).trim();
+      }
+    } catch (e) {}
+    try {
+      var choice = localStorage.getItem("WALLETCONNECT_DEEPLINK_CHOICE");
+      if (choice) {
+        var o = JSON.parse(choice);
+        var href = o && (o.href || o.link);
+        if (href && String(href).trim()) return String(href).trim();
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  /* Bring the wallet forward for a request the user has to answer.
+     Without this the request is delivered silently and the page just sits
+     there, leaving the user to find the wallet app themselves. */
+  var lastOpen = 0;
+  function openWallet() {
+    if (!api.provider) return false;            // injected wallets need nothing
+    var link = walletLink();
+    if (!link) return false;
+
+    var now = Date.now();
+    if (now - lastOpen < 1200) return true;     // one request, one switch
+    lastOpen = now;
+
+    try {
+      if (link.indexOf("http") === 0) {
+        window.open(link, "_blank");
+      } else {
+        window.location.href = link;
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
   function hasStoredSession() {
     try {
       for (var i = 0; i < localStorage.length; i++) {
@@ -184,7 +235,7 @@
   }
 
   var api = {
-    build: 7,
+    build: 9,
     provider: null,
     available: true,
 
@@ -205,6 +256,10 @@
     hasInjected: function () { return wallets.length > 0; },
 
     active: function () { return api.provider || chosen || injected || null; },
+
+    // Brings the connected wallet app to the front. No-op with an extension.
+    openWallet: openWallet,
+    walletLink: walletLink,
 
     connect: async function () {
       var p = await ensureInit();

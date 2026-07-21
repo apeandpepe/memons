@@ -146,19 +146,25 @@
     const p = eth();
     if (!p) throw new Error("A wallet is required.");
 
-    const accs = await p.request({ method: "eth_requestAccounts" });
+    const accReq = p.request({ method: "eth_requestAccounts" });
+    try { if (window.MEMONS_WC && window.MEMONS_WC.openWallet) window.MEMONS_WC.openWallet(); } catch (e) {}
+    const accs = await accReq;
     address = (accs[0] || "").toLowerCase();
     if (!address) throw new Error("No account selected.");
 
     const nonceRes = await get("/auth/nonce?address=" + address);
 
-    // The wallet app is now in the foreground on mobile. Tell the page so it can
-    // show a hint instead of looking frozen.
     try { document.dispatchEvent(new CustomEvent("memons:signing")); } catch (e) {}
 
     let signature;
     try {
-      signature = await p.request({ method: "personal_sign", params: [nonceRes.message, address] });
+      const req = p.request({ method: "personal_sign", params: [nonceRes.message, address] });
+      // Over WalletConnect the request travels to a wallet that is not on
+      // screen, so nothing happens until the user goes and finds it. Bring the
+      // app forward instead. Sent after the request so it cannot arrive to an
+      // empty queue, and a no-op for extensions, which draw their own prompt.
+      try { if (window.MEMONS_WC && window.MEMONS_WC.openWallet) window.MEMONS_WC.openWallet(); } catch (e) {}
+      signature = await req;
     } finally {
       try { document.dispatchEvent(new CustomEvent("memons:signed")); } catch (e) {}
     }
