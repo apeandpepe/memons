@@ -399,6 +399,29 @@
     share:'https://x.com/intent/tweet?text='+encodeURIComponent(SHARE_TEXT),
     pfp:'https://x.com/settings/profile',
   };
+  /* Which missions the user has already been sent off to X for. Kept per
+     wallet so switching accounts does not inherit somebody else's progress,
+     and given a lifetime so a visit from days ago does not linger. */
+  var VISIT_KEY='memons_visited_v1', VISIT_TTL=7*24*60*60*1000;
+  function visitStore(){
+    try{
+      var raw=localStorage.getItem(VISIT_KEY);
+      var o=raw?JSON.parse(raw):{};
+      var a=(window.MEMONS&&MEMONS.address)?String(MEMONS.address).toLowerCase():'';
+      if(o.a!==a) return {a:a,m:{}};
+      var now=Date.now(), m=o.m||{};
+      Object.keys(m).forEach(function(k){ if(now-m[k]>VISIT_TTL) delete m[k]; });
+      return {a:a,m:m};
+    }catch(e){ return {a:'',m:{}}; }
+  }
+  function markVisited(key){
+    try{ var o=visitStore(); o.m[key]=Date.now(); localStorage.setItem(VISIT_KEY,JSON.stringify(o)); }catch(e){}
+  }
+  function visited(key){ return !!visitStore().m[key]; }
+  function clearVisited(key){
+    try{ var o=visitStore(); delete o.m[key]; localStorage.setItem(VISIT_KEY,JSON.stringify(o)); }catch(e){}
+  }
+
   var EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var currentEmail=null;
 
@@ -479,9 +502,17 @@
       else if(LINK[m.key]){
         // external action first (go), then claim
         btn.className='btn go'; btn.textContent='GO →';
-        btn.onclick=function(){ window.open(LINK[m.key],'_blank'); setTimeout(function(){ showClaim(A,m); },400); };
+        btn.onclick=function(){
+          markVisited(m.key);
+          window.open(LINK[m.key],'_blank');
+          setTimeout(function(){ showClaim(A,m); },400);
+        };
         A.appendChild(btn);
-        if(m.claimed>0 || m._revealed) showClaim(A,m);
+        // The visit has to be remembered across reloads. It was held on the
+        // mission object, which is rebuilt from the server on every render, so
+        // coming back from X made the claim button vanish and there was no way
+        // to reach it again.
+        if(m.claimed>0 || visited(m.key)) showClaim(A,m);
       }
       else{
         // pure auto missions (wallet / referral): claim directly
@@ -549,6 +580,7 @@
       var body={key:m.key};
       if(proof) body.proof=proof;
       var r=await MEMONS.authFetch('/missions',body);
+      if(r.claims_used>=m.max_claims) clearVisited(m.key);
       toast('+'+r.granted+' capsules · '+r.capsules_total+' total');
       await load();
     }catch(e){
