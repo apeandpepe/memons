@@ -177,6 +177,14 @@
   }
   /* .good and .bad already exist; this is the waiting colour. */
   .gold{color:var(--gold)}
+  /* Won is a separate state from eligible: before a draw a card is a chance,
+     after one it is either a result or it is not. */
+  .pot .pstv.won{color:#f0b429}
+  .pot.hi .pstv.won{color:#f0b429}
+  .drawnote{display:flex;align-items:center;gap:10px;margin:16px 0 4px;padding:13px 16px;
+    border:1px solid rgba(233,184,74,.35);border-radius:11px;background:rgba(233,184,74,.06);
+    color:var(--gold);font-size:12.5px;line-height:1.55}
+  .drawnote i{font-size:17px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -251,6 +259,8 @@
         </div>
       </div>
 
+      <div class="drawnote" id="drawNote" style="display:none"></div>
+
       <div class="lbl">POTENTIAL REWARDS</div>
       <div class="pgrid" id="pgrid"></div>
 
@@ -277,6 +287,8 @@
     {r:'legendary',title:'APEPE REWARD', holder:'LEGENDARY Holder',winners:'10 Winners',  rewardText:'$200', coin:true},
     {r:'mythic', title:'APEPE REWARD', holder:'MYTHIC Holder',    winners:'5 Winners',   rewardText:'$600', coin:true}
   ];
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
   var owned=[];
   function $(id){return document.getElementById(id);}
 
@@ -343,11 +355,60 @@
     }catch(e){ el.textContent='—'; }
   }
 
-    // event rewards — placeholder statuses until lottery/snapshot (step 10)
     $('evEntries').textContent = totalCards;
-    $('evEligible').innerHTML = (d.epic+d.legendary+d.mythic>0)
+    $('evEligible').innerHTML = (d.common+d.rare+d.epic+d.legendary+d.mythic>0)
       ? '<span class="good">Yes</span>' : '<span>—</span>';
     loadKycStatus();
+    loadDraw(d);
+  }
+
+  /* Draw results.
+     These four figures used to be filled in from whatever the page happened
+     to know: entries was simply the card count, and every rarity the user
+     held read "Eligible" whether or not a draw had been run. Once a draw
+     exists the answer is a fact, and the page has to say which it is. */
+  var drawState = { taken: false, snapshotAt: null, wins: {} };
+
+  async function loadDraw(d){
+    var H = { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON };
+
+    // Did this wallet win anything? lottery_check answers only for the
+    // address passed in, so it is safe to call with the publishable key.
+    try{
+      var res = await fetch(SB_URL + '/rest/v1/rpc/lottery_check', {
+        method: 'POST',
+        headers: Object.assign({ 'content-type': 'application/json' }, H),
+        body: JSON.stringify({ p_address: MEMONS.address })
+      });
+      var rows = await res.json();
+      if(Array.isArray(rows)){
+        drawState.wins = {};
+        rows.forEach(function(w){ drawState.wins[w.rarity] = w; });
+      }
+    }catch(e){ /* keep the pre-draw view */ }
+
+    // Whether a draw has happened at all, which is what separates
+    // "not selected" from "no draw yet".
+    try{
+      var dres = await fetch(SB_URL + '/rest/v1/lottery_draw?select=drawn_at&order=drawn_at.desc&limit=1', { headers: H });
+      var draws = await dres.json();
+      drawState.taken = Array.isArray(draws) && draws.length > 0;
+    }catch(e){}
+
+    try{
+      var sres = await fetch(SB_URL + '/rest/v1/lottery_snapshot?select=taken_at&order=taken_at.desc&limit=1', { headers: H });
+      var snaps = await sres.json();
+      var t = Array.isArray(snaps) && snaps[0] && snaps[0].taken_at;
+      if(t){
+        drawState.snapshotAt = t;
+        $('evSnap').textContent = new Date(t).toISOString().slice(0,10);
+      }
+    }catch(e){}
+
+    renderPot(d);
+  }
+
+  function renderPot(d){
     $('pgrid').innerHTML=POT.map(function(p){
       var img = p.coin ? 'images/mypage/event/apepe-'+p.r+'.webp' : 'images/mypage/event/reward-'+p.r+'.webp';
       var rewInner = p.coin
@@ -355,9 +416,23 @@
         : '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv" style="font-size:12px">'+p.rewardText+'</div>';
       var hi = (p.r==='epic'||p.r==='legendary'||p.r==='mythic') ? ' hi' : '';
       var eligible = d[p.r] > 0;
-      var statusHtml = eligible
-        ? '<div class="pstv eli"><i class="ti ti-circle-check"></i>Eligible</div>'
-        : '<div class="pstv no"><i class="ti ti-circle-x"></i>Not Eligible</div>';
+      var win = drawState.wins[p.r];
+
+      /* Three states, not two. Holding a card before the draw means a chance;
+         after the draw it means nothing on its own. */
+      var statusHtml;
+      if(win){
+        // The draw position is recorded but not shown: every winner in a
+        // rarity gets the same prize, so a number next to it only invites
+        // the question of whether a lower one would have been better.
+        statusHtml = '<div class="pstv won"><i class="ti ti-trophy"></i>Won</div>';
+      } else if(drawState.taken){
+        statusHtml = '<div class="pstv no"><i class="ti ti-circle-x"></i>Not Selected</div>';
+      } else if(eligible){
+        statusHtml = '<div class="pstv eli"><i class="ti ti-circle-check"></i>Eligible</div>';
+      } else {
+        statusHtml = '<div class="pstv no"><i class="ti ti-circle-x"></i>Not Eligible</div>';
+      }
       return '<div class="pot'+hi+'" style="--cc:var(--c-'+p.r+')">'+
         '<div class="ptop">'+
           '<img class="pbox" src="images/mypage/event/box-'+p.r+'.webp" alt="" onerror="this.closest(\'.pot\').classList.add(\'nobox\')">'+
@@ -366,6 +441,15 @@
         '<div class="prow2"><div class="prew"><div class="prewl">Reward</div><div class="prewv">'+rewInner+'</div></div>'+
         '<div class="pst"><div class="pstl">Current Status</div>'+statusHtml+'</div></div></div>';
     }).join('');
+
+    var n = Object.keys(drawState.wins).length;
+    var box = $('drawNote');
+    if(box){
+      if(n)                   box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+'. Complete identity verification to receive your rewards.';
+      else if(drawState.taken) box.innerHTML = '<i class="ti ti-info-circle"></i> The draw has been held. Your wallet was not selected this time.';
+      else                     box.innerHTML = '';
+      box.style.display = box.innerHTML ? 'flex' : 'none';
+    }
   }
 
   // simple toast
