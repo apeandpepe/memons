@@ -235,7 +235,7 @@
   }
 
   var api = {
-    build: 9,
+    build: 10,
     provider: null,
     available: true,
 
@@ -297,10 +297,61 @@
     }
   };
 
+  /* ---- warm the library up in the background ---------------------------
+     The bundle is around 875KB and, until now, was only fetched once the
+     user pressed connect. On a slow line that is several seconds of a
+     button that appears to do nothing. Fetching it while the page is idle
+     puts it in the browser cache, so the press finds it already there.
+
+     Nothing is initialised and no network session is opened: this is a
+     download and nothing more, so it cannot open a wallet or connect
+     anything by itself. If it fails, connect falls back to fetching the
+     library then, which is exactly what happened before.
+
+     Skipped where the data would not be welcome: an injected wallet needs
+     none of this, and a metered or slow connection should not spend 875KB
+     on something the visitor may never use. */
+  var warmed = false;
+  function warm() {
+    if (warmed || api.provider || injected) return;
+    warmed = true;
+    try {
+      var c = navigator.connection;
+      if (c) {
+        if (c.saveData) return;
+        if (/(^|-)2g$/.test(c.effectiveType || "")) return;
+      }
+      var l = document.createElement("link");
+      l.rel = "modulepreload";
+      l.href = ESM;
+      l.crossOrigin = "anonymous";
+      (document.head || document.documentElement).appendChild(l);
+    } catch (e) {}
+  }
+
+  function scheduleWarm() {
+    // After load, and only when the browser has nothing better to do, so it
+    // never competes with the page's own images and scripts.
+    var go = function () {
+      if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 4000 });
+      else setTimeout(warm, 2000);
+    };
+    if (document.readyState === "complete") go();
+    else window.addEventListener("load", go, { once: true });
+  }
+
+  api.warm = warm;
+
   window.MEMONS_WC = api;
   window.MEMONS_ETH = function () { return api.active(); };
 
   // capsule-reveal.html takes payments but has no header, so it never loads
   // mypage-entry.js. Restoring here covers every page that includes this file.
   api.ready = api.restore();
+
+  // Only worth doing when WalletConnect is the likely route: with an
+  // extension present the library is never loaded at all.
+  api.ready.then(function () {
+    if (!injected && !api.provider) scheduleWarm();
+  });
 })();
