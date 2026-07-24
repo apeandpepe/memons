@@ -256,6 +256,11 @@
      go straight to /2 if they do not — and change their mind by typing a
      different address. */
   function wantsLight(){
+    /* The path, not the query. /2 is a rewrite: the server hands over
+       index.html while the address bar still reads /2, so location.search
+       is empty there. ?tier=low stays supported for testing without
+       depending on the deployment config. */
+    if (/^\/2\/?$/.test(location.pathname)) return true;
     return /[?&]tier=low/.test(location.search);
   }
 

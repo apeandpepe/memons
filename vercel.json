@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/2",
-      "destination": "/index.html?tier=low"
+      "destination": "/index.html"
     },
     {
       "source": "/c/:id",
