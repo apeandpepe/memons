@@ -376,7 +376,7 @@
     <video class="capvideo" id="capvideo" src="images/reveal/open.mp4" muted playsinline preload="auto"></video>
     <div class="rays" id="rays"></div>
     <div class="core" id="core"></div>
-    <video class="leakvid" id="leakvid" src="images/reveal/fx-leak.mp4" muted playsinline preload="auto"></video>
+    <video class="leakvid" id="leakvid" data-src="images/reveal/fx-leak.mp4" muted playsinline preload="none"></video>
     <div class="flash"></div>
     <div class="shock" id="shock"></div>
     <div class="particles" id="parts"></div>
@@ -511,7 +511,7 @@
     <input type="range" min="200" max="3000" step="50" value="900" id="lks">
     <div class="lab-sec">Intensity <span id="lkiv">1.00</span></div>
     <input type="range" min="0.3" max="1" step="0.05" value="1" id="lki">
-    <div class="lab-note" id="leaknote">file: images/reveal/fx-leak.mp4</div>
+    <div class="lab-note" id="leaknote">file: images/reveal/fx-leak.mp4 <span class="miss">(off - file missing)</span></div>
     <button class="lab-open" id="testLeak" style="margin-top:8px">💡 Test leak</button>
 
     <div class="lab-sec" style="color:var(--gold);margin-top:14px">⚡ IMPACT FLASH</div>
@@ -638,10 +638,16 @@ let FLASH_AT = 2.5;      // sec into video when flash fires
 let CARD_DELAY = 380;    // ms after flash start -> card emerges (within the flash)
 const IMPACT = { type:'fire', fadeIn:380, hold:120, fadeOut:450, intensity:1, colorMode:'gold', color:'#ffcf5a', fireStart:0.7, fireDur:2200, capFade:300 };
 /* inner light leak (strong light from inside): video overlay — before the full-screen flash */
-const LEAK = { on:true, at:1.8, vstart:0, dur:900, inten:1 };
+/* Off because images/reveal/fx-leak.mp4 was never added. The element and
+   the controls stay, so dropping the file in and setting this back to true
+   is all it takes; leaving it on meant a failed request on every reveal. */
+const LEAK = { on:false, at:1.8, vstart:0, dur:900, inten:1 };
 function fireLeak(){
   if(!LEAK.on) return;
   const el=$('leakvid'); if(!el) return;
+  // src is attached on first use rather than in the markup, so turning LEAK
+  // off costs nothing at load time.
+  if(!el.src && el.dataset.src) el.src=el.dataset.src;
   try{ el.pause(); el.currentTime=LEAK.vstart; }catch(e){}
   el.style.transition='opacity .2s ease'; el.style.opacity=LEAK.inten;
   const pr=el.play(); if(pr&&pr.catch) pr.catch(()=>{});

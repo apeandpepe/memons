@@ -240,20 +240,58 @@
   <video id="introVid" class="vbg" autoplay muted loop playsinline preload="auto"
          poster="images/home/intro-poster.webp"
          data-src="images/home/intro.mp4"
-         data-src-mobile="images/home/intro-mobile.mp4"></video>
+         data-src-mobile="images/home/intro-mobile.mp4"
+         data-src-low="images/home/intro-low.mp4"
+         data-src-mobile-low="images/home/intro-mobile-low.mp4"></video>
 <script>
 (function(){
-  /* pick the light video on phones/tablets, the full-quality one on desktop */
+  /* Two axes: screen size picks the aspect, connection picks the weight.
+     The site is meant to be reachable from places where 17MB of background
+     video is most of a day's data, so a slow or metered line gets the
+     lighter cut instead. Nothing is withheld — the video still plays. */
+  function isSlow(){
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (c) {
+      // The user asked for less data; that is not ours to overrule.
+      if (c.saveData) return true;
+      // 2g and slow-2g by name, and 3g by measured downlink: effectiveType
+      // rounds up generously, so a bad 4g reading is common on real networks.
+      var t = c.effectiveType || "";
+      if (/(^|-)2g$/.test(t) || t === "3g") return true;
+      if (typeof c.downlink === "number" && c.downlink > 0 && c.downlink < 2) return true;
+      // The connection reported for itself and said it was fine. Second-
+      // guessing that with hardware hints put fast desktops on the light
+      // cut, which is the opposite of the point.
+      return false;
+    }
+    // No Network Information API at all (Safari, Firefox). Device specs are
+    // a poor proxy for bandwidth, so only the clearly modest ones qualify.
+    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return true;
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) return true;
+    return false;
+  }
+
   function pick(el){
     if(!el) return;
     var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
-    var src = small ? el.getAttribute('data-src-mobile') : el.getAttribute('data-src');
+    var slow  = isSlow();
+
+    var src = small
+      ? (slow && el.getAttribute('data-src-mobile-low')) || el.getAttribute('data-src-mobile')
+      : (slow && el.getAttribute('data-src-low'))        || el.getAttribute('data-src');
     if(!src) return;
+
+    // A slow line has better uses for its bandwidth than reading ahead.
+    if (slow) el.preload = 'metadata';
+
     var s = document.createElement('source');
     s.src = src; s.type = 'video/mp4';
     el.appendChild(s);
     el.load();
     var p = el.play(); if(p && p.catch) p.catch(function(){});
+
+    // Leaves a trace for anyone checking why they got the file they got.
+    try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
   }
   pick(document.getElementById('introVid'));
 })();
