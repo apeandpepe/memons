@@ -290,16 +290,48 @@
     // A slow line has better uses for its bandwidth than reading ahead.
     if (slow) el.preload = 'metadata';
 
-    var s = document.createElement('source');
-    s.src = src; s.type = 'video/mp4';
-    el.appendChild(s);
-    el.load();
+    // src straight on the element. Appending a <source> and then calling
+    // load() made the browser fetch the file twice: the append starts one
+    // request and load() restarts it.
+    el.src = src;
     var p = el.play(); if(p && p.catch) p.catch(function(){});
 
     // Leaves a trace for anyone checking why they got the file they got.
     try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
   }
   pick(document.getElementById('introVid'));
+
+  /* The sections sit side by side, so lazy iframes count as nearly visible
+     and load at once. open-capsule alone pulls a 6MB video that way, before
+     the visitor has scrolled anywhere near it. Held back until the section
+     is actually approached. */
+  function watchFrames(){
+    var frames = document.querySelectorAll('iframe[data-src]');
+    if (!frames.length) return;
+    function loadFrame(f){
+      if (f.src || !f.dataset.src) return;
+      f.src = f.dataset.src;
+    }
+    if (!('IntersectionObserver' in window)) {
+      window.addEventListener('load', function(){
+        setTimeout(function(){ frames.forEach(loadFrame); }, 1500);
+      });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) { loadFrame(e.target); io.unobserve(e.target); }
+      });
+    }, { root: null, rootMargin: '200px' });
+    frames.forEach(function(f){ io.observe(f); });
+  }
+  // This script sits with the video, above the iframes it is looking for, so
+  // it has to wait for the rest of the document before it can find them.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', watchFrames);
+  } else {
+    watchFrames();
+  }
 })();
 </script>
   <div class="vshade"></div>
@@ -314,17 +346,17 @@
 
 <!-- ABOUT (embed, below home) -->
 <section id="about" class="embedsec">
-  <iframe class="embed abembed" src="about.html" title="ABOUT MEMONS" loading="lazy"></iframe>
+  <iframe class="embed abembed" data-src="about.html" title="ABOUT MEMONS" loading="lazy"></iframe>
 </section>
 
 <!-- MEMONS VAULT (embed) -->
 <section id="vault" class="embedsec">
-  <iframe class="embed vembed" src="vault.html#embed" title="MEMONS VAULT" loading="lazy"></iframe>
+  <iframe class="embed vembed" data-src="vault.html#embed" title="MEMONS VAULT" loading="lazy"></iframe>
 </section>
 
 <!-- OPEN CAPSULE (embed) -->
 <section id="capsule" class="embedsec">
-  <iframe class="embed" src="open-capsule.html#embed" title="OPEN CAPSULE" loading="lazy"></iframe>
+  <iframe class="embed" data-src="open-capsule.html#embed" title="OPEN CAPSULE" loading="lazy"></iframe>
 </section>
 
 <!-- MARKETPLACE -->
