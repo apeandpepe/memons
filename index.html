@@ -244,43 +244,25 @@
          data-src-mobile-low="images/home/intro-mobile-low.mp4"></video>
 <script>
 (function(){
-  /* Two axes: screen size picks the aspect, connection picks the weight.
-     The site is meant to be reachable from places where 17MB of background
-     video is most of a day's data, so a slow or metered line gets the
-     lighter cut instead. Nothing is withheld — the video still plays. */
-  function isSlow(){
-    /* ?tier=low forces the light cut, ?tier=full the full one. DevTools
-       throttling slows the transfer but leaves navigator.connection saying
-       4g, so there is otherwise no way to see which file a visitor on a bad
-       line would get without finding a bad line. */
-    var q = location.search.match(/[?&]tier=(low|full)/);
-    if (q) return q[1] === 'low';
+  /* Two addresses, and the address is the whole answer.
 
-    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (c) {
-      // The user asked for less data; that is not ours to overrule.
-      if (c.saveData) return true;
-      // 2g and slow-2g by name, and 3g by measured downlink: effectiveType
-      // rounds up generously, so a bad 4g reading is common on real networks.
-      var t = c.effectiveType || "";
-      if (/(^|-)2g$/.test(t) || t === "3g") return true;
-      if (typeof c.downlink === "number" && c.downlink > 0 && c.downlink < 2) return true;
-      // The connection reported for itself and said it was fine. Second-
-      // guessing that with hardware hints put fast desktops on the light
-      // cut, which is the opposite of the point.
-      return false;
-    }
-    // No Network Information API at all (Safari, Firefox). Device specs are
-    // a poor proxy for bandwidth, so only the clearly modest ones qualify.
-    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return true;
-    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) return true;
-    return false;
+     apepe.io   the full-size video
+     apepe.io/2 a smaller one
+
+     Nothing is remembered between visits and nothing is detected. Automatic
+     detection was tried and dropped: effectiveType reports 4g on connections
+     that plainly are not, and a visitor who landed on the wrong one had no
+     way to say so. Now anyone can wait out the big video if they want it, or
+     go straight to /2 if they do not — and change their mind by typing a
+     different address. */
+  function wantsLight(){
+    return /[?&]tier=low/.test(location.search);
   }
 
   function pick(el){
     if(!el) return;
     var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
-    var slow  = isSlow();
+    var slow  = wantsLight();
 
     var src = small
       ? (slow && el.getAttribute('data-src-mobile-low')) || el.getAttribute('data-src-mobile')
@@ -298,6 +280,7 @@
     try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
   }
   pick(document.getElementById('introVid'));
+
 
   /* The sections sit side by side, so lazy iframes count as nearly visible
      and load at once. open-capsule alone pulls a 6MB video that way, before
@@ -325,10 +308,11 @@
   }
   // This script sits with the video, above the iframes it is looking for, so
   // it has to wait for the rest of the document before it can find them.
+  function onReady(){ watchFrames(); }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', watchFrames);
+    document.addEventListener('DOMContentLoaded', onReady);
   } else {
-    watchFrames();
+    onReady();
   }
 })();
 </script>
