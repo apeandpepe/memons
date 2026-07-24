@@ -237,7 +237,7 @@
 <!-- VIDEO INTRO (HOME) -->
 <!-- swap video: images/home/intro.mp4 -->
 <section class="vhero" id="home">
-  <video id="introVid" class="vbg" autoplay muted loop playsinline preload="auto"
+  <video id="introVid" class="vbg" autoplay muted loop playsinline preload="none"
          data-src="images/home/intro.mp4"
          data-src-mobile="images/home/intro-mobile.mp4"
          data-src-low="images/home/intro-low.mp4"
@@ -287,12 +287,10 @@
       : (slow && el.getAttribute('data-src-low'))        || el.getAttribute('data-src');
     if(!src) return;
 
-    // A slow line has better uses for its bandwidth than reading ahead.
-    if (slow) el.preload = 'metadata';
-
-    // src straight on the element. Appending a <source> and then calling
-    // load() made the browser fetch the file twice: the append starts one
-    // request and load() restarts it.
+    /* preload starts at none in the markup and is raised here, once. With
+       auto in the tag the browser began fetching on src assignment and
+       autoplay then started its own read, so the file came down twice. */
+    el.preload = slow ? 'metadata' : 'auto';
     el.src = src;
     var p = el.play(); if(p && p.catch) p.catch(function(){});
 
