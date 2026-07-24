@@ -249,6 +249,13 @@
      video is most of a day's data, so a slow or metered line gets the
      lighter cut instead. Nothing is withheld — the video still plays. */
   function isSlow(){
+    /* ?tier=low forces the light cut, ?tier=full the full one. DevTools
+       throttling slows the transfer but leaves navigator.connection saying
+       4g, so there is otherwise no way to see which file a visitor on a bad
+       line would get without finding a bad line. */
+    var q = location.search.match(/[?&]tier=(low|full)/);
+    if (q) return q[1] === 'low';
+
     var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (c) {
       // The user asked for less data; that is not ours to overrule.
