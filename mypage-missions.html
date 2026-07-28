@@ -88,24 +88,85 @@
      hidden. It covered the whole zone at inset:0, which left the buttons
      visible but swallowed every tap. */
   .event-lock[hidden]{display:none}
-  .el-card{position:relative;text-align:center;padding:40px 40px 36px;border-radius:22px;max-width:400px;width:100%;
-    background:radial-gradient(120% 120% at 50% 0%,rgba(40,33,16,.96),rgba(12,12,15,.97));
-    border:1px solid rgba(233,184,74,.34);
-    box-shadow:0 30px 80px -24px rgba(0,0,0,.85),0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05)}
-  .el-card::before{content:"";position:absolute;inset:-1px;border-radius:22px;padding:1px;pointer-events:none;
-    background:linear-gradient(140deg,rgba(233,184,74,.7),transparent 40%,transparent 60%,rgba(233,184,74,.35));
-    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
-  .el-badge{width:66px;height:66px;margin:0 auto 20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#E9B84A;
-    background:radial-gradient(circle at 50% 35%,rgba(233,184,74,.22),rgba(233,184,74,.05));
-    border:1px solid rgba(233,184,74,.45);box-shadow:0 0 0 6px rgba(233,184,74,.06),0 10px 30px -8px rgba(233,184,74,.4);
-    animation:elPulse 2.6s ease-in-out infinite}
-  .el-badge svg{width:30px;height:30px}
-  @keyframes elPulse{0%,100%{box-shadow:0 0 0 6px rgba(233,184,74,.06),0 10px 30px -8px rgba(233,184,74,.35)}50%{box-shadow:0 0 0 12px rgba(233,184,74,.02),0 12px 40px -6px rgba(233,184,74,.6)}}
-  .el-eyebrow{font-family:var(--font-head);font-size:11px;letter-spacing:4px;color:var(--muted);font-weight:600;margin-bottom:10px}
-  .el-title{font-family:var(--font-head);font-weight:800;font-size:30px;letter-spacing:4px;line-height:1;
-    background:linear-gradient(180deg,#fff3d6,#E9B84A 60%,#c8922f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .el-sub{color:#a99d85;font-size:13.5px;margin-top:14px;line-height:1.6;max-width:300px;margin-left:auto;margin-right:auto}
-  @media(max-width:560px){.el-card{padding:32px 24px 28px}.el-title{font-size:25px;letter-spacing:3px}.el-badge{width:58px;height:58px}}
+  /* The site is set in Chakra Petch -- squared terminals, flat stroke ends,
+     no curves anywhere in the letterforms. A 22px radius and a circular
+     badge were pulling against that on every edge, and the brown wash
+     underneath belonged to no colour on the site. This is the same panel
+     rebuilt to agree with the type: corners cut rather than rounded, the
+     palette kept to the black and gold the rest of the pages use, and the
+     one flourish spent on the corner marks. */
+  .el-card{position:relative;text-align:center;padding:38px 36px 32px;max-width:420px;width:100%;
+    background:linear-gradient(180deg,#0e0e11,#08080a 62%);
+    border:1px solid rgba(233,184,74,.28);
+    /* Cut corners instead of rounded ones. The capsule in the artwork is a
+       faceted solid, and the cards have clipped corners too, so the panel
+       is built from the same geometry rather than a generic rounded box. */
+    clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);
+    box-shadow:0 30px 80px -28px rgba(0,0,0,.9)}
+  /* A single gold hairline traced inside the top-left and bottom-right cuts.
+     It reads as a bracket holding the panel shut, which is what the panel is
+     saying. */
+  .el-card::before,.el-card::after{content:"";position:absolute;width:36px;height:36px;pointer-events:none}
+  .el-card::before{top:-1px;left:17px;border-top:1px solid var(--gold);
+    transform-origin:left top}
+  .el-card::after{bottom:-1px;right:17px;border-bottom:1px solid var(--gold)}
+
+  /* Hexagon, not a circle -- the capsule the whole product is built around is
+     a faceted solid, and a round badge is the one shape it never uses. */
+  .el-badge{width:62px;height:62px;margin:0 auto 22px;display:flex;align-items:center;
+    justify-content:center;color:var(--gold);position:relative;
+    background:linear-gradient(160deg,rgba(233,184,74,.16),rgba(233,184,74,.03));
+    clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
+  .el-badge::before{content:"";position:absolute;inset:0;
+    background:linear-gradient(160deg,rgba(233,184,74,.55),rgba(233,184,74,.14));
+    clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+    z-index:-1;transform:scale(1.045)}
+  .el-badge svg{width:26px;height:26px;stroke-width:1.4}
+
+  .el-eyebrow{font-family:var(--font-head);font-size:10px;letter-spacing:5px;
+    color:#6f6650;font-weight:600;margin-bottom:12px}
+  .el-title{font-family:var(--font-head);font-weight:700;font-size:34px;letter-spacing:2px;
+    line-height:1;color:var(--gold)}
+  .el-sub{color:#7d735d;font-size:12.5px;margin-top:12px;line-height:1.65;
+    max-width:280px;margin-left:auto;margin-right:auto}
+
+  /* Countdown.
+     Four boxed tiles read as four buttons and put a second border inside a
+     bordered card. The clock is one reading, so it is set as one line with
+     hairline dividers, and the weight goes into the digits. Tabular figures
+     keep the row from shifting as the seconds turn over. */
+  .el-cd{display:flex;justify-content:center;align-items:flex-start;margin-top:26px;
+    padding:20px 0 4px;border-top:1px solid rgba(233,184,74,.16)}
+  .el-cd .u{flex:1;position:relative;padding:0 2px}
+  .el-cd .n{position:relative}
+  .el-cd .u + .u::before{content:"";position:absolute;left:0;top:2px;bottom:18px;width:1px;
+    background:rgba(233,184,74,.14)}
+  .el-cd .n{font-family:var(--font-head);font-weight:700;font-size:40px;line-height:.9;
+    font-variant-numeric:tabular-nums;letter-spacing:1px;color:var(--gold-a)}
+  .el-cd .l{font-family:var(--font-head);font-size:9px;letter-spacing:3px;color:#5f5744;
+    margin-top:11px;font-weight:600}
+  /* Only the seconds move, so only the seconds are marked -- a dim underline
+     that steps once a second. Enough to show the page is live without
+     pulling the eye off the total. */
+  .el-cd .u.sec .n::after{content:"";position:absolute;left:50%;transform:translateX(-50%);
+    bottom:-6px;width:18px;height:1px;background:var(--gold);opacity:.5;
+    animation:cdTick 1s steps(1) infinite}
+  @keyframes cdTick{0%,49%{opacity:.55}50%,100%{opacity:.12}}
+
+  .el-when{font-family:var(--font-head);color:#5f5744;font-size:10.5px;margin-top:22px;
+    letter-spacing:2.4px;font-weight:600}
+  .el-when b{color:#a99d85;font-weight:700}
+
+  @media(max-width:560px){
+    .el-card{padding:32px 22px 26px}
+    .el-badge{width:56px;height:56px;margin-bottom:18px}
+    .el-title{font-size:28px;letter-spacing:1.5px}
+    .el-cd{margin-top:22px;padding-top:18px}
+    .el-cd .n{font-size:31px}
+    .el-cd .l{font-size:8px;letter-spacing:2px;margin-top:9px}
+    .el-when{font-size:9.5px;letter-spacing:1.8px}
+  }
+  @media(prefers-reduced-motion:reduce){ .el-cd .u.sec .n::after{animation:none} }
   .mrow{display:grid;grid-template-columns:minmax(0,1fr) 220px 220px;gap:24px;align-items:center;padding:20px 30px;border-bottom:1px solid var(--line)}
   .mrow:last-child{border-bottom:none}
   .mrow:hover{background:rgba(255,255,255,.015)}
@@ -292,11 +353,18 @@
       <div class="event-lock" id="eventLock" hidden>
         <div class="el-card">
           <div class="el-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.2" r="1.3"/><path d="M12 16.5v2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M5 10.8h14v9.4H5z"/><path d="M8.4 10.8V7.4a3.6 3.6 0 0 1 7.2 0v3.4"/><path d="M12 14.2v3"/></svg>
           </div>
           <div class="el-eyebrow">EVENT MISSION</div>
-          <div class="el-title">COMING SOON</div>
-          <div class="el-sub">Missions are being prepared. Check back shortly to start earning capsules.</div>
+          <div class="el-title" id="elTitle">COMING SOON</div>
+          <div class="el-sub" id="elSub">Missions are being prepared. Check back shortly to start earning capsules.</div>
+          <div class="el-cd" id="elCd" hidden>
+            <div class="u"><div class="n" id="cdD">00</div><div class="l">DAYS</div></div>
+            <div class="u"><div class="n" id="cdH">00</div><div class="l">HRS</div></div>
+            <div class="u"><div class="n" id="cdM">00</div><div class="l">MIN</div></div>
+            <div class="u sec"><div class="n" id="cdS">00</div><div class="l">SEC</div></div>
+          </div>
+          <div class="el-when" id="elWhen" hidden></div>
         </div>
       </div>
     </div>
@@ -328,15 +396,92 @@
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
   var _eventActive=null, _testers=null;
+  var _opensAt=null;      // ms, from event_settings.opens_at
+  var _skew=0;            // server clock minus this device's clock, in ms
+  var _cdTimer=null;
+
   async function checkEvent(){
     try{
-      var r=await fetch(SB_URL+"/rest/v1/event_settings?id=eq.1&select=mission_active,test_addresses",
+      var r=await fetch(SB_URL+"/rest/v1/event_settings?id=eq.1&select=mission_active,test_addresses,opens_at",
         {headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+
+      /* A countdown run off the device clock is only as right as the device
+         clock, and a phone set an hour fast would open the event an hour
+         early -- or leave someone staring at a timer that has already
+         finished. The response carries the server's own time, so the
+         difference between the two is measured once and applied to every
+         tick after that. */
+      var d = r.headers.get('Date');
+      if (d) {
+        var t = Date.parse(d);
+        if (!isNaN(t)) _skew = t - Date.now();
+      }
+
       var rows=await r.json();
       var row=Array.isArray(rows)&&rows[0]?rows[0]:null;
       _testers=(row&&Array.isArray(row.test_addresses))?row.test_addresses:[];
-      applyEventState(row&&row.mission_active===true);
+
+      var oa = row && row.opens_at ? Date.parse(row.opens_at) : NaN;
+      _opensAt = isNaN(oa) ? null : oa;
+
+      // The switch wins. Otherwise the time decides.
+      var open = !!(row && row.mission_active === true) ||
+                 (_opensAt !== null && serverNow() >= _opensAt);
+      applyEventState(open);
+      if (!open) startCountdown();
     }catch(e){ /* on error, leave as-is (fail open only if never set) */ }
+  }
+
+  function serverNow(){ return Date.now() + _skew; }
+
+  function pad(n){ return (n<10?'0':'')+n; }
+
+  /* One time, in UTC. Read off the stored value rather than written in, so
+     changing the opening hour does not leave the caption saying something
+     else. */
+  function whenText(ms){
+    var d=new Date(ms);
+    var p=function(n){ return (n<10?'0':'')+n; };
+    var day=d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+    return 'OPENS <b>'+day.toUpperCase()+' '+p(d.getUTCHours())+':'+p(d.getUTCMinutes())+' UTC</b>';
+  }
+
+  function startCountdown(){
+    var cd=document.getElementById('elCd'), title=document.getElementById('elTitle'),
+        sub=document.getElementById('elSub'), when=document.getElementById('elWhen');
+    if(!cd) return;
+
+    if(_cdTimer){ clearInterval(_cdTimer); _cdTimer=null; }
+
+    if(_opensAt===null){          // no time set: leave the plain notice alone
+      cd.hidden=true; if(when) when.hidden=true;
+      return;
+    }
+
+    if(title) title.textContent='OPENS IN';
+    if(sub) sub.textContent='Missions unlock automatically. No need to refresh.';
+    cd.hidden=false;
+    if(when){ when.innerHTML=whenText(_opensAt); when.hidden=false; }
+
+    function tick(){
+      var left=_opensAt-serverNow();
+      if(left<=0){
+        clearInterval(_cdTimer); _cdTimer=null;
+        /* Opened. The page unlocks itself rather than asking to be
+           reloaded -- someone who waited for the countdown should not have
+           to do anything when it reaches zero. */
+        applyEventState(true);
+        if(typeof load==='function'){ try{ load(); }catch(e){} }
+        return;
+      }
+      var s=Math.floor(left/1000);
+      document.getElementById('cdD').textContent=pad(Math.floor(s/86400));
+      document.getElementById('cdH').textContent=pad(Math.floor(s/3600)%24);
+      document.getElementById('cdM').textContent=pad(Math.floor(s/60)%60);
+      document.getElementById('cdS').textContent=pad(s%60);
+    }
+    tick();
+    _cdTimer=setInterval(tick,1000);
   }
   /* Wallets on the tester list see the event while it is still closed, so the
      flow can be walked end to end before launch. */
@@ -356,6 +501,10 @@
     var zone=document.getElementById('mzone'), lock=document.getElementById('eventLock');
     if(!zone||!lock) return;
     if(active){
+      if(_cdTimer){ clearInterval(_cdTimer); _cdTimer=null; }
+      var cd=document.getElementById('elCd'), when=document.getElementById('elWhen');
+      if(cd) cd.hidden=true;
+      if(when) when.hidden=true;
       zone.classList.remove('locked');
       lock.hidden=true;
       lock.style.display='none';          // belt and braces if a stylesheet wins

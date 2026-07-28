@@ -59,7 +59,24 @@
   .content ul,.content ol{margin:10px 0 10px 22px} .content li{margin:5px 0}
   .content a{color:var(--gold);text-decoration:underline}
   .content a.notice-cta{text-decoration:none;margin:6px 0}
-  .content img{max-width:100%;height:auto;border-radius:12px;margin:16px 0;display:block}
+  /* Two banners exported at the same pixel size were still landing at
+     different widths, which happens when one of them is nested a level
+     deeper than the other: max-width:100% means 100% of whatever the parent
+     turns out to be, and an editor that wraps one image in a paragraph and
+     another in a div hands them different parents.
+
+     So the width is taken from the column rather than from the parent, and
+     any wrapper that exists only to hold an image is flattened. Scoped with
+     :has() to wrappers that directly contain an image, so list indents and
+     ordinary paragraph spacing elsewhere in the post are left alone. */
+  .content img{width:100%;height:auto;border-radius:12px;margin:16px 0;display:block}
+  .content p:has(> img),
+  .content div:has(> img),
+  .content figure:has(> img),
+  .content span:has(> img){display:block;margin:0;padding:0;width:100%;max-width:none;border:0}
+  /* An image sitting alone in a paragraph should not also carry that
+     paragraph's spacing on top of its own. */
+  .content p:has(> img) img{margin:16px 0}
   .content strong{color:var(--text)}
   .content code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
   .content pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;margin:14px 0}
