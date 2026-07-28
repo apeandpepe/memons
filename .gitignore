@@ -34,3 +34,6 @@ images/reveal/*.mp4
 
 admin-rewards.html
 verify-payment.ts
+
+referral-index.ts
+*-index.ts
