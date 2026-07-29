@@ -26,14 +26,21 @@ export const config = { runtime: "edge" };
 const STORAGE_BASE =
   "https://neixdrtamznrooougcda.supabase.co/storage/v1/object/public/cards";
 
+// Kept as components rather than hex strings: the wash needs the same
+// colour at low opacity, and building "#E9B84A26" by hand asks the renderer
+// to accept eight-digit hex inside a gradient, which is where the last
+// version stopped producing an image at all.
 const RARITY_COLOR = {
-  common: "#cfccc4",
-  rare: "#5b9bd5",
-  epic: "#c468d8",
-  legendary: "#E9B84A",
-  mythic: "#e0556a",
-  special: "#E9B84A",
+  common:    [207, 204, 196],
+  rare:      [91, 155, 213],
+  epic:      [196, 104, 216],
+  legendary: [233, 184, 74],
+  mythic:    [224, 85, 106],
+  special:   [233, 184, 74],
 };
+
+const rgb  = (c)        => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+const rgba = (c, alpha) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alpha})`;
 
 const el = (type, props) => ({ type, props });
 
@@ -48,14 +55,18 @@ export default function handler(req) {
   // card ids look like "legendary_mrh1jqh8pqo" — the rarity is the prefix
   const rarity =
     Object.keys(RARITY_COLOR).find((r) => id.startsWith(r + "_")) || "common";
-  const color = RARITY_COLOR[rarity];
+  const rgbc = RARITY_COLOR[rarity];
 
   const card = id
     ? `${STORAGE_BASE}/${rarity}/${id}.png`
     : `${url.origin}/images/reveal/sample-card.png`;
 
-  const W = 2400;
-  const H = 1256;
+  // 1800 rather than 2400. The card is 960px wide in storage and lands at
+  // 838px here, so nothing is being stretched -- and every pixel past that
+  // is work the edge renderer does for no visible gain, on a canvas whose
+  // area it has to hold in memory all at once.
+  const W = 1800;
+  const H = 942;
 
   return new ImageResponse(
     el("div", {
@@ -70,7 +81,8 @@ export default function handler(req) {
         // makes the space look composed instead of unused -- and tells a
         // legendary from a common at a glance in the timeline.
         backgroundColor: "#050505",
-        backgroundImage: `radial-gradient(circle at 50% 50%, ${color}26 0%, #050505 62%)`,
+        backgroundImage:
+          `radial-gradient(circle at 50% 50%, ${rgba(rgbc, 0.16)} 0%, rgba(5,5,5,0) 62%)`,
       },
       children: el("img", {
         src: card,
@@ -79,9 +91,9 @@ export default function handler(req) {
           // clear of the edge.
           height: `${Math.round(H * 0.89)}px`,
           objectFit: "contain",
-          borderRadius: "30px",
+          borderRadius: "24px",
           // identical to the reveal screen's card glow, scaled to match
-          boxShadow: `0 0 160px -12px ${color}, 0 0 300px -24px ${color}`,
+          boxShadow: `0 0 120px -10px ${rgb(rgbc)}, 0 0 220px -20px ${rgba(rgbc, 0.7)}`,
         },
       }),
     }),
