@@ -1012,6 +1012,24 @@
     return a.length > 10 ? a.slice(0,6) + '\u2026' + a.slice(-4) : a;
   }
 
+  /* A filled board, on request, without a filled database.
+     Seeing how five places actually look needs five referrals, and putting
+     fake wallets in to get them means putting fake wallets in front of real
+     visitors and then remembering to take them out again. This borrows the
+     rendering and nothing else: it reads nothing, writes nothing, and only
+     answers to an address typed by hand.
+
+         apepe.io/?rankdemo=1
+     */
+  var DEMO = /[?&]rankdemo=1\b/.test(location.search);
+  var DEMO_ROWS = [
+    { rank:1, address:'0x43cd\u2026e9ef', valid_ref:47 },
+    { rank:2, address:'0x973b\u2026a250', valid_ref:31 },
+    { rank:3, address:'0x42fb\u2026a5a5', valid_ref:28 },
+    { rank:4, address:'0xecbe\u20263295', valid_ref:19 },
+    { rank:5, address:'0x8f2a\u2026c103', valid_ref:12 }
+  ];
+
   async function loadBoard(){
     if (boardLoaded) return;
     boardLoaded = true;
@@ -1020,6 +1038,9 @@
     if (!list) return;
 
     var rows = [];
+    if (DEMO) {
+      rows = DEMO_ROWS;
+    } else {
     try {
       var r = await fetch(SB_URL + '/rest/v1/referral_board?select=rank,address,valid_ref&limit=5',
                           { headers: { apikey: SB_ANON } });
@@ -1029,6 +1050,7 @@
       boardLoaded = false;   // let a later visit try again
       list.innerHTML = '<div class="rk-note">Standings are unavailable right now.</div>';
       return;
+    }
     }
 
     // Medals for the podium only. Marked aria-hidden because the place is
@@ -1099,7 +1121,9 @@
       return;
     }
     try {
-      var mine = await MEMONS.authFetch('/referral');
+      // In demo the wallet is real but its standing is invented, so the
+      // pinned row and the distance line can be looked at as well.
+      var mine = DEMO ? { rank:5, valid_ref:12 } : await MEMONS.authFetch('/referral');
       var v = Number(mine.valid_ref) || 0;
       me.hidden = false;
 
