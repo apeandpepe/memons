@@ -86,6 +86,19 @@
     font-family:var(--font-head);font-size:11px;letter-spacing:2px;color:var(--dim)}
   .mhead .c{text-align:center}
   .mtable{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}
+  /* Cap notice.
+     A wallet that has taken all 80 capsules keeps referring -- the count on
+     the leaderboard goes on rising -- but every claim now comes back
+     refused. Without a line saying why, that reads as the referral mission
+     being broken rather than finished. */
+  .capnote{display:flex;align-items:flex-start;gap:11px;margin-bottom:14px;padding:13px 15px;
+    border:1px solid rgba(233,184,74,.26);background:rgba(233,184,74,.05);
+    clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)}
+  .capnote i{font-size:17px;color:var(--gold);flex-shrink:0;line-height:1.3}
+  .capnote b{font-family:var(--font-head);font-size:12.5px;letter-spacing:.8px;color:var(--gold);
+    display:block}
+  .capnote span{font-size:12.5px;color:#a99d85;line-height:1.6;display:block;margin-top:3px}
+
   .mzone{position:relative}
   .mzone.locked .mhead,.mzone.locked .mtable{filter:blur(4px) brightness(.42) saturate(.7);pointer-events:none;user-select:none;transition:filter .3s}
   .event-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;padding:20px}
@@ -405,6 +418,8 @@
       </div>
     </div>
 
+    <div class="capnote" id="capNote" hidden></div>
+
     <div class="mzone" id="mzone">
       <div class="mhead"><span>MISSION</span><span class="c">REWARD</span><span class="c">STATUS</span></div>
       <div class="mtable" id="mtable">
@@ -687,7 +702,23 @@
     catch(e){ $('mtable').innerHTML='<div class="mrow"><div class="mL"><div class="mico">⚠️</div><div><div class="mname">Failed to load: '+(e.message||e)+'</div></div></div><div></div><div></div></div>'; return; }
 
     $('capNum').textContent=d.capsules;
+    capNote(d);
     render(d);
+  }
+
+  /* The cap is per wallet and counts everything ever granted, not what is
+     left unopened -- so it is granted_total that decides this, never the
+     capsule balance, which goes down as capsules are opened. */
+  function capNote(d){
+    var el=$('capNote');
+    if(!el) return;
+    var cap=Number(d.per_account_cap), got=Number(d.granted_total);
+    if(!cap || !isFinite(got) || got < cap){ el.hidden=true; return; }
+    el.hidden=false;
+    el.innerHTML='<i class="ti ti-info-circle"></i><div>'+
+      '<b>CAPSULE LIMIT REACHED</b>'+
+      '<span>You have received all '+cap+' capsules for this event. '+
+      'Referrals still count toward the leaderboard.</span></div>';
   }
 
   function render(d){
@@ -814,7 +845,7 @@
     }catch(e){
       var msg=e.message||''+e;
       if(msg.includes('MISSION_MAXED')) toast('Already completed',true);
-      else if(msg.includes('ACCOUNT_CAP_REACHED')) toast('Account capsule cap reached',true);
+      else if(msg.includes('ACCOUNT_CAP_REACHED')) toast('Capsule limit reached — referrals still count toward the leaderboard',true);
       else if(msg.includes('NO_VALID_REFERRALS')) toast('Need more valid referrals first',true);
       else if(msg.includes('EVENT_CLOSED')) toast('The event is not open yet',true);
       else if(msg.includes('EVENT_CAP_REACHED')) toast('All event capsules have been issued',true);
