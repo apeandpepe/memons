@@ -1157,19 +1157,36 @@
   }
   window.addEventListener('resize', fitBox);
 
-  /* Held back until the page has loaded. Arriving over the intro video, it
-     would otherwise appear before there is anything behind it. */
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      if ((!open.event && !open.rank) || !pop.parentNode) return;
-      pop.hidden = false;
-      document.body.style.overflow = 'hidden';
-      // Measured only now. A hidden element has no size, so calling this any
-      // earlier reads zero and leaves the box at its full CSS width.
-      fitBox();
-      loadBoard();
-    }, 900);
-  });
+  /* When to appear.
+     Straight away. This waited for window.load, then for the intro video to
+     be playable, on the idea that a popup should not open over an empty
+     hero -- but the popup covers the hero completely, so whatever is behind
+     it is not being looked at either way. All that waiting bought was a
+     black screen on a slow connection, and the popup arriving after the
+     visitor had already decided nothing was happening.
+
+     The video keeps loading in its own time; nothing here waits for it. */
+  function show(){
+    if ((!open.event && !open.rank) || !pop.parentNode) return;
+    pop.hidden = false;
+    document.body.style.overflow = 'hidden';
+    // Measured only now. A hidden element has no size, so calling this any
+    // earlier reads zero and leaves the box at its full CSS width.
+    fitBox();
+    loadBoard();
+  }
+
+  /* One frame's grace, so the browser has painted the page underneath before
+     the overlay goes over it -- opening in the same tick as the markup can
+     leave the backdrop rendering a beat late on a slow device. */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      requestAnimationFrame(show);
+    }, { once:true });
+  } else {
+    requestAnimationFrame(show);
+  }
+
 })();
 </script>
 </body>
