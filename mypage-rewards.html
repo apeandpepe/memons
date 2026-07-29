@@ -159,14 +159,26 @@
   .pot .pt{font-family:var(--font-head);font-size:11px;letter-spacing:.5px;font-weight:700;line-height:1.25}
   .pot .ph{font-size:11px;color:var(--cc);font-family:var(--font-head);margin-top:3px}
   .pot .pw{font-size:11px;color:var(--muted);margin-top:2px}
-  /* Reward above status, not beside it.
-     Side by side the status column held 118px of a 176px card, leaving 58px
-     for a figure that needs 85 -- so a billion pushed "Not Eligible" off the
-     right edge. Stacked, each gets the full width and the longest number in
-     the table still has room. */
-  .pot .prow2{display:flex;flex-direction:column;border-top:1px solid var(--line)}
-  .pot .prew{padding:12px 14px;border-bottom:1px solid var(--line);min-width:0}
-  .pot .pst{padding:12px 14px;min-width:0}
+  /* Reward beside status, as it was.
+     Stacking them was a fix for a figure that no longer exists: 1B is 25px
+     where 1,000,000,000 was 85, so the two columns fit again. What is kept
+     from that detour is min-width:0 -- without it a long value refuses to
+     shrink and pushes the status column off the card instead, which is how
+     "Not Eligible" ended up past the right edge in the first place. */
+  .pot .prow2{display:flex;border-top:1px solid var(--line)}
+  .pot .prew{flex:1 1 0;min-width:0;padding:12px 14px;border-right:1px solid var(--line)}
+  .pot .pst{flex:0 0 112px;padding:12px 14px;min-width:0}
+  /* Whether the two columns fit depends on how wide the card ended up, not
+     on how wide the window is: five across a 1280 screen leaves 175px a
+     card and 61px for the reward, which clips "Season1 Capsule x1" while
+     the same window at four across has room to spare. Asking the card
+     rather than the viewport puts the question where the answer is. */
+  .pot{container-type:inline-size}
+  @container (max-width: 190px){
+    .pot .prow2{flex-direction:column}
+    .pot .prew{border-right:0;border-bottom:1px solid var(--line)}
+    .pot .pst{flex:0 0 auto}
+  }
   .pot .prewl,.pot .pstl{font-size:9.5px;color:var(--dim);font-family:var(--font-head);letter-spacing:.5px}
   .pot .prewv{display:flex;align-items:center;gap:8px;margin-top:8px}
   .pot .prewv img{width:34px;height:34px;object-fit:contain;border-radius:50%}
