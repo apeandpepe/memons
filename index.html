@@ -147,6 +147,12 @@
   .embedsec iframe.embed{display:block;width:100%;border:0;height:100vh;height:100svh}
   .embedsec iframe.mkembed,.embedsec iframe.vembed,.embedsec iframe.abembed{height:100vh;height:100svh}
   .sec-h{text-align:center;margin:0 auto 40px}
+  /* The three held sections share one block, so they read as one decision
+     rather than three pages that each happen to be unfinished. Each ends in
+     the same button, because a visitor who has just been told to come back
+     in September should be given something to do today. */
+  .soon{text-align:center;max-width:640px}
+
   .sec-eyebrow{font-size:12px;letter-spacing:4px;color:var(--gold);font-weight:600;margin-bottom:14px}
   .sec-title{font-family:var(--font-head);font-weight:700;font-size:clamp(34px,5vw,56px);line-height:1;letter-spacing:.5px}
   .sec-sub{margin-top:16px;font-size:16px;font-weight:300;color:#bdbab2;line-height:1.6;max-width:580px;margin-left:auto;margin-right:auto}
@@ -631,13 +637,30 @@
 </section>
 
 <!-- ABOUT (embed, below home) -->
-<section id="about" class="embedsec">
-  <iframe class="embed abembed" data-src="about.html" title="ABOUT MEMONS" loading="lazy"></iframe>
+<!-- Held until 1 September.
+     The pages still exist and still work on their own; what is removed is
+     the embed, so nothing here loads about.html or vault.html during the
+     event. That is the point of the change as much as the wording: each of
+     those iframes pulls its own page, fonts and images on every visit to
+     the front page, for a section nobody is meant to be reading yet.
+     Restoring them is putting the two iframes back. -->
+<section id="about" class="sec">
+  <div class="soon">
+    <div class="sec-eyebrow">ABOUT MEMONS</div>
+    <div class="sec-title">COMING SOON</div>
+    <p class="sec-sub">Opening 1 September 2026.<br>The open beta event is running now.</p>
+    <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+  </div>
 </section>
 
-<!-- MEMONS VAULT (embed) -->
-<section id="vault" class="embedsec">
-  <iframe class="embed vembed" data-src="vault.html#embed" title="MEMONS VAULT" loading="lazy"></iframe>
+<!-- MEMONS VAULT -->
+<section id="vault" class="sec">
+  <div class="soon">
+    <div class="sec-eyebrow">MEMONS VAULT</div>
+    <div class="sec-title">COMING SOON</div>
+    <p class="sec-sub">Opening 1 September 2026.<br>Your cards are being kept safe until then.</p>
+    <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+  </div>
 </section>
 
 <!-- OPEN CAPSULE (embed) -->
@@ -647,11 +670,11 @@
 
 <!-- MARKETPLACE -->
 <section id="marketplace" class="sec">
-  <div style="text-align:center;max-width:640px">
+  <div class="soon">
     <div class="sec-eyebrow">MARKETPLACE</div>
     <div class="sec-title">COMING SOON</div>
-    <p class="sec-sub">The MEMONS marketplace is on its way.<br>Trade, collect, and flex your memes — very soon.</p>
-    <div class="sec-cta"><span class="gbtn ghost">STAY TUNED</span></div>
+    <p class="sec-sub">Opening 1 September 2026.<br>Trade, collect, and flex your memes.</p>
+    <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
   </div>
 </section>
 
