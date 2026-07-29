@@ -224,7 +224,7 @@
      the middle of it with dead space above and below; letting the image find
      its own size inside a width and height limit means the frame ends exactly
      where the picture does, whatever shape it is. */
-  .evpop-box{position:relative;width:fit-content;max-width:min(94vw, 1100px);
+  .evpop-box{position:relative;width:fit-content;max-width:min(94vw, 520px);
     height:auto;max-height:calc(100vh - 40px);
     display:flex;flex-direction:column;background:#0b0b0c;border:1px solid rgba(233,184,74,.25);
     border-radius:16px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.75)}
@@ -238,13 +238,223 @@
      because nothing is being fitted into a fixed frame. The height cap is
      set from script, since it depends on how tall the footer turns out. */
   .evpop-img img{display:block;width:auto;height:auto;
-    max-width:min(94vw, 1100px);max-height:calc(100vh - 140px)}
+    max-width:min(94vw, 520px);max-height:calc(100vh - 140px)}
   .evpop-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 14px;
     padding:8px 14px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:#0b0b0c}
   /* The buttons take a row to themselves so they stay centred on the frame
      no matter how wide the banner made it, and the tick box drops beneath
      them against the right edge. Keeping both in normal flow means a narrow
      banner cannot push them into each other. */
+  /* Two slides, one frame.
+     A second popup would mean a second thing to dismiss, and the one people
+     close fastest is the one they did not ask for. Sliding keeps the event
+     banner at full size and lets the standings be something you move to
+     rather than something that interrupts you. */
+  .evpop-slides{position:relative;flex:1 1 auto;min-height:0;display:flex;
+    transition:transform .32s cubic-bezier(.4,0,.2,1)}
+  .evpop-slide{flex:0 0 100%;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .evpop-dots{display:flex;gap:7px;justify-content:center;flex:1 1 100%;order:0;padding-bottom:2px}
+  .evpop-dot{width:7px;height:7px;border-radius:50%;border:0;padding:0;cursor:pointer;
+    background:rgba(255,255,255,.22);transition:.2s}
+  .evpop-dot.on{background:var(--gold);width:20px;border-radius:4px}
+  @media(prefers-reduced-motion:reduce){ .evpop-slides{transition:none} }
+
+  /* Standings.
+     The podium is built as a frame rather than a row: a metal edge drawn as
+     a gradient, two pixels of it, with the dark panel inset inside. That is
+     what makes the top three read as trophies and the rest as a list, and it
+     is the one place worth spending the weight -- everything below fourth
+     stays a plain row so the difference means something.
+
+     Everything is set in the site's display face, including the addresses.
+     A monospace stack is the right instinct for a hex string and the wrong
+     one here: it was the only thing not speaking in the site's voice. */
+  .rk{padding:24px 18px 16px;text-align:center;width:100%}
+
+  /* Heading, built the way the event artwork builds one: a rule and a
+     diamond either side of the label, then the title in struck metal. */
+  .rk-badge{display:flex;align-items:center;justify-content:center;gap:11px;
+    font-family:var(--font-head);font-size:10px;letter-spacing:3.4px;font-weight:700;
+    color:var(--gold)}
+  .rk-badge i{flex:1;max-width:60px;height:7px;position:relative;display:block}
+  .rk-badge i::before{content:"";position:absolute;top:50%;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(233,184,74,.6))}
+  /* A small square turned on its point -- drawn rather than typed, so it
+     keeps its size and colour whatever the font is doing. */
+  .rk-badge i::after{content:"";position:absolute;top:50%;width:5px;height:5px;
+    transform:translateY(-50%) rotate(45deg);background:var(--gold)}
+  .rk-badge i:first-child::before{left:9px;right:0}
+  .rk-badge i:first-child::after{left:0}
+  .rk-badge i:last-child::before{right:9px;left:0;
+    background:linear-gradient(270deg,transparent,rgba(233,184,74,.6))}
+  .rk-badge i:last-child::after{right:0}
+
+  /* Struck metal, not a flat gold fill. A single ramp reads as a coloured
+     letter; metal reads as metal because the light turns over across the
+     face -- bright, deep, bright again, with the turn held tight around the
+     middle so it lands on the stroke instead of smearing over the letter. */
+  .rk-title{font-family:var(--font-head);font-weight:700;font-size:52px;letter-spacing:.5px;
+    margin-top:13px;line-height:.95;
+    background:linear-gradient(180deg,
+      #FFFCF2 0%, #FBE7A8 24%, #EFC463 44%, #9C6B18 52%,
+      #E8B849 58%, #FBE7A8 78%, #C08F2C 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 0 34px rgba(233,184,74,.3))}
+  .rk-sub{font-family:var(--font-head);color:#cfc6b4;font-size:12px;margin-top:11px;
+    letter-spacing:1.6px;font-weight:600}
+
+  .rk-list{margin-top:20px;text-align:left;display:flex;flex-direction:column;gap:9px}
+
+  /* Frame and inset. The gradient lives on the outer element and shows
+     through as a two-pixel edge; the inner one covers the rest. */
+  .rk-row{position:relative;padding:2px;background:rgba(255,255,255,.07);
+    clip-path:polygon(13px 0,100% 0,100% calc(100% - 13px),calc(100% - 13px) 100%,0 100%,0 13px)}
+  .rk-in{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+    padding:0 16px 0 0;background:#0c0c0e;overflow:hidden;position:relative;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), inset 0 -2px 6px rgba(0,0,0,.7);
+    clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+  /* A glint along the top edge, brightest at the middle. It is what makes
+     the frame read as lit metal rather than a coloured outline. */
+  .rk-row.r1::after,.rk-row.r2::after,.rk-row.r3::after{content:"";position:absolute;
+    left:22%;right:22%;top:0;height:2px;pointer-events:none;
+    background:radial-gradient(ellipse at center,rgba(255,255,255,.85),transparent 72%)}
+
+  /* Rank plate: a crest of its own, cornered off the row so the place reads
+     before the address does. Crown and laurel are drawn rather than typed --
+     an emoji would arrive at whatever size and colour the device felt like,
+     and these have to sit in the row's metal. */
+  /* The crest sits in a lit recess rather than on a flat panel: a pool of
+     light behind the number, a bright line along the top lip and a dark one
+     at the bottom. Two hairlines is all a bevel is, and it is what stops the
+     plate reading as a coloured rectangle. */
+  .rk-plate{position:relative;width:64px;height:58px;display:flex;align-items:center;
+    justify-content:center;flex:0 0 auto;
+    background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.09),rgba(255,255,255,.02) 68%);
+    border-right:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(0,0,0,.55)}
+  .rk-plate .num{font-family:var(--font-head);font-weight:700;font-size:25px;color:#5f5744;
+    position:relative;z-index:1;line-height:1;margin-top:2px;
+    text-shadow:0 2px 0 rgba(0,0,0,.75), 0 -1px 0 rgba(255,255,255,.16)}
+  /* Only reached when the medal file is missing: the numeral takes the
+     row's metal so a broken image never leaves an empty plate. */
+  .rk-row.r1 .rk-plate .num,.rk-row.r2 .rk-plate .num,.rk-row.r3 .rk-plate .num{
+    font-size:26px;
+    background:linear-gradient(180deg,#FFFDF6 0%,#FFF1C4 34%,currentColor 56%,#fff 96%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 0 rgba(0,0,0,.75))}
+  .rk-plate svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  /* The medal is the whole crest, so it fills the plate and needs no ring
+     or ground of its own -- a drop shadow is enough to lift it off. */
+  .rk-medalimg{width:46px;height:46px;object-fit:contain;display:block;position:relative;z-index:1;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))}
+
+  .rk-mid{display:flex;align-items:center;gap:10px;min-width:0}
+  /* The medal sits in its own facet so it reads as set into the row rather
+     than dropped on top of it. */
+  .rk-medal{font-size:20px;line-height:1;flex:0 0 auto;width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.1),rgba(0,0,0,.5) 70%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 3px rgba(0,0,0,.6);
+    clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
+  /* Cut into the row rather than laid on it: dark at the top where a recess
+     would be shadowed, a light lip along the bottom. */
+  .rk-addr{font-family:var(--font-head);font-weight:600;font-size:15px;color:#cfc6b4;
+    letter-spacing:.3px;font-variant-numeric:tabular-nums;padding:8px 13px;
+    background:linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.34));
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.65), inset 0 -1px 0 rgba(255,255,255,.07);
+    clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+  .rk-pts{text-align:right;flex:0 0 auto}
+  .rk-pts b{display:block;font-family:var(--font-head);font-weight:700;font-size:26px;
+    line-height:1;color:var(--gold-a);font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 0 rgba(0,0,0,.6)}
+
+  /* Gold, silver, bronze. Each carries its metal in the frame, the plate and
+     the number; the glow is first place only, because on all three it stops
+     meaning anything. */
+  .rk-row.r1{background:linear-gradient(135deg,#8a6414,#FCE39A 26%,#C79433 52%,#FFF0BE 74%,#8a6414);
+    box-shadow:0 0 34px -10px rgba(233,184,74,.55), 0 6px 16px -8px rgba(0,0,0,.9)}
+  .rk-row.r1 .rk-in{background:linear-gradient(100deg,#171207,#0d0c0a 55%)}
+  .rk-row.r1 .rk-plate{color:#FCE39A;background:rgba(233,184,74,.14)}
+  .rk-row.r1 .rk-pts b{color:#FCE39A}
+  .rk-row.r1 .rk-pts small{color:var(--gold)}
+
+  .rk-row.r2{background:linear-gradient(135deg,#6c727a,#eef2f7 26%,#98a0aa 52%,#ffffff 74%,#6c727a);
+    box-shadow:0 5px 14px -8px rgba(0,0,0,.85)}
+  .rk-row.r2 .rk-in{background:linear-gradient(100deg,#111316,#0c0d0e 55%)}
+  .rk-row.r2 .rk-plate{color:#e8edf4;background:rgba(198,205,214,.12)}
+  .rk-row.r2 .rk-pts b{color:#dfe4ea}
+  .rk-row.r2 .rk-pts small{color:#9aa3ae}
+
+  .rk-row.r3{background:linear-gradient(135deg,#6b3f1c,#e0a678 26%,#a3663a 52%,#f0c39c 74%,#6b3f1c);
+    box-shadow:0 5px 14px -8px rgba(0,0,0,.85)}
+  .rk-row.r3 .rk-in{background:linear-gradient(100deg,#160f09,#0d0b09 55%)}
+  .rk-row.r3 .rk-plate{color:#e0a678;background:rgba(199,127,74,.13)}
+  .rk-row.r3 .rk-pts b{color:#e6b48c}
+  .rk-row.r3 .rk-pts small{color:#a3663a}
+
+  /* Below the podium there is no frame and no pill -- a plain row, so the
+     three above it keep their weight. */
+  .rk-row.plain{background:rgba(255,255,255,.06)}
+  .rk-row.plain .rk-in{padding:0 16px 0 0}
+  .rk-row.plain .rk-plate{width:56px;height:46px;background:none;border-right:0}
+  .rk-row.plain .rk-plate .num{font-size:19px}
+  .rk-row.plain .rk-addr{background:none;border:0;padding:0;color:#8d8579}
+  .rk-row.plain .rk-pts b{font-size:21px;color:#b9ab8c}
+
+  /* Your own standing, and the distance to the next place up -- the one
+     number that turns a position into something to do. */
+  /* Your own standing, labelled and set apart, so it is read as yours
+     rather than as a sixth place on the board. */
+  .rk-me{margin-top:13px}
+  .rk-me .rk-row{background:rgba(233,184,74,.34)}
+  .rk-me .rk-row .rk-in{background:#100e09;padding:12px 16px;grid-template-columns:auto 1fr auto}
+  .rk-me .rk-plate{width:44px;height:44px;background:rgba(233,184,74,.1);border-right:0;
+    color:var(--gold);
+    clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
+  .rk-me .rk-plate .num{font-size:18px;color:var(--gold)}
+  .rk-me .rk-addr{color:#c2b189}
+  .rk-me-lbl{font-family:var(--font-head);font-size:8.5px;letter-spacing:2px;font-weight:700;
+    color:var(--gold);display:block;margin-bottom:3px}
+
+  /* The distance to the next place up, with the same distance drawn. */
+  .rk-gap{display:flex;align-items:center;gap:11px;margin-top:11px;font-family:var(--font-head);
+    font-size:11px;letter-spacing:1.4px;color:#8d8579;font-weight:600;padding:11px 15px;
+    border:1px solid rgba(233,184,74,.22);background:rgba(233,184,74,.045);
+    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+  .rk-gap b{color:var(--gold);font-weight:700}
+  .rk-gap svg{width:16px;height:16px;flex:0 0 auto;color:var(--gold)}
+  .rk-gap .bar{flex:1;height:5px;min-width:40px;background:rgba(255,255,255,.07);
+    overflow:hidden}
+  .rk-gap .bar i{display:block;height:100%;width:var(--p,0%);
+    background:linear-gradient(90deg,#C79433,#FCE39A)}
+
+  /* Two calls to action, one panel, split on the diagonal: the one being
+     asked for carries the gold, the other stays dark and available. */
+  .rk-note{font-family:var(--font-head);color:#6f6650;font-size:11.5px;line-height:1.7;
+    padding:24px 0;text-align:center;letter-spacing:.5px}
+
+  @media(max-width:560px){
+    .rk{padding:18px 12px 12px}
+    .rk-title{font-size:34px}
+    .rk-badge{font-size:9px;letter-spacing:2.2px;gap:8px}
+    .rk-badge i{max-width:30px}
+    .rk-sub{font-size:11px;letter-spacing:1px}
+    .rk-list{margin-top:15px;gap:7px}
+    .rk-in{gap:10px;padding:0 12px 0 0}
+    .rk-plate{width:54px;height:50px}
+    .rk-medalimg{width:38px;height:38px}
+    .rk-plate .num{font-size:19px}
+    .rk-medal{width:32px;height:32px;font-size:17px}
+    .rk-addr{font-size:12.5px;padding:6px 9px}
+    .rk-pts b{font-size:21px}
+    .rk-row.plain .rk-plate{width:46px;height:40px}
+    .rk-row.plain .rk-plate .num{font-size:17px}
+    .rk-row.plain .rk-pts b{font-size:18px}
+    .rk-me .rk-row .rk-in{padding:10px 12px}
+    .rk-me .rk-plate{width:38px;height:38px}
+    .rk-gap{font-size:10px;letter-spacing:1px;padding:9px 11px;gap:8px}
+  }
+
   .evpop-acts{display:flex;gap:10px;justify-content:center;flex:1 1 100%;order:1}
   .evpop-chk{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#8a8780;
     cursor:pointer;user-select:none;margin-left:auto;order:2;line-height:1}
@@ -541,14 +751,28 @@
   <div class="evpop-bg" id="evPopBg"></div>
   <div class="evpop-box" role="dialog" aria-modal="true" aria-label="Event notice">
     <button class="evpop-x" id="evPopX" aria-label="Close">&times;</button>
-    <a class="evpop-img" id="evPopLink" href="notice.html">
-      <img src="images/notice/event-popup.png" alt="Open Beta Event"
-           onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
-    </a>
+    <div class="evpop-slides" id="evSlides">
+      <div class="evpop-slide" data-slide="event">
+        <a class="evpop-img" id="evPopLink" href="notice.html">
+          <img src="images/notice/event-popup.png" alt="Open Beta Event"
+               onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
+        </a>
+      </div>
+      <div class="evpop-slide" data-slide="rank">
+        <div class="rk">
+          <div class="rk-badge"><i></i>REFERRAL LEADERBOARD<i></i></div>
+          <div class="rk-title">TOP REFERRERS</div>
+          <div class="rk-sub" id="rkSub">INVITE FRIENDS &middot; CLIMB THE BOARD</div>
+          <div class="rk-list" id="rkList"><div class="rk-note">Loading&hellip;</div></div>
+          <div class="rk-me" id="rkMe" hidden></div>
+        </div>
+      </div>
+    </div>
     <div class="evpop-foot">
+      <div class="evpop-dots" id="evDots" hidden></div>
       <label class="evpop-chk">
         <input type="checkbox" id="evPopHide">
-        <span>Don&rsquo;t show again</span>
+        <span id="evPopHideLbl">Don&rsquo;t show again</span>
       </label>
       <div class="evpop-acts">
         <a class="evpop-btn sub" id="evPopNotice" href="notice.html">NOTICE</a>
@@ -621,24 +845,64 @@
      back to the notice list, so a wrong id is never a dead link.
      MISSION_URL is where the event is actually done.
 
-     The image follows the mission button rather than the notice: someone who
-     taps the banner is reaching for the event itself, not for a page about
-     it. */
+     The banner follows the mission button rather than the notice: someone
+     who taps it is reaching for the event itself, not for a page about it. */
   var NOTICE_ID   = '6';
   var MISSION_URL = 'mypage-missions';
 
   /* Bump this when a new event goes up. The tick box is remembered against
      it, so a visitor who hid the last popup still sees the next one --
-     without this, anyone who ever ticked the box never sees another event. */
+     without this, anyone who ever ticked the box never sees another. */
   var EVENT_KEY = 'ev1';
-  var KEY = 'memons_evpop_hidden_' + EVENT_KEY;
+
+  var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 
   var pop = document.getElementById('evPop');
   if (!pop) return;
-  var img = pop.querySelector('.evpop-img img');
 
-  try { if (localStorage.getItem(KEY) === '1') return; } catch (e) {}
+  var img     = pop.querySelector('.evpop-img img');
+  var slides  = document.getElementById('evSlides');
+  var dotsBox = document.getElementById('evDots');
+  var chk     = document.getElementById('evPopHide');
+  var chkLbl  = document.getElementById('evPopHideLbl');
 
+  /* ---- what is still due ------------------------------------------------
+     The two slides are hidden on different terms, so they are tracked
+     separately and the popup opens with whichever are left. Sharing one
+     switch would mean hiding the event forever also hid the standings, which
+     change every day and are the reason to come back. */
+  function todayKey(){
+    var d = new Date();
+    var p = function(n){ return (n<10?'0':'')+n; };
+    // The visitor's own day, because "today" is theirs and not the server's.
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+  }
+  var K_EVENT = 'memons_evpop_hidden_' + EVENT_KEY;
+  var K_RANK  = 'memons_rankpop_hidden_day';
+
+  function hiddenEvent(){
+    try { return localStorage.getItem(K_EVENT) === '1'; } catch(e){ return false; }
+  }
+  function hiddenRank(){
+    try { return localStorage.getItem(K_RANK) === todayKey(); } catch(e){ return false; }
+  }
+
+  var HIDE_LABEL = {
+    event: 'Don\u2019t show again',
+    rank:  'Don\u2019t show today'
+  };
+
+  var order = [];
+  if (!hiddenEvent()) order.push('event');
+  if (!hiddenRank())  order.push('rank');
+  if (!order.length) return;
+
+  // Ticked per slide, applied on the way out, so it works however the popup
+  // is dismissed -- button, backdrop or Escape.
+  var ticked = {};
+
+  /* ---- links ---------------------------------------------------------- */
   var noticeUrl = NOTICE_ID
     ? ('notice-detail?id=' + encodeURIComponent(NOTICE_ID))
     : 'notice.html';
@@ -650,94 +914,303 @@
   if (notice)  notice.href  = noticeUrl;
   if (mission) mission.href = MISSION_URL;
 
-  function close(){
-    // The checkbox is read on the way out, so it applies however the popup
-    // is dismissed — button, backdrop or Escape.
+  /* ---- slides --------------------------------------------------------- */
+  var at = 0;
+
+  // Only the due slides stay in the DOM, so the track width and the dots
+  // both follow from the same list and cannot disagree.
+  (function pruneSlides(){
+    if (!slides) return;
+    Array.prototype.slice.call(slides.children).forEach(function(el){
+      if (order.indexOf(el.getAttribute('data-slide')) < 0) el.remove();
+    });
+    slides.style.width = (order.length * 100) + '%';
+    Array.prototype.forEach.call(slides.children, function(el){
+      el.style.flexBasis = (100 / order.length) + '%';
+    });
+  })();
+
+  function paintDots(){
+    if (!dotsBox) return;
+    if (order.length < 2) { dotsBox.hidden = true; return; }
+    dotsBox.hidden = false;
+    dotsBox.innerHTML = '';
+    order.forEach(function(name, i){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'evpop-dot' + (i === at ? ' on' : '');
+      b.setAttribute('aria-label', 'Slide ' + (i+1));
+      b.onclick = function(){ go(i); };
+      dotsBox.appendChild(b);
+    });
+  }
+
+  function go(i){
+    at = Math.max(0, Math.min(order.length - 1, i));
+    if (slides) slides.style.transform = 'translateX(-' + (at * (100 / order.length)) + '%)';
+    if (chk){
+      // The box means something different on each slide, so it is re-read
+      // rather than carried across.
+      chk.checked = !!ticked[order[at]];
+      if (chkLbl) chkLbl.textContent = HIDE_LABEL[order[at]];
+    }
+    paintDots();
+    if (order[at] === 'rank') loadBoard();
+  }
+
+  if (chk) chk.addEventListener('change', function(){
+    ticked[order[at]] = chk.checked;
+  });
+
+  // Swipe, because a phone user will try it before finding the dots.
+  (function swipe(){
+    if (!slides || order.length < 2) return;
+    var x0 = null;
+    slides.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+    slides.addEventListener('touchend', function(e){
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 45) go(at + (dx < 0 ? 1 : -1));
+    }, {passive:true});
+  })();
+
+  document.addEventListener('keydown', function(e){
+    if (pop.hidden) return;
+    if (e.key === 'ArrowRight') go(at + 1);
+    if (e.key === 'ArrowLeft')  go(at - 1);
+  });
+
+  /* ---- standings ------------------------------------------------------ */
+  var boardLoaded = false;
+
+  function esc(t){
+    return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  function mask(a){
+    a = String(a || '').toLowerCase();
+    return a.length > 10 ? a.slice(0,6) + '\u2026' + a.slice(-4) : a;
+  }
+
+  async function loadBoard(){
+    if (boardLoaded) return;
+    boardLoaded = true;
+    var list = document.getElementById('rkList');
+    var me   = document.getElementById('rkMe');
+    if (!list) return;
+
+    var rows = [];
     try {
-      var c = document.getElementById('evPopHide');
-      if (c && c.checked) localStorage.setItem(KEY, '1');
+      var r = await fetch(SB_URL + '/rest/v1/referral_board?select=rank,address,valid_ref&limit=5',
+                          { headers: { apikey: SB_ANON } });
+      rows = await r.json();
+      if (!Array.isArray(rows)) rows = [];
+    } catch (e) {
+      boardLoaded = false;   // let a later visit try again
+      list.innerHTML = '<div class="rk-note">Standings are unavailable right now.</div>';
+      return;
+    }
+
+    // Medals for the podium only. Marked aria-hidden because the place is
+    // already in the plate beside it, and a glyph says nothing on its own.
+    var MEDAL = { 1:'\uD83E\uDD47', 2:'\uD83E\uDD48', 3:'\uD83E\uDD49' };
+
+    /* The place, as artwork.
+       Two attempts at drawing this in the page failed for the same reason:
+       a laurel is eight or ten separate leaves and at sixty pixels they
+       collapse into each other, and a shape simple enough to survive that
+       size was not the shape being asked for. A file has neither problem.
+
+       The medal already carries its own number, so nothing is printed over
+       it -- the rank goes to the alt text, where a reader that cannot see
+       the image still gets it. */
+    function crest(rank){
+      return '<img class="rk-medalimg" src="images/rank/medal-' + rank + '.png" ' +
+             'alt="Rank ' + rank + '" loading="lazy" ' +
+             'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),' +
+               '{className:\'num\',textContent:' + rank + '}))">';
+    }
+
+    function row(rank, addr, val, opts){
+      opts = opts || {};
+      var podium = !opts.plain && MEDAL[rank];
+      return '<div class="rk-row ' + (podium ? 'r' + rank : 'plain') + '">' +
+               '<div class="rk-in">' +
+                 '<span class="rk-plate">' +
+                   (podium ? crest(rank)
+                           : '<span class="num">' + (rank == null ? '\u2014' : rank) + '</span>') +
+                 '</span>' +
+                 '<span class="rk-mid">' +
+                   (podium ? '<span class="rk-medal" aria-hidden="true">' + MEDAL[rank] + '</span>' : '') +
+                   '<span class="rk-addr">' + esc(addr) + '</span>' +
+                 '</span>' +
+                 '<span class="rk-pts"><b>' + esc(val) + '</b></span>' +
+               '</div>' +
+             '</div>';
+    }
+
+    if (!rows.length){
+      list.innerHTML = '<div class="rk-note">No referrals yet.<br>' +
+                       'The first invite takes the top spot.</div>';
+    } else {
+      list.innerHTML = rows.map(function(x){
+        return row(x.rank, x.address, x.valid_ref);
+      }).join('');
+    }
+
+    /* Your own row, pinned. A table of other people's numbers is something
+       to read; your position three places off the board is something to act
+       on, and that is the whole point of showing it here. */
+    if (!me) return;
+    if (!(window.MEMONS && MEMONS.connected)){
+      me.hidden = false;
+      me.innerHTML = '<div class="rk-note">Connect your wallet to see your rank.</div>';
+      return;
+    }
+    try {
+      var mine = await MEMONS.authFetch('/referral');
+      var v = Number(mine.valid_ref) || 0;
+      me.hidden = false;
+
+      /* How far to the next place up. Someone three invites off fourth will
+         send three invites; someone told only that they are fifth will not.
+         Outside the board the target is the last visible row, because that
+         is the first place their name would appear. */
+      var text = '', pct = 0;
+      if (mine.rank === 1) {
+        text = 'YOU ARE <b>#1</b>'; pct = 100;
+      } else if (rows.length) {
+        var above = null;
+        for (var i = rows.length - 1; i >= 0; i--) {
+          if (Number(rows[i].valid_ref) > v) { above = rows[i]; break; }
+        }
+        var target = above || rows[rows.length - 1];
+        var tv = Number(target.valid_ref);
+        if (above) {
+          text = '<b>' + (tv - v + 1) + '</b> MORE TO REACH <b>#' + above.rank + '</b>';
+        } else if (!mine.rank) {
+          text = '<b>' + (tv - v + 1) + '</b> MORE TO ENTER THE TOP ' + rows.length;
+        }
+        // Stating the distance and drawing it are different jobs: the number
+        // says how far, the bar says how close.
+        if (text) pct = Math.max(4, Math.min(96, Math.round(v / Math.max(1, tv) * 100)));
+      }
+
+      var chip = text
+        ? '<div class="rk-gap" style="--p:' + pct + '%">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+              'stroke-linecap="square"><path d="M3 17l5-5 4 4 8-8"/><path d="M15 8h5v5"/></svg>' +
+            '<span>' + text + '</span><span class="bar"><i></i></span>' +
+          '</div>'
+        : '';
+
+      me.innerHTML = '<span class="rk-me-lbl">YOUR RANK</span>' +
+                     row(mine.rank || null, mask(MEMONS.address), v, {plain:true}) + chip;
+      me.className = 'rk-me';
+    } catch (e) {
+      me.hidden = true;
+    }
+  }
+
+  /* ---- open and close ------------------------------------------------- */
+  function close(){
+    try {
+      if (ticked.event) localStorage.setItem(K_EVENT, '1');
+      if (ticked.rank)  localStorage.setItem(K_RANK, todayKey());
     } catch (e) {}
     pop.hidden = true;
     document.body.style.overflow = '';
   }
 
-  /* Held back until the page has loaded. Arriving over the intro video, it
-     would otherwise appear before there is anything behind it. */
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      if (missing || !pop.parentNode) return;
-      pop.hidden = false;
-      document.body.style.overflow = 'hidden';
-      // Measured only now. A hidden element has no size, so calling this any
-      // earlier reads zero and leaves the box at its full CSS width.
-      fitBox();
-    }, 900);
-  });
-
-  /* A banner that fails to load leaves nothing worth showing, so the popup
-     goes. The image usually fails before the popup is due to open, so the
-     failure is recorded and checked at that point too — otherwise the timer
-     fires afterwards and locks the page behind something that is gone. */
+  /* A banner that fails to load takes its own slide with it rather than the
+     whole popup: the standings are still worth showing, and before slides
+     existed a missing file meant nothing appeared at all. */
   var missing = false;
-  document.documentElement.addEventListener('evpop:missing', function(){
+  function dropEventSlide(){
+    if (missing) return;
     missing = true;
-    pop.hidden = true;
-    document.body.style.overflow = '';
-    if (pop.parentNode) pop.remove();
-  });
+    var i = order.indexOf('event');
+    if (i < 0) return;
+    order.splice(i, 1);
+    var el = slides && slides.querySelector('[data-slide="event"]');
+    if (el) el.remove();
+    if (!order.length){
+      pop.hidden = true;
+      document.body.style.overflow = '';
+      if (pop.parentNode) pop.remove();
+      return;
+    }
+    slides.style.width = (order.length * 100) + '%';
+    Array.prototype.forEach.call(slides.children, function(x){
+      x.style.flexBasis = (100 / order.length) + '%';
+    });
+    go(0);
+  }
+  document.documentElement.addEventListener('evpop:missing', dropEventSlide);
+  if (img && img.complete && !img.naturalWidth) dropEventSlide();
 
-  /* The box fills the height and the banner keeps its shape, which leaves
-     the width depending on the file's proportions -- something no stylesheet
-     can know in advance. Left to the CSS ceiling a tall banner sits in the
-     middle of a wide panel with black down both sides. Measuring the image
-     once it has loaded and pulling the box in to match is the only way to
-     have it hug whatever image is dropped in. */
+  /* The box takes its size from the banner, which no stylesheet can know in
+     advance. Measured once the image has loaded and the box pulled in to
+     match, so a tall banner does not sit in the middle of a wide panel with
+     black down both sides. With no banner left there is nothing to measure,
+     so the standings keep a readable width of their own. */
   function fitBox(){
     var box  = pop.querySelector('.evpop-box');
     var im   = pop.querySelector('.evpop-img img');
     var foot = pop.querySelector('.evpop-foot');
-    if (!box || !im || !foot) return;
+    if (!box || !foot) return;
     box.style.maxWidth = '';
-    im.style.maxHeight = '';
-    if (!im.naturalWidth) return;
+    if (im) im.style.maxHeight = '';
 
     var narrow = window.matchMedia('(max-width:560px)').matches;
     var gap = narrow ? 24 : 40;
 
+    if (!im || !im.naturalWidth){
+      if (!narrow) box.style.maxWidth = '520px';
+      return;
+    }
     /* How tall the footer ends up depends on the text and how it wraps, so
-       the room left for the image can only be measured, not written into the
-       stylesheet. */
+       the room left for the image can only be measured. */
     im.style.maxHeight = Math.max(120, window.innerHeight - gap - foot.offsetHeight) + 'px';
-
-    /* On a phone the box is already the width of the screen and the image
-       fills it, so there is nothing to pull in. */
     if (narrow) return;
     var w = im.getBoundingClientRect().width;
     // The footer needs its own room; a banner narrower than the buttons
     // would otherwise crush them.
-    if (w > 0) box.style.maxWidth = Math.ceil(Math.max(w, 400)) + 'px';
+    if (w > 0) box.style.maxWidth = Math.ceil(Math.max(w, 460)) + 'px';
   }
-  if (img) {
+  if (img){
     if (img.complete) fitBox();
     img.addEventListener('load', fitBox);
   }
   window.addEventListener('resize', fitBox);
 
   document.getElementById('evPopX').onclick = close;
-  document.getElementById('evPopBg').onclick = close;
+  var bg = document.getElementById('evPopBg');
+  if (bg) bg.onclick = close;
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && !pop.hidden) close();
   });
-  // Following any of them is also a dismissal: the checkbox should still count.
-  if (link)    link.addEventListener('click', close);
-  if (notice)  notice.addEventListener('click', close);
-  if (mission) mission.addEventListener('click', close);
 
-  // The image may already have failed by the time this runs.
-  if (img && img.complete && !img.naturalWidth) {
-    missing = true;
-    if (pop.parentNode) pop.remove();
-  }
+  // Following a link is also a dismissal: the tick box should still count.
+  [link, notice, mission].forEach(function(a){
+    if (a) a.addEventListener('click', close);
+  });
+
+  /* Held back until the page has loaded. Arriving over the intro video, it
+     would otherwise appear before there is anything behind it. */
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (!order.length || !pop.parentNode) return;
+      pop.hidden = false;
+      document.body.style.overflow = 'hidden';
+      go(0);
+      // Measured only now. A hidden element has no size, so calling this any
+      // earlier reads zero and leaves the box at its full CSS width.
+      fitBox();
+    }, 900);
+  });
 })();
 </script>
 </body>
