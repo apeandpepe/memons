@@ -153,6 +153,49 @@
     animation:cdTick 1s steps(1) infinite}
   @keyframes cdTick{0%,49%{opacity:.55}50%,100%{opacity:.12}}
 
+  /* Not-connected prompt.
+     The line it replaces sat inside the mission table while the only button
+     that could act on it was in the far corner of the header -- a message
+     and its answer at opposite ends of the screen. Built from the same
+     panel as the countdown so the page has one way of saying "not yet". */
+  /* The artwork carries its own button, so the whole thing is the target
+     rather than a rectangle guessed over the painted one -- that guess
+     drifts the moment the image is resized or replaced. */
+  .cw-art{display:block;width:100%;max-width:560px;margin:8px auto 0;padding:0;border:0;
+    background:none;cursor:pointer;line-height:0}
+  .cw-art img{width:100%;height:auto;display:block;
+    clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
+  .cw-art:hover img{filter:brightness(1.05)}
+  .cw-art:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+
+  .cw{display:flex;justify-content:center;padding:8px 0 4px}
+  .cw-card{text-align:center;padding:36px 32px 30px;max-width:400px;width:100%;
+    background:linear-gradient(180deg,#0e0e11,#08080a 62%);
+    border:1px solid rgba(233,184,74,.28);
+    clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
+  .cw-badge{width:56px;height:56px;margin:0 auto 20px;display:flex;align-items:center;
+    justify-content:center;color:var(--gold);position:relative;
+    background:linear-gradient(160deg,rgba(233,184,74,.16),rgba(233,184,74,.03));
+    clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
+  .cw-badge::before{content:"";position:absolute;inset:0;
+    background:linear-gradient(160deg,rgba(233,184,74,.55),rgba(233,184,74,.14));
+    clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+    z-index:-1;transform:scale(1.045)}
+  .cw-badge svg{width:24px;height:24px;stroke-width:1.4;fill:none;stroke:currentColor}
+  .cw-title{font-family:var(--font-head);font-weight:700;font-size:26px;letter-spacing:1.6px;
+    color:var(--gold);line-height:1}
+  .cw-sub{color:#7d735d;font-size:12.5px;margin-top:12px;line-height:1.65;
+    max-width:260px;margin-left:auto;margin-right:auto}
+  .cw-btn{margin-top:22px;font-family:var(--font-head);font-size:13px;font-weight:700;
+    letter-spacing:1.6px;color:#100d05;border:0;cursor:pointer;padding:14px 30px;width:100%;
+    background:linear-gradient(140deg,#FCE39A,#F1C14C);
+    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+  .cw-btn:hover{filter:brightness(1.07)}
+  @media(max-width:560px){
+    .cw-card{padding:30px 20px 26px}
+    .cw-title{font-size:22px}
+  }
+
   .el-when{font-family:var(--font-head);color:#5f5744;font-size:10.5px;margin-top:22px;
     letter-spacing:2.4px;font-weight:600}
   .el-when b{color:#a99d85;font-weight:700}
@@ -596,7 +639,39 @@
   async function load(){
     if(!MEMONS.connected){
       $('capNum').textContent='—';
-      $('mtable').innerHTML='<div class="mrow"><div class="mL"><div class="mico">🔒</div><div><div class="mname">Connect your wallet to view missions</div></div></div><div></div><div></div></div>';
+      /* The button hands off to the one in the header rather than calling
+         connect() itself, so the wallet picker, the deep-link handling and
+         the mobile return path stay in a single place. */
+      /* The artwork first, the written panel as the fallback. A banner that
+         fails to load would otherwise leave the page with nothing to press,
+         and connecting is the only thing this screen is for. */
+      $('mtable').innerHTML =
+        '<button class="cw-art" id="cwArt" type="button" aria-label="Connect wallet">'+
+          '<img src="images/connect-wallet.png" alt="Connect your wallet to start your mission">'+
+        '</button>'+
+        '<div class="cw" id="cwFallback" hidden><div class="cw-card">'+
+          '<div class="cw-badge"><svg viewBox="0 0 24 24" stroke-linecap="square" stroke-linejoin="miter">'+
+            '<path d="M3 7.5h15v11H3z"/><path d="M3 7.5 16 4v3.5"/><path d="M18 11h3v4h-3z"/>'+
+          '</svg></div>'+
+          '<div class="cw-title">CONNECT WALLET</div>'+
+          '<div class="cw-sub">Your missions and the capsules you earn are tied to your wallet.</div>'+
+          '<button class="cw-btn" id="cwGo">CONNECT WALLET</button>'+
+        '</div></div>';
+      /* Both routes hand off to the header button rather than calling
+         connect() themselves, so the wallet picker, the deep link and the
+         mobile return path stay in one place. */
+      var hdr=document.getElementById('wbtn');
+      var tap=function(){ if(hdr) hdr.click(); };
+      var art=$('cwArt'), go=$('cwGo'), fb=$('cwFallback');
+      if(go) go.onclick=tap;
+      if(art){
+        art.onclick=tap;
+        var im=art.querySelector('img');
+        var toText=function(){ art.remove(); if(fb) fb.hidden=false; };
+        im.addEventListener('error', toText);
+        // Already failed before this ran: complete with no dimensions.
+        if(im.complete && !im.naturalWidth) toText();
+      } else if(fb){ fb.hidden=false; }
       return;
     }
     // current contact email (for mission 1 state)
