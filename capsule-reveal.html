@@ -238,6 +238,9 @@
   .macts{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:18px;flex-wrap:wrap}
 
   /* share on X */
+  .b.save{border:1px solid rgba(255,255,255,.22);color:#e8e6e0;background:rgba(255,255,255,.04)}
+  .b.save:hover{border-color:#fff;background:rgba(255,255,255,.1)}
+  .b.save:disabled{opacity:.55;cursor:default}
   .b.share{border:1px solid rgba(255,255,255,.22);color:#e8e6e0;background:rgba(255,255,255,.04)}
   .b.share:hover{border-color:#fff;background:rgba(255,255,255,.1)}
   /* rare pulls are worth bragging about: make the button pop */
@@ -422,6 +425,14 @@
       <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="vertical-align:-2px;margin-right:6px">
         <path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/>
       </svg>SHARE
+    </button>
+    <button class="b save hidden" id="saveBtn" title="Save the card image">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           style="vertical-align:-3px;margin-right:6px">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+      </svg>SAVE
     </button>
     <button class="b ghost hidden" id="again">CONTINUE</button>
   </div>
@@ -828,7 +839,7 @@ function singleReveal(it){
   const reveal=()=>{
     $('stage').classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
-    showShareSingle(it);
+    showShareSingle(it); showSaveSingle(it);
     refreshStatus(); busy=false;
   };
   const src = LAB.testCard || it.img;
@@ -925,7 +936,7 @@ function __oldSingle(){
     const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'COLLECTED':'NEW';
     $('stage').classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
-    showShareSingle(it);
+    showShareSingle(it); showSaveSingle(it);
     refreshStatus(); busy=false;
   });
 }
@@ -953,6 +964,32 @@ function __oldTen(){
 /* ---- share on X --------------------------------------------------------
    Fires straight after a reveal, while the pull still feels exciting.
    Rare pulls get a highlighted button (people brag about those).           */
+/* Saving the card.
+   A plain <a download> is ignored for a cross-origin file: the browser
+   navigates to the image instead of saving it, which on a phone means
+   losing the reveal screen. Fetching it as a blob keeps the download a
+   download. If that is refused -- no CORS header on the bucket -- the
+   image opens in a new tab, which leaves a long-press away from saved
+   rather than a button that appears to do nothing. */
+async function saveCard(url, name){
+  const file = String(name || 'memons-card').trim().replace(/[^\w.-]+/g,'-') + '.png';
+  try{
+    const r = await fetch(url, { mode:'cors' });
+    if(!r.ok) throw new Error(r.status);
+    const b = await r.blob();
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href = u; a.download = file;
+    document.body.appendChild(a); a.click(); a.remove();
+    // Revoked late: Safari reads the blob after the click returns.
+    setTimeout(()=>URL.revokeObjectURL(u), 4000);
+    return true;
+  }catch(e){
+    window.open(url, '_blank', 'noopener');
+    return false;
+  }
+}
+
 const SHARE_URL  = location.origin + '/open-capsule.html';
 const SHARE_TAGS = 'MEMONS,APEPE';
 const HOT = ['epic','legendary','mythic'];   // worth bragging about
@@ -982,6 +1019,24 @@ function showShareSingle(it){
     `I just pulled a ${it.rarity} card from MEMONS 🔥`,
     it
   );
+}
+
+function showSaveSingle(it){
+  const b = $('saveBtn'); if(!b) return;
+  const url = LAB.testCard || it.img;
+  if(!url){ b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  b.disabled = false;
+  b.onclick = async () => {
+    b.disabled = true;
+    const before = b.innerHTML;
+    b.textContent = 'SAVING…';
+    const ok = await saveCard(url, 'memons-' + (it.rkey||'card') + '-' + (it.char||''));
+    b.innerHTML = before;
+    // Says what happened rather than snapping back as if nothing did.
+    b.textContent = ok ? 'SAVED' : 'OPENED';
+    setTimeout(()=>{ b.innerHTML = before; b.disabled = false; }, 1600);
+  };
 }
 
 function showShareTen(items){
