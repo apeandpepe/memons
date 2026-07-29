@@ -626,18 +626,26 @@
   };
   var DESC={
     x_connect:'Create a wallet, connect X, and add your email',
-    follow:'Follow @APEPE_MEME on X',
+    follow:'Follow @apepeofficial on X',
     retweet:'Retweet the official event post on X',
     share:'Share your acquired card on X',
     pfp:'Set your card as your X profile picture',
     referral:'Invite friends and have them join',
   };
   // external action links (follow/retweet/share/pfp open X)
-  // NOTE: retweet id is a placeholder until the official launch tweet is posted.
+  //
+  // The account is written once and the links are built from it, so a rename
+  // is one edit rather than a hunt through the file -- which is how the old
+  // handle survived in some places and not others last time.
+  var X_HANDLE  = 'apepeofficial';
+  var X_TWEET   = '2082357413534216558';   // the post to retweet
   var SHARE_TEXT='I just pulled my MEMONS card! Join the drop \uD83D\uDC49 apepe.io';
   var LINK={
-    follow:'https://x.com/intent/follow?screen_name=APEPE_MEME',
-    retweet:'https://x.com/intent/retweet?tweet_id=2076570211269115955',
+    /* The profile, not intent/follow. X stopped honouring the follow intent
+       for logged-out and app users, who land on an error instead of a follow
+       button -- the profile page works for everyone. */
+    follow:'https://x.com/'+X_HANDLE,
+    retweet:'https://x.com/'+X_HANDLE+'/status/'+X_TWEET,
     share:'https://x.com/intent/tweet?text='+encodeURIComponent(SHARE_TEXT),
     pfp:'https://x.com/settings/profile',
   };
