@@ -245,19 +245,23 @@
      no matter how wide the banner made it, and the tick box drops beneath
      them against the right edge. Keeping both in normal flow means a narrow
      banner cannot push them into each other. */
-  /* Two slides, one frame.
-     A second popup would mean a second thing to dismiss, and the one people
-     close fastest is the one they did not ask for. Sliding keeps the event
-     banner at full size and lets the standings be something you move to
-     rather than something that interrupts you. */
-  .evpop-slides{position:relative;flex:1 1 auto;min-height:0;display:flex;
-    transition:transform .32s cubic-bezier(.4,0,.2,1)}
-  .evpop-slide{flex:0 0 100%;min-width:0;display:flex;flex-direction:column;justify-content:center}
-  .evpop-dots{display:flex;gap:7px;justify-content:center;flex:1 1 100%;order:0;padding-bottom:2px}
-  .evpop-dot{width:7px;height:7px;border-radius:50%;border:0;padding:0;cursor:pointer;
-    background:rgba(255,255,255,.22);transition:.2s}
-  .evpop-dot.on{background:var(--gold);width:20px;border-radius:4px}
-  @media(prefers-reduced-motion:reduce){ .evpop-slides{transition:none} }
+  /* Two panels standing next to each other.
+     The overlay is the row; each panel keeps the size it had on its own, so
+     nothing had to be redrawn to fit beside anything. Below 1100px there is
+     no room for two of them abreast and they stack, with the overlay taking
+     the scrolling. */
+  .evpop{gap:22px}
+  .evpop-box.rank{width:100%;max-width:min(94vw,520px)}
+  .evpop-box[hidden]{display:none}
+  .evpop-box.rank .evpop-foot{justify-content:flex-end}
+  @media(max-width:1100px){
+    .evpop{flex-direction:column;justify-content:flex-start;overflow-y:auto;
+      padding:16px;gap:16px}
+    .evpop-box{flex:0 0 auto}
+    /* Stacked, the banner cannot also claim the whole height or the second
+       panel starts below the fold with nothing to say it is there. */
+    .evpop-img img{max-height:min(62vh, 620px)}
+  }
 
   /* Standings.
      The podium is built as a frame rather than a row: a metal edge drawn as
@@ -765,37 +769,46 @@
 </style>
 <!-- Event notice, shown once. The banner links through to the full post;
      the popup itself only has to be seen. -->
+<!-- Two panels, not two slides.
+     Sliding meant the standings only existed for whoever thought to swipe,
+     and the whole reason they are here is to be seen without being looked
+     for. Side by side both are on screen at once, each with its own close
+     and its own memory of having been closed. -->
 <div class="evpop" id="evPop" hidden>
   <div class="evpop-bg" id="evPopBg"></div>
-  <div class="evpop-box" role="dialog" aria-modal="true" aria-label="Event notice">
-    <button class="evpop-x" id="evPopX" aria-label="Close">&times;</button>
-    <div class="evpop-slides" id="evSlides">
-      <div class="evpop-slide" data-slide="event">
-        <a class="evpop-img" id="evPopLink" href="notice.html">
-          <img src="images/notice/event-popup.png" alt="Open Beta Event"
-               onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
-        </a>
-      </div>
-      <div class="evpop-slide" data-slide="rank">
-        <div class="rk">
-          <div class="rk-badge"><i></i>REFERRAL LEADERBOARD<i></i></div>
-          <div class="rk-title">TOP REFERRERS</div>
-          <div class="rk-sub" id="rkSub">INVITE FRIENDS &middot; CLIMB THE BOARD</div>
-          <div class="rk-list" id="rkList"><div class="rk-note">Loading&hellip;</div></div>
-          <div class="rk-me" id="rkMe" hidden></div>
-        </div>
-      </div>
-    </div>
+
+  <div class="evpop-box" id="evBoxEvent" role="dialog" aria-modal="true" aria-label="Open beta event">
+    <button class="evpop-x" data-close="event" aria-label="Close">&times;</button>
+    <a class="evpop-img" id="evPopLink" href="notice.html">
+      <img src="images/notice/event-popup.png" alt="Open Beta Event"
+           onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
+    </a>
     <div class="evpop-foot">
-      <div class="evpop-dots" id="evDots" hidden></div>
-      <label class="evpop-chk">
-        <input type="checkbox" id="evPopHide">
-        <span id="evPopHideLbl">Don&rsquo;t show again</span>
-      </label>
       <div class="evpop-acts">
         <a class="evpop-btn sub" id="evPopNotice" href="notice.html">NOTICE</a>
         <a class="evpop-btn" id="evPopMission" href="mypage-missions.html">JOIN EVENT</a>
       </div>
+      <label class="evpop-chk">
+        <input type="checkbox" data-hide="event">
+        <span>Don&rsquo;t show again</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="evpop-box rank" id="evBoxRank" role="dialog" aria-modal="true" aria-label="Referral leaderboard">
+    <button class="evpop-x" data-close="rank" aria-label="Close">&times;</button>
+    <div class="rk">
+      <div class="rk-badge"><i></i>REFERRAL LEADERBOARD<i></i></div>
+      <div class="rk-title">TOP REFERRERS</div>
+      <div class="rk-sub" id="rkSub">INVITE FRIENDS &middot; CLIMB THE BOARD</div>
+      <div class="rk-list" id="rkList"><div class="rk-note">Loading&hellip;</div></div>
+      <div class="rk-me" id="rkMe" hidden></div>
+    </div>
+    <div class="evpop-foot">
+      <label class="evpop-chk">
+        <input type="checkbox" data-hide="rank">
+        <span>Don&rsquo;t show today</span>
+      </label>
     </div>
   </div>
 </div>
@@ -859,18 +872,13 @@
 
 <script>
 (function(){
-  /* Where the popup leads. NOTICE_ID is the event post; left empty it falls
-     back to the notice list, so a wrong id is never a dead link.
-     MISSION_URL is where the event is actually done.
-
-     The banner follows the mission button rather than the notice: someone
-     who taps it is reaching for the event itself, not for a page about it. */
+  /* Where the panels lead. NOTICE_ID is the event post; left empty it falls
+     back to the notice list, so a wrong id is never a dead link. */
   var NOTICE_ID   = '6';
   var MISSION_URL = 'mypage-missions';
 
   /* Bump this when a new event goes up. The tick box is remembered against
-     it, so a visitor who hid the last popup still sees the next one --
-     without this, anyone who ever ticked the box never sees another. */
+     it, so a visitor who hid the last one still sees the next. */
   var EVENT_KEY = 'ev1';
 
   var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
@@ -878,53 +886,42 @@
 
   var pop = document.getElementById('evPop');
   if (!pop) return;
+  var img = pop.querySelector('.evpop-img img');
 
-  var img     = pop.querySelector('.evpop-img img');
-  var slides  = document.getElementById('evSlides');
-  var dotsBox = document.getElementById('evDots');
-  var chk     = document.getElementById('evPopHide');
-  var chkLbl  = document.getElementById('evPopHideLbl');
-
-  /* ---- what is still due ------------------------------------------------
-     The two slides are hidden on different terms, so they are tracked
-     separately and the popup opens with whichever are left. Sharing one
-     switch would mean hiding the event forever also hid the standings, which
-     change every day and are the reason to come back. */
+  /* ---- what is still due ----------------------------------------------
+     The two panels are hidden on different terms, so each is tracked on its
+     own and the overlay opens with whichever are left. One switch for both
+     would mean hiding the event forever also hid the standings, which change
+     every day and are the reason to come back. */
   function todayKey(){
-    var d = new Date();
-    var p = function(n){ return (n<10?'0':'')+n; };
+    var d = new Date(), p = function(n){ return (n<10?'0':'')+n; };
     // The visitor's own day, because "today" is theirs and not the server's.
     return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
   }
-  var K_EVENT = 'memons_evpop_hidden_' + EVENT_KEY;
-  var K_RANK  = 'memons_rankpop_hidden_day';
-
-  function hiddenEvent(){
-    try { return localStorage.getItem(K_EVENT) === '1'; } catch(e){ return false; }
+  var KEY = { event:'memons_evpop_hidden_'+EVENT_KEY, rank:'memons_rankpop_hidden_day' };
+  function hidden(name){
+    try {
+      var v = localStorage.getItem(KEY[name]);
+      return name === 'event' ? v === '1' : v === todayKey();
+    } catch(e){ return false; }
   }
-  function hiddenRank(){
-    try { return localStorage.getItem(K_RANK) === todayKey(); } catch(e){ return false; }
+  function remember(name){
+    try {
+      localStorage.setItem(KEY[name], name === 'event' ? '1' : todayKey());
+    } catch(e){}
   }
 
-  var HIDE_LABEL = {
-    event: 'Don\u2019t show again',
-    rank:  'Don\u2019t show today'
-  };
-
-  var order = [];
-  if (!hiddenEvent()) order.push('event');
-  if (!hiddenRank())  order.push('rank');
-  if (!order.length) return;
-
-  // Ticked per slide, applied on the way out, so it works however the popup
-  // is dismissed -- button, backdrop or Escape.
-  var ticked = {};
+  var box = { event: document.getElementById('evBoxEvent'),
+              rank:  document.getElementById('evBoxRank') };
+  var open = { event: !hidden('event'), rank: !hidden('rank') };
+  if (!open.event) box.event.hidden = true;
+  if (!open.rank)  box.rank.hidden  = true;
+  if (!open.event && !open.rank) return;
 
   /* ---- links ---------------------------------------------------------- */
   var noticeUrl = NOTICE_ID
     ? ('notice-detail?id=' + encodeURIComponent(NOTICE_ID))
     : 'notice.html';
-
   var link    = document.getElementById('evPopLink');
   var notice  = document.getElementById('evPopNotice');
   var mission = document.getElementById('evPopMission');
@@ -932,71 +929,34 @@
   if (notice)  notice.href  = noticeUrl;
   if (mission) mission.href = MISSION_URL;
 
-  /* ---- slides --------------------------------------------------------- */
-  var at = 0;
-
-  // Only the due slides stay in the DOM, so the track width and the dots
-  // both follow from the same list and cannot disagree.
-  (function pruneSlides(){
-    if (!slides) return;
-    Array.prototype.slice.call(slides.children).forEach(function(el){
-      if (order.indexOf(el.getAttribute('data-slide')) < 0) el.remove();
-    });
-    slides.style.width = (order.length * 100) + '%';
-    Array.prototype.forEach.call(slides.children, function(el){
-      el.style.flexBasis = (100 / order.length) + '%';
-    });
-  })();
-
-  function paintDots(){
-    if (!dotsBox) return;
-    if (order.length < 2) { dotsBox.hidden = true; return; }
-    dotsBox.hidden = false;
-    dotsBox.innerHTML = '';
-    order.forEach(function(name, i){
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'evpop-dot' + (i === at ? ' on' : '');
-      b.setAttribute('aria-label', 'Slide ' + (i+1));
-      b.onclick = function(){ go(i); };
-      dotsBox.appendChild(b);
-    });
-  }
-
-  function go(i){
-    at = Math.max(0, Math.min(order.length - 1, i));
-    if (slides) slides.style.transform = 'translateX(-' + (at * (100 / order.length)) + '%)';
-    if (chk){
-      // The box means something different on each slide, so it is re-read
-      // rather than carried across.
-      chk.checked = !!ticked[order[at]];
-      if (chkLbl) chkLbl.textContent = HIDE_LABEL[order[at]];
+  /* ---- closing --------------------------------------------------------
+     A panel remembers on the way out, so the tick counts however it was
+     dismissed. The overlay only goes when nothing is left standing. */
+  function close(name){
+    if (!open[name]) return;
+    var b = box[name];
+    var c = b.querySelector('input[data-hide]');
+    if (c && c.checked) remember(name);
+    b.hidden = true;
+    open[name] = false;
+    if (!open.event && !open.rank){
+      pop.hidden = true;
+      document.body.style.overflow = '';
     }
-    paintDots();
-    if (order[at] === 'rank') loadBoard();
   }
+  function closeAll(){ close('event'); close('rank'); }
 
-  if (chk) chk.addEventListener('change', function(){
-    ticked[order[at]] = chk.checked;
+  Array.prototype.forEach.call(pop.querySelectorAll('[data-close]'), function(btn){
+    btn.onclick = function(){ close(btn.getAttribute('data-close')); };
   });
-
-  // Swipe, because a phone user will try it before finding the dots.
-  (function swipe(){
-    if (!slides || order.length < 2) return;
-    var x0 = null;
-    slides.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
-    slides.addEventListener('touchend', function(e){
-      if (x0 === null) return;
-      var dx = e.changedTouches[0].clientX - x0;
-      x0 = null;
-      if (Math.abs(dx) > 45) go(at + (dx < 0 ? 1 : -1));
-    }, {passive:true});
-  })();
-
+  var bg = document.getElementById('evPopBg');
+  if (bg) bg.onclick = closeAll;
   document.addEventListener('keydown', function(e){
-    if (pop.hidden) return;
-    if (e.key === 'ArrowRight') go(at + 1);
-    if (e.key === 'ArrowLeft')  go(at - 1);
+    if (e.key === 'Escape' && !pop.hidden) closeAll();
+  });
+  // Following a link is also a dismissal: the tick box should still count.
+  [link, notice, mission].forEach(function(a){
+    if (a) a.addEventListener('click', function(){ close('event'); });
   });
 
   /* ---- standings ------------------------------------------------------ */
@@ -1013,14 +973,14 @@
   }
 
   /* A filled board, on request, without a filled database.
-     Seeing how five places actually look needs five referrals, and putting
-     fake wallets in to get them means putting fake wallets in front of real
-     visitors and then remembering to take them out again. This borrows the
-     rendering and nothing else: it reads nothing, writes nothing, and only
-     answers to an address typed by hand.
+     Seeing how five places look needs five referrals, and inventing them in
+     the database means putting fake wallets in front of real visitors and
+     remembering to take them out. This borrows the rendering and nothing
+     else: it reads nothing, writes nothing, and answers only to an address
+     typed by hand.
 
          apepe.io/?rankdemo=1
-     */
+   */
   var DEMO = /[?&]rankdemo=1\b/.test(location.search);
   var DEMO_ROWS = [
     { rank:1, address:'0x43cd\u2026e9ef', valid_ref:47 },
@@ -1031,7 +991,7 @@
   ];
 
   async function loadBoard(){
-    if (boardLoaded) return;
+    if (boardLoaded || !open.rank) return;
     boardLoaded = true;
     var list = document.getElementById('rkList');
     var me   = document.getElementById('rkMe');
@@ -1041,41 +1001,29 @@
     if (DEMO) {
       rows = DEMO_ROWS;
     } else {
-    try {
-      var r = await fetch(SB_URL + '/rest/v1/referral_board?select=rank,address,valid_ref&limit=5',
-                          { headers: { apikey: SB_ANON } });
-      rows = await r.json();
-      if (!Array.isArray(rows)) rows = [];
-    } catch (e) {
-      boardLoaded = false;   // let a later visit try again
-      list.innerHTML = '<div class="rk-note">Standings are unavailable right now.</div>';
-      return;
+      try {
+        var r = await fetch(SB_URL + '/rest/v1/referral_board?select=rank,address,valid_ref&limit=5',
+                            { headers: { apikey: SB_ANON } });
+        rows = await r.json();
+        if (!Array.isArray(rows)) rows = [];
+      } catch (e) {
+        boardLoaded = false;   // let a later visit try again
+        list.innerHTML = '<div class="rk-note">Standings are unavailable right now.</div>';
+        return;
+      }
     }
-    }
 
-    // Medals for the podium only. Marked aria-hidden because the place is
-    // already in the plate beside it, and a glyph says nothing on its own.
-    var MEDAL = { 1:'\uD83E\uDD47', 2:'\uD83E\uDD48', 3:'\uD83E\uDD49' };
-
-    /* The place, as artwork.
-       Two attempts at drawing this in the page failed for the same reason:
-       a laurel is eight or ten separate leaves and at sixty pixels they
-       collapse into each other, and a shape simple enough to survive that
-       size was not the shape being asked for. A file has neither problem.
-
-       The medal already carries its own number, so nothing is printed over
-       it -- the rank goes to the alt text, where a reader that cannot see
-       the image still gets it. */
+    // Medals for the podium only, marked aria-hidden because the place is
+    // already in the image beside it.
     function crest(rank){
       return '<img class="rk-medalimg" src="images/rank/medal-' + rank + '.png" ' +
              'alt="Rank ' + rank + '" loading="lazy" ' +
              'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),' +
                '{className:\'num\',textContent:' + rank + '}))">';
     }
-
     function row(rank, addr, val, opts){
       opts = opts || {};
-      var podium = !opts.plain && MEDAL[rank];
+      var podium = !opts.plain && rank >= 1 && rank <= 3;
       return '<div class="rk-row ' + (podium ? 'r' + rank : 'plain') + '">' +
                '<div class="rk-in">' +
                  '<span class="rk-plate">' +
@@ -1083,7 +1031,6 @@
                            : '<span class="num">' + (rank == null ? '\u2014' : rank) + '</span>') +
                  '</span>' +
                  '<span class="rk-mid">' +
-                   (podium ? '<span class="rk-medal" aria-hidden="true">' + MEDAL[rank] + '</span>' : '') +
                    '<span class="rk-addr">' + esc(addr) + '</span>' +
                  '</span>' +
                  '<span class="rk-pts"><b>' + esc(val) + '</b></span>' +
@@ -1093,8 +1040,8 @@
 
     if (!rows.length){
       /* Nobody has referred anyone yet. The connect line joins this block
-         rather than sitting on its own further down -- with no board between
-         them the two messages were reading as two unrelated failures. */
+         rather than sitting further down on its own -- with no board between
+         them the two messages read as two unrelated failures. */
       var connected = !!(window.MEMONS && MEMONS.connected);
       list.innerHTML =
         '<div class="rk-empty">' +
@@ -1105,11 +1052,11 @@
         '</div>';
       if (me) { me.hidden = true; me.innerHTML = ''; }
       return;
-    } else {
-      list.innerHTML = rows.map(function(x){
-        return row(x.rank, x.address, x.valid_ref);
-      }).join('');
     }
+
+    list.innerHTML = rows.map(function(x){
+      return row(x.rank, x.address, x.valid_ref);
+    }).join('');
 
     /* Your own row, pinned. A table of other people's numbers is something
        to read; your position three places off the board is something to act
@@ -1117,6 +1064,7 @@
     if (!me) return;
     if (!(window.MEMONS && MEMONS.connected)){
       me.hidden = false;
+      me.className = '';
       me.innerHTML = '<div class="rk-note">Connect your wallet to see your rank.</div>';
       return;
     }
@@ -1127,14 +1075,10 @@
       var v = Number(mine.valid_ref) || 0;
       me.hidden = false;
 
-      /* How far to the next place up. Someone three invites off fourth will
-         send three invites; someone told only that they are fifth will not.
-         Outside the board the target is the last visible row, because that
-         is the first place their name would appear. */
       var text = '', pct = 0;
       if (mine.rank === 1) {
         text = 'YOU ARE <b>#1</b>'; pct = 100;
-      } else if (rows.length) {
+      } else {
         var above = null;
         for (var i = rows.length - 1; i >= 0; i--) {
           if (Number(rows[i].valid_ref) > v) { above = rows[i]; break; }
@@ -1151,87 +1095,61 @@
         if (text) pct = Math.max(4, Math.min(96, Math.round(v / Math.max(1, tv) * 100)));
       }
 
-      var chip = text
-        ? '<div class="rk-gap" style="--p:' + pct + '%">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
-              'stroke-linecap="square"><path d="M3 17l5-5 4 4 8-8"/><path d="M15 8h5v5"/></svg>' +
-            '<span>' + text + '</span><span class="bar"><i></i></span>' +
-          '</div>'
-        : '';
-
-      me.innerHTML = '<span class="rk-me-lbl">YOUR RANK</span>' +
-                     row(mine.rank || null, mask(MEMONS.address), v, {plain:true}) + chip;
       me.className = 'rk-me';
+      me.innerHTML = '<span class="rk-me-lbl">YOUR RANK</span>' +
+        row(mine.rank || null, mask(MEMONS.address), v, {plain:true}) +
+        (text
+          ? '<div class="rk-gap" style="--p:' + pct + '%">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+                'stroke-linecap="square"><path d="M3 17l5-5 4 4 8-8"/><path d="M15 8h5v5"/></svg>' +
+              '<span>' + text + '</span><span class="bar"><i></i></span>' +
+            '</div>'
+          : '');
     } catch (e) {
       me.hidden = true;
     }
   }
 
-  /* ---- open and close ------------------------------------------------- */
-  function close(){
-    try {
-      if (ticked.event) localStorage.setItem(K_EVENT, '1');
-      if (ticked.rank)  localStorage.setItem(K_RANK, todayKey());
-    } catch (e) {}
-    pop.hidden = true;
-    document.body.style.overflow = '';
-  }
-
-  /* A banner that fails to load takes its own slide with it rather than the
-     whole popup: the standings are still worth showing, and before slides
-     existed a missing file meant nothing appeared at all. */
-  var missing = false;
-  function dropEventSlide(){
-    if (missing) return;
-    missing = true;
-    var i = order.indexOf('event');
-    if (i < 0) return;
-    order.splice(i, 1);
-    var el = slides && slides.querySelector('[data-slide="event"]');
-    if (el) el.remove();
-    if (!order.length){
+  /* A banner that fails to load takes its own panel with it rather than the
+     whole overlay: the standings are still worth showing. */
+  document.documentElement.addEventListener('evpop:missing', function(){
+    if (!open.event) return;
+    box.event.hidden = true;
+    open.event = false;
+    if (!open.rank){
       pop.hidden = true;
       document.body.style.overflow = '';
-      if (pop.parentNode) pop.remove();
-      return;
+    } else {
+      fitBox();
     }
-    slides.style.width = (order.length * 100) + '%';
-    Array.prototype.forEach.call(slides.children, function(x){
-      x.style.flexBasis = (100 / order.length) + '%';
-    });
-    go(0);
-  }
-  document.documentElement.addEventListener('evpop:missing', dropEventSlide);
-  if (img && img.complete && !img.naturalWidth) dropEventSlide();
+  });
 
-  /* The box takes its size from the banner, which no stylesheet can know in
-     advance. Measured once the image has loaded and the box pulled in to
+  /* The banner panel takes its size from the image, which no stylesheet can
+     know in advance. Measured once it has loaded and the box pulled in to
      match, so a tall banner does not sit in the middle of a wide panel with
-     black down both sides. With no banner left there is nothing to measure,
-     so the standings keep a readable width of their own. */
+     black down both sides. */
   function fitBox(){
-    var box  = pop.querySelector('.evpop-box');
-    var im   = pop.querySelector('.evpop-img img');
-    var foot = pop.querySelector('.evpop-foot');
-    if (!box || !foot) return;
-    box.style.maxWidth = '';
-    if (im) im.style.maxHeight = '';
+    var b = box.event;
+    var im = b && b.querySelector('.evpop-img img');
+    var foot = b && b.querySelector('.evpop-foot');
+    if (!b || b.hidden || !im || !foot) return;
+    b.style.maxWidth = '';
+    im.style.maxHeight = '';
+    if (!im.naturalWidth) return;
 
-    var narrow = window.matchMedia('(max-width:560px)').matches;
-    var gap = narrow ? 24 : 40;
-
-    if (!im || !im.naturalWidth){
-      if (!narrow) box.style.maxWidth = '520px';
-      return;
-    }
-    /* How tall the footer ends up depends on the text and how it wraps, so
-       the room left for the image can only be measured. */
-    im.style.maxHeight = Math.max(120, window.innerHeight - gap - foot.offsetHeight) + 'px';
+    var narrow = window.matchMedia('(max-width:1100px)').matches;
+    /* Beside another panel the banner gets the height minus the footer;
+       stacked above one it gets a share of the screen, so the second panel
+       is not pushed entirely below the fold. */
+    var room = narrow
+      ? Math.min(window.innerHeight * 0.62, 620)
+      : window.innerHeight - 40 - foot.offsetHeight;
+    im.style.maxHeight = Math.max(140, room) + 'px';
     if (narrow) return;
     var w = im.getBoundingClientRect().width;
     // The footer needs its own room; a banner narrower than the buttons
     // would otherwise crush them.
-    if (w > 0) box.style.maxWidth = Math.ceil(Math.max(w, 460)) + 'px';
+    if (w > 0) b.style.maxWidth = Math.ceil(Math.max(w, 400)) + 'px';
   }
   if (img){
     if (img.complete) fitBox();
@@ -1239,29 +1157,17 @@
   }
   window.addEventListener('resize', fitBox);
 
-  document.getElementById('evPopX').onclick = close;
-  var bg = document.getElementById('evPopBg');
-  if (bg) bg.onclick = close;
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && !pop.hidden) close();
-  });
-
-  // Following a link is also a dismissal: the tick box should still count.
-  [link, notice, mission].forEach(function(a){
-    if (a) a.addEventListener('click', close);
-  });
-
   /* Held back until the page has loaded. Arriving over the intro video, it
      would otherwise appear before there is anything behind it. */
   window.addEventListener('load', function(){
     setTimeout(function(){
-      if (!order.length || !pop.parentNode) return;
+      if ((!open.event && !open.rank) || !pop.parentNode) return;
       pop.hidden = false;
       document.body.style.overflow = 'hidden';
-      go(0);
       // Measured only now. A hidden element has no size, so calling this any
       // earlier reads zero and leaves the box at its full CSS width.
       fitBox();
+      loadBoard();
     }, 900);
   });
 })();
