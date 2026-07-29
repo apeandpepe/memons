@@ -153,6 +153,24 @@
      in September should be given something to do today. */
   .soon{text-align:center;max-width:640px}
 
+  /* Held, not emptied: the page behind stays as a shape under glass.
+     pointer-events off on the frame is the part that matters -- a blurred
+     button is still a button to a mouse, and a visitor could otherwise
+     click through into a section that is supposed to be shut. */
+  .veiled{position:relative;overflow:hidden}
+  /* Enough haze to say "not yet", not so much that there is nothing to see.
+     The first pass dimmed to 55% under an 88% wash and the page behind
+     measured flat black -- a silhouette nobody could make out is just an
+     empty panel with extra steps. */
+  .veiled > .embed{filter:blur(6px) saturate(.55) brightness(.9);
+    pointer-events:none;user-select:none;transform:scale(1.03)}
+  .veiled > .veil{position:absolute;inset:0;z-index:2;display:flex;
+    align-items:center;justify-content:center;padding:24px;
+    background:radial-gradient(ellipse at center,rgba(5,5,5,.42),rgba(5,5,5,.72) 80%)}
+  /* The notice has to stay readable over whatever happens to be behind it. */
+  .veiled .soon .sec-title{text-shadow:0 2px 26px rgba(0,0,0,.95)}
+  .veiled .soon .sec-sub,.veiled .soon .sec-eyebrow{text-shadow:0 1px 14px rgba(0,0,0,.9)}
+
   .sec-eyebrow{font-size:12px;letter-spacing:4px;color:var(--gold);font-weight:600;margin-bottom:14px}
   .sec-title{font-family:var(--font-head);font-weight:700;font-size:clamp(34px,5vw,56px);line-height:1;letter-spacing:.5px}
   .sec-sub{margin-top:16px;font-size:16px;font-weight:300;color:#bdbab2;line-height:1.6;max-width:580px;margin-left:auto;margin-right:auto}
@@ -637,29 +655,36 @@
 </section>
 
 <!-- ABOUT (embed, below home) -->
-<!-- Held until 1 September.
-     The pages still exist and still work on their own; what is removed is
-     the embed, so nothing here loads about.html or vault.html during the
-     event. That is the point of the change as much as the wording: each of
-     those iframes pulls its own page, fonts and images on every visit to
-     the front page, for a section nobody is meant to be reading yet.
-     Restoring them is putting the two iframes back. -->
-<section id="about" class="sec">
-  <div class="soon">
-    <div class="sec-eyebrow">ABOUT MEMONS</div>
-    <div class="sec-title">COMING SOON</div>
-    <p class="sec-sub">Opening 1 September 2026.<br>The open beta event is running now.</p>
-    <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+<!-- Held until 1 September, but not emptied.
+     The page underneath stays where it was, blurred and dimmed, with the
+     notice over it. An empty panel says the section does not exist yet; a
+     shape behind glass says it is built and waiting, which is the true
+     state and the more persuasive one.
+
+     The iframes keep data-src, so they still only load when the visitor
+     scrolls near them -- a section nobody reaches costs nothing. -->
+<section id="about" class="embedsec veiled">
+  <iframe class="embed abembed" data-src="about.html" title="ABOUT MEMONS" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+  <div class="veil">
+    <div class="soon">
+      <div class="sec-eyebrow">ABOUT MEMONS</div>
+      <div class="sec-title">COMING SOON</div>
+      <p class="sec-sub">Opening 1 September 2026.<br>The open beta event is running now.</p>
+      <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+    </div>
   </div>
 </section>
 
 <!-- MEMONS VAULT -->
-<section id="vault" class="sec">
-  <div class="soon">
-    <div class="sec-eyebrow">MEMONS VAULT</div>
-    <div class="sec-title">COMING SOON</div>
-    <p class="sec-sub">Opening 1 September 2026.<br>Your cards are being kept safe until then.</p>
-    <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+<section id="vault" class="embedsec veiled">
+  <iframe class="embed vembed" data-src="vault.html#embed" title="MEMONS VAULT" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+  <div class="veil">
+    <div class="soon">
+      <div class="sec-eyebrow">MEMONS VAULT</div>
+      <div class="sec-title">COMING SOON</div>
+      <p class="sec-sub">Opening 1 September 2026.<br>Your cards are being kept safe until then.</p>
+      <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+    </div>
   </div>
 </section>
 
@@ -669,12 +694,15 @@
 </section>
 
 <!-- MARKETPLACE -->
-<section id="marketplace" class="sec">
-  <div class="soon">
-    <div class="sec-eyebrow">MARKETPLACE</div>
-    <div class="sec-title">COMING SOON</div>
-    <p class="sec-sub">Opening 1 September 2026.<br>Trade, collect, and flex your memes.</p>
-    <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+<section id="marketplace" class="embedsec veiled">
+  <iframe class="embed" data-src="marketplace.html#embed" title="MARKETPLACE" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+  <div class="veil">
+    <div class="soon">
+      <div class="sec-eyebrow">MARKETPLACE</div>
+      <div class="sec-title">COMING SOON</div>
+      <p class="sec-sub">Opening 1 September 2026.<br>Trade, collect, and flex your memes.</p>
+      <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+    </div>
   </div>
 </section>
 
