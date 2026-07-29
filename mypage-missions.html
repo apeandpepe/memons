@@ -10,6 +10,12 @@
     --gold:#E9B84A;--gold2:#f4d27a;--gold-b:#b8862e;--good:#5ccf92;--bad:#e0556a;--x:#4aa3ff;
     --sbw:220px;--tbh:70px;
   }
+  /* The hidden attribute only carries display:none from the browser's own
+     stylesheet, so any rule here that sets display beats it -- a panel built
+     with display:flex stays on screen however many times the script hides
+     it. Two were doing exactly that: the connect fallback and the countdown.
+     Stated once so it cannot come back the next time something is toggled. */
+  [hidden]{display:none !important}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;min-height:100vh;
     background-image:radial-gradient(1100px 480px at 82% -8%, rgba(233,184,74,.06), transparent 62%)}
