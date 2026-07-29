@@ -27,6 +27,24 @@
   var LOAD_TIMEOUT = 10000;
   var DETECT_TIMEOUT = 2500;
 
+  /* Above anything this site puts on screen, with room to spare. */
+  var WC_Z = 2147483000;
+
+  /* The theme variable covers the modal's own layers. This covers the custom
+     element that hosts them, which takes its stacking from the page and not
+     from the variable -- and it names the tags used by both the version in
+     use and the one that replaces it, so an upgrade does not quietly put the
+     modal back underneath. */
+  (function lift(){
+    try {
+      var css = document.createElement('style');
+      css.textContent =
+        ':root{--wcm-z-index:' + WC_Z + ';--w3m-z-index:' + WC_Z + '}' +
+        'wcm-modal,w3m-modal,w3m-router,appkit-modal{position:relative;z-index:' + WC_Z + '}';
+      (document.head || document.documentElement).appendChild(css);
+    } catch (e) {}
+  })();
+
   var initPromise = null;
   var injected = null;
 
@@ -143,7 +161,15 @@
         "wallet_switchEthereumChain", "wallet_addEthereumChain"
       ],
       showQrModal: true,
-      qrModalOptions: { themeMode: "dark" },
+      /* The QR modal ships with z-index 89. Every overlay on this site sits
+         well above that -- the connect gate is at 1500, the event popup at
+         1400 -- so the modal opened underneath them and the button looked
+         dead to anyone without an extension installed, which on desktop is
+         most people. Lifted above everything we draw. */
+      qrModalOptions: {
+        themeMode: "dark",
+        themeVariables: { "--wcm-z-index": String(WC_Z) }
+      },
       metadata: {
         name: "MEMONS",
         description: "The archive of internet culture",
