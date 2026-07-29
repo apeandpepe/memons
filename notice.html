@@ -142,7 +142,7 @@
       rows.innerHTML=items.map(function(n){
         var badge = n.pinned ? '<span class="badge pinned">PINNED</span>' : '<span class="badge '+n.category+'">'+n.category.toUpperCase()+'</span>';
         var pin = n.pinned ? '<i class="ti ti-pin pin"></i>' : '';
-        return '<div class="lrow" onclick="location.href=\'notice-detail?id='+n.id+'\'">'+
+        return '<div class="lrow" onclick="location.href=\'notice/'+n.id+'\'">'+
           '<div class="lt">'+pin+badge+'<span class="ltitle">'+esc(n.title)+'</span></div>'+
           '<div class="ldate">'+fmtDate(n.created_at)+'</div>'+
           '<div class="lchev"><i class="ti ti-chevron-right"></i></div></div>';

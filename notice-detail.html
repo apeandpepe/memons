@@ -139,7 +139,17 @@
   function $(id){return document.getElementById(id);}
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function fmtDate(s){ if(!s) return ''; var d=new Date(s); return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0'); }
-  function id(){ return new URLSearchParams(location.search).get('id'); }
+  /* The id can arrive two ways and both have to work.
+     /notice/6 is a rewrite: the server hands over this file while the
+     address bar still reads /notice/6, so location.search is empty there --
+     the same trick /2 uses on the front page. The old ?id= form stays
+     supported because links to it are already out in the world. */
+  function id(){
+    var q = new URLSearchParams(location.search).get('id');
+    if (q) return q;
+    var m = /^\/notice\/(\d+)/.exec(location.pathname);
+    return m ? m[1] : null;
+  }
 
   function share(){
     if(navigator.share){ navigator.share({title:document.title, url:location.href}).catch(function(){}); }
