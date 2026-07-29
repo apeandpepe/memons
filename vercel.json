@@ -3,6 +3,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/notice/:id",
+      "destination": "/notice-detail"
+    },
+    {
       "source": "/2",
       "destination": "/index"
     },
