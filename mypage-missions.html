@@ -164,15 +164,26 @@
      that could act on it was in the far corner of the header -- a message
      and its answer at opposite ends of the screen. Built from the same
      panel as the countdown so the page has one way of saying "not yet". */
-  /* The artwork carries its own button, so the whole thing is the target
-     rather than a rectangle guessed over the painted one -- that guess
-     drifts the moment the image is resized or replaced. */
-  .cw-art{display:block;width:100%;max-width:560px;margin:8px auto 0;padding:0;border:0;
-    background:none;cursor:pointer;line-height:0}
-  .cw-art img{width:100%;height:auto;display:block;
+  /* Connect gate.
+     Sized by height rather than width: the artwork is square, and capping it
+     by width leaves it small on a wide screen inside a frame padded with
+     dead space. Letting it take the height and find its own width means it
+     fills whatever screen it lands on at its own proportions.
+
+     No close button. Nothing on this page works without a wallet, so an
+     escape route would only lead to an empty table. */
+  .cwm{position:fixed;inset:0;z-index:1500;display:flex;align-items:center;
+    justify-content:center;padding:20px}
+  .cwm-bg{position:absolute;inset:0;background:rgba(0,0,0,.86);backdrop-filter:blur(4px)}
+  .cwm-art{position:relative;display:block;padding:0;border:0;background:none;
+    cursor:pointer;line-height:0;max-width:min(94vw,760px);max-height:calc(100vh - 40px)}
+  .cwm-art img{display:block;width:auto;height:auto;
+    max-width:min(94vw,760px);max-height:calc(100vh - 40px);
     clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
-  .cw-art:hover img{filter:brightness(1.05)}
-  .cw-art:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+  .cwm-art:hover img{filter:brightness(1.05)}
+  .cwm-art:focus-visible{outline:2px solid var(--gold);outline-offset:6px}
+  .cwm .cw{position:relative}
+  @media(max-width:560px){ .cwm{padding:12px} }
 
   .cw{display:flex;justify-content:center;padding:8px 0 4px}
   .cw-card{text-align:center;padding:36px 32px 30px;max-width:400px;width:100%;
@@ -436,6 +447,23 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Connect gate. Outside the mission table, so it covers the page rather
+     than sitting inside the area it is reporting as unavailable. -->
+<div class="cwm" id="cwGate" hidden>
+  <div class="cwm-bg"></div>
+  <button class="cwm-art" id="cwArt" type="button" aria-label="Connect wallet">
+    <img src="images/connect-wallet.png" alt="Connect your wallet to start your mission">
+  </button>
+  <div class="cw" id="cwFallback" hidden><div class="cw-card">
+    <div class="cw-badge"><svg viewBox="0 0 24 24" stroke-linecap="square" stroke-linejoin="miter">
+      <path d="M3 7.5h15v11H3z"/><path d="M3 7.5 16 4v3.5"/><path d="M18 11h3v4h-3z"/>
+    </svg></div>
+    <div class="cw-title">CONNECT WALLET</div>
+    <div class="cw-sub">Your missions and the capsules you earn are tied to your wallet.</div>
+    <button class="cw-btn" id="cwGo">CONNECT WALLET</button>
+  </div></div>
+</div>
+
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
@@ -477,6 +505,7 @@
       var open = !!(row && row.mission_active === true) ||
                  (_opensAt !== null && serverNow() >= _opensAt);
       applyEventState(open);
+      syncGate();
       if (!open) startCountdown();
     }catch(e){ /* on error, leave as-is (fail open only if never set) */ }
   }
@@ -645,39 +674,8 @@
   async function load(){
     if(!MEMONS.connected){
       $('capNum').textContent='—';
-      /* The button hands off to the one in the header rather than calling
-         connect() itself, so the wallet picker, the deep-link handling and
-         the mobile return path stay in a single place. */
-      /* The artwork first, the written panel as the fallback. A banner that
-         fails to load would otherwise leave the page with nothing to press,
-         and connecting is the only thing this screen is for. */
-      $('mtable').innerHTML =
-        '<button class="cw-art" id="cwArt" type="button" aria-label="Connect wallet">'+
-          '<img src="images/connect-wallet.png" alt="Connect your wallet to start your mission">'+
-        '</button>'+
-        '<div class="cw" id="cwFallback" hidden><div class="cw-card">'+
-          '<div class="cw-badge"><svg viewBox="0 0 24 24" stroke-linecap="square" stroke-linejoin="miter">'+
-            '<path d="M3 7.5h15v11H3z"/><path d="M3 7.5 16 4v3.5"/><path d="M18 11h3v4h-3z"/>'+
-          '</svg></div>'+
-          '<div class="cw-title">CONNECT WALLET</div>'+
-          '<div class="cw-sub">Your missions and the capsules you earn are tied to your wallet.</div>'+
-          '<button class="cw-btn" id="cwGo">CONNECT WALLET</button>'+
-        '</div></div>';
-      /* Both routes hand off to the header button rather than calling
-         connect() themselves, so the wallet picker, the deep link and the
-         mobile return path stay in one place. */
-      var hdr=document.getElementById('wbtn');
-      var tap=function(){ if(hdr) hdr.click(); };
-      var art=$('cwArt'), go=$('cwGo'), fb=$('cwFallback');
-      if(go) go.onclick=tap;
-      if(art){
-        art.onclick=tap;
-        var im=art.querySelector('img');
-        var toText=function(){ art.remove(); if(fb) fb.hidden=false; };
-        im.addEventListener('error', toText);
-        // Already failed before this ran: complete with no dimensions.
-        if(im.complete && !im.naturalWidth) toText();
-      } else if(fb){ fb.hidden=false; }
+      $('mtable').innerHTML='<div class="mrow"><div class="mL"><div class="mico">🔒</div><div><div class="mname">Connect your wallet to view missions</div></div></div><div></div><div></div></div>';
+      syncGate();
       return;
     }
     // current contact email (for mission 1 state)
@@ -890,12 +888,41 @@
     }catch(e){ toast('X login error',true); }
   }
 
+  /* ---- connect gate --------------------------------------------------
+     Shown only once the event is open. Before that the countdown has the
+     screen: someone who came to find out when it starts should be able to
+     read that without handing over a wallet first, and that answer is the
+     reason they would come back at all. */
+  function syncGate(){
+    var g=$('cwGate');
+    if(!g) return;
+    var need = !(window.MEMONS && MEMONS.connected) && _eventActive === true;
+    g.hidden = !need;
+    document.body.style.overflow = need ? 'hidden' : '';
+  }
+
+  (function bindGate(){
+    var hdr=document.getElementById('wbtn');
+    var tap=function(){ if(hdr) hdr.click(); };
+    var art=$('cwArt'), go=$('cwGo'), fb=$('cwFallback');
+    if(go) go.onclick=tap;
+    if(art){
+      art.onclick=tap;
+      var im=art.querySelector('img');
+      /* A banner that fails to load would leave the gate with nothing to
+         press, on a screen whose only purpose is to be pressed. */
+      var toText=function(){ art.hidden=true; if(fb) fb.hidden=false; };
+      im.addEventListener('error', toText);
+      if(im.complete && !im.naturalWidth) toText();
+    } else if(fb){ fb.hidden=false; }
+  })();
+
   handleReturnParams();
   checkEvent();
   setInterval(checkEvent, 15000);
   load();
   // retry when wallet connects (mypage-entry.js paints header + chip)
-  var iv=setInterval(function(){ if(MEMONS.connected){ clearInterval(iv); load(); } },800);
+  var iv=setInterval(function(){ syncGate(); if(MEMONS.connected){ clearInterval(iv); load(); } },800);
 })();
 </script>
 <style>
