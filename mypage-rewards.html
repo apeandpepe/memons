@@ -159,17 +159,23 @@
   .pot .pt{font-family:var(--font-head);font-size:11px;letter-spacing:.5px;font-weight:700;line-height:1.25}
   .pot .ph{font-size:11px;color:var(--cc);font-family:var(--font-head);margin-top:3px}
   .pot .pw{font-size:11px;color:var(--muted);margin-top:2px}
-  .pot .prow2{display:flex;border-top:1px solid var(--line)}
-  .pot .prew{flex:1;padding:12px 14px;border-right:1px solid var(--line)}
-  .pot .pst{width:118px;padding:12px 14px}
+  /* Reward above status, not beside it.
+     Side by side the status column held 118px of a 176px card, leaving 58px
+     for a figure that needs 85 -- so a billion pushed "Not Eligible" off the
+     right edge. Stacked, each gets the full width and the longest number in
+     the table still has room. */
+  .pot .prow2{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+  .pot .prew{padding:12px 14px;border-bottom:1px solid var(--line);min-width:0}
+  .pot .pst{padding:12px 14px;min-width:0}
   .pot .prewl,.pot .pstl{font-size:9.5px;color:var(--dim);font-family:var(--font-head);letter-spacing:.5px}
   .pot .prewv{display:flex;align-items:center;gap:8px;margin-top:8px}
   .pot .prewv img{width:34px;height:34px;object-fit:contain;border-radius:50%}
-  .pot .prewv .pv{font-family:var(--font-head);font-weight:800;font-size:15px}
-  /* 1,000,000,000 does not fit where $600 did, and shrinking every reward
-     to suit the longest one would waste the space on the short ones. */
-  .pot .prewv .pv.coin{font-size:13px;letter-spacing:-.2px;line-height:1.15}
-  @media(max-width:900px){ .pot .prewv .pv.coin{font-size:12px} }
+  .pot .prewv{min-width:0}
+  .pot .prewv .pv{font-family:var(--font-head);font-weight:800;font-size:15px;min-width:0}
+  /* A billion is three times the width of $600 was. It gets its own size
+     rather than every reward being shrunk to suit the longest one. */
+  .pot .prewv .pv.coin{font-size:19px;letter-spacing:.3px;line-height:1.1;
+    white-space:nowrap;cursor:help}
   .pot .prewv .pv small{display:block;font-size:10px;color:var(--muted);font-weight:600}
   .pot .pstv{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;font-family:var(--font-head)}
   .pot .pstv i{font-size:15px}
@@ -323,9 +329,13 @@
        price nobody controls, and the notice does not make it. */
     {r:'common', title:'SEASON 1 CAPSULE', holder:'COMMON Holder', winners:'700 Winners', rewardText:'Season1 Capsule x1', coin:false},
     {r:'rare',   title:'SEASON 1 CAPSULE', holder:'RARE Holder',   winners:'250 Winners', rewardText:'Season1 Capsule x3', coin:false},
-    {r:'epic',   title:'APEPE REWARD', holder:'EPIC Holder',      winners:'50 Winners', rewardText:'10,000,000',    coin:true},
-    {r:'legendary',title:'APEPE REWARD', holder:'LEGENDARY Holder',winners:'4 Winners', rewardText:'500,000,000',   coin:true},
-    {r:'mythic', title:'APEPE REWARD', holder:'MYTHIC Holder',    winners:'1 Winner',   rewardText:'1,000,000,000', coin:true}
+    /* Short on the card, exact on hover. A card is scanned, not read: 500M
+       and 1B are told apart at a glance where 500,000,000 and 1,000,000,000
+       have to be counted. The notice keeps the full figures, which is where
+       someone goes to check them. */
+    {r:'epic',   title:'APEPE REWARD', holder:'EPIC Holder',      winners:'50 Winners', rewardText:'10M', rewardFull:'10,000,000 APEPE',    coin:true},
+    {r:'legendary',title:'APEPE REWARD', holder:'LEGENDARY Holder',winners:'4 Winners', rewardText:'500M',rewardFull:'500,000,000 APEPE',   coin:true},
+    {r:'mythic', title:'APEPE REWARD', holder:'MYTHIC Holder',    winners:'1 Winner',   rewardText:'1B',  rewardFull:'1,000,000,000 APEPE', coin:true}
   ];
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
@@ -452,7 +462,8 @@
     $('pgrid').innerHTML=POT.map(function(p){
       var img = p.coin ? 'images/mypage/event/apepe-'+p.r+'.webp' : 'images/mypage/event/reward-'+p.r+'.webp';
       var rewInner = p.coin
-        ? '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv coin">'+p.rewardText+'<small>APEPE</small></div>'
+        ? '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv coin"'+
+          (p.rewardFull ? ' title="'+p.rewardFull+'"' : '')+'>'+p.rewardText+'<small>APEPE</small></div>'
         : '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv" style="font-size:12px">'+p.rewardText+'</div>';
       var hi = (p.r==='epic'||p.r==='legendary'||p.r==='mythic') ? ' hi' : '';
       var eligible = d[p.r] > 0;
