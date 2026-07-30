@@ -793,11 +793,22 @@ async function pullServer(){ const r = await MEMONS.pull(); const c=mapCard(r.ca
    useless for a screenshot, because the card that lands is not a real one.
    This names an actual card instead and runs the same reveal it would get.
 
-       ?lab&card=legendary_mrh1jqh8pqo
+       ?lab&card=legendary_mrh1n4xztgt&key=TESTMEMONS
 
    Reads the card from the public list and never touches the wallet: no pull
-   is spent, nothing is granted, and the same recording can be made again. */
-var DEMO_CARD = new URLSearchParams(location.search).get('card');
+   is spent, nothing is granted, and the same recording can be made again.
+
+   The key is what keeps it ours. Without it the address alone would let
+   anyone play a legendary reveal and screenshot it as their own pull -- no
+   card is granted, but the picture is the same picture. It is not a secret
+   worth defending, only enough that the URL cannot be guessed from seeing
+   one shared. Change it here when it has been passed around too widely. */
+var DEMO_KEY = 'TESTMEMONS';
+var DEMO_CARD = (function(){
+  var q = new URLSearchParams(location.search);
+  if (q.get('key') !== DEMO_KEY) return null;
+  return q.get('card');
+})();
 
 async function pullDemo(){
   // Written here rather than borrowed from gacha-client, which keeps its
