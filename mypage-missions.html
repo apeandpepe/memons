@@ -274,6 +274,13 @@
      A button and no text field: the status column is 220px on a desktop and
      narrower than that on a phone, which left the field 24px wide -- a box
      showing four characters of a URL nobody needs to read. */
+  /* Stacked, with a gap, when both are showing. */
+  .act .btn + .btn{margin-top:8px}
+  /* The copy button steps back while a claim is waiting -- both are useful,
+     only one is the thing to do next. */
+  .act .btn.go.sub{background:transparent;border-color:var(--line2);color:var(--muted)}
+  .act .btn.go.sub:hover{color:var(--text);border-color:var(--accent2)}
+
   .refhint{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
   .refhint b{color:var(--gold);font-weight:700}
 
@@ -834,7 +841,9 @@
         A.appendChild(btn);
       }
 
-      if(m.max_claims>1){
+      /* The referral row prints its own counts above the button, so the
+         shared tally underneath would be the same figure twice. */
+      if(m.max_claims>1 && m.key!=='referral'){
         var p=document.createElement('div'); p.className='prog';
         p.textContent = unlimited(m) ? (m.claimed+' claimed') : (m.claimed+' / '+m.max_claims);
         A.appendChild(p);
@@ -894,32 +903,38 @@
       slot.innerHTML='';
       var owed = joined - (r ? (r.referral_claims||0) : 0);
 
+      if(!(r && r.code)){
+        var gb=document.createElement('button');
+        gb.className='btn go'; gb.textContent='GET MY LINK';
+        gb.onclick=function(){ _ref=null; A.innerHTML=''; buildReferral(A,m,d); };
+        slot.appendChild(gb);
+        return;
+      }
+
+      var url=location.origin+'/r/'+r.code;
+
+      /* Claim first when there is something to claim, but never instead of
+         the link. Swapping one button for the other meant that the moment
+         two friends joined, the way to invite a third disappeared -- exactly
+         when it was working. */
       if(owed > 0){
         var cb=document.createElement('button');
         cb.className='btn claim';
         cb.textContent='CLAIM +'+(owed*(m.reward||5));
         cb.onclick=function(){ claim(m,cb); };
         slot.appendChild(cb);
-        return;
       }
 
-      if(r && r.code){
-        var url=location.origin+'/r/'+r.code;
-        var cp=document.createElement('button');
-        cp.className='btn go'; cp.textContent='COPY MY LINK';
-        cp.onclick=function(){ copyLink(url, cp); };
-        slot.appendChild(cp);
-        var h2=document.createElement('div');
-        h2.className='refhint';
-        h2.innerHTML='They count once they connect <b>\uD835\uDD4F</b>.';
-        slot.appendChild(h2);
-        return;
-      }
+      var cp=document.createElement('button');
+      cp.className='btn go' + (owed > 0 ? ' sub' : '');
+      cp.textContent='COPY MY LINK';
+      cp.onclick=function(){ copyLink(url, cp); };
+      slot.appendChild(cp);
 
-      var gb=document.createElement('button');
-      gb.className='btn go'; gb.textContent='GET MY LINK';
-      gb.onclick=function(){ _ref=null; A.innerHTML=''; buildReferral(A,m,d); };
-      slot.appendChild(gb);
+      var h2=document.createElement('div');
+      h2.className='refhint';
+      h2.innerHTML='They count once they connect <b>\uD835\uDD4F</b>.';
+      slot.appendChild(h2);
     });
   }
 
