@@ -252,6 +252,35 @@
   .mico.i-x{color:#e8e6e0}
   .mico.i-retweet,.mico.i-share,.mico.i-pfp{color:#5aa9ff}
   .mico.i-referral{color:#b884ff}
+
+  /* Referral row.
+     The count is the part that does the work. A button that quietly changes
+     from one label to another is not noticed by someone who visits a page
+     once; two numbers that went up since last time are. Sized to be read
+     across the row rather than squinted at, and stacked on a phone where
+     the status column is narrow. */
+  .refstat{display:flex;align-items:baseline;justify-content:center;gap:8px;
+    margin-bottom:9px;font-family:var(--font-head);white-space:nowrap}
+  .refstat b{font-size:20px;font-weight:800;color:var(--gold);line-height:1;
+    font-variant-numeric:tabular-nums}
+  .refstat span{font-size:11.5px;letter-spacing:1px;color:var(--muted);font-weight:600}
+  .refstat i{font-style:normal;color:var(--dim);font-size:12px;margin:0 2px}
+  .refstat.zero b{color:var(--muted)}
+
+  /* The link, copied where it is asked for. Sending someone to another page
+     to fetch a string and bring it back is three screens for one clipboard
+     write.
+
+     A button and no text field: the status column is 220px on a desktop and
+     narrower than that on a phone, which left the field 24px wide -- a box
+     showing four characters of a URL nobody needs to read. */
+  .refhint{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+  .refhint b{color:var(--gold);font-weight:700}
+
+  @media(max-width:760px){
+    .refstat{justify-content:flex-start;flex-wrap:wrap;white-space:normal}
+    .refstat b{font-size:18px}
+  }
   .mico.i-follow{color:#1d9bf0}
   .mrow .mname{font-family:var(--font-head);font-size:15.5px;font-weight:600}
   /* email capture (mission 1) */
@@ -630,7 +659,10 @@
     retweet:'Retweet the official event post on X',
     share:'Share your acquired card on X',
     pfp:'Set your card as your X profile picture',
-    referral:'Invite friends and have them join',
+    /* Both halves of the rule, in the row that is asking for it. Neither
+       was written anywhere before: people were pressing a button that could
+       not work and being told only that it had not worked. */
+    referral:'Connect \uD835\uDD4F to get your link \u00b7 friends count once they connect \uD835\uDD4F too',
   };
   // external action links (follow/retweet/share/pfp open X)
   //
@@ -652,6 +684,17 @@
   /* Which missions the user has already been sent off to X for. Kept per
      wallet so switching accounts does not inherit somebody else's progress,
      and given a lifetime so a visit from days ago does not linger. */
+  /* A referral cap set past any number a person could reach is not a cap;
+     printing it ("up to 2147483647 times", "0 / 2147483647") tells the
+     reader nothing and reads like a bug. Anything this large is shown as
+     unlimited, and the progress line drops the denominator. */
+  var UNLIMITED_AT = 1000000;
+  function unlimited(m){ return Number(m.max_claims) >= UNLIMITED_AT; }
+  function limitText(m){
+    if (unlimited(m)) return ' \u00b7 unlimited';
+    return m.max_claims > 1 ? (' \u00b7 up to ' + m.max_claims + ' times') : '';
+  }
+
   var VISIT_KEY='memons_visited_v1', VISIT_TTL=7*24*60*60*1000;
   function visitStore(){
     try{
@@ -739,7 +782,7 @@
       var ico=ICON[m.key]||{cls:'',ic:'ti-star'};
       L.innerHTML='<div class="mico '+ico.cls+'"><i class="ti '+ico.ic+'"></i></div>'+
         '<div><div class="mname">'+m.label+'</div><div class="mdesc">'+(DESC[m.key]||'')+
-        (m.max_claims>1?' · up to '+m.max_claims+' times':'')+'</div></div>';
+        (limitText(m))+'</div></div>';
       row.appendChild(L);
 
       // middle: reward (capsule image + number)
@@ -781,15 +824,19 @@
         // to reach it again.
         if(m.claimed>0 || visited(m.key)) showClaim(A,m);
       }
+      else if(m.key==='referral'){
+        buildReferral(A, m, d);
+      }
       else{
-        // pure auto missions (wallet / referral): claim directly
+        // pure auto missions: claim directly
         btn.className='btn claim'; btn.textContent='CLAIM';
         btn.onclick=function(){ claim(m,btn); };
         A.appendChild(btn);
       }
 
       if(m.max_claims>1){
-        var p=document.createElement('div'); p.className='prog'; p.textContent=m.claimed+' / '+m.max_claims;
+        var p=document.createElement('div'); p.className='prog';
+        p.textContent = unlimited(m) ? (m.claimed+' claimed') : (m.claimed+' / '+m.max_claims);
         A.appendChild(p);
       }
       row.appendChild(A);
@@ -797,6 +844,116 @@
     });
     // mission 1 gate: X linked but no contact email yet -> force the email modal
     if(d.x_connected && !currentEmail) openEmailModal(); else closeEmailModal();
+  }
+
+  /* The referral row.
+     Three states, and the row says which one it is in rather than offering
+     the same button in all of them:
+
+       step 1 not finished   the link cannot exist yet
+       link, nobody joined   copy it
+       friends joined        claim
+
+     The two counts sit above the button in every state. Someone who sent
+     the link out comes back to find out whether it worked, and a button
+     that quietly changed its label is not an answer to that. */
+  var _ref = null, _refLoading = false;
+
+  function buildReferral(A, m, d){
+    var stat=document.createElement('div');
+    stat.className='refstat zero';
+    stat.innerHTML='<b>&mdash;</b><span>INVITED</span><i>&middot;</i><b>&mdash;</b><span>JOINED</span>';
+    A.appendChild(stat);
+
+    var slot=document.createElement('div');
+    A.appendChild(slot);
+
+    /* Step 1 first. Asking the server for a code before it can exist would
+       come back with an error that means nothing to the reader -- and step 1
+       is not just the X link, it is only finished once the email is in. */
+    if(!(d.x_connected && currentEmail)){
+      var b=document.createElement('button');
+      b.className='btn go'; b.textContent='FINISH STEP 1';
+      b.onclick=function(){ if(!d.x_connected) connectX(); else openEmailModal(); };
+      slot.appendChild(b);
+      var h=document.createElement('div');
+      h.className='refhint';
+      h.innerHTML='Finish <b>step 1</b> to get your invite link.';
+      slot.appendChild(h);
+      return;
+    }
+
+    loadReferral(function(r){
+      var invited = r ? (r.total_referees||0) : 0;
+      var joined  = r ? (r.valid_ref||0) : 0;
+      stat.className = 'refstat' + (joined ? '' : ' zero');
+      stat.innerHTML =
+        '<b>'+invited+'</b><span>INVITED</span><i>&middot;</i>'+
+        '<b>'+joined+'</b><span>JOINED</span>';
+
+      slot.innerHTML='';
+      var owed = joined - (r ? (r.referral_claims||0) : 0);
+
+      if(owed > 0){
+        var cb=document.createElement('button');
+        cb.className='btn claim';
+        cb.textContent='CLAIM +'+(owed*(m.reward||5));
+        cb.onclick=function(){ claim(m,cb); };
+        slot.appendChild(cb);
+        return;
+      }
+
+      if(r && r.code){
+        var url=location.origin+'/r/'+r.code;
+        var cp=document.createElement('button');
+        cp.className='btn go'; cp.textContent='COPY MY LINK';
+        cp.onclick=function(){ copyLink(url, cp); };
+        slot.appendChild(cp);
+        var h2=document.createElement('div');
+        h2.className='refhint';
+        h2.innerHTML='They count once they connect <b>\uD835\uDD4F</b>.';
+        slot.appendChild(h2);
+        return;
+      }
+
+      var gb=document.createElement('button');
+      gb.className='btn go'; gb.textContent='GET MY LINK';
+      gb.onclick=function(){ _ref=null; A.innerHTML=''; buildReferral(A,m,d); };
+      slot.appendChild(gb);
+    });
+  }
+
+  /* Asked for once and held: three states read the same numbers, and
+     without this each render would fetch them again. */
+  function loadReferral(cb){
+    if(_ref){ cb(_ref); return; }
+    if(_refLoading){ setTimeout(function(){ loadReferral(cb); }, 250); return; }
+    _refLoading = true;
+    MEMONS.authFetch('/referral', { action:'issue' })
+      .then(function(r){ _ref = r || {}; cb(_ref); })
+      .catch(function(){ cb(null); })
+      .then(function(){ _refLoading = false; });
+  }
+
+  function copyLink(url, btn){
+    var was = btn.textContent;
+    var done = function(ok){
+      btn.textContent = ok ? 'COPIED' : 'FAILED';
+      setTimeout(function(){ btn.textContent = was; }, 1400);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ done(true); },
+                                             function(){ done(false); });
+      return;
+    }
+    // Older mobile browsers, and any page not served over https.
+    try{
+      var t=document.createElement('textarea');
+      t.value=url; t.style.position='fixed'; t.style.opacity='0';
+      document.body.appendChild(t); t.select();
+      done(document.execCommand('copy'));
+      t.remove();
+    }catch(e){ done(false); }
   }
 
   function showClaim(A,m){
@@ -842,6 +999,8 @@
   }
 
   async function claim(m,btn,proof){
+    // The held referral figures are stale the moment one is claimed.
+    if(m.key==='referral') _ref = null;
     btn.disabled=true; var old=btn.textContent; btn.textContent='...';
     try{
       var body={key:m.key};
@@ -854,7 +1013,12 @@
       var msg=e.message||''+e;
       if(msg.includes('MISSION_MAXED')) toast('Already completed',true);
       else if(msg.includes('ACCOUNT_CAP_REACHED')) toast('Capsule limit reached — referrals still count toward the leaderboard',true);
-      else if(msg.includes('NO_VALID_REFERRALS')) toast('Need more valid referrals first',true);
+      else if(msg.includes('NO_VALID_REFERRALS')){
+        toast('No referrals to claim yet — invite a friend first',true);
+        // Sent where the code is, rather than left on a button that cannot
+        // work until somebody has used it.
+        setTimeout(function(){ location.href='mypage-referral'; }, 1400);
+      }
       else if(msg.includes('EVENT_CLOSED')) toast('The event is not open yet',true);
       else if(msg.includes('EVENT_CAP_REACHED')) toast('All event capsules have been issued',true);
       else if(msg.includes('PROOF_ALREADY_USED')) toast('That post has already been used',true);
