@@ -813,6 +813,14 @@
         }
         A.appendChild(btn);
       }
+      /* Referral is checked before done, and that order is the point.
+         Every other mission finishes and has nothing left to offer; this one
+         keeps its invite link after the fourth reward, because invites go on
+         counting on the leaderboard. Left below the done check it rendered
+         as COMPLETED and the link disappeared with it. */
+      else if(m.key==='referral'){
+        buildReferral(A, m, d);
+      }
       else if(m.done){
         btn.className='btn done'; btn.textContent='✓ COMPLETED'; btn.disabled=true; A.appendChild(btn);
       }
@@ -830,9 +838,6 @@
         // coming back from X made the claim button vanish and there was no way
         // to reach it again.
         if(m.claimed>0 || visited(m.key)) showClaim(A,m);
-      }
-      else if(m.key==='referral'){
-        buildReferral(A, m, d);
       }
       else{
         // pure auto missions: claim directly
