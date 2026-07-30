@@ -904,10 +904,17 @@
       var owed = joined - (r ? (r.referral_claims||0) : 0);
 
       if(!(r && r.code)){
+        /* loadReferral already tried to mint one, so reaching here means it
+           was refused -- step 1 unfinished, or the server said no. Retrying
+           is the only thing left to offer, and it costs one request. */
         var gb=document.createElement('button');
         gb.className='btn go'; gb.textContent='GET MY LINK';
         gb.onclick=function(){ _ref=null; A.innerHTML=''; buildReferral(A,m,d); };
         slot.appendChild(gb);
+        var h3=document.createElement('div');
+        h3.className='refhint';
+        h3.innerHTML='Finish <b>step 1</b> first if this does not work.';
+        slot.appendChild(h3);
         return;
       }
 
@@ -938,16 +945,35 @@
     });
   }
 
-  /* Asked for once and held: three states read the same numbers, and
-     without this each render would fetch them again. */
+  /* Two calls, because the endpoint splits the job:
+       GET  /referral                  the code and the counts
+       POST /referral {action:'issue'} makes a code, returns only that
+
+     Asking issue for the numbers was the mistake -- it answers with { code }
+     and nothing else, so every count read as zero and the row never left
+     COPY MY LINK however many friends had joined.
+
+     Read first. Only mint a code when the read says there isn't one, and
+     then read again so the counts come back with it. Held afterwards so the
+     three states do not each fetch. */
   function loadReferral(cb){
     if(_ref){ cb(_ref); return; }
     if(_refLoading){ setTimeout(function(){ loadReferral(cb); }, 250); return; }
     _refLoading = true;
-    MEMONS.authFetch('/referral', { action:'issue' })
-      .then(function(r){ _ref = r || {}; cb(_ref); })
-      .catch(function(){ cb(null); })
-      .then(function(){ _refLoading = false; });
+
+    var done = function(r){ _ref = r || {}; _refLoading = false; cb(_ref); };
+    var fail = function(){ _refLoading = false; cb(null); };
+
+    MEMONS.authFetch('/referral')
+      .then(function(r){
+        if (r && r.code) { done(r); return; }
+        // No code yet. Mint one, then read again for the counts.
+        return MEMONS.authFetch('/referral', { action:'issue' })
+          .then(function(){ return MEMONS.authFetch('/referral'); })
+          .then(done)
+          .catch(function(){ done(r || {}); });
+      })
+      .catch(fail);
   }
 
   function copyLink(url, btn){
