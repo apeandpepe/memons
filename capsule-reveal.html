@@ -785,10 +785,33 @@ async function ensureConnected(){
 }
 async function pullServer(){ const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c; }
 
+/* ---- pulls remaining ---- */
+async function refreshPulls(){
+  const el=document.getElementById('pullsLeft');
+  const box=document.getElementById('pullsbox');
+  const chg=document.getElementById('chargeBtn');
+  if(!el) return;
+  if(!window.MEMONS || !MEMONS.connected){
+    el.textContent='–';
+    if(chg) chg.textContent='CONNECT WALLET';
+    if(chg) chg.onclick = async function(){ try{ await MEMONS.connect(); await refreshPulls(); }catch(e){ alert((e&&e.message)||'Wallet connection failed'); } };
+    return;
+  }
+  if(chg && chg.textContent==='CONNECT WALLET'){
+    // the button keeps its normal look; the actual payment is blocked by
+    // memons-pay.js and again by the server, so nothing can be charged
+    chg.textContent='＋ CHARGE'; chg.onclick=null;
+    if(window.__bindCharge) window.__bindCharge();
+  }
+  try{ const st=await MEMONS.state(); el.textContent = (st && st.pulls_remaining!=null) ? st.pulls_remaining : '–'; }
+  catch(e){ el.textContent='–'; }
+}
+window.refreshPulls=refreshPulls;
+document.addEventListener('DOMContentLoaded', ()=>{ refreshPulls(); });
+
 let busy=false;
 async function single(){
   if(busy) return;
-
   if(USE_SERVER){
     if(!await ensureConnected()) return;
     busy=true; closeResult();
