@@ -841,9 +841,10 @@
         A.appendChild(btn);
       }
 
-      /* The referral row prints its own counts above the button, so the
-         shared tally underneath would be the same figure twice. */
-      if(m.max_claims>1 && m.key!=='referral'){
+      /* The referral row prints invited/joined above the button; the tally
+         underneath is a different figure -- rewards claimed out of four --
+         so both belong. Hidden only when the cap is set past counting. */
+      if(m.max_claims>1 && !(m.key==='referral' && unlimited(m))){
         var p=document.createElement('div'); p.className='prog';
         p.textContent = unlimited(m) ? (m.claimed+' claimed') : (m.claimed+' / '+m.max_claims);
         A.appendChild(p);
@@ -901,7 +902,15 @@
         '<b>'+joined+'</b><span>JOINED</span>';
 
       slot.innerHTML='';
-      var owed = joined - (r ? (r.referral_claims||0) : 0);
+
+      /* Two limits, and the row has to respect the tighter one.
+         How many friends have joined and not yet been claimed for, and how
+         many claims the mission has left. Reading only the first is what let
+         an account with room in its capsule budget keep collecting past the
+         fourth. */
+      var claimed = r ? (r.referral_claims||0) : 0;
+      var left    = Math.max(0, (m.max_claims||0) - claimed);
+      var owed    = Math.max(0, Math.min(joined - claimed, left));
 
       if(!(r && r.code)){
         /* loadReferral already tried to mint one, so reaching here means it
@@ -941,6 +950,15 @@
           w.innerHTML='<b>'+owed+'</b> rewards waiting \u00b7 one per tap';
           slot.appendChild(w);
         }
+      }
+      /* Nothing left to claim, but friends are still joining: say why the
+         button went, so it does not read as something breaking. */
+      else if(left === 0 && (m.max_claims||0) > 0){
+        var mx=document.createElement('div');
+        mx.className='refhint';
+        mx.innerHTML='All <b>'+m.max_claims+'</b> referral rewards claimed \u00b7 '+
+                     'invites still count on the leaderboard';
+        slot.appendChild(mx);
       }
 
       var cp=document.createElement('button');
