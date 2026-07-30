@@ -282,6 +282,47 @@
   .act .btn.go.sub:hover{color:var(--text);border-color:var(--accent2)}
 
   .refhint{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+
+  /* Card picker.
+     Sharing used to post the site address and a line of text, which X shows
+     as a bare link -- the card the post is about was nowhere in it. Posting
+     the card's own address gives the preview its picture, and which card
+     that is should be the sharer's choice: the one they are proud of is not
+     always the rarest one. */
+  .pick{position:fixed;inset:0;z-index:1600;display:flex;align-items:center;
+    justify-content:center;padding:20px;background:rgba(0,0,0,.86)}
+  .pick-box{width:100%;max-width:620px;max-height:calc(100vh - 40px);display:flex;
+    flex-direction:column;background:linear-gradient(180deg,#0e0e11,#08080a 62%);
+    border:1px solid rgba(233,184,74,.28);
+    clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px)}
+  .pick-h{padding:22px 24px 14px;text-align:center;flex:0 0 auto}
+  .pick-h b{display:block;font-family:var(--font-head);font-weight:700;font-size:21px;
+    letter-spacing:1.4px;color:var(--gold);line-height:1}
+  .pick-h span{display:block;color:var(--muted);font-size:12.5px;margin-top:9px;line-height:1.6}
+  .pick-grid{flex:1 1 auto;min-height:0;overflow-y:auto;padding:4px 20px 20px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:12px}
+  .pick-c{border:1px solid var(--line2);background:#0b0b0d;padding:8px;cursor:pointer;
+    text-align:center;border-radius:10px}
+  .pick-c:hover{border-color:var(--gold)}
+  .pick-c img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;border-radius:6px;
+    background:#141418}
+  .pick-c .n{font-size:11.5px;color:var(--text);margin-top:7px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .pick-c .r{font-family:var(--font-head);font-size:9px;letter-spacing:1.6px;margin-top:3px}
+  .pick-x{flex:0 0 auto;padding:12px;border:0;background:none;color:var(--muted);
+    font:inherit;font-size:12.5px;cursor:pointer;border-top:1px solid rgba(255,255,255,.06)}
+  .pick-x:hover{color:var(--text)}
+  .pick-empty{padding:34px 24px 30px;text-align:center}
+  .pick-empty p{color:var(--muted);font-size:13px;line-height:1.7;margin:12px 0 0}
+  .pick-go{display:inline-block;margin-top:20px;font-family:var(--font-head);font-weight:700;
+    font-size:12.5px;letter-spacing:1.6px;color:#100d05;padding:14px 30px;text-decoration:none;
+    background:linear-gradient(140deg,#FCE39A,#F1C14C);
+    clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)}
+  @media(max-width:560px){
+    .pick-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;padding:4px 14px 16px}
+    .pick-h{padding:18px 16px 12px}
+    .pick-h b{font-size:18px}
+  }
   .refhint b{color:var(--gold);font-weight:700}
 
   @media(max-width:760px){
@@ -828,6 +869,10 @@
         // external action first (go), then claim
         btn.className='btn go'; btn.textContent='GO →';
         btn.onclick=function(){
+          /* Sharing needs a card before it needs X. Everything else here
+             opens a link and comes straight back; this one asks which card
+             is going in the post, because that is what the post is for. */
+          if(m.key==='share'){ pickCardThenShare(A,m); return; }
           markVisited(m.key);
           window.open(LINK[m.key],'_blank');
           setTimeout(function(){ showClaim(A,m); },400);
@@ -1029,6 +1074,106 @@
       done(document.execCommand('copy'));
       t.remove();
     }catch(e){ done(false); }
+  }
+
+  /* ---- share a card -----------------------------------------------------
+     The old link posted SHARE_TEXT and the site address, which X renders as
+     a line of text and a bare link. Posting the card's own address instead
+     gives the post its picture -- the same preview the reveal screen's share
+     button produces. */
+  var RARITY_COLOR = { common:'#cfccc4', rare:'#5b9bd5', epic:'#c468d8',
+                       legendary:'#E9B84A', mythic:'#e0556a', special:'#E9B84A' };
+
+  /* Card names and image paths come back from the server and go straight
+     into markup here, so they are escaped on the way in. */
+  function esc(t){
+    return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  async function pickCardThenShare(A, m){
+    var cards = [];
+    try{
+      var st = await MEMONS.state();
+      var owned = (st && st.owned) || [];
+      // One entry per card: holding three of the same is still one thing to
+      // post about, and duplicates would only pad the grid.
+      var seen = {};
+      owned.forEach(function(o){
+        var id = o.card_id; if(!id || seen[id]) return;
+        seen[id] = true;
+        var c = o.cards || {};
+        cards.push({ id:id, name:c.name || id,
+                     rarity:(c.rarity||'common').toLowerCase(),
+                     image:c.image_url || '',
+                     at:o.pulled_at || '' });
+      });
+      // Newest first: the card someone just opened is the one they came to
+      // share, and it should not be at the bottom of the grid.
+      cards.sort(function(a,b){ return (b.at||'').localeCompare(a.at||''); });
+    }catch(e){ cards = []; }
+
+    showPicker(cards, function(card){
+      markVisited(m.key);
+      var url  = location.origin + '/c/' + card.id;
+      var text = 'I just pulled a ' + card.rarity.toUpperCase() +
+                 ' card from MEMONS \uD83D\uDD25';
+      window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                  '&url=' + encodeURIComponent(url) +
+                  '&hashtags=MEMONS,APEPE', '_blank');
+      setTimeout(function(){ showClaim(A,m); }, 400);
+    });
+  }
+
+  function showPicker(cards, onPick){
+    var old = document.getElementById('cardPick');
+    if(old) old.remove();
+
+    var wrap = document.createElement('div');
+    wrap.id = 'cardPick'; wrap.className = 'pick';
+
+    var box = document.createElement('div');
+    box.className = 'pick-box';
+
+    if(!cards.length){
+      /* No card, no post. Said plainly, with the way to fix it, rather than
+         opening X for a tweet about a card that does not exist. */
+      box.innerHTML =
+        '<div class="pick-empty">' +
+          '<div class="pick-h" style="padding:0"><b>NO CARDS YET</b></div>' +
+          '<p>Open a capsule first, then come back<br>and share what you pulled.</p>' +
+          '<a class="pick-go" href="open-capsule">OPEN A CAPSULE</a>' +
+        '</div>' +
+        '<button class="pick-x">Close</button>';
+    } else {
+      box.innerHTML =
+        '<div class="pick-h"><b>CHOOSE A CARD</b>' +
+          '<span>The card you pick is the one shown in your post.</span></div>' +
+        '<div class="pick-grid"></div>' +
+        '<button class="pick-x">Cancel</button>';
+      var grid = box.querySelector('.pick-grid');
+      cards.forEach(function(c){
+        var col = RARITY_COLOR[c.rarity] || '#cfccc4';
+        var el = document.createElement('div');
+        el.className = 'pick-c';
+        el.style.borderColor = col + '55';
+        el.innerHTML =
+          '<img src="' + esc(c.image) + '" alt="" loading="lazy" ' +
+            'onerror="this.style.visibility=\'hidden\'">' +
+          '<div class="n">' + esc(c.name) + '</div>' +
+          '<div class="r" style="color:' + col + '">' + esc(c.rarity.toUpperCase()) + '</div>';
+        el.onclick = function(){ wrap.remove(); onPick(c); };
+        grid.appendChild(el);
+      });
+    }
+
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    var close = function(){ wrap.remove(); };
+    wrap.addEventListener('click', function(e){ if(e.target === wrap) close(); });
+    box.querySelector('.pick-x').onclick = close;
+    box.querySelectorAll('.pick-go').forEach(function(a){ a.onclick = close; });
   }
 
   function showClaim(A,m){
