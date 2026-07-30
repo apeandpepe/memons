@@ -30,6 +30,20 @@
   /* Above anything this site puts on screen, with room to spare. */
   var WC_Z = 2147483000;
 
+  /* WalletConnect's registry ids. The modal filters its list by the chains
+     asked for, and MetaMask was falling out of that filter -- not buried in
+     the ordering but absent, searching for it found nothing. Naming it here
+     pins it to the front of the list whatever the filter decides, which is
+     the only way to be sure the wallet most people have is the one they see
+     first. The others are the ones that actually get used on these chains. */
+  var WALLET_IDS = {
+    metamask: "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96",
+    trust:    "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0",
+    okx:      "971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709",
+    bitget:   "38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662",
+    coinbase: "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa",
+  };
+
   /* The theme variable covers the modal's own layers. This covers the custom
      element that hosts them, which takes its stacking from the page and not
      from the variable -- and it names the tags used by both the version in
@@ -168,7 +182,17 @@
          most people. Lifted above everything we draw. */
       qrModalOptions: {
         themeMode: "dark",
-        themeVariables: { "--wcm-z-index": String(WC_Z) }
+        themeVariables: { "--wcm-z-index": String(WC_Z) },
+        // MetaMask first, then the wallets that turn up on Polygon and BSC.
+        featuredWalletIds: [
+          WALLET_IDS.metamask, WALLET_IDS.trust, WALLET_IDS.okx,
+          WALLET_IDS.bitget,   WALLET_IDS.coinbase
+        ],
+        // Somewhere to go for anyone who has no wallet at all. Without it
+        // the modal is a QR code for an app they have not installed.
+        explorerRecommendedWalletIds: [
+          WALLET_IDS.metamask, WALLET_IDS.trust, WALLET_IDS.okx
+        ]
       },
       metadata: {
         name: "MEMONS",
