@@ -38,8 +38,13 @@ export default function handler(req, res) {
   const rarity = RARITIES.find((r) => id.startsWith(r + "_")) || "";
 
   // The raw card is portrait; X crops it. /api/og composes it onto a
-  // 1200x630 canvas so the whole card survives the crop.
+  // landscape canvas so the whole card survives the crop.
   const image = `${origin}/api/og?id=${encodeURIComponent(id)}`;
+
+  // Must match what /api/og actually draws. Declaring 1200x630 for an
+  // 1800x942 image asks the crawler to trust a figure it can check.
+  const OG_W = 1800;
+  const OG_H = 942;
 
   const RARITY = rarity ? rarity.toUpperCase() : "MEMONS";
   const title = rarity ? `${RARITY} card — ${SITE}` : `${SITE} Capsule`;
@@ -50,7 +55,7 @@ export default function handler(req, res) {
   const target = `${origin}${CAPSULE_PATH}`;
 
   res.setHeader("content-type", "text/html; charset=utf-8");
-  res.setHeader("cache-control", "public, max-age=600, s-maxage=3600");
+  res.setHeader("cache-control", "public, max-age=60, s-maxage=60",);
 
   res.status(200).send(`<!DOCTYPE html>
 <html lang="en">
@@ -64,8 +69,8 @@ export default function handler(req, res) {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${esc(image)}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:image:width" content="${OG_W}">
+<meta property="og:image:height" content="${OG_H}">
 <meta property="og:image:alt" content="${esc(RARITY)} MEMONS card">
 <meta property="og:url" content="${esc(origin)}/c/${esc(id)}">
 
@@ -74,13 +79,22 @@ export default function handler(req, res) {
 <meta name="twitter:description" content="${esc(desc)}">
 <meta name="twitter:image" content="${esc(image)}">
 
-<!-- humans go straight to the capsule; crawlers stop at the tags above -->
-<meta http-equiv="refresh" content="0; url=${esc(target)}">
-<link rel="canonical" href="${esc(target)}">
+<!-- Canonical points at this page, not at the capsule.
+     It used to name the capsule page, and a crawler that is told "the real
+     address of this document is over there" goes over there and reads that
+     document's tags instead. Everything above was being discarded and the
+     preview fell back to whatever the capsule page says about itself.
+
+     The redirect moved for the same reason: a meta refresh is markup, and
+     crawlers follow it. A script is not -- they do not run it, so they stay
+     here with the tags, while a person is moved on as before. The link in
+     the body is the fallback for anyone with scripting off. -->
+<link rel="canonical" href="${esc(origin)}/c/${esc(id)}">
 </head>
 <body style="margin:0;background:#050505;color:#e8e6e0;font-family:system-ui,sans-serif;
              display:flex;align-items:center;justify-content:center;height:100vh">
   <a href="${esc(target)}" style="color:#E9B84A;text-decoration:none">Open a MEMONS capsule →</a>
+  <script>location.replace(${JSON.stringify(target)});</script>
 </body>
 </html>`);
 }
