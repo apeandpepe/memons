@@ -305,6 +305,75 @@
       });
     }
 
+    /* Anything at all in the browser that could sign. Kept separate from
+       MEMONS_WC.list(), which only reports wallets it recognises -- a rarer
+       extension would still be a wallet, and sending its owner to install
+       MetaMask would be wrong. */
+    function hasAnyInjected() {
+      try {
+        var e = window.ethereum;
+        if (!e) return false;
+        if (e.providers && e.providers.length) return true;
+        return true;
+      } catch (err) { return false; }
+    }
+
+    /* Told before they are sent, not after they arrive.
+       Opening metamask.io straight from a click drops the visitor on an
+       unfamiliar site with no idea why -- and once the extension is
+       installed nothing brings them back here, so the sentence about
+       returning is the part that matters. */
+    function showInstallWallet() {
+      if (document.getElementById('mmInstall')) return;
+
+      var wrap = document.createElement('div');
+      wrap.id = 'mmInstall';
+      wrap.style.cssText =
+        'position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;' +
+        'justify-content:center;padding:20px;background:rgba(0,0,0,.82)';
+
+      wrap.innerHTML =
+        '<div style="width:100%;max-width:400px;background:linear-gradient(180deg,#0e0e11,#08080a 62%);' +
+          'border:1px solid rgba(233,184,74,.28);padding:34px 30px 26px;text-align:center;' +
+          'clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px)">' +
+
+          '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#E9B84A" ' +
+            'stroke-width="1.4" stroke-linecap="square" style="margin-bottom:16px">' +
+            '<path d="M3 7.5h15v11H3z"/><path d="M3 7.5 16 4v3.5"/><path d="M18 11h3v4h-3z"/></svg>' +
+
+          '<div style="font-family:\'ChakraPetch\',sans-serif;font-weight:700;font-size:23px;' +
+            'letter-spacing:1.4px;color:#E9B84A;line-height:1">WALLET REQUIRED</div>' +
+
+          '<p style="color:#a99d85;font-size:13.5px;line-height:1.7;margin:14px 0 0">' +
+            'You need a crypto wallet to join the event.<br>' +
+            'MetaMask is free and takes about a minute.</p>' +
+
+          '<p style="color:#7d735d;font-size:12px;line-height:1.7;margin:16px 0 0;' +
+            'padding-top:16px;border-top:1px solid rgba(233,184,74,.16)">' +
+            'Install it in the tab that opens, then<br><b style="color:#c2b189">come back to this page</b> ' +
+            'and press connect again.</p>' +
+
+          '<button id="mmGo" style="width:100%;margin-top:22px;padding:15px;border:0;cursor:pointer;' +
+            'font-family:\'ChakraPetch\',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.6px;' +
+            'color:#100d05;background:linear-gradient(140deg,#FCE39A,#F1C14C);' +
+            'clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)">' +
+            'GET METAMASK</button>' +
+
+          '<button id="mmX" style="width:100%;margin-top:8px;padding:12px;border:0;background:none;' +
+            'cursor:pointer;font-size:12.5px;color:#6b6862">Not now</button>' +
+        '</div>';
+
+      document.body.appendChild(wrap);
+      var close = function () { wrap.remove(); };
+      wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+      wrap.querySelector('#mmX').onclick = close;
+      wrap.querySelector('#mmGo').onclick = function () {
+        // New tab, so this page and whatever they were doing survives.
+        window.open('https://metamask.io/download/', '_blank', 'noopener');
+        close();
+      };
+    }
+
     async function connectInjected() {
       if (busy) return;
       busy = true;
@@ -442,12 +511,17 @@
         return;
       }
 
-      // Nothing installed. WalletConnect covers desktop QR and mobile wallets,
-      // and keeps per-wallet deep links current across hundreds of wallets.
-      // The sheet below stays only as a fallback when it cannot be reached.
+      /* Nothing installed.
+         On a phone WalletConnect is right: it deep-links into whichever
+         wallet app is on the device.
+         On a desktop it offers a QR code and tells the visitor to scan it
+         with their phone -- which is no help at all to someone who has no
+         wallet anywhere. What they need is the extension, and the modal has
+         no way to say so. */
+      if (!isMobileDevice() && !hasAnyInjected()) { showInstallWallet(); return; }
       if (window.MEMONS_WC) { connectViaWalletConnect(); return; }
       if (isMobileDevice()) { showWalletSheet(); return; }
-      alert('No wallet detected. Please install MetaMask and reload this page.');
+      showInstallWallet();
     }
 
     async function doDisconnect(reload) {
