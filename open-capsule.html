@@ -54,6 +54,21 @@
   .buybox{align-self:center;font-family:var(--font-body);border:1px solid var(--line);border-radius:14px;padding:20px 18px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent)}
   .buybox .bt{font-family:var(--font-head),'Saira';font-weight:700;font-size:17px;color:#e6c878;letter-spacing:.5px}
   .buybox .ql{font-size:11px;letter-spacing:2px;color:#a4905a;margin:16px 0 9px;font-weight:600}
+  /* The locked button keeps its own label underneath, dimmed, so the cover
+     reads as something laid over a real button rather than as its name. */
+  .obtn.locked{position:relative}
+  .obtn.locked > *:not(.lockcover){opacity:.2}
+  .obtn.locked .lockcover{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;font-family:var(--font-head);font-size:13px;font-weight:700;
+    letter-spacing:2.4px;color:#0d0b06;background:rgba(0,0,0,.3);border-radius:inherit}
+
+  .pullsleft{display:flex;align-items:baseline;gap:9px;padding:13px 16px;
+    border:1px solid var(--line);border-radius:9px}
+  .pullsleft b{font-family:var(--font-head);font-size:26px;font-weight:800;color:var(--gold);
+    line-height:1;font-variant-numeric:tabular-nums}
+  .pullsleft span{font-size:10.5px;letter-spacing:2px;color:var(--muted)}
+  .pullsleft.none b{color:var(--muted)}
+
   .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden}
   .qty button{flex:none;width:46px;height:46px;background:transparent;border:0;color:var(--gold);font-size:20px;cursor:pointer;transition:.15s}
   .qty button:hover{background:rgba(233,184,74,.1)}
@@ -205,12 +220,13 @@
   </div>
   <div class="buybox">
     <div class="bt">MEMONS CAPSULE 001</div>
-    <div class="ql">QUANTITY</div>
-    <div class="qty">
-      <button id="qMinus" aria-label="Decrease">−</button>
-      <span class="qn" id="qn">1</span>
-      <button id="qPlus" aria-label="Increase">+</button>
-    </div>
+    <!-- The stepper that was here counted to 99 and was read by nothing:
+         the two buttons below open one and ten, and the number never
+         reached them. Replaced by the figure it was standing in front of --
+         how many pulls are left, which is what decides whether either
+         button does anything. -->
+    <div class="ql">YOUR PULLS</div>
+    <div class="pullsleft none" id="pullsLeft"><b>&mdash;</b><span>REMAINING</span></div>
     <button class="obtn gold" id="openOne">OPEN CAPSULE</button>
     <button class="obtn ghost" id="openTen"><span class="lbl">OPEN 10 CAPSULES</span><span class="off">10%<br>OFF</span></button>
     <div class="bnote" id="gateNote" style="display:none;border-color:rgba(233,184,74,.4)">
@@ -234,10 +250,30 @@
 <footer class="foot"><span><b>MEMONS CAPSULE</b>&nbsp;&nbsp;|&nbsp;&nbsp;POWERED BY APEPE</span></footer>
 <script>
 (function(){
-  const qn=document.getElementById('qn'); let q=1;
-  const set=v=>{ q=Math.max(1,Math.min(99,v)); qn.textContent=q; };
-  document.getElementById('qMinus').onclick=()=>set(q-1);
-  document.getElementById('qPlus').onclick=()=>set(q+1);
+  /* How many pulls are left. Read once the wallet is connected, and again
+     on return -- coming back from the reveal screen should not still show
+     the number from before the capsule was opened. */
+  var el = document.getElementById('pullsLeft');
+  if(!el) return;
+  var last = null;
+  function paint(n){
+    if(n === last) return;
+    last = n;
+    var ok = typeof n === 'number' && isFinite(n);
+    el.className = 'pullsleft' + (ok && n > 0 ? '' : ' none');
+    el.innerHTML = '<b>' + (ok ? n : '\u2014') + '</b><span>REMAINING</span>';
+  }
+  async function refresh(){
+    try{
+      if(!(window.MEMONS && MEMONS.connected)){ paint(null); return; }
+      var st = await MEMONS.state();
+      paint(st && st.pulls_remaining != null ? st.pulls_remaining : 0);
+    }catch(e){ paint(null); }
+  }
+  refresh();
+  // The wallet may connect after this runs, and the count changes on return.
+  setInterval(refresh, 4000);
+  window.addEventListener('focus', refresh);
 })();
 (function(){
   var gateOk=false;   // locked until we confirm (pessimistic; closes the load-window gap)
@@ -431,10 +467,23 @@ if(document.documentElement.classList.contains('embed')){
     if(MEMONS.purchasesEnabled()) return;                 // open: leave everything as is
     var btn = document.getElementById('chargeBtn');
     if(btn){
-      btn.textContent = 'CHARGE PULLS · COMING SOON';
+      /* A cover over the button rather than a longer label on it. The label
+         became "CHARGE PULLS · COMING SOON", which is wider than the button
+         and was cut off mid-word -- and it read as the name of something you
+         could press. */
       btn.disabled = true;
-      btn.style.opacity = '.5';
       btn.style.cursor = 'not-allowed';
+      btn.classList.add('locked');
+      if(!btn.querySelector('.lockcover')){
+        var label = document.createElement('span');
+        label.textContent = btn.textContent;
+        btn.textContent = '';
+        btn.appendChild(label);
+        var cover = document.createElement('span');
+        cover.className = 'lockcover';
+        cover.textContent = 'COMING SOON';
+        btn.appendChild(cover);
+      }
       btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
     }
     var note = document.querySelector('.chargenote');
