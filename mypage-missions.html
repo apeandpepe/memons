@@ -927,9 +927,20 @@
       if(owed > 0){
         var cb=document.createElement('button');
         cb.className='btn claim';
-        cb.textContent='CLAIM +'+(owed*(m.reward||5));
+        /* One referral per press, because that is what the server does:
+           claim_mission takes a single referral each time it is called. The
+           button read CLAIM +10 with two waiting and then handed over five,
+           which looks like the count being eaten rather than collected. */
+        cb.textContent='CLAIM +'+(m.reward||5);
         cb.onclick=function(){ claim(m,cb); };
         slot.appendChild(cb);
+
+        if(owed > 1){
+          var w=document.createElement('div');
+          w.className='refhint';
+          w.innerHTML='<b>'+owed+'</b> rewards waiting \u00b7 one per tap';
+          slot.appendChild(w);
+        }
       }
 
       var cp=document.createElement('button');
