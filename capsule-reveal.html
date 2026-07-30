@@ -785,86 +785,9 @@ async function ensureConnected(){
 }
 async function pullServer(){ const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c; }
 
-/* ---- demo card ---------------------------------------------------------
-   For recording the reveal without waiting on a one-in-two-hundred draw.
-
-   The Effects Lab's rarity buttons only ever changed the colour and swapped
-   in the rarity's placeholder artwork -- fine for tuning the animation,
-   useless for a screenshot, because the card that lands is not a real one.
-   This names an actual card instead and runs the same reveal it would get.
-
-       ?lab&card=legendary_mrh1n4xztgt&key=TESTMEMONS
-
-   Reads the card from the public list and never touches the wallet: no pull
-   is spent, nothing is granted, and the same recording can be made again.
-
-   The key is what keeps it ours. Without it the address alone would let
-   anyone play a legendary reveal and screenshot it as their own pull -- no
-   card is granted, but the picture is the same picture. It is not a secret
-   worth defending, only enough that the URL cannot be guessed from seeing
-   one shared. Change it here when it has been passed around too widely. */
-var DEMO_KEY = 'TESTMEMONS';
-var DEMO_CARD = (function(){
-  var q = new URLSearchParams(location.search);
-  if (q.get('key') !== DEMO_KEY) return null;
-  return q.get('card');
-})();
-
-async function pullDemo(){
-  // Written here rather than borrowed from gacha-client, which keeps its
-  // endpoint private -- and this is the public read-only list either way.
-  var SB = 'https://neixdrtamznrooougcda.supabase.co';
-  var KEY = 'sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO';
-  var url = SB + '/rest/v1/card_list?select=id,name,rarity,image_url&id=eq.' +
-            encodeURIComponent(DEMO_CARD) + '&limit=1';
-  var res = await fetch(url, { headers: { apikey: KEY } });
-  var rows = await res.json();
-  if(!Array.isArray(rows) || !rows.length) throw new Error('CARD_NOT_FOUND: ' + DEMO_CARD);
-  var c = rows[0];
-  return mapCard({ card_id:c.id, name:c.name, rarity:c.rarity, image_url:c.image_url });
-}
-
-/* ---- pulls remaining ---- */
-async function refreshPulls(){
-  const el=document.getElementById('pullsLeft');
-  const box=document.getElementById('pullsbox');
-  const chg=document.getElementById('chargeBtn');
-  if(!el) return;
-  if(!window.MEMONS || !MEMONS.connected){
-    el.textContent='–';
-    if(chg) chg.textContent='CONNECT WALLET';
-    if(chg) chg.onclick = async function(){ try{ await MEMONS.connect(); await refreshPulls(); }catch(e){ alert((e&&e.message)||'Wallet connection failed'); } };
-    return;
-  }
-  if(chg && chg.textContent==='CONNECT WALLET'){
-    // the button keeps its normal look; the actual payment is blocked by
-    // memons-pay.js and again by the server, so nothing can be charged
-    chg.textContent='＋ CHARGE'; chg.onclick=null;
-    if(window.__bindCharge) window.__bindCharge();
-  }
-  try{ const st=await MEMONS.state(); el.textContent = (st && st.pulls_remaining!=null) ? st.pulls_remaining : '–'; }
-  catch(e){ el.textContent='–'; }
-}
-window.refreshPulls=refreshPulls;
-document.addEventListener('DOMContentLoaded', ()=>{ refreshPulls(); });
-
 let busy=false;
 async function single(){
   if(busy) return;
-
-  /* A named card runs ahead of both paths. No wallet, no pull spent, and the
-     card that lands is the real one -- which is the whole point, since the
-     lab's rarity buttons only ever produced the placeholder artwork. */
-  if(DEMO_CARD){
-    busy=true; closeResult();
-    let it;
-    try{ it = await pullDemo(); }
-    catch(e){ busy=false; revToast(String(e.message||e)); return; }
-    LAB._it=it;
-    $('stage').style.setProperty('--burst', burstColor(it));
-    playOpen(()=>{ singleReveal(it); });
-    return;
-  }
 
   if(USE_SERVER){
     if(!await ensureConnected()) return;
