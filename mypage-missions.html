@@ -564,14 +564,19 @@
   var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
-  var _eventActive=null, _testers=null;
+  var _eventActive=null;
   var _opensAt=null;      // ms, from event_settings.opens_at
   var _skew=0;            // server clock minus this device's clock, in ms
   var _cdTimer=null;
 
   async function checkEvent(){
     try{
-      var r=await fetch(SB_URL+"/rest/v1/event_settings?id=eq.1&select=mission_active,test_addresses,opens_at",
+      /* event_public, not event_settings.
+         The table also holds the tester wallet list, and asking for two of
+         its columns still meant anyone could ask for the third. The view
+         carries only the switch and the time; the table is closed to
+         anonymous readers. */
+      var r=await fetch(SB_URL+"/rest/v1/event_public?id=eq.1&select=mission_active,opens_at",
         {headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
 
       /* A countdown run off the device clock is only as right as the device
@@ -588,8 +593,6 @@
 
       var rows=await r.json();
       var row=Array.isArray(rows)&&rows[0]?rows[0]:null;
-      _testers=(row&&Array.isArray(row.test_addresses))?row.test_addresses:[];
-
       var oa = row && row.opens_at ? Date.parse(row.opens_at) : NaN;
       _opensAt = isNaN(oa) ? null : oa;
 
@@ -655,7 +658,18 @@
   }
   /* Wallets on the tester list see the event while it is still closed, so the
      flow can be walked end to end before launch. */
+  /* The tester preview is gone with the list.
+     It let a handful of wallets see the mission page before the countdown
+     finished -- a convenience, and only ever a visual one, since the server
+     refused every claim until the event opened either way. Bringing it back
+     means the server telling each caller whether they are a tester, rather
+     than the page being handed everyone's address to check against.
+     Left as a stub so the two call sites keep working. */
   function isTester(){
+    return false;
+  }
+  function isTester_disabled(){
+    var _testers = [];
     if(!_testers||!_testers.length) return false;
     var a=(window.MEMONS&&MEMONS.address)?String(MEMONS.address).toLowerCase():'';
     if(!a) return false;
