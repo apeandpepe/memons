@@ -607,13 +607,35 @@
        auto in the tag the browser began fetching on src assignment and
        autoplay then started its own read, so the file came down twice. */
     el.preload = slow ? 'metadata' : 'auto';
+    /* Reassigning src restarts playback from the first frame, so the same
+       address must never be written twice. */
+    if (el.getAttribute('src') === src) return;
     el.src = src;
     var p = el.play(); if(p && p.catch) p.catch(function(){});
 
     // Leaves a trace for anyone checking why they got the file they got.
     try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
   }
-  pick(document.getElementById('introVid'));
+
+  var introEl = document.getElementById('introVid');
+  pick(introEl);
+
+  /* A folding phone changes the viewport without reloading anything, and the
+     two files are different shapes -- 1200x752 against 720x1264. A frame
+     chosen while the phone was shut is the wrong one the moment it opens,
+     and it showed: the landscape file on the cover screen with the picture
+     stranded in the middle, the portrait one opened out standing twice the
+     height of the screen.
+
+     Listening for the crossing rather than for resize. Resize fires
+     continuously while a desktop window is dragged, and every call that
+     changed the address would send the video back to its first frame. */
+  if (window.matchMedia) {
+    var mqShape = window.matchMedia('(max-width:600px)');
+    var repick = function(){ pick(introEl); };
+    if (mqShape.addEventListener) mqShape.addEventListener('change', repick);
+    else if (mqShape.addListener) mqShape.addListener(repick);
+  }
 
 
   /* The sections sit side by side, so lazy iframes count as nearly visible
@@ -823,6 +845,22 @@
     .vhero{min-height:100svh !important}
   }
 
+  /* The cover screen of a folding phone is around 350px across, and the
+     header still had the spacing it was drawn with: the wallet button ran
+     past the right edge with half its label gone. Tightened rather than
+     dropped -- connecting a wallet is the one thing the header is for, and
+     an icon on its own does not say so. */
+  @media(max-width:430px){
+    .head{padding-left:10px !important;padding-right:10px !important;gap:6px !important}
+    .head .brand img{height:26px !important}
+    .head .brand{font-size:13px !important;letter-spacing:1px !important;gap:7px !important}
+    .head .hr{gap:6px !important}
+    .wbtn,.mpbtn,.wicon{padding:7px 8px !important;font-size:9.5px !important;
+      letter-spacing:.6px !important;gap:5px !important}
+    .wbtn svg,.wicon svg{width:12px !important;height:12px !important}
+    .m-burger{padding:7px !important}
+  }
+
   /* The intro video below the nav breakpoint.
 
      The frame is exactly as wide as the screen and its height follows from
@@ -847,7 +885,13 @@
       top:50%; left:0; right:auto; bottom:auto;
       transform:translateY(-50%);
       width:100%; height:auto;
-      object-fit:fill; background:#000}
+      /* A backstop, not the usual path. When the height the ratio asks for
+         fits, the box is the video's own shape and contain changes nothing.
+         When it does not -- the wrong file, an orientation nobody planned
+         for -- the frame stops at the screen edge and the picture sits
+         inside it, narrow, rather than running off both ends. */
+      max-height:100svh;
+      object-fit:contain; background:#000}
   }
 </style>
 <!-- Event notice, shown once. The banner links through to the full post;
