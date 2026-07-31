@@ -842,6 +842,7 @@
     .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
     .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
     .head .brand{font-size:15px !important}
+    :root{--headh:60px; --vgap:12px}
     .vhero{min-height:100svh !important}
     /* The cue is for a pointer. On a touch screen the gesture is already
        the obvious one, and the label was landing over the artwork. */
@@ -854,6 +855,7 @@
      dropped -- connecting a wallet is the one thing the header is for, and
      an icon on its own does not say so. */
   @media(max-width:430px){
+    :root{--headh:54px}
     .head{padding-left:10px !important;padding-right:10px !important;gap:6px !important}
     .head .brand img{height:26px !important}
     .head .brand{font-size:13px !important;letter-spacing:1px !important;gap:7px !important}
@@ -885,17 +887,24 @@
      from it would stand about twice the height of the screen. */
   @media(max-width:1040px){
     .vhero .vbg{
-      top:50%; left:0; right:auto; bottom:auto;
+      /* Centred in the space below the header, not in the screen. The
+         header is fixed and its background is transparent, so it floats
+         over whatever is behind it; centring in the whole screen put the
+         top of the frame underneath it. On a cover screen there is only
+         about 50px of slack to start with, so the wallet button ended up
+         sitting on the artwork.
+
+         --vgap is the gap left under the header. Raising it pushes the
+         picture down and, once the screen runs out of room, narrows it --
+         so a wider band above costs a thin one at the sides. */
+      top:calc(50% + (var(--headh, 60px) + var(--vgap, 12px)) / 2);
+      left:0; right:auto; bottom:auto;
       transform:translateY(-50%);
       width:100%; height:auto;
-      /* A backstop, not the usual path. When the height the ratio asks for
-         fits, the box is the video's own shape and contain changes nothing.
-         When it does not -- the wrong file, an orientation nobody planned
-         for -- the frame stops at the screen edge and the picture sits
-         inside it, narrow, rather than running off both ends. */
-      max-height:100svh;
+      max-height:calc(100svh - var(--headh, 60px) - var(--vgap, 12px));
       object-fit:contain; background:#000}
   }
+
 </style>
 <!-- Event notice, shown once. The banner links through to the full post;
      the popup itself only has to be seen. -->
