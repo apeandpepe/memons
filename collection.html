@@ -1,90 +1,349 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MEMONS — My Collection</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS &mdash; Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="fonts.css">
 <style>
-  :root{--bg:#050505;--gold:#E9B84A;--gold-a:#f4d27a;--gold-b:#b8862e;--line:rgba(233,184,74,.30);--hair:rgba(255,255,255,.08);--text:#e8e6e0;--muted:#8d8a82}
+  :root{
+    --bg:#000000; --panel:#0b0b0c; --panel2:#101012;
+    --gold:#F1C14C; --gold-a:#FCE39A; --gold-b:#E0A93C;
+    --line:rgba(233,184,74,.20); --hair:rgba(255,255,255,.06);
+    --text:#eceae4; --muted:#8a8780; --faint:#5c5a54;
+    --green:#3fd17a; --red:#e0556a;
+    --c-common:#cfccc4; --c-rare:#5b9bd5; --c-epic:#c468d8; --c-legendary:#E9B84A; --c-mythic:#e0556a;
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-body)}
-  .head{display:flex;align-items:center;justify-content:space-between;padding:13px 34px;border-bottom:1px solid var(--hair)}
-  .brand{font-family:var(--font-head);display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:1px}
-  .brand .m{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:16px}
-  nav{display:flex;gap:30px;font-size:12.5px;letter-spacing:1px}
-  nav a{color:var(--muted);text-decoration:none}nav a:hover,nav a.on{color:var(--gold)}
-  .wrap{max-width:1260px;margin:0 auto;padding:40px 34px 80px}
-  .top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px}
-  h1{font-family:var(--font-head);font-size:30px;font-weight:800;letter-spacing:1px}
-  .sub{color:var(--muted);font-size:14px;margin-top:6px}
-  .count{color:var(--gold);font-weight:700;font-size:15px}
-  .clr{border:1px solid rgba(255,255,255,.22);color:#cfccc4;background:transparent;padding:9px 16px;border-radius:8px;font-family:var(--font-body);font-size:12px;letter-spacing:1px;cursor:pointer}
-  .clr:hover{border-color:#e0556a;color:#e0556a}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,170px);gap:18px;justify-content:center}
-  .card{position:relative;border-radius:11px;overflow:hidden;background:#070707;border:1.5px solid var(--rc,#cfccc4);box-shadow:0 0 18px -7px var(--rc,#cfccc4)}
-  .card img{display:block;width:100%;aspect-ratio:1/1.05;object-fit:cover;object-position:top center}
-  .foot{text-align:center;padding:10px 6px 12px}
-  .foot .nm{color:#fff;font-weight:700;font-size:13px;letter-spacing:.5px}
-  .foot .rr{color:var(--rc,#cfccc4);font-weight:600;font-size:10.5px;letter-spacing:1.4px;margin-top:3px}
-  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:70px 0}
-  .empty a{color:var(--gold)}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  .app{margin:14px;border:1px solid var(--line);border-radius:20px;background:#000;position:relative}
+  .head{border-radius:19px 19px 0 0}
+  .app>footer{border-radius:0 0 19px 19px;overflow:hidden}
+  /* embedded in home.html (#embed): hide header + footer, remove frame */
+  html.embed .head{display:none!important}
+  html.embed .app{margin:0;border:none;border-radius:0}
+  html.embed .app>footer{display:none!important}
+  html.embed .hero{border-top:none}
+  a{color:inherit;text-decoration:none}
+  img{display:block}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== HEADER ===== */
+  .head{position:sticky;top:0;z-index:40;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 36px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mk{width:32px;height:32px;border:2px solid var(--gold);border-radius:8px;display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:18px}
+  .brand .wm{color:var(--gold);font-weight:700;letter-spacing:3px;font-size:20px}
+  .nav{display:flex;gap:34px;font-size:13px;letter-spacing:1.4px;color:#cdcabf;font-weight:600}
+  .nav a{position:relative;padding:6px 0;transition:color .2s}
+  .nav a:hover{color:#fff}
+  .nav a.on{color:var(--gold)}
+  .nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-20px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hr{display:flex;align-items:center;gap:20px}
+  .soc{display:flex;gap:16px;color:#b7b4ac}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:18px;height:18px;fill:currentColor}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:10px 16px;border-radius:8px;
+    font-family:var(--font-body);font-weight:600;font-size:12px;letter-spacing:1.4px;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .wbtn:hover{background:var(--gold);color:#000}
+  .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7}
+  @media(max-width:1040px){.nav,.soc{display:none}}
+
+  /* ===== HERO ===== */
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--hair);background:#000}
+  .hero-in{position:relative;display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:center;
+    max-width:1500px;margin:0 auto;padding:30px 36px 18px 36px}
+  .h-eye{font-size:13px;letter-spacing:4px;color:#fff;font-weight:600}
+  .h-title{font-weight:700;font-size:26px;line-height:1.05;letter-spacing:.5px;margin:8px 0 12px;white-space:nowrap}
+  .h-title .g{color:var(--gold)}
+  .h-sub{color:#bdbab2;font-weight:400;font-size:15px;line-height:1.5;max-width:165px}
+  .h-cta{margin-top:24px;display:inline-flex;align-items:center;gap:12px;border:1px solid var(--gold);color:var(--gold);background:transparent;white-space:nowrap;
+    padding:13px 18px;border-radius:8px;font-weight:700;font-size:12px;letter-spacing:1.2px;cursor:pointer;transition:.2s}
+  .h-cta span{font-size:15px;line-height:1}
+  .h-cta:hover{background:var(--gold);color:#000}
+  .h-trend{margin-top:30px}
+  .h-trend .lab{font-size:11px;letter-spacing:1.8px;color:#cdcabf;font-weight:600}
+  .tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .tags span{border:1px solid var(--hair);color:#b7b4ac;font-size:11.5px;letter-spacing:.5px;padding:7px 13px;border-radius:7px;cursor:pointer;transition:.2s}
+  .tags span:hover{border-color:var(--line);color:#fff}
+  .featured{display:flex;justify-content:flex-start;align-items:flex-start;gap:6px;padding:0;flex-wrap:nowrap}
+  .featured .fc{position:relative;flex:0 0 234px;min-width:0;aspect-ratio:237/392;
+    transition:transform .2s}
+  .featured .fc img{width:100%;height:100%;object-fit:contain;display:block;border-radius:9px}
+  .featured .fc:hover{transform:translateY(-8px);z-index:5}
+  .dots{grid-column:1/-1;display:flex;justify-content:center;gap:8px;margin-top:18px}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#34332f;display:block;cursor:pointer;transition:.2s}
+  .dots i.on{background:var(--gold);width:20px;border-radius:4px}
+  @media(max-width:980px){.hero-in{grid-template-columns:1fr}.featured{flex-wrap:wrap;gap:8px}.featured .fc{flex:1 1 28%;transform:none!important}}
+
+  /* ===== MAIN ===== */
+  .main{display:grid;grid-template-columns:224px 1fr;gap:28px;max-width:1500px;margin:0 auto;padding:34px 36px 50px}
+  .side{align-self:start;position:sticky;top:78px}
+  .side .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .side .sh b{font-size:13px;letter-spacing:1.8px;color:var(--gold);font-weight:700}
+  .side .sh a{font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer}
+  .side .sh a:hover{color:var(--red)}
+  .fgroup{border-top:1px solid var(--hair);padding:17px 0}
+  .fgroup>h5{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;letter-spacing:1.8px;color:var(--gold);font-weight:600;cursor:pointer;margin-bottom:14px}
+  .fgroup>h5 .chev{color:var(--muted);font-size:10px}
+  .frow{display:flex;align-items:center;gap:11px;padding:6px 0;cursor:pointer;font-size:12.5px;letter-spacing:.6px;color:#cdcabf}
+  .frow:hover{color:#fff}
+  .frow .cb{width:16px;height:16px;border:1.5px solid #3c3c3a;border-radius:4px;flex:none;display:grid;place-items:center;transition:.15s}
+  .frow .cb svg{width:10px;height:10px;stroke:#000;stroke-width:3;fill:none;opacity:0}
+  .frow.on .cb svg{opacity:1}
+  .frow .nm{flex:1}
+  .frow .ct{color:var(--faint);font-size:12px}
+  .frow[data-r="common"].on .cb{background:var(--c-common);border-color:var(--c-common)}
+  .frow[data-r="rare"].on .cb{background:var(--c-rare);border-color:var(--c-rare)}
+  .frow[data-r="epic"].on .cb{background:var(--c-epic);border-color:var(--c-epic)}
+  .frow[data-r="legendary"].on .cb{background:var(--c-legendary);border-color:var(--c-legendary)}
+  .frow[data-r="mythic"].on .cb{background:var(--c-mythic);border-color:var(--c-mythic)}
+  .frow.cat.on .cb{background:var(--gold);border-color:var(--gold)}
+  .price-in{display:flex;gap:8px;margin-bottom:14px}
+  .price-in input{flex:1;width:100%;background:#0b0b0c;border:1px solid var(--hair);border-radius:7px;color:#fff;padding:10px 11px;font-family:var(--font-body);font-size:12.5px;letter-spacing:.5px}
+  .price-in input::placeholder{color:#5c5a54}
+  .apply{width:100%;border:1px solid var(--gold);color:var(--gold);background:transparent;border-radius:7px;padding:11px;
+    font-family:var(--font-body);font-weight:600;font-size:11.5px;letter-spacing:1.6px;cursor:pointer;transition:.2s}
+  .apply:hover{background:var(--gold);color:#000}
+
+  .toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+  .search{position:relative;flex:1;min-width:220px}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8}
+  .search input{width:100%;background:#0b0b0c;border:1px solid var(--hair);border-radius:9px;color:#fff;padding:12px 14px 12px 39px;font-family:var(--font-body);font-size:13px}
+  .search input::placeholder{color:#6a6862}
+  .rpills{display:flex;gap:9px}
+  .rpill{background:transparent;padding:10px 16px;border-radius:8px;font-family:var(--font-body);
+    font-weight:700;font-size:11px;letter-spacing:1.4px;cursor:pointer;transition:.18s;
+    color:var(--rc,#cdcabf);border:1px solid color-mix(in srgb, var(--rc,#888) 42%, transparent)}
+  .rpill[data-r="common"]{--rc:var(--c-common)}
+  .rpill[data-r="rare"]{--rc:var(--c-rare)}
+  .rpill[data-r="epic"]{--rc:var(--c-epic)}
+  .rpill[data-r="legendary"]{--rc:var(--c-legendary)}
+  .rpill[data-r="mythic"]{--rc:var(--c-mythic)}
+  .rpill:hover{border-color:var(--rc,#888)}
+  .rpill.on{border-color:var(--rc);background:color-mix(in srgb, var(--rc) 16%, transparent);box-shadow:0 0 14px -7px var(--rc)}
+  .sortwrap{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
+  .sortwrap select{background:#0b0b0c;border:1px solid var(--hair);border-radius:8px;color:#eceae4;padding:10px 11px;font-family:var(--font-body);font-size:12px;cursor:pointer}
+  .viewtog{display:flex;border:1px solid var(--hair);border-radius:8px;overflow:hidden}
+  .viewtog button{background:transparent;border:none;padding:10px 11px;cursor:pointer;display:grid;place-items:center}
+  .viewtog button svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8}
+  .viewtog button.on{background:rgba(233,184,74,.1)}
+  .viewtog button.on svg{stroke:var(--gold)}
+  @media(max-width:760px){.rpills{order:3;width:100%}}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  @media(max-width:1180px){.grid{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:820px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.side{position:static}}
+  .lc{position:relative;background:#0a0a0b;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;transition:transform .18s, border-color .18s;cursor:pointer}
+  .lc:hover{transform:translateY(-4px);border-color:var(--rc,#333)}
+  .lc .thumb{position:relative;aspect-ratio:1/1;overflow:hidden;background:#0c0c0d}
+  .lc .thumb img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .lc .bdg{position:absolute;top:9px;left:9px;font-size:8.5px;font-weight:700;letter-spacing:1.2px;padding:4px 8px;border-radius:6px;
+    color:var(--rc,#cfccc4);background:rgba(0,0,0,.6);border:1px solid color-mix(in srgb, var(--rc,#cfccc4) 45%, transparent)}
+  .lc .idn{position:absolute;top:9px;right:9px;font-size:10px;font-weight:600;color:#cdcabf;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:6px}
+  .lc .info{padding:12px 13px 13px}
+  .lc .nm{font-weight:700;font-size:13px;letter-spacing:.6px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lc .pr{display:flex;align-items:baseline;justify-content:space-between;margin-top:8px}
+  .lc .pr .eth{font-weight:700;font-size:14px;color:var(--gold)}
+  .lc .pr .fs{font-size:10px;color:var(--green);font-weight:600;letter-spacing:.5px}
+  .lc .meta{display:flex;align-items:center;gap:13px;margin-top:11px;padding-top:10px;border-top:1px solid var(--hair);font-size:10.5px;color:var(--muted)}
+  .lc .meta span{display:flex;align-items:center;gap:4px}
+  .lc .meta svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.6}
+  .lc .meta .t{margin-left:auto}
+  .grid.list{grid-template-columns:1fr;gap:10px}
+  .grid.list .lc{display:grid;grid-template-columns:60px 1fr auto;align-items:center;gap:16px;padding:10px 16px 10px 10px}
+  .grid.list .lc:hover{transform:none}
+  .grid.list .thumb{width:60px;aspect-ratio:1/1;border-radius:8px}
+  .grid.list .bdg,.grid.list .idn{display:none}
+  .grid.list .info{padding:0}
+  .grid.list .pr{display:block;margin:0}
+  .grid.list .meta{border:none;margin:0;padding:0}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0;font-size:14px}
+
+  .pager{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:36px}
+  .pager button{min-width:40px;height:40px;border:1px solid var(--hair);background:transparent;color:#cdcabf;border-radius:8px;
+    font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;padding:0 11px}
+  .pager button:hover:not(:disabled){border-color:var(--line);color:#fff}
+  .pager button.on{background:var(--gold);color:#000;border-color:var(--gold)}
+  .pager button:disabled{opacity:.32;cursor:default}
+  .pager .ell{color:var(--muted);padding:0 4px}
+
+  /* ===== RECENTLY SOLD ===== */
+  .sold{max-width:1500px;margin:0 auto;padding:6px 36px 44px 288px}
+  .sold-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .sold-h b{display:flex;align-items:center;gap:9px;font-size:15px;letter-spacing:1.6px;font-weight:700}
+  .sold-h b svg{width:16px;height:16px;fill:var(--gold)}
+  .sold-h a{font-size:11.5px;letter-spacing:1.2px;color:var(--gold);font-weight:600;cursor:pointer}
+  .sold-grid{display:flex;justify-content:flex-start;gap:11px}
+  .sold-grid .sold-c{flex:1 1 0;width:auto;aspect-ratio:237/392}
+  @media(max-width:980px){.sold-grid{flex-wrap:wrap;justify-content:center}}
+
+  .sold-c{position:relative;transition:transform .2s}
+  .sold-c:hover{transform:translateY(-6px)}
+  .sold-c img{width:100%;height:100%;object-fit:contain;display:block;border-radius:9px}
+
+  /* ===== STATS ===== */
+  .stats{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);background:#000}
+  .stats-in{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);padding:0 36px}
+  .stat{display:flex;align-items:center;gap:17px;padding:32px 28px}
+  .stat+.stat{border-left:1px solid var(--hair)}
+  .stat .ic{width:50px;height:50px;display:grid;place-items:center;flex:none;background:transparent}
+  .stat .ic img{width:100%;height:100%;object-fit:contain}
+  .stat .ic img ~ svg{display:none}
+  .stat .ic svg{width:40px;height:40px}
+  .stat.s1 .ic{border:2px solid var(--gold);border-radius:50%}
+  .stat.s1 .ic:has(img){border:none}
+  .stat.s1 .ic svg{width:24px;height:24px;fill:var(--gold)}
+  .stat.s2 .ic svg{fill:var(--c-epic)}
+  .stat.s3 .ic svg{fill:var(--c-rare)}
+  .stat.s4 .ic svg{fill:none;stroke:var(--green);stroke-width:1.6}
+  .stat .lab{font-size:10.5px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase}
+  .stat .big{font-size:24px;font-weight:700;letter-spacing:.5px;margin-top:3px}
+  .stat .delta{font-size:11px;font-weight:700;margin-left:8px}
+  .stat .delta.up{color:var(--green)} .stat .delta.down{color:var(--red)}
+  .stat .sub{font-size:9.5px;letter-spacing:1.2px;color:var(--faint);margin-top:4px}
+  @media(max-width:900px){.stats-in{grid-template-columns:repeat(2,1fr)}.stat:nth-child(3){border-left:none}.stat:nth-child(n+3){border-top:1px solid var(--hair)}}
+
+  /* ===== FOOTER ===== */
+  footer{background:#000;border-top:1px solid var(--hair)}
+  .foot{max-width:1500px;margin:0 auto;padding:50px 36px 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1.4fr;gap:32px}
+  .foot .fb{display:flex;align-items:center;gap:11px;margin-bottom:15px}
+  .foot .fb .mk{width:34px;height:34px;border:2px solid var(--gold);border-radius:8px;display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:18px}
+  .foot .fb .wm{color:var(--gold);font-weight:700;letter-spacing:3px;font-size:22px}
+  .foot p.tg{color:var(--muted);font-size:13px;line-height:1.6;max-width:230px}
+  .foot .fsoc{display:flex;gap:17px;margin-top:17px;color:#94918a}
+  .foot .fsoc a:hover{color:var(--gold)}
+  .foot .fsoc svg{width:18px;height:18px;fill:currentColor}
+  .foot h6{font-size:11px;letter-spacing:1.8px;color:var(--gold);font-weight:700;margin-bottom:17px}
+  .foot ul{list-style:none}
+  .foot ul li{margin-bottom:12px}
+  .foot ul a{color:#b7b4ac;font-size:13px;display:flex;align-items:center;gap:8px}
+  .foot ul a:hover{color:#fff}
+  .foot ul a svg{width:13px;height:13px;fill:currentColor;opacity:.8}
+  .sub-in{display:flex;gap:8px;margin-top:6px}
+  .sub-in input{flex:1;min-width:0;background:#0b0b0c;border:1px solid var(--hair);border-radius:7px;color:#fff;padding:11px 12px;font-family:var(--font-body);font-size:12.5px}
+  .sub-in input::placeholder{color:#5c5a54}
+  .sub-in button{border:1px solid var(--gold);background:var(--gold);color:#000;border-radius:7px;padding:0 17px;font-family:var(--font-body);font-weight:700;font-size:11.5px;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+  .copy{text-align:center;color:var(--faint);font-size:12px;padding:22px;border-top:1px solid var(--hair)}
+  @media(max-width:900px){.foot{grid-template-columns:1fr 1fr}}
+
+  /* ===== MEMONS FONT SYSTEM (Rajdhani + Inter) ===== */
+  .brand .mk,.brand .wm,.foot .fb .mk,.foot .fb .wm,.sold-h b,.h-eye,.h-title,
+  .nav a,.h-cta,.wbtn,.apply,.sub-in button,.pager button,.side .sh b,.fgroup>h5,.foot h6,
+  .lc .nm,.h-trend .lab,.rpill,.lc .bdg,.stat .lab,#rarityFilters .frow .nm{font-family:var(--font-head)}
+  .brand .wm,.foot .fb .wm{letter-spacing:.12em;text-transform:uppercase}
+  .h-sub,.search input,.sortwrap,.sortwrap select,.frow,.tags span,.sold-h a,
+  .lc .pr .fs,.stat .sub,.stat .delta,.price-in input,.foot ul a,.foot p.tg,.sub-in input,.copy,
+  .lc .pr .eth,.stat .big,.lc .idn,.frow .ct,.lc .meta{font-family:var(--font-body)}
+
+  /* ===== marketplace ===== */
+  .mkhero{padding:56px 34px 30px;border-bottom:1px solid var(--hair)}
+  .mkhero-in{max-width:1400px;margin:0 auto;display:flex;align-items:flex-end;
+    justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .mkeye{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:10px}
+  .mktitle{font-family:var(--font-head,inherit);font-weight:900;font-size:clamp(30px,4.6vw,54px);
+    letter-spacing:-.5px;line-height:1;margin:0}
+  .mktitle .g{background:linear-gradient(120deg,var(--gold-a),var(--gold),var(--gold-b));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .mksub{color:var(--muted);font-size:14px;margin:12px 0 0}
+  .mkbal{border:1px solid var(--line);border-radius:13px;padding:14px 18px;min-width:170px;
+    background:linear-gradient(150deg,rgba(241,193,76,.07),transparent)}
+  .mkbal-l{font-size:10.5px;letter-spacing:2px;color:var(--muted)}
+  .mkbal-v{font-size:24px;font-weight:800;color:var(--gold);margin-top:4px}
+  .mkbal-v small{font-size:11px;color:var(--muted);font-weight:500}
+  .mkbal-s{font-size:11px;color:var(--faint);margin-top:2px}
+
+  .mkwrap{max-width:1400px;margin:0 auto;padding:26px 34px 90px}
+  .mkbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .mksearch{flex:1;min-width:220px;position:relative}
+  .mksearch svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;
+    fill:none;stroke:var(--muted);stroke-width:1.8}
+  .mksearch input{width:100%;background:var(--panel);border:1px solid var(--hair);border-radius:11px;
+    color:var(--text);font:inherit;font-size:13.5px;padding:12px 14px 12px 38px;outline:none}
+  .mksearch input:focus{border-color:var(--line)}
+  .mkpills{display:flex;gap:6px;flex-wrap:wrap}
+  .mkpill{font:inherit;font-size:12px;letter-spacing:.4px;color:var(--muted);background:transparent;
+    border:1px solid var(--hair);border-radius:20px;padding:8px 14px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .mkpill:hover{color:var(--text);border-color:var(--line)}
+  .mkpill.on{color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));border-color:transparent;font-weight:700}
+  .mksort{background:var(--panel);border:1px solid var(--hair);border-radius:11px;color:var(--text);
+    font:inherit;font-size:13px;padding:11px 12px;outline:none;cursor:pointer}
+  .mkcount{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+
+  /* The tile is the card. Its artwork is the reason anyone is here, so it
+     gets the space and the numbers sit under it rather than over it. */
+  .mkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .mkcard{background:var(--panel);border:1px solid var(--hair);border-radius:15px;overflow:hidden;
+    cursor:pointer;transition:transform .16s,border-color .16s;display:flex;flex-direction:column}
+  .mkcard:hover{transform:translateY(-3px);border-color:var(--line)}
+  .mkart{position:relative;width:100%;aspect-ratio:945/1280;background:#08080a;overflow:hidden}
+  .mkart img{width:100%;height:100%;object-fit:cover;display:block}
+  .mkart .rr{position:absolute;top:9px;left:9px;font-size:9.5px;letter-spacing:1.4px;font-weight:800;
+    padding:4px 9px;border-radius:20px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px)}
+  .mkart .chg{position:absolute;top:9px;right:9px;font-size:10.5px;font-weight:800;
+    padding:4px 8px;border-radius:20px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px)}
+  .mkart .chg.up{color:var(--green)} .mkart .chg.dn{color:var(--red)}
+  .mkinfo{padding:12px 13px 14px}
+  .mkname{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;margin-bottom:8px}
+  .mkprice{display:flex;align-items:baseline;gap:5px}
+  .mkprice b{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:-.3px}
+  .mkprice small{font-size:10.5px;color:var(--muted)}
+  .mkprice .none{font-size:13px;color:var(--faint);font-weight:500}
+  .mkmeta{display:flex;gap:10px;margin-top:7px;font-size:11px;color:var(--faint)}
+  .mkmeta b{color:var(--muted);font-weight:600}
+  .mkempty{text-align:center;color:var(--muted);padding:70px 20px;font-size:14px;line-height:1.7}
+  .mkempty b{display:block;color:var(--text);font-size:16px;margin-bottom:8px}
+
+  .r-common{color:var(--c-common)} .r-rare{color:var(--c-rare)}
+  .r-epic{color:var(--c-epic)} .r-legendary{color:var(--c-legendary)}
+  .r-mythic{color:var(--c-mythic)} .r-special{color:var(--gold)}
+
   @media(max-width:1040px){
-    .wrap{padding:30px 18px 70px}
-    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+    .mkhero{padding:36px 18px 24px}
+    .mkwrap{padding:20px 18px 70px}
+    /* auto-fill would drop straight to two here and leave the artwork
+       oversized for the space. Three keeps the tile a sensible size. */
+    .mkgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
   }
+  @media(max-width:820px){
+    .mkgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+  /* Two columns on a phone. One wastes the screen, three makes the artwork
+     too small to be worth showing. */
   @media(max-width:560px){
-    .wrap{padding:24px 14px 64px}
-    h1{font-size:24px}
-    .sub{font-size:13px}
-    .top{margin-bottom:18px;gap:10px}
-    .grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:11px;max-width:360px;margin:0 auto}
-    .foot{padding:8px 4px 10px}
-    .foot .nm{font-size:12px}
-    .foot .rr{font-size:9.5px}
+    .mkgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .mkart .rr{font-size:8.5px;padding:3px 7px}
+    .mkart .chg{font-size:9.5px;padding:3px 6px}
+    .mkinfo{padding:10px 10px 12px}
+    .mkname{font-size:12px;margin-bottom:6px}
+    .mkprice b{font-size:15px}
+    .mkmeta{font-size:10px;gap:8px}
+    .mkbar{gap:9px}
+    .mksearch{flex:1 1 100%}
+    .mksort{flex:1}
+    .mkpills{flex:1 1 100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+    .mkpills::-webkit-scrollbar{display:none}
+    .mkbal{width:100%}
   }
-</style></head>
-<body>
-  <header class="head">
-    <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
-    <nav>
-      <a href="index.html">HOME</a>
-      <a href="vault.html">MEMONS VAULT</a>
-      <a href="open-capsule.html">OPEN CAPSULE</a>
-      <a href="index.html#marketplace">MARKETPLACE</a>
-      <a href="notice.html">NOTICE</a>
-      <a href="index.html#contact">CONTACT</a>
-    </nav>
-  </header>
 
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <h1>MY COLLECTION</h1>
-        <div class="sub">MEMONS pulled from capsules — <span class="count" id="cnt">0</span> collected</div>
-      </div>
-      <button class="clr" id="clr">CLEAR</button>
-    </div>
-    <div class="grid" id="grid"></div>
-  </div>
+  /* mobile drawer, matching the other pages */
 
-<script src="data/memons.js"></script>
-<script src="data/collection.js"></script>
-<script>
-  const grid=document.getElementById('grid'), cnt=document.getElementById('cnt'), clr=document.getElementById('clr');
-  function render(){
-    const items=MEMONS_COLLECTION.all();
-    cnt.textContent=items.length;
-    if(!items.length){ grid.innerHTML='<div class="empty">No cards yet.<br><a href="capsule-reveal.html">Go open a capsule →</a></div>'; return; }
-    grid.innerHTML=items.map(it=>`
-      <div class="card" style="--rc:${it.color||'#cfccc4'}">
-        <img src="${it.img}" alt="${it.char}">
-        <div class="foot"><div class="nm">${it.char||'MEMONS'}</div><div class="rr">${it.rarity||''}</div></div>
-      </div>`).join('');
-  }
-  clr.addEventListener('click', ()=>{ if(confirm('Clear your entire collection?')){ MEMONS_COLLECTION.clear(); render(); } });
-  render();
-</script>
-<style>
+  /* Nothing may push past the viewport: with overflow-x hidden the excess is
+     not scrollable, so it would simply be unreachable. */
+  html,body{overflow-x:hidden;max-width:100vw}
+  .mkwrap,.mkhero-in{min-width:0}
+  .mkbar,.mkpills{min-width:0;max-width:100%}
+
+  /* mobile drawer, same as the other pages */
   .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
   .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  
   .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
   .m-overlay.open{opacity:1;pointer-events:auto}
   .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
@@ -96,27 +355,990 @@
   .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
   .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
   .m-drawer a i{font-size:18px;width:20px;text-align:center}
-  html,body{overflow-x:hidden;max-width:100vw}
+
+  /* ===== top tabs ===== */
+  .mktabs{display:flex;gap:0;border-bottom:1px solid var(--hair);margin-bottom:18px}
+  .mktab{font:inherit;font-size:13px;font-weight:700;letter-spacing:1.4px;color:var(--muted);
+    background:transparent;border:0;border-bottom:2px solid transparent;
+    padding:12px 22px;cursor:pointer;transition:.15s;margin-bottom:-1px}
+  .mktab:hover{color:var(--text)}
+  .mktab.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+  /* ===== detail modal ===== */
+  .mkmodal{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:24px}
+  .mkmodal[hidden]{display:none}
+  .mkmodal-bg{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(3px)}
+  .mkmodal-box{position:relative;width:100%;max-width:1240px;max-height:calc(100vh - 48px);
+    background:var(--panel);border:1px solid var(--line);border-radius:17px;overflow:hidden;
+    display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  .mkm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+    padding:20px 22px 16px;border-bottom:1px solid var(--hair);flex-shrink:0}
+  .mkm-rr{font-size:10px;letter-spacing:1.8px;font-weight:800;margin-bottom:5px}
+  .mkm-title{font-family:var(--font-head,inherit);font-size:22px;font-weight:800;margin:0;letter-spacing:-.3px}
+  .mkm-x{font-size:26px;line-height:1;color:var(--muted);background:transparent;border:0;cursor:pointer;padding:0 4px}
+  .mkm-x:hover{color:var(--text)}
+  .mkm-body{overflow-y:auto;padding:20px 22px 24px;-webkit-overflow-scrolling:touch}
+
+  /* Three columns: the card, the book, and the trade panel with the recent
+     trades under it. Two columns left the space beside a tall card empty,
+     which made the card look like decoration rather than the subject. */
+  .mkm-top{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.73fr) minmax(0,1fr);
+    gap:22px;margin-bottom:22px;align-items:start}
+  .mkm-left{min-width:0}
+  .mkm-art{border-radius:12px;overflow:hidden;background:#08080a;aspect-ratio:945/1280}
+  .mkm-art img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .mkm-act{display:flex;flex-direction:column;min-width:0}
+  /* The book stretches to the height of the card so the row reads as three
+     columns rather than three floating boxes of different sizes. */
+  .mkm-book{display:flex;flex-direction:column;min-height:100%}
+  .mkm-book .mkm-depth{flex:1;max-height:none;min-height:0}
+  .mkm-trades{margin-top:18px}
+  .mkm-mode{display:flex;gap:6px;margin-bottom:14px}
+  .mkm-tab{flex:1;font:inherit;font-size:12px;font-weight:700;letter-spacing:1.2px;
+    color:var(--muted);background:transparent;border:1px solid var(--hair);border-radius:9px;
+    padding:9px;cursor:pointer;transition:.15s}
+  .mkm-tab.on{color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));border-color:transparent}
+  .mkm-row{display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-bottom:1px solid var(--hair);font-size:13px;color:var(--muted)}
+  .mkm-row b{color:var(--text);font-size:14px}
+  .mkm-input{display:flex;gap:6px;margin-top:16px}
+  .mkm-input input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--hair);
+    border-radius:10px;color:var(--text);font:inherit;font-size:17px;font-weight:700;
+    padding:12px 14px;outline:none;-moz-appearance:textfield}
+  .mkm-input input::-webkit-outer-spin-button,
+  .mkm-input input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .mkm-input input:focus{border-color:var(--line)}
+  .mkm-step{width:44px;background:var(--panel2);border:1px solid var(--hair);border-radius:10px;
+    color:var(--text);font-size:17px;cursor:pointer}
+  .mkm-step:hover{border-color:var(--line)}
+  .mkm-floor{font-size:11.5px;color:var(--faint);text-align:right;margin-top:6px}
+  .mkm-floor b{color:var(--muted)}
+  .mkm-go{width:100%;margin-top:14px;font:inherit;font-size:14px;font-weight:800;letter-spacing:1.4px;
+    color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));
+    border:0;border-radius:11px;padding:15px;cursor:pointer;transition:.15s}
+  .mkm-go:hover:not(:disabled){filter:brightness(1.08)}
+  .mkm-go:disabled{opacity:.4;cursor:not-allowed}
+  .mkm-go.sell{background:linear-gradient(140deg,#7fd6a0,var(--green));color:#04180d}
+  .mkm-note{font-size:11.5px;line-height:1.55;color:var(--muted);margin-top:10px;min-height:16px}
+  .mkm-note.bad{color:var(--red)}
+
+  .mkm-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .mkm-panel{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;min-width:0}
+  .mkm-panel h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0 0 11px;font-weight:700}
+  .mkm-depth,.mkm-hist{max-height:210px;overflow-y:auto;font-size:12.5px}
+  .mkm-line{display:flex;justify-content:space-between;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.03)}
+  .mkm-line:last-child{border-bottom:0}
+  .mkm-line .q{color:var(--faint);font-size:11.5px}
+  .mkm-line.ask .p{color:var(--c-rare)}
+  .mkm-line.bid .p{color:var(--red)}
+  .mkm-line .p{font-weight:700}
+  .mkm-mine{font-size:9px;letter-spacing:.6px;color:var(--gold);margin-left:5px}
+  .mkm-spread{text-align:center;font-size:10.5px;letter-spacing:1px;color:var(--faint);
+    padding:7px 0;border-top:1px dashed rgba(255,255,255,.09);border-bottom:1px dashed rgba(255,255,255,.09);margin:4px 0}
+  .mkm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .mkm-stat{background:var(--panel2);border-radius:9px;padding:8px 9px}
+  .mkm-stat span{display:block;font-size:9.5px;letter-spacing:.8px;color:var(--faint)}
+  .mkm-stat b{font-size:13.5px;color:var(--text)}
+  .mkm-hist .t{color:var(--faint);font-size:11.5px}
+  .mkm-hist .up{color:var(--green)} .mkm-hist .dn{color:var(--red)}
+  .mkm-none{color:var(--faint);font-size:12px;padding:18px 4px;text-align:center}
+  .mkm-chart{margin-top:18px}
+
+  /* Below this the third column starves the trade panel, so the book moves
+     under the other two and gets the full width instead. */
+  @media(max-width:1100px){
+    .mkm-top{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px}
+    .mkm-left{grid-column:1;grid-row:1}
+    .mkm-act{grid-column:2;grid-row:1}
+    .mkm-book{grid-column:1/-1;grid-row:2;min-height:0;margin-top:2px}
+    
+  }
+  @media(max-width:760px){
+    .mkmodal{padding:0}
+    .mkmodal-box{max-width:none;max-height:100vh;height:100vh;border-radius:0;border:0}
+    /* Artwork and the trade panel side by side, the way the reference does
+       it on a phone: stacking them would push the buy button below the fold. */
+    /* Three columns will not fit a phone. The card and the trade panel stay
+       side by side so the buy button is reachable without scrolling, and the
+       book drops below them at full width. */
+    /* Card across the top at full width, then the book and the trade panel
+       side by side beneath it. The buy button falls below the fold, which is
+       the trade being made: the artwork is what someone came to look at. */
+    .mkm-top{grid-template-columns:minmax(0,.72fr) minmax(0,1fr);gap:10px;margin-bottom:18px}
+    .mkm-left{grid-row:1;grid-column:1/-1;margin-bottom:4px}
+    .mkm-book{grid-row:2;grid-column:1}
+    .mkm-act{grid-row:2;grid-column:2}
+    
+    .mkm-step{width:32px}
+    .mkm-panel{padding:12px 11px}
+    .mkm-input{gap:4px}
+    .mkm-input input{padding:11px 10px;font-size:16px}
+    .mkm-art{align-self:start;max-width:340px;margin:0 auto}
+    .mkm-body{padding:16px 15px 30px}
+    .mkm-title{font-size:18px}
+    .mkm-cols{grid-template-columns:minmax(0,1fr);gap:14px}
+    .mkm-input input{font-size:16px}
+    .mkm-depth,.mkm-hist{max-height:180px}
+  }
+  /* Under 360px there is no width left to split. The card goes on top at a
+     size worth looking at, and the trade panel gets the full row beneath it. */
+  @media(max-width:359px){
+    .mkm-top{grid-template-columns:minmax(0,1fr);gap:12px}
+    .mkm-left{grid-column:1;grid-row:1}
+    .mkm-act{grid-column:1;grid-row:2}
+    .mkm-book{grid-column:1;grid-row:3}
+    
+  }
+
+  /* ===== header parity with the rest of the site =====
+     This page had grown its own header: a wordmark instead of the logo, no
+     My Page button, and nav links that jumped to marketplace.html while every
+     other page points at the landing anchors. Anyone moving between pages saw
+     the top bar change shape, which reads as a different site. */
+  .brand a{display:block;line-height:0}
+  .brand img{height:44px;width:auto;display:block}
+  .mpbtn{display:none;align-items:center;gap:8px;font-family:inherit;font-size:12px;
+    font-weight:700;letter-spacing:1.2px;color:var(--gold);background:transparent;
+    border:1px solid var(--line);border-radius:9px;padding:9px 15px;cursor:pointer;transition:.15s}
+  .mpbtn:hover{background:rgba(241,193,76,.09)}
+  .wicon{display:none;align-items:center;justify-content:center;width:38px;height:38px;
+    border-radius:10px;border:1px solid var(--line);color:var(--gold);cursor:pointer}
+  .wicon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .hidden-chip{display:none}
+
   @media(max-width:1040px){
+    .brand img{height:34px}
+  }
+
+  /* Fixed to the same 70px the other pages use, rather than letting padding
+     decide. A bar that changes height between pages is the thing people
+     notice even when they cannot say what moved. */
+  .head{height:70px;padding:0 34px}
+  @media(max-width:1040px){
+    .head{padding:0 18px}
+    /* The burger only belongs where the nav has been hidden. Left as a flat
+       rule it showed on desktop alongside the full menu. */
     .head nav{display:none !important}
     .m-burger{display:flex}
-    .sidebar{display:none !important}
-    .main{margin-left:0 !important}
-    .shell .wrap,.main .wrap{padding-left:16px !important;padding-right:16px !important}
-    .head .soc{display:none !important}
-    .head{padding-left:14px !important;padding-right:14px !important;gap:10px !important;justify-content:flex-start !important}
-    .head .hr{gap:8px !important;margin-left:auto !important}
-    .head .brand img{height:32px !important}
-    .mypage-entry,.mpbtn{display:none !important}
-    .wrap{margin-left:auto !important;margin-right:auto !important}
-    .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
-    .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
-    .head .brand{font-size:15px !important}
+    .brand img{height:32px}
+  }
+
+  /* Sixteen rows plus the spread, always. The panel keeps one height whether
+     the book is full or empty, so nothing shifts under the cursor when an
+     order lands. */
+  .mkm-book .mkm-depth{max-height:none;height:calc(17 * 27px);overflow-y:auto}
+  .mkm-line{height:27px;box-sizing:border-box;align-items:center}
+  .mkm-line.empty{opacity:.28}
+  .mkm-line.empty .p{font-weight:400;color:var(--faint)}
+  .mkm-spread{height:27px;display:flex;align-items:center;justify-content:center;margin:0;padding:0}
+
+  /* ===== deposit ===== */
+  .mkbal-add{margin-top:10px;width:100%;font:inherit;font-size:11px;font-weight:700;letter-spacing:1.2px;
+    color:var(--gold);background:transparent;border:1px solid var(--line);border-radius:8px;
+    padding:7px;cursor:pointer;transition:.15s}
+  .mkbal-add:hover{background:rgba(241,193,76,.1)}
+
+  .tu-box{max-width:440px}
+  .tu-label{display:block;font-size:11px;letter-spacing:1.4px;color:var(--muted);margin-bottom:8px}
+  .tu-unit{display:flex;align-items:center;padding:0 14px;font-size:13px;color:var(--muted);
+    background:var(--panel2);border:1px solid var(--hair);border-radius:10px}
+  .tu-hint{font-size:11.5px;color:var(--faint);margin-top:7px}
+  .tu-quick{display:flex;gap:7px;margin:14px 0 18px;flex-wrap:wrap}
+  .tu-quick button{flex:1;min-width:64px;font:inherit;font-size:12.5px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:9px;padding:10px 4px;cursor:pointer}
+  .tu-quick button:hover{color:var(--text);border-color:var(--line)}
+
+  .tu-amt{font-size:34px;font-weight:800;color:var(--gold);letter-spacing:-.5px;
+    text-align:center;margin-bottom:6px}
+  .tu-amt small{font-size:13px;color:var(--muted);font-weight:500}
+  /* An amount that is off by a cent does not match any order, and the money
+     sits until somebody looks. Worth saying plainly before they send. */
+  .tu-warn{font-size:12px;line-height:1.5;color:#f0b429;text-align:center;
+    background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.25);
+    border-radius:9px;padding:10px 12px;margin-bottom:20px}
+  .tu-addr{display:flex;gap:7px;align-items:stretch}
+  .tu-addr code{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--hair);
+    border-radius:10px;padding:12px 13px;font-size:12px;font-family:ui-monospace,monospace;
+    color:var(--text);overflow-wrap:anywhere;line-height:1.4}
+  .tu-addr button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--gold);
+    background:transparent;border:1px solid var(--line);border-radius:10px;padding:0 14px;cursor:pointer;white-space:nowrap}
+  .tu-addr button:hover{background:rgba(241,193,76,.1)}
+  .tu-timer{text-align:center;font-size:12.5px;color:var(--muted);margin:18px 0 4px}
+  .tu-timer b{color:var(--text);font-variant-numeric:tabular-nums}
+  .tu-timer.soon b{color:var(--red)}
+  .tu-cancel{width:100%;margin-top:9px;font:inherit;font-size:12px;color:var(--faint);
+    background:transparent;border:0;padding:9px;cursor:pointer}
+  .tu-cancel:hover{color:var(--muted)}
+
+  @media(max-width:560px){
+    .tu-box{max-width:none}
+    .tu-amt{font-size:28px}
+    .tu-addr{flex-direction:column}
+    .tu-addr button{padding:11px}
+  }
+
+  /* Quantity was set in the faint colour used for disabled text, which put
+     the one number that says how deep a price level is below the price it
+     belongs to. Same weight as the price now, just not coloured. */
+  .mkm-line .q{color:var(--text);font-size:12.5px;font-weight:600;
+    display:flex;align-items:center;gap:6px}
+  .mkm-line.empty .q{color:var(--faint);font-weight:400}
+  /* A dot beside the quantity, rather than a MINE tag after the price: it
+     reads at a glance down the column and costs no width. */
+  .mkm-line .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);
+    flex-shrink:0;box-shadow:0 0 5px rgba(241,193,76,.7)}
+  /* The dot alone marks a row as this wallet's. Recolouring the price as
+     well overrode the buy/sell colours, which are what the column is for. */
+  .mkm-line.own{background:rgba(241,193,76,.05)}
+
+  .mkm-line.hit{cursor:pointer;transition:background .1s}
+  .mkm-line.hit:hover{background:rgba(255,255,255,.05)}
+  .mkm-line.own.hit:hover{background:rgba(241,193,76,.1)}
+
+  /* ===== my orders ===== */
+  .mkbal-btns{display:flex;gap:6px;margin-top:10px}
+  .mkbal-btns .mkbal-add{margin-top:0;flex:1}
+
+  .ord-box{max-width:680px}
+  .ord-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:20px}
+  .ord-stat{background:var(--panel2);border:1px solid var(--hair);border-radius:10px;padding:11px 12px}
+  .ord-stat span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--faint);margin-bottom:3px}
+  .ord-stat b{font-size:16px;color:var(--text);font-weight:800;letter-spacing:-.3px}
+  .ord-stat b small{font-size:10px;color:var(--muted);font-weight:500;margin-left:2px}
+  .ord-stat.lock b{color:var(--gold)}
+
+  .ord-sec{margin-bottom:24px}
+  .ord-sec:last-child{margin-bottom:0}
+  .ord-sechead{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+  .ord-sec h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0;font-weight:700}
+  .ord-sec h3 span{display:inline-block;min-width:17px;text-align:center;margin-left:6px;
+    font-size:10px;color:var(--text);background:var(--panel2);border-radius:20px;padding:2px 6px}
+  .ord-secright{display:flex;align-items:center;gap:10px}
+  .ord-tot{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ord-all{font:inherit;font-size:10.5px;letter-spacing:.6px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:7px;
+    padding:6px 10px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .ord-all:hover{color:var(--red);border-color:rgba(224,85,106,.4)}
+  .ord-all:disabled{opacity:.4;cursor:default}
+
+  /* Each order is its own tile. A row of text separated by a hairline made
+     it hard to see where one order ended and the next began. */
+  .ord-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto auto;gap:14px;
+    align-items:center;background:var(--panel2);border:1px solid var(--hair);
+    border-left:2px solid var(--hair);border-radius:11px;padding:11px 13px;margin-bottom:8px;
+    transition:border-color .15s}
+  .ord-row:last-child{margin-bottom:0}
+  .ord-row:hover{border-color:var(--line)}
+  .ord-row.ask{border-left-color:var(--c-rare)}
+  .ord-row.bid{border-left-color:var(--red)}
+  .ord-img{width:62px;aspect-ratio:945/1280;border-radius:7px;overflow:hidden;background:#08080a}
+  .ord-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .ord-mid{min-width:0}
+  .ord-name{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+  .ord-tags{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:10.5px}
+  .ord-rr{font-size:9px;letter-spacing:1.1px;font-weight:800}
+  .ord-when{color:var(--faint)}
+  .ord-exp{color:var(--muted);border:1px solid var(--hair);border-radius:20px;padding:2px 7px;font-size:9.5px}
+  .ord-exp.soon{color:#f0b429;border-color:rgba(240,180,41,.35);background:rgba(240,180,41,.08)}
+  .ord-exp.gone{color:var(--red);border-color:rgba(224,85,106,.35)}
+  .ord-price{font-size:17px;font-weight:800;text-align:right;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .ord-price.ask{color:var(--c-rare)} .ord-price.bid{color:var(--red)}
+  .ord-price small{display:block;font-size:9.5px;color:var(--faint);font-weight:500;letter-spacing:.6px}
+  .ord-x{width:32px;height:32px;font-size:19px;line-height:1;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:9px;
+    cursor:pointer;transition:.15s;flex-shrink:0}
+  .ord-x:hover{color:var(--red);border-color:rgba(224,85,106,.45);background:rgba(224,85,106,.08)}
+  .ord-x:disabled{opacity:.35;cursor:default}
+  .ord-none{color:var(--faint);font-size:13px;padding:44px 4px;text-align:center;line-height:1.8}
+  .ord-none b{display:block;color:var(--text);font-size:15px;margin-bottom:6px}
+
+  @media(max-width:600px){
+    .ord-box{max-width:none}
+    .ord-sum{grid-template-columns:repeat(2,1fr)}
+    .ord-row{grid-template-columns:52px minmax(0,1fr) auto;gap:11px;padding:10px 11px}
+    .ord-img{width:52px}
+    .ord-name{font-size:13px}
+    .ord-price{font-size:15px}
+    /* The close button drops to its own line rather than squeezing the price;
+       at 32px it has to stay tappable. */
+    .ord-x{grid-column:3;grid-row:1}
+  }
+
+  /* ===== withdraw ===== */
+  .wd-to{margin-bottom:2px}
+  .wd-to code{display:block;background:var(--panel2);border:1px solid var(--hair);
+    border-radius:10px;padding:12px 13px;font-size:12px;font-family:ui-monospace,monospace;
+    color:var(--muted);overflow-wrap:anywhere;line-height:1.4}
+  .wd-ok{width:52px;height:52px;margin:6px auto 16px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+    color:var(--green);border:1px solid rgba(63,209,122,.4);background:rgba(63,209,122,.08)}
+  .wd-pending{margin-top:16px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;
+    font-size:12px;line-height:1.6;color:var(--muted);text-align:center}
+  .wd-pending b{color:var(--text)}
+
+  /* Three buttons across a 320px card leaves each of them too narrow to read
+     or to hit. Below that width they stack. */
+  @media(max-width:400px){
+    .mkbal-btns{flex-wrap:wrap}
+    .mkbal-btns .mkbal-add{flex:1 1 100%}
+  }
+
+  /* ===== hero / portfolio ===== */
+  .mkhero-in{align-items:center;gap:40px}
+  .mkhero-txt{flex:1;min-width:280px}
+  .mkrule{display:block;width:56px;height:2px;margin-top:18px;
+    background:linear-gradient(90deg,var(--gold),transparent)}
+
+  .mkport{width:330px;flex-shrink:0;border:1px solid var(--line);border-radius:16px;
+    padding:20px 22px;background:linear-gradient(155deg,rgba(241,193,76,.08),rgba(241,193,76,.02) 45%,transparent)}
+  .mkport-h{font-size:10.5px;letter-spacing:2.4px;color:var(--gold);margin-bottom:8px}
+  .mkport-v{font-size:34px;font-weight:800;color:var(--gold);letter-spacing:-1px;line-height:1}
+  .mkport-v small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.5px;margin-left:3px}
+  .mkport-s{font-size:11px;color:var(--faint);margin-top:5px;min-height:14px}
+  .mkport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+    margin:18px 0 16px;padding-top:16px;border-top:1px solid var(--hair)}
+  .mkport-stat span{display:block;font-size:9px;letter-spacing:1.1px;color:var(--faint);margin-bottom:4px}
+  .mkport-stat b{font-size:18px;font-weight:800;color:var(--text)}
+
+  /* ===== rarity pills ===== */
+  /* Each rarity carries its own colour here as it does everywhere else, so
+     the filter row reads as the same vocabulary rather than a plain toolbar. */
+  .mkpill[data-r="common"]{color:var(--c-common);border-color:rgba(207,204,196,.28)}
+  .mkpill[data-r="rare"]{color:var(--c-rare);border-color:rgba(91,155,213,.35)}
+  .mkpill[data-r="epic"]{color:var(--c-epic);border-color:rgba(196,104,216,.35)}
+  .mkpill[data-r="legendary"]{color:var(--c-legendary);border-color:rgba(233,184,74,.35)}
+  .mkpill[data-r="mythic"]{color:var(--c-mythic);border-color:rgba(224,85,106,.35)}
+  .mkpill[data-r="special"]{color:var(--gold);border-color:rgba(241,193,76,.4)}
+  .mkpill[data-r]:hover{filter:brightness(1.25)}
+  .mkpill.on[data-r="common"]{background:rgba(207,204,196,.16);border-color:var(--c-common)}
+  .mkpill.on[data-r="rare"]{background:rgba(91,155,213,.18);border-color:var(--c-rare)}
+  .mkpill.on[data-r="epic"]{background:rgba(196,104,216,.18);border-color:var(--c-epic)}
+  .mkpill.on[data-r="legendary"]{background:rgba(233,184,74,.18);border-color:var(--c-legendary)}
+  .mkpill.on[data-r="mythic"]{background:rgba(224,85,106,.18);border-color:var(--c-mythic)}
+  .mkpill.on[data-r="special"]{background:rgba(241,193,76,.2);border-color:var(--gold)}
+  .mkpill.on[data-r]{color:var(--text);font-weight:700}
+
+  /* ===== card tiles ===== */
+  /* A coloured edge and a matching glow, applied in CSS rather than baked
+     into the artwork, so a rarity can be recoloured without new images. */
+  .mkcard{border-width:1px;position:relative}
+  .mkcard::after{content:"";position:absolute;inset:0;border-radius:15px;
+    pointer-events:none;transition:box-shadow .2s,border-color .2s;
+    border:1px solid transparent}
+  .mkcard[data-r="common"]::after{border-color:rgba(207,204,196,.3)}
+  .mkcard[data-r="rare"]::after{border-color:rgba(91,155,213,.4)}
+  .mkcard[data-r="epic"]::after{border-color:rgba(196,104,216,.4)}
+  .mkcard[data-r="legendary"]::after{border-color:rgba(233,184,74,.45)}
+  .mkcard[data-r="mythic"]::after{border-color:rgba(224,85,106,.4)}
+  .mkcard[data-r="special"]::after{border-color:rgba(241,193,76,.5)}
+  .mkcard:hover[data-r="common"]::after{box-shadow:0 0 22px rgba(207,204,196,.2)}
+  .mkcard:hover[data-r="rare"]::after{box-shadow:0 0 22px rgba(91,155,213,.3)}
+  .mkcard:hover[data-r="epic"]::after{box-shadow:0 0 22px rgba(196,104,216,.3)}
+  .mkcard:hover[data-r="legendary"]::after{box-shadow:0 0 22px rgba(233,184,74,.35)}
+  .mkcard:hover[data-r="mythic"]::after{box-shadow:0 0 22px rgba(224,85,106,.3)}
+  .mkcard:hover[data-r="special"]::after{box-shadow:0 0 26px rgba(241,193,76,.4)}
+
+  /* Floor and best offer side by side: the two numbers someone actually
+     weighs against each other before deciding. */
+  .mkquote{display:flex;gap:18px;margin-top:9px}
+  .mkq{min-width:0}
+  .mkq span{display:block;font-size:9.5px;letter-spacing:.8px;color:var(--faint);margin-bottom:2px}
+  .mkq b{font-size:15px;font-weight:800;letter-spacing:-.3px}
+  .mkq b small{font-size:9.5px;font-weight:500;color:var(--muted);margin-left:3px}
+  .mkq.ask b{color:var(--gold)}
+  .mkq.bid b{color:var(--text)}
+  .mknone{font-size:12.5px;color:var(--faint);margin-top:11px}
+
+  /* ===== pagination ===== */
+  .mkpager{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin-top:30px;flex-wrap:wrap}
+  .mkpages{display:flex;gap:6px;flex-wrap:wrap;margin:0 auto}
+  .mkpg{min-width:36px;height:36px;font:inherit;font-size:13px;color:var(--muted);
+    background:var(--panel);border:1px solid var(--hair);border-radius:9px;
+    cursor:pointer;transition:.15s;padding:0 10px}
+  .mkpg:hover:not(:disabled){color:var(--text);border-color:var(--line)}
+  .mkpg.on{color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));
+    border-color:transparent;font-weight:800}
+  .mkpg:disabled{opacity:.3;cursor:default}
+  .mkpg.dots{border:0;background:transparent;cursor:default;min-width:20px;padding:0}
+
+  @media(max-width:1040px){
+    .mkhero-in{flex-direction:column;align-items:stretch;gap:24px}
+    .mkport{width:auto}
+  }
+  @media(max-width:560px){
+    .mkport{padding:16px 17px}
+    .mkport-v{font-size:28px}
+    .mkport-grid{gap:6px}
+    .mkport-stat b{font-size:15px}
+    .mkq b{font-size:13px}
+    .mkquote{gap:12px}
+    .mkpager{justify-content:center}
+  }
+
+  /* Sits between the wordmark and the portfolio card, and steps aside on
+     anything narrower: on a phone the header should be text and numbers. */
+  .mkhero-art{flex:0 1 420px;min-width:0;display:flex;justify-content:center}
+  .mkhero-art img{width:100%;max-width:420px;height:auto;display:block}
+  @media(max-width:1240px){ .mkhero-art{display:none} }
+
+  .mkport-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .mkport-top .mkport-h{margin:0}
+  .mkport-eye{width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:0;color:var(--muted);cursor:pointer;padding:0;transition:.15s}
+  .mkport-eye:hover{color:var(--gold)}
+  .mkport-eye svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  .mkport-stat{display:flex;align-items:center;gap:8px;min-width:0}
+  .mkport-ic{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:50%;color:var(--gold)}
+  .mkport-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5;
+    stroke-linecap:round;stroke-linejoin:round}
+  .mkport-stat > div{min-width:0}
+
+  /* Balance hidden: the numbers stay in the DOM but are unreadable, so the
+     card keeps its shape and nothing reflows when it is turned back on. */
+  .mkport.hidden .mkport-v b,
+  .mkport.hidden .mkport-s,
+  .mkport.hidden .mkport-stat b{color:transparent;text-shadow:0 0 11px rgba(236,234,228,.55)}
+  .mkport.hidden .mkport-v b{text-shadow:0 0 15px rgba(241,193,76,.6)}
+
+  @media(max-width:560px){
+    .mkport-grid{gap:8px}
+    .mkport-ic{width:22px;height:22px}
+    .mkport-ic svg{width:11px;height:11px}
+    .mkport-stat{gap:6px}
+  }
+
+  /* Mythic artwork is iridescent and special is crimson, but the palette had
+     mythic as red and special as gold — so the two filters that should be
+     easiest to tell apart were the two that looked wrong. Matched to the
+     cards themselves. */
+  :root{ --c-special:#e0556a; --mythic-grad:linear-gradient(115deg,#ff6b81,#ffd86b 33%,#6bd0ff 62%,#c46bff); }
+
+  .mkpill[data-r="mythic"]{color:#c9a2ff;border-color:rgba(201,162,255,.4)}
+  .mkpill.on[data-r="mythic"]{background:var(--mythic-grad);border-color:transparent;color:#1a1020}
+  .mkpill[data-r="special"]{color:var(--c-special);border-color:rgba(224,85,106,.4)}
+  .mkpill.on[data-r="special"]{background:rgba(224,85,106,.2);border-color:var(--c-special);color:var(--text)}
+
+  .mkcard[data-r="mythic"]::after{border-color:rgba(201,162,255,.45)}
+  .mkcard:hover[data-r="mythic"]::after{box-shadow:0 0 26px rgba(160,120,255,.35)}
+  .mkcard[data-r="special"]::after{border-color:rgba(224,85,106,.45)}
+  .mkcard:hover[data-r="special"]::after{box-shadow:0 0 24px rgba(224,85,106,.32)}
+  .r-mythic{color:#c9a2ff} .r-special{color:var(--c-special)}
+  .mkm-rr.r-mythic{color:#c9a2ff} .mkm-rr.r-special{color:var(--c-special)}
+
+  /* The hero was carrying more air than it needed now that the artwork
+     fills the middle. */
+  .mkhero{padding:26px 34px 22px}
+  .mkhero-in{gap:28px}
+  .mkwrap{padding-top:20px}
+  @media(max-width:1040px){ .mkhero{padding:22px 18px 20px} }
+
+  /* Outline only, and squared off. A filled pill made the selected rarity
+     shout while the rest receded; a border and matching label says the same
+     thing without redrawing the row every time the choice changes. */
+  .mkpill{border-radius:8px;padding:9px 15px;background:transparent}
+  .mkpill.on{background:transparent;font-weight:700}
+  .mkpill.on[data-r]{background:transparent}
+  .mkpill[data-v=""]{color:var(--gold);border-color:rgba(241,193,76,.4)}
+  .mkpill[data-v=""].on{background:transparent;border-color:var(--gold);color:var(--gold)}
+  .mkpill.on[data-r="common"]{background:transparent;border-color:var(--c-common);color:var(--c-common)}
+  .mkpill.on[data-r="rare"]{background:transparent;border-color:var(--c-rare);color:var(--c-rare)}
+  .mkpill.on[data-r="epic"]{background:transparent;border-color:var(--c-epic);color:var(--c-epic)}
+  .mkpill.on[data-r="legendary"]{background:transparent;border-color:var(--c-legendary);color:var(--c-legendary)}
+  .mkpill.on[data-r="special"]{background:transparent;border-color:var(--c-special);color:var(--c-special)}
+  /* Mythic keeps its spectrum, but as an edge and a label rather than a fill. */
+  .mkpill[data-r="mythic"]{position:relative;border-color:transparent;
+    background:linear-gradient(var(--bg),var(--bg)) padding-box,
+               var(--mythic-grad) border-box;
+    border:1px solid transparent}
+  .mkpill.on[data-r="mythic"]{color:#e8d5ff;
+    background:linear-gradient(var(--bg),var(--bg)) padding-box,
+               var(--mythic-grad) border-box}
+
+  /* The eye belongs to the word, not to the far edge of the card. */
+  .mkport-top{justify-content:flex-start;gap:7px}
+  .mkport-eye{width:20px;height:20px}
+  .mkport-eye svg{width:14px;height:14px}
+
+  /* Solid glyphs: a 13px outline turns to mush, a filled silhouette holds. */
+  .mkport-ic svg{fill:currentColor;stroke:none}
+
+  .mkport-eye svg{fill:currentColor;stroke:none}
+
+  /* The text was set to grow, which pushed the artwork up against the
+     portfolio card and left a hole in the middle of the header. Letting the
+     text take only what it needs, and sending the slack to the right of the
+     artwork instead, closes the gap. */
+  /* Three things share one row and the middle one was getting whatever was
+     left, which was not much. Capping the wordmark and tightening the gaps
+     hands that space to the artwork instead. */
+  .mkhero-in{gap:22px}
+  .mkhero-txt{flex:0 1 auto;max-width:500px}
+  .mkhero-art{flex:1 1 0;min-width:0;justify-content:flex-start}
+  .mkhero-art img{width:100%;max-width:560px}
+  .mkport{width:310px}
+
+  /* Price on the left, size on the right, and sells red against buys green.
+     Blue for asks was a house choice that meant nothing to anyone arriving
+     from an exchange, where the pair is always red over green. */
+  .mkm-dhead{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.6px;
+    color:var(--faint);padding:0 2px 7px;border-bottom:1px solid var(--hair);margin-bottom:4px}
+  .mkm-dhead small{font-size:9px}
+  .mkm-line .p{font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+  .mkm-line .q{color:var(--muted);font-weight:600;font-size:12.5px;justify-content:flex-end}
+  .mkm-line.empty .q{color:var(--faint);font-weight:400}
+  .mkm-line.ask .p{color:var(--red)}
+  .mkm-line.bid .p{color:var(--green)}
+  .mkm-line .dot{margin-left:2px}
+
+  .mkm-lab{display:block;font-size:10.5px;letter-spacing:1.1px;color:var(--muted);
+    margin:14px 0 7px}
+  .mkm-lab small{font-size:9.5px;color:var(--faint)}
+  .mkm-lab:first-of-type{margin-top:16px}
+  .mkm-total{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px;
+    padding-top:14px;border-top:1px solid var(--hair)}
+  .mkm-total span{flex:1;font-size:12.5px;color:var(--muted)}
+  .mkm-total b{font-size:19px;font-weight:800;color:var(--text);
+    letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+  .mkm-total small{font-size:10.5px;color:var(--muted)}
+
+  /* The book was sizing itself to its contents, so a long list made the row
+     taller instead of scrolling and the panel drifted away from the card
+     beside it. Bounded by the row now — the card's aspect ratio sets the
+     height, and anything past that scrolls. */
+  .mkm-top{align-items:stretch}
+  .mkm-left{align-self:start}
+  .mkm-book{min-height:0;overflow:hidden;height:100%}
+  .mkm-book .mkm-depth{flex:1 1 0;min-height:0;height:auto;max-height:none;overflow-y:auto}
+  @media(max-width:1100px){
+    /* Below this the book sits under the other two at full width, where the
+       card no longer constrains it. */
+    .mkm-book{height:auto}
+    .mkm-book .mkm-depth{flex:none;height:calc(13 * 27px)}
+  }
+
+  /* Eight rows each, fixed. The panel is the same height whether the book
+     holds ten orders or two hundred. */
+  .mkm-book .mkm-depth{flex:none;height:auto;max-height:none;overflow:visible;display:block}
+  .mkm-side{height:calc(8 * 27px);overflow-y:auto;overscroll-behavior:contain}
+  /* Chrome and Safari take the pseudo-elements, which allow a 4px rail and a
+     rounded thumb. Setting scrollbar-color alongside them would make Chrome
+     ignore the lot, so the standard properties are kept for Firefox only. */
+  .mkm-side::-webkit-scrollbar{width:4px}
+  .mkm-side::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:4px}
+  .mkm-side::-webkit-scrollbar-thumb{background:rgba(241,193,76,.4);border-radius:4px}
+  .mkm-side::-webkit-scrollbar-thumb:hover{background:rgba(241,193,76,.7)}
+  @supports not selector(::-webkit-scrollbar){
+    .mkm-side{scrollbar-width:thin;scrollbar-color:rgba(241,193,76,.45) rgba(255,255,255,.03)}
+  }
+  @media(max-width:1100px){
+    .mkm-book .mkm-depth{height:auto}
+    .mkm-side{height:calc(6 * 27px)}
+  }
+
+  /* ===== collection ===== */
+  .colbar{height:5px;border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden;margin:14px 0 7px}
+  .colbar i{display:block;height:100%;border-radius:5px;
+    background:linear-gradient(90deg,var(--gold-b),var(--gold),var(--gold-a));transition:width .4s}
+
+  /* A card nobody holds is still part of the archive, so it stays on the
+     grid and loses its colour instead. The set keeps its shape and the gaps
+     are the point. */
+  .mkcard.miss .mkart img{filter:grayscale(1) brightness(.42)}
+  .mkcard.miss{opacity:.75}
+  .mkcard.miss:hover{opacity:1}
+  .mkcard.miss:hover .mkart img{filter:grayscale(.6) brightness(.62)}
+  .mkcard .own{position:absolute;left:9px;bottom:9px;z-index:2;font-size:10px;font-weight:800;
+    color:#100d05;background:var(--gold);border-radius:20px;padding:3px 8px;letter-spacing:.4px}
+
+  .col-box{max-width:940px}
+  .col-view{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:26px;align-items:start}
+  .col-art{border-radius:12px;overflow:hidden;background:#08080a;aspect-ratio:945/1280}
+  .col-art img{width:100%;height:100%;object-fit:cover;display:block}
+  .col-meta{padding-top:4px}
+  .col-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    padding:12px 0;border-bottom:1px solid var(--hair);font-size:12px;letter-spacing:.8px;color:var(--muted)}
+  .col-row b{font-size:14px;color:var(--text);letter-spacing:0}
+  .col-nav{display:flex;gap:8px;margin-top:20px}
+  .col-navbtn{flex:1;font:inherit;font-size:11.5px;letter-spacing:1px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:9px;padding:11px;cursor:pointer;transition:.15s}
+  .col-navbtn:hover:not(:disabled){color:var(--text);border-color:var(--line)}
+  .col-navbtn:disabled{opacity:.35;cursor:default}
+
+  @media(max-width:820px){
+    .col-view{grid-template-columns:minmax(0,1fr);gap:18px}
+    /* Stacked, the card is the whole width of the sheet. max-width alone
+       left it at its intrinsic size, which on a phone was a thumbnail. */
+    .col-art{width:100%;max-width:330px;margin:0 auto}
+    .col-box{max-width:none}
   }
 </style>
+</head>
+<body>
+
+<header class="head">
+  <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
+  <nav class="nav">
+    <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a><a href="index.html#vault">MEMONS VAULT</a>
+    <a href="index.html#capsule">OPEN CAPSULE</a><a href="marketplace.html">MARKETPLACE</a>
+    <a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
+  </nav>
+  <div class="hr">
+    <div class="soc">
+      <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+    </div>
+    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+    <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+    <button class="mpbtn" id="mpbtn">My Page</button>
+    <span class="hidden-chip"><span id="waddr"></span><span id="wstat"></span><button id="wdisc"></button></span>
+  </div>
+</header>
+
+<section class="mkhero">
+  <div class="mkhero-in">
+    <div class="mkhero-txt">
+      <div class="mkeye">COLLECTION</div>
+      <h1 class="mktitle" id="charName">MEMONS</h1>
+      <p class="mksub" id="charLine">Every card in the archive.</p>
+      <span class="mkrule"></span>
+    </div>
+
+    <div class="mkport" id="progWrap" hidden>
+      <div class="mkport-top"><span class="mkport-h">COLLECTED</span></div>
+      <div class="mkport-v"><b id="progHave">0</b> <small>/ <span id="progTotal">0</span></small></div>
+      <div class="colbar"><i id="progBar" style="width:0%"></i></div>
+      <div class="mkport-s" id="progPct">0%</div>
+    </div>
+  </div>
+</section>
+
+<section class="mkwrap">
+  <div class="mkbar">
+    <div class="mksearch">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Search cards" spellcheck="false">
+    </div>
+    <div class="mkpills" id="pills"></div>
+    <select id="sort" class="mksort">
+      <option value="num">Number</option>
+      <option value="rarity">Rarity</option>
+    </select>
+  </div>
+
+  <div class="mkcount" id="count">Loading&hellip;</div>
+  <div class="mkgrid" id="grid"></div>
+  <div class="mkempty" id="empty" hidden></div>
+
+  <div class="mkpager" id="pager" hidden>
+    <div class="mkpages" id="pages"></div>
+    <select id="perPage" class="mksort"></select>
+  </div>
+</section>
+
+<div class="mkmodal" id="modal" hidden>
+  <div class="mkmodal-bg" id="modalBg"></div>
+  <div class="mkmodal-box col-box" role="dialog" aria-modal="true">
+    <header class="mkm-head">
+      <div>
+        <div class="mkm-rr" id="mRarity"></div>
+        <h2 class="mkm-title" id="mTitle"></h2>
+      </div>
+      <button class="mkm-x" id="mClose" aria-label="Close">&times;</button>
+    </header>
+    <div class="mkm-body">
+      <div class="col-view">
+        <div class="col-art"><img id="mImg" alt=""></div>
+        <div class="col-meta">
+          <div class="col-row"><span>RARITY</span><b id="mMetaRarity">&mdash;</b></div>
+          <div class="col-row"><span>CHARACTER</span><b id="mMetaChar">&mdash;</b></div>
+          <div class="col-row"><span>SEASON</span><b id="mMetaSeason">&mdash;</b></div>
+          <div class="col-row" id="mOwnedRow" hidden><span>YOU OWN</span><b id="mMetaOwned">&mdash;</b></div>
+          <div class="col-nav">
+            <button class="col-navbtn" id="mPrev">&lsaquo; PREV</button>
+            <button class="col-navbtn" id="mNext">NEXT &rsaquo;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <button class="m-burger" id="mBurger" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
 <div class="m-overlay" id="mOverlay"></div>
 <nav class="m-drawer" id="mDrawer"></nav>
+<script src="wallet-provider.js"></script>
+<script src="gacha-client.js"></script>
+<script src="mypage-entry.js"></script>
+<script>
+(function(){
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  var H={apikey:SB_ANON,Authorization:'Bearer '+SB_ANON};
+
+  var RARITY=['common','rare','epic','legendary','mythic','special'];
+  var LABEL={common:'COMMON',rare:'RARE',epic:'EPIC',legendary:'LEGENDARY',mythic:'MYTHIC',special:'SPECIAL'};
+  var $=function(id){return document.getElementById(id);};
+  var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+
+  /* Supabase resizes on request, so the grid asks for a tile-sized image
+     instead of the full card. */
+  function thumb(url){
+    if(!url) return '';
+    return url + (url.indexOf('?')<0?'?':'&') + 'width=520&quality=75';
+  }
+  function title(c){
+    var n=String(c.name||'').trim();
+    return /^\d+$/.test(n) ? NAME+' #'+n : (n || c.card_id);
+  }
+
+  /* One character's archive. Which one comes from the address, so the same
+     page serves every character that gets added later. */
+  var CHAR=(location.search.match(/[?&]char=([\w-]+)/)||[,'apepe'])[1];
+  var NAME=CHAR.toUpperCase();
+
+  var rows=[], shown=[], owned={}, filter='', q='', sort='num';
+  function isPhone(){ return window.matchMedia && window.matchMedia('(max-width:640px)').matches; }
+  var page=1, perPage=isPhone()?6:20;
+  function connected(){ return !!(window.MEMONS && MEMONS.connected); }
+
+  function pills(){
+    var host=$('pills'); if(!host) return;
+    var all=[['','ALL']].concat(RARITY.map(function(r){return [r,LABEL[r]];}));
+    host.innerHTML=all.map(function(p){
+      return '<button class="mkpill'+(filter===p[0]?' on':'')+'"'+
+             (p[0]?' data-r="'+p[0]+'"':'')+' data-v="'+p[0]+'">'+p[1]+'</button>';
+    }).join('');
+    host.querySelectorAll('.mkpill').forEach(function(b){
+      b.onclick=function(){ filter=b.dataset.v; page=1; pills(); apply(); };
+    });
+  }
+
+  function tile(c){
+    var have=owned[c.card_id]||0;
+    var miss=connected() && !have;
+    return '<article class="mkcard'+(miss?' miss':'')+'" data-id="'+esc(c.card_id)+'" data-r="'+esc(c.rarity)+'">'+
+      '<div class="mkart">'+
+        '<img loading="lazy" src="'+esc(thumb(c.image_url))+'" alt="'+esc(title(c))+'"'+
+        ' onerror="this.style.visibility=\'hidden\'">'+
+        '<span class="rr r-'+esc(c.rarity)+'">'+esc(LABEL[c.rarity]||c.rarity)+'</span>'+
+        (have>1 ? '<span class="own">x'+have+'</span>' : '')+
+      '</div>'+
+      '<div class="mkinfo"><div class="mkname">'+esc(title(c))+'</div></div>'+
+    '</article>';
+  }
+
+  function render(){
+    var g=$('grid'), e=$('empty');
+    var total=shown.length;
+    var pages=Math.max(1, Math.ceil(total/perPage));
+    if(page>pages) page=pages;
+    var from=(page-1)*perPage, to=Math.min(from+perPage,total);
+
+    $('count').textContent = total ? 'Showing '+(from+1)+' - '+to+' of '+total+' cards' : '0 cards';
+
+    if(!total){
+      g.innerHTML=''; $('pager').hidden=true; e.hidden=false;
+      e.innerHTML = rows.length
+        ? '<b>Nothing matches</b>Try a different rarity or search term.'
+        : '<b>No cards yet</b>This archive is still being filled.';
+      return;
+    }
+    e.hidden=true;
+    g.innerHTML=shown.slice(from,to).map(tile).join('');
+    g.querySelectorAll('.mkcard').forEach(function(el){
+      el.onclick=function(){ openCard(el.dataset.id); };
+    });
+    renderPager(pages);
+  }
+
+  function renderPager(pages){
+    var host=$('pages'); if(!host) return;
+    $('pager').hidden = pages<=1;
+    if(pages<=1){ host.innerHTML=''; return; }
+    var out=[], win=2;
+    var add=function(n){ out.push('<button class="mkpg'+(n===page?' on':'')+'" data-p="'+n+'">'+n+'</button>'); };
+    var dots=function(){ out.push('<span class="mkpg dots">&hellip;</span>'); };
+    out.push('<button class="mkpg" data-p="'+(page-1)+'"'+(page===1?' disabled':'')+'>&lsaquo;</button>');
+    add(1);
+    if(page-win>2) dots();
+    for(var i=Math.max(2,page-win); i<=Math.min(pages-1,page+win); i++) add(i);
+    if(page+win<pages-1) dots();
+    if(pages>1) add(pages);
+    out.push('<button class="mkpg" data-p="'+(page+1)+'"'+(page===pages?' disabled':'')+'>&rsaquo;</button>');
+    host.innerHTML=out.join('');
+    host.querySelectorAll('.mkpg[data-p]').forEach(function(b){
+      b.onclick=function(){
+        var n=Number(b.dataset.p);
+        if(n<1||n>pages||n===page) return;
+        page=n; render();
+        var g2=$('grid');
+        if(g2) window.scrollTo({top:g2.offsetTop-120, behavior:'smooth'});
+      };
+    });
+  }
+
+  function apply(){
+    var t=q.trim().toLowerCase();
+    shown=rows.filter(function(c){
+      if(filter && c.rarity!==filter) return false;
+      if(t && title(c).toLowerCase().indexOf(t)<0) return false;
+      return true;
+    });
+    var ri=function(c){ return RARITY.indexOf(c.rarity); };
+    var nm=function(c){ return parseInt(c.name,10)||0; };
+    shown.sort(function(a,b){
+      if(sort==='rarity') return ri(b)-ri(a) || nm(a)-nm(b);
+      return ri(a)-ri(b) || nm(a)-nm(b);
+    });
+    render();
+  }
+
+  var cur=null;
+  function openCard(id){
+    var i=shown.findIndex(function(c){return c.card_id===id;});
+    if(i<0) return;
+    cur=i; paint();
+    $('modal').hidden=false;
+    document.body.style.overflow='hidden';
+  }
+  function closeCard(){
+    $('modal').hidden=true;
+    document.body.style.overflow='';
+  }
+  function paint(){
+    var c=shown[cur]; if(!c) return;
+    $('mTitle').textContent=title(c);
+    var rr=$('mRarity');
+    rr.textContent=LABEL[c.rarity]||c.rarity;
+    rr.className='mkm-rr r-'+c.rarity;
+    // Full size here rather than the tile thumbnail: seeing the art properly
+    // is the reason to open a card at all.
+    $('mImg').src=c.image_url||'';
+    $('mImg').alt=title(c);
+    $('mMetaRarity').textContent=LABEL[c.rarity]||c.rarity;
+    $('mMetaChar').textContent=(c.character_key||CHAR).toUpperCase();
+    $('mMetaSeason').textContent=(c.season_key||'').toUpperCase()||'\u2014';
+    var have=owned[c.card_id]||0;
+    $('mOwnedRow').hidden=!connected();
+    $('mMetaOwned').textContent=have ? have+(have>1?' copies':' copy') : 'Not collected';
+    $('mPrev').disabled=cur<=0;
+    $('mNext').disabled=cur>=shown.length-1;
+  }
+
+  async function loadOwned(){
+    owned={};
+    if(!connected()) return;
+    try{
+      var s=await MEMONS.state();
+      (s.owned||[]).forEach(function(o){
+        if(!o.card_id) return;
+        owned[o.card_id]=(owned[o.card_id]||0)+1;
+      });
+    }catch(e){}
+  }
+
+  function progress(){
+    var w=$('progWrap');
+    if(!connected()){ w.hidden=true; return; }
+    var have=rows.filter(function(c){return owned[c.card_id];}).length;
+    var tot=rows.length;
+    var pct=tot? have/tot*100 : 0;
+    $('progHave').textContent=have;
+    $('progTotal').textContent=tot;
+    $('progBar').style.width=pct+'%';
+    $('progPct').textContent=(Math.round(pct*10)/10)+'%';
+    w.hidden=false;
+  }
+
+  async function load(){
+    try{
+      /* card_list rather than the cards table: a view that exposes only what
+         a public archive needs. Opening the table itself would publish every
+         column on it, drop rates included. */
+      var res=await fetch(SB_URL+'/rest/v1/card_list'+
+        '?select=id,name,rarity,image_url,character_key,season_key'+
+        '&character_key=eq.'+encodeURIComponent(CHAR),{headers:H});
+      var d=await res.json();
+      if(!Array.isArray(d)) throw new Error('bad response');
+      rows=d.map(function(c){
+        return {card_id:c.id, name:c.name, rarity:c.rarity, image_url:c.image_url,
+                character_key:c.character_key, season_key:c.season_key};
+      });
+    }catch(e){
+      rows=[];
+      $('count').textContent='';
+      $('grid').innerHTML='';
+      $('empty').hidden=false;
+      $('empty').innerHTML='<b>Could not load the archive</b>Please try again in a moment.';
+      return;
+    }
+    $('charName').textContent=NAME;
+    $('charLine').textContent='All '+rows.length+' cards in the archive.';
+    apply();
+    progress();
+  }
+
+  function fillPerPage(){
+    var sel=$('perPage'); if(!sel) return;
+    var opts = isPhone() ? [[6,'6 per page'],[12,'12 per page'],[9999,'Show all']]
+                         : [[20,'20 per page'],[40,'40 per page'],[9999,'Show all']];
+    sel.innerHTML=opts.map(function(o){
+      return '<option value="'+o[0]+'"'+(o[0]===perPage?' selected':'')+'>'+o[1]+'</option>';
+    }).join('');
+  }
+
+  $('q').oninput=function(){ q=this.value; page=1; apply(); };
+  $('sort').onchange=function(){ sort=this.value; page=1; apply(); };
+  fillPerPage();
+  $('perPage').onchange=function(){ perPage=Number(this.value); page=1; render(); };
+
+  var wasPhone=isPhone();
+  window.addEventListener('resize', function(){
+    var now=isPhone();
+    if(now===wasPhone) return;
+    wasPhone=now; perPage=now?6:20; page=1; fillPerPage(); render();
+  });
+
+  $('mClose').onclick=closeCard;
+  $('modalBg').onclick=closeCard;
+  $('mPrev').onclick=function(){ if(cur>0){ cur--; paint(); } };
+  $('mNext').onclick=function(){ if(cur<shown.length-1){ cur++; paint(); } };
+  document.addEventListener('keydown',function(e){
+    if($('modal').hidden) return;
+    if(e.key==='Escape') closeCard();
+    if(e.key==='ArrowLeft' && cur>0){ cur--; paint(); }
+    if(e.key==='ArrowRight' && cur<shown.length-1){ cur++; paint(); }
+  });
+
+  pills();
+  load();
+
+  /* The wallet arrives after the grid is already on screen, so ownership is
+     painted in when it does rather than holding the page back for it. */
+  document.addEventListener('memons:connected', async function(){
+    await loadOwned(); progress(); render();
+  });
+  document.addEventListener('memons:disconnected', function(){
+    owned={}; progress(); render();
+  });
+  (async function(){
+    for(var i=0;i<12;i++){
+      if(connected()){ await loadOwned(); progress(); render(); return; }
+      await new Promise(function(r){ setTimeout(r,400); });
+    }
+  })();
+})();
+</script>
+
 <script>
 (function(){
   var drawer=document.getElementById('mDrawer'), overlay=document.getElementById('mOverlay'), burger=document.getElementById('mBurger');
@@ -170,5 +1392,5 @@
   });
 })();
 </script>
-
-</body></html>
+</body>
+</html>

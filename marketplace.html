@@ -240,9 +240,786 @@
   .h-sub,.search input,.sortwrap,.sortwrap select,.frow,.tags span,.sold-h a,
   .lc .pr .fs,.stat .sub,.stat .delta,.price-in input,.foot ul a,.foot p.tg,.sub-in input,.copy,
   .lc .pr .eth,.stat .big,.lc .idn,.frow .ct,.lc .meta{font-family:var(--font-body)}
+
+  /* ===== marketplace ===== */
+  .mkhero{padding:56px 34px 30px;border-bottom:1px solid var(--hair)}
+  .mkhero-in{max-width:1400px;margin:0 auto;display:flex;align-items:flex-end;
+    justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .mkeye{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:10px}
+  .mktitle{font-family:var(--font-head,inherit);font-weight:900;font-size:clamp(30px,4.6vw,54px);
+    letter-spacing:-.5px;line-height:1;margin:0}
+  .mktitle .g{background:linear-gradient(120deg,var(--gold-a),var(--gold),var(--gold-b));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .mksub{color:var(--muted);font-size:14px;margin:12px 0 0}
+  .mkbal{border:1px solid var(--line);border-radius:13px;padding:14px 18px;min-width:170px;
+    background:linear-gradient(150deg,rgba(241,193,76,.07),transparent)}
+  .mkbal-l{font-size:10.5px;letter-spacing:2px;color:var(--muted)}
+  .mkbal-v{font-size:24px;font-weight:800;color:var(--gold);margin-top:4px}
+  .mkbal-v small{font-size:11px;color:var(--muted);font-weight:500}
+  .mkbal-s{font-size:11px;color:var(--faint);margin-top:2px}
+
+  .mkwrap{max-width:1400px;margin:0 auto;padding:26px 34px 90px}
+  .mkbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .mksearch{flex:1;min-width:220px;position:relative}
+  .mksearch svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;
+    fill:none;stroke:var(--muted);stroke-width:1.8}
+  .mksearch input{width:100%;background:var(--panel);border:1px solid var(--hair);border-radius:11px;
+    color:var(--text);font:inherit;font-size:13.5px;padding:12px 14px 12px 38px;outline:none}
+  .mksearch input:focus{border-color:var(--line)}
+  .mkpills{display:flex;gap:6px;flex-wrap:wrap}
+  .mkpill{font:inherit;font-size:12px;letter-spacing:.4px;color:var(--muted);background:transparent;
+    border:1px solid var(--hair);border-radius:20px;padding:8px 14px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .mkpill:hover{color:var(--text);border-color:var(--line)}
+  .mkpill.on{color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));border-color:transparent;font-weight:700}
+  .mksort{background:var(--panel);border:1px solid var(--hair);border-radius:11px;color:var(--text);
+    font:inherit;font-size:13px;padding:11px 12px;outline:none;cursor:pointer}
+  .mkcount{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+
+  /* The tile is the card. Its artwork is the reason anyone is here, so it
+     gets the space and the numbers sit under it rather than over it. */
+  .mkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .mkcard{background:var(--panel);border:1px solid var(--hair);border-radius:15px;overflow:hidden;
+    cursor:pointer;transition:transform .16s,border-color .16s;display:flex;flex-direction:column}
+  .mkcard:hover{transform:translateY(-3px);border-color:var(--line)}
+  .mkart{position:relative;width:100%;aspect-ratio:945/1280;background:#08080a;overflow:hidden}
+  .mkart img{width:100%;height:100%;object-fit:cover;display:block}
+  .mkart .rr{position:absolute;top:9px;left:9px;font-size:9.5px;letter-spacing:1.4px;font-weight:800;
+    padding:4px 9px;border-radius:20px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px)}
+  .mkart .chg{position:absolute;top:9px;right:9px;font-size:10.5px;font-weight:800;
+    padding:4px 8px;border-radius:20px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px)}
+  .mkart .chg.up{color:var(--green)} .mkart .chg.dn{color:var(--red)}
+  .mkinfo{padding:12px 13px 14px}
+  .mkname{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;margin-bottom:8px}
+  .mkprice{display:flex;align-items:baseline;gap:5px}
+  .mkprice b{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:-.3px}
+  .mkprice small{font-size:10.5px;color:var(--muted)}
+  .mkprice .none{font-size:13px;color:var(--faint);font-weight:500}
+  .mkmeta{display:flex;gap:10px;margin-top:7px;font-size:11px;color:var(--faint)}
+  .mkmeta b{color:var(--muted);font-weight:600}
+  .mkempty{text-align:center;color:var(--muted);padding:70px 20px;font-size:14px;line-height:1.7}
+  .mkempty b{display:block;color:var(--text);font-size:16px;margin-bottom:8px}
+
+  .r-common{color:var(--c-common)} .r-rare{color:var(--c-rare)}
+  .r-epic{color:var(--c-epic)} .r-legendary{color:var(--c-legendary)}
+  .r-mythic{color:var(--c-mythic)} .r-special{color:var(--gold)}
+
+  @media(max-width:1040px){
+    .mkhero{padding:36px 18px 24px}
+    .mkwrap{padding:20px 18px 70px}
+    /* auto-fill would drop straight to two here and leave the artwork
+       oversized for the space. Three keeps the tile a sensible size. */
+    .mkgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  }
+  @media(max-width:820px){
+    .mkgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+  /* Two columns on a phone. One wastes the screen, three makes the artwork
+     too small to be worth showing. */
+  @media(max-width:560px){
+    .mkgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .mkart .rr{font-size:8.5px;padding:3px 7px}
+    .mkart .chg{font-size:9.5px;padding:3px 6px}
+    .mkinfo{padding:10px 10px 12px}
+    .mkname{font-size:12px;margin-bottom:6px}
+    .mkprice b{font-size:15px}
+    .mkmeta{font-size:10px;gap:8px}
+    .mkbar{gap:9px}
+    .mksearch{flex:1 1 100%}
+    .mksort{flex:1}
+    .mkpills{flex:1 1 100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+    .mkpills::-webkit-scrollbar{display:none}
+    .mkbal{width:100%}
+  }
+
+  /* mobile drawer, matching the other pages */
+
+  /* Nothing may push past the viewport: with overflow-x hidden the excess is
+     not scrollable, so it would simply be unreachable. */
+  html,body{overflow-x:hidden;max-width:100vw}
+  .mkwrap,.mkhero-in{min-width:0}
+  .mkbar,.mkpills{min-width:0;max-width:100%}
+
+  /* mobile drawer, same as the other pages */
+  .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+  .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  
+  .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
+  .m-overlay.open{opacity:1;pointer-events:auto}
+  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
+  .m-drawer.open{transform:translateX(0)}
+  .m-drawer .m-close{align-self:flex-end;background:transparent;border:0;color:#8d8a82;cursor:pointer;padding:4px;margin-bottom:2px}
+  .m-drawer .m-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
+  .m-drawer .m-sec{font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;color:#E9B84A;font-weight:700;padding:12px 12px 6px}
+  .m-drawer a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;color:#8d8a82;font-family:var(--font-head,inherit);text-decoration:none}
+  .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
+  .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
+  .m-drawer a i{font-size:18px;width:20px;text-align:center}
+
+  /* ===== top tabs ===== */
+  .mktabs{display:flex;gap:0;border-bottom:1px solid var(--hair);margin-bottom:18px}
+  .mktab{font:inherit;font-size:13px;font-weight:700;letter-spacing:1.4px;color:var(--muted);
+    background:transparent;border:0;border-bottom:2px solid transparent;
+    padding:12px 22px;cursor:pointer;transition:.15s;margin-bottom:-1px}
+  .mktab:hover{color:var(--text)}
+  .mktab.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+  /* ===== detail modal ===== */
+  .mkmodal{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:24px}
+  .mkmodal[hidden]{display:none}
+  .mkmodal-bg{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(3px)}
+  .mkmodal-box{position:relative;width:100%;max-width:1240px;max-height:calc(100vh - 48px);
+    background:var(--panel);border:1px solid var(--line);border-radius:17px;overflow:hidden;
+    display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  .mkm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+    padding:20px 22px 16px;border-bottom:1px solid var(--hair);flex-shrink:0}
+  .mkm-rr{font-size:10px;letter-spacing:1.8px;font-weight:800;margin-bottom:5px}
+  .mkm-title{font-family:var(--font-head,inherit);font-size:22px;font-weight:800;margin:0;letter-spacing:-.3px}
+  .mkm-x{font-size:26px;line-height:1;color:var(--muted);background:transparent;border:0;cursor:pointer;padding:0 4px}
+  .mkm-x:hover{color:var(--text)}
+  .mkm-body{overflow-y:auto;padding:20px 22px 24px;-webkit-overflow-scrolling:touch}
+
+  /* Three columns: the card, the book, and the trade panel with the recent
+     trades under it. Two columns left the space beside a tall card empty,
+     which made the card look like decoration rather than the subject. */
+  .mkm-top{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.73fr) minmax(0,1fr);
+    gap:22px;margin-bottom:22px;align-items:start}
+  .mkm-left{min-width:0}
+  .mkm-art{border-radius:12px;overflow:hidden;background:#08080a;aspect-ratio:945/1280}
+  .mkm-art img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .mkm-act{display:flex;flex-direction:column;min-width:0}
+  /* The book stretches to the height of the card so the row reads as three
+     columns rather than three floating boxes of different sizes. */
+  .mkm-book{display:flex;flex-direction:column;min-height:100%}
+  .mkm-book .mkm-depth{flex:1;max-height:none;min-height:0}
+  .mkm-trades{margin-top:18px}
+  .mkm-mode{display:flex;gap:6px;margin-bottom:14px}
+  .mkm-tab{flex:1;font:inherit;font-size:12px;font-weight:700;letter-spacing:1.2px;
+    color:var(--muted);background:transparent;border:1px solid var(--hair);border-radius:9px;
+    padding:9px;cursor:pointer;transition:.15s}
+  .mkm-tab.on{color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));border-color:transparent}
+  .mkm-row{display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-bottom:1px solid var(--hair);font-size:13px;color:var(--muted)}
+  .mkm-row b{color:var(--text);font-size:14px}
+  .mkm-input{display:flex;gap:6px;margin-top:16px}
+  .mkm-input input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--hair);
+    border-radius:10px;color:var(--text);font:inherit;font-size:17px;font-weight:700;
+    padding:12px 14px;outline:none;-moz-appearance:textfield}
+  .mkm-input input::-webkit-outer-spin-button,
+  .mkm-input input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .mkm-input input:focus{border-color:var(--line)}
+  .mkm-step{width:44px;background:var(--panel2);border:1px solid var(--hair);border-radius:10px;
+    color:var(--text);font-size:17px;cursor:pointer}
+  .mkm-step:hover{border-color:var(--line)}
+  .mkm-floor{font-size:11.5px;color:var(--faint);text-align:right;margin-top:6px}
+  .mkm-floor b{color:var(--muted)}
+  .mkm-go{width:100%;margin-top:14px;font:inherit;font-size:14px;font-weight:800;letter-spacing:1.4px;
+    color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));
+    border:0;border-radius:11px;padding:15px;cursor:pointer;transition:.15s}
+  .mkm-go:hover:not(:disabled){filter:brightness(1.08)}
+  .mkm-go:disabled{opacity:.4;cursor:not-allowed}
+  .mkm-go.sell{background:linear-gradient(140deg,#7fd6a0,var(--green));color:#04180d}
+  .mkm-note{font-size:11.5px;line-height:1.55;color:var(--muted);margin-top:10px;min-height:16px}
+  .mkm-note.bad{color:var(--red)}
+
+  .mkm-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .mkm-panel{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;min-width:0}
+  .mkm-panel h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0 0 11px;font-weight:700}
+  .mkm-depth,.mkm-hist{max-height:210px;overflow-y:auto;font-size:12.5px}
+  .mkm-line{display:flex;justify-content:space-between;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.03)}
+  .mkm-line:last-child{border-bottom:0}
+  .mkm-line .q{color:var(--faint);font-size:11.5px}
+  .mkm-line.ask .p{color:var(--c-rare)}
+  .mkm-line.bid .p{color:var(--red)}
+  .mkm-line .p{font-weight:700}
+  .mkm-mine{font-size:9px;letter-spacing:.6px;color:var(--gold);margin-left:5px}
+  .mkm-spread{text-align:center;font-size:10.5px;letter-spacing:1px;color:var(--faint);
+    padding:7px 0;border-top:1px dashed rgba(255,255,255,.09);border-bottom:1px dashed rgba(255,255,255,.09);margin:4px 0}
+  .mkm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .mkm-stat{background:var(--panel2);border-radius:9px;padding:8px 9px}
+  .mkm-stat span{display:block;font-size:9.5px;letter-spacing:.8px;color:var(--faint)}
+  .mkm-stat b{font-size:13.5px;color:var(--text)}
+  .mkm-hist .t{color:var(--faint);font-size:11.5px}
+  .mkm-hist .up{color:var(--green)} .mkm-hist .dn{color:var(--red)}
+  .mkm-none{color:var(--faint);font-size:12px;padding:18px 4px;text-align:center}
+  .mkm-chart{margin-top:18px}
+
+  /* Below this the third column starves the trade panel, so the book moves
+     under the other two and gets the full width instead. */
+  @media(max-width:1100px){
+    .mkm-top{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px}
+    .mkm-left{grid-column:1;grid-row:1}
+    .mkm-act{grid-column:2;grid-row:1}
+    .mkm-book{grid-column:1/-1;grid-row:2;min-height:0;margin-top:2px}
+    
+  }
+  @media(max-width:760px){
+    .mkmodal{padding:0}
+    .mkmodal-box{max-width:none;max-height:100vh;height:100vh;border-radius:0;border:0}
+    /* Artwork and the trade panel side by side, the way the reference does
+       it on a phone: stacking them would push the buy button below the fold. */
+    /* Three columns will not fit a phone. The card and the trade panel stay
+       side by side so the buy button is reachable without scrolling, and the
+       book drops below them at full width. */
+    /* Card across the top at full width, then the book and the trade panel
+       side by side beneath it. The buy button falls below the fold, which is
+       the trade being made: the artwork is what someone came to look at. */
+    .mkm-top{grid-template-columns:minmax(0,.72fr) minmax(0,1fr);gap:10px;margin-bottom:18px}
+    .mkm-left{grid-row:1;grid-column:1/-1;margin-bottom:4px}
+    .mkm-book{grid-row:2;grid-column:1}
+    .mkm-act{grid-row:2;grid-column:2}
+    
+    .mkm-step{width:32px}
+    .mkm-panel{padding:12px 11px}
+    .mkm-input{gap:4px}
+    .mkm-input input{padding:11px 10px;font-size:16px}
+    .mkm-art{align-self:start;max-width:340px;margin:0 auto}
+    .mkm-body{padding:16px 15px 30px}
+    .mkm-title{font-size:18px}
+    .mkm-cols{grid-template-columns:minmax(0,1fr);gap:14px}
+    .mkm-input input{font-size:16px}
+    .mkm-depth,.mkm-hist{max-height:180px}
+  }
+  /* Under 360px there is no width left to split. The card goes on top at a
+     size worth looking at, and the trade panel gets the full row beneath it. */
+  @media(max-width:359px){
+    .mkm-top{grid-template-columns:minmax(0,1fr);gap:12px}
+    .mkm-left{grid-column:1;grid-row:1}
+    .mkm-act{grid-column:1;grid-row:2}
+    .mkm-book{grid-column:1;grid-row:3}
+    
+  }
+
+  /* ===== header parity with the rest of the site =====
+     This page had grown its own header: a wordmark instead of the logo, no
+     My Page button, and nav links that jumped to marketplace.html while every
+     other page points at the landing anchors. Anyone moving between pages saw
+     the top bar change shape, which reads as a different site. */
+  .brand a{display:block;line-height:0}
+  .brand img{height:44px;width:auto;display:block}
+  .mpbtn{display:none;align-items:center;gap:8px;font-family:inherit;font-size:12px;
+    font-weight:700;letter-spacing:1.2px;color:var(--gold);background:transparent;
+    border:1px solid var(--line);border-radius:9px;padding:9px 15px;cursor:pointer;transition:.15s}
+  .mpbtn:hover{background:rgba(241,193,76,.09)}
+  .wicon{display:none;align-items:center;justify-content:center;width:38px;height:38px;
+    border-radius:10px;border:1px solid var(--line);color:var(--gold);cursor:pointer}
+  .wicon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .hidden-chip{display:none}
+
+  @media(max-width:1040px){
+    .brand img{height:34px}
+  }
+
+  /* Fixed to the same 70px the other pages use, rather than letting padding
+     decide. A bar that changes height between pages is the thing people
+     notice even when they cannot say what moved. */
+  .head{height:70px;padding:0 34px}
+  @media(max-width:1040px){
+    .head{padding:0 18px}
+    /* The burger only belongs where the nav has been hidden. Left as a flat
+       rule it showed on desktop alongside the full menu. */
+    .head nav{display:none !important}
+    .m-burger{display:flex}
+    .brand img{height:32px}
+  }
+
+  /* Sixteen rows plus the spread, always. The panel keeps one height whether
+     the book is full or empty, so nothing shifts under the cursor when an
+     order lands. */
+  .mkm-book .mkm-depth{max-height:none;height:calc(17 * 27px);overflow-y:auto}
+  .mkm-line{height:27px;box-sizing:border-box;align-items:center}
+  .mkm-line.empty{opacity:.28}
+  .mkm-line.empty .p{font-weight:400;color:var(--faint)}
+  .mkm-spread{height:27px;display:flex;align-items:center;justify-content:center;margin:0;padding:0}
+
+  /* ===== deposit ===== */
+  .mkbal-add{margin-top:10px;width:100%;font:inherit;font-size:11px;font-weight:700;letter-spacing:1.2px;
+    color:var(--gold);background:transparent;border:1px solid var(--line);border-radius:8px;
+    padding:7px;cursor:pointer;transition:.15s}
+  .mkbal-add:hover{background:rgba(241,193,76,.1)}
+
+  .tu-box{max-width:440px}
+  .tu-label{display:block;font-size:11px;letter-spacing:1.4px;color:var(--muted);margin-bottom:8px}
+  .tu-unit{display:flex;align-items:center;padding:0 14px;font-size:13px;color:var(--muted);
+    background:var(--panel2);border:1px solid var(--hair);border-radius:10px}
+  .tu-hint{font-size:11.5px;color:var(--faint);margin-top:7px}
+  .tu-quick{display:flex;gap:7px;margin:14px 0 18px;flex-wrap:wrap}
+  .tu-quick button{flex:1;min-width:64px;font:inherit;font-size:12.5px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:9px;padding:10px 4px;cursor:pointer}
+  .tu-quick button:hover{color:var(--text);border-color:var(--line)}
+
+  .tu-amt{font-size:34px;font-weight:800;color:var(--gold);letter-spacing:-.5px;
+    text-align:center;margin-bottom:6px}
+  .tu-amt small{font-size:13px;color:var(--muted);font-weight:500}
+  /* An amount that is off by a cent does not match any order, and the money
+     sits until somebody looks. Worth saying plainly before they send. */
+  .tu-warn{font-size:12px;line-height:1.5;color:#f0b429;text-align:center;
+    background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.25);
+    border-radius:9px;padding:10px 12px;margin-bottom:20px}
+  .tu-addr{display:flex;gap:7px;align-items:stretch}
+  .tu-addr code{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--hair);
+    border-radius:10px;padding:12px 13px;font-size:12px;font-family:ui-monospace,monospace;
+    color:var(--text);overflow-wrap:anywhere;line-height:1.4}
+  .tu-addr button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--gold);
+    background:transparent;border:1px solid var(--line);border-radius:10px;padding:0 14px;cursor:pointer;white-space:nowrap}
+  .tu-addr button:hover{background:rgba(241,193,76,.1)}
+  .tu-timer{text-align:center;font-size:12.5px;color:var(--muted);margin:18px 0 4px}
+  .tu-timer b{color:var(--text);font-variant-numeric:tabular-nums}
+  .tu-timer.soon b{color:var(--red)}
+  .tu-cancel{width:100%;margin-top:9px;font:inherit;font-size:12px;color:var(--faint);
+    background:transparent;border:0;padding:9px;cursor:pointer}
+  .tu-cancel:hover{color:var(--muted)}
+
+  @media(max-width:560px){
+    .tu-box{max-width:none}
+    .tu-amt{font-size:28px}
+    .tu-addr{flex-direction:column}
+    .tu-addr button{padding:11px}
+  }
+
+  /* Quantity was set in the faint colour used for disabled text, which put
+     the one number that says how deep a price level is below the price it
+     belongs to. Same weight as the price now, just not coloured. */
+  .mkm-line .q{color:var(--text);font-size:12.5px;font-weight:600;
+    display:flex;align-items:center;gap:6px}
+  .mkm-line.empty .q{color:var(--faint);font-weight:400}
+  /* A dot beside the quantity, rather than a MINE tag after the price: it
+     reads at a glance down the column and costs no width. */
+  .mkm-line .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);
+    flex-shrink:0;box-shadow:0 0 5px rgba(241,193,76,.7)}
+  /* The dot alone marks a row as this wallet's. Recolouring the price as
+     well overrode the buy/sell colours, which are what the column is for. */
+  .mkm-line.own{background:rgba(241,193,76,.05)}
+
+  .mkm-line.hit{cursor:pointer;transition:background .1s}
+  .mkm-line.hit:hover{background:rgba(255,255,255,.05)}
+  .mkm-line.own.hit:hover{background:rgba(241,193,76,.1)}
+
+  /* ===== my orders ===== */
+  .mkbal-btns{display:flex;gap:6px;margin-top:10px}
+  .mkbal-btns .mkbal-add{margin-top:0;flex:1}
+
+  /* Six-column history rows need more room than the two-column order list
+     the box was originally sized for. */
+  .ord-box{max-width:880px}
+  .ord-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:16px}
+
+  /* ===== order tabs ===== */
+  .ord-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;
+    border-bottom:1px solid var(--hair);padding-bottom:14px}
+  .ord-tab{font:inherit;font-size:11px;font-weight:700;letter-spacing:1.1px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:9px;padding:9px 13px;cursor:pointer}
+  .ord-tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+  .ord-tab.on{color:var(--gold);border-color:var(--line);background:rgba(241,193,76,.09)}
+  .ord-tab i{font-style:normal;color:var(--faint);font-weight:500;margin-left:4px}
+  .ord-tab.on i{color:var(--gold-b)}
+
+  /* ===== history tables ===== */
+  .his-tbl{border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+  .his-row{display:grid;gap:10px;align-items:center;padding:12px 15px;
+    border-top:1px solid var(--hair);font-size:12.5px}
+  .his-row:first-child{border-top:none}
+  .his-row.th{background:var(--panel2);color:var(--faint);font-size:9.5px;
+    letter-spacing:1.1px;font-weight:700}
+  .his-n{font-variant-numeric:tabular-nums;font-weight:700}
+  .his-up{color:var(--green)} .his-dn{color:var(--red)}
+  .his-d{color:var(--muted);font-size:11.5px}
+  .his-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--muted)}
+  .his-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .his-fee{color:var(--faint);font-size:10.5px;font-weight:500;margin-left:3px}
+  .his-a{color:var(--muted);text-decoration:none}
+  .his-a:hover{color:var(--gold)}
+  .his-foot{color:var(--faint);font-size:11px;margin-top:12px;text-align:center}
+  .his-p{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.9px;
+    padding:4px 8px;border-radius:6px;border:1px solid var(--hair);color:var(--muted)}
+  .his-p.ok{color:var(--green);border-color:rgba(63,209,122,.35)}
+  .his-p.wait{color:var(--gold);border-color:var(--line)}
+  .his-p.no{color:var(--red);border-color:rgba(224,85,106,.35)}
+  .his-p.buy{color:var(--c-rare);border-color:rgba(91,155,213,.4)}
+  .his-p.sell{color:var(--gold);border-color:var(--line)}
+  /* Chains are told apart at a glance by colour; the label alone is three
+     similar-length words in a narrow column. */
+  .his-p.polygon{color:#a06bf0;border-color:rgba(160,107,240,.4)}
+  .his-p.ethereum{color:#8fa2c8;border-color:rgba(143,162,200,.4)}
+  .his-p.bsc{color:var(--gold);border-color:var(--line)}
+
+  /* Six columns do not fit a phone. Each row becomes a stacked block with the
+     column name carried in ::before, so the header row can drop away without
+     the numbers losing what they refer to. */
+  @media(max-width:640px){
+    .his-row.th{display:none}
+    .his-row{grid-template-columns:1fr !important;gap:6px;padding:14px}
+    .his-row>span{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .his-row>span::before{content:attr(data-l);color:var(--faint);font-size:9.5px;
+      font-weight:700;letter-spacing:1px;flex-shrink:0}
+    .his-ell{white-space:normal;text-align:right}
+  }
+  .ord-stat{background:var(--panel2);border:1px solid var(--hair);border-radius:10px;padding:11px 12px}
+  .ord-stat span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--faint);margin-bottom:3px}
+  .ord-stat b{font-size:16px;color:var(--text);font-weight:800;letter-spacing:-.3px}
+  .ord-stat b small{font-size:10px;color:var(--muted);font-weight:500;margin-left:2px}
+  .ord-stat.lock b{color:var(--gold)}
+
+  .ord-sec{margin-bottom:24px}
+  .ord-sec:last-child{margin-bottom:0}
+  .ord-sechead{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+  .ord-sec h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0;font-weight:700}
+  .ord-sec h3 span{display:inline-block;min-width:17px;text-align:center;margin-left:6px;
+    font-size:10px;color:var(--text);background:var(--panel2);border-radius:20px;padding:2px 6px}
+  .ord-secright{display:flex;align-items:center;gap:10px}
+  .ord-tot{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ord-all{font:inherit;font-size:10.5px;letter-spacing:.6px;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:7px;
+    padding:6px 10px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .ord-all:hover{color:var(--red);border-color:rgba(224,85,106,.4)}
+  .ord-all:disabled{opacity:.4;cursor:default}
+
+  /* Each order is its own tile. A row of text separated by a hairline made
+     it hard to see where one order ended and the next began. */
+  .ord-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto auto;gap:14px;
+    align-items:center;background:var(--panel2);border:1px solid var(--hair);
+    border-left:2px solid var(--hair);border-radius:11px;padding:11px 13px;margin-bottom:8px;
+    transition:border-color .15s}
+  .ord-row:last-child{margin-bottom:0}
+  .ord-row:hover{border-color:var(--line)}
+  .ord-row.ask{border-left-color:var(--c-rare)}
+  .ord-row.bid{border-left-color:var(--red)}
+  .ord-img{width:62px;aspect-ratio:945/1280;border-radius:7px;overflow:hidden;background:#08080a}
+  .ord-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .ord-mid{min-width:0}
+  .ord-name{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+  .ord-tags{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:10.5px}
+  .ord-rr{font-size:9px;letter-spacing:1.1px;font-weight:800}
+  .ord-when{color:var(--faint)}
+  .ord-exp{color:var(--muted);border:1px solid var(--hair);border-radius:20px;padding:2px 7px;font-size:9.5px}
+  .ord-exp.soon{color:#f0b429;border-color:rgba(240,180,41,.35);background:rgba(240,180,41,.08)}
+  .ord-exp.gone{color:var(--red);border-color:rgba(224,85,106,.35)}
+  .ord-price{font-size:17px;font-weight:800;text-align:right;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .ord-price.ask{color:var(--c-rare)} .ord-price.bid{color:var(--red)}
+  .ord-price small{display:block;font-size:9.5px;color:var(--faint);font-weight:500;letter-spacing:.6px}
+  .ord-x{width:32px;height:32px;font-size:19px;line-height:1;color:var(--muted);
+    background:transparent;border:1px solid var(--hair);border-radius:9px;
+    cursor:pointer;transition:.15s;flex-shrink:0}
+  .ord-x:hover{color:var(--red);border-color:rgba(224,85,106,.45);background:rgba(224,85,106,.08)}
+  .ord-x:disabled{opacity:.35;cursor:default}
+  .ord-none{color:var(--faint);font-size:13px;padding:44px 4px;text-align:center;line-height:1.8}
+  .ord-none b{display:block;color:var(--text);font-size:15px;margin-bottom:6px}
+
+  @media(max-width:600px){
+    .ord-box{max-width:none}
+    .ord-sum{grid-template-columns:repeat(2,1fr)}
+    .ord-tabs{gap:5px}
+    .ord-tab{padding:8px 10px;font-size:10px;letter-spacing:.8px}
+    .ord-row{grid-template-columns:52px minmax(0,1fr) auto;gap:11px;padding:10px 11px}
+    .ord-img{width:52px}
+    .ord-name{font-size:13px}
+    .ord-price{font-size:15px}
+    /* The close button drops to its own line rather than squeezing the price;
+       at 32px it has to stay tappable. */
+    .ord-x{grid-column:3;grid-row:1}
+  }
+
+  /* ===== network picker ===== */
+  /* Same control in both modals. Choosing the wrong one costs real money —
+     USDT sent on a chain the other side is not watching does not bounce —
+     so the selected chain is stated rather than implied. */
+  .chsel{display:flex;gap:7px;margin-bottom:6px}
+  .chsel button{flex:1;padding:10px 4px;border:1px solid var(--hair);border-radius:9px;
+    background:transparent;color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;
+    letter-spacing:.4px;cursor:pointer;transition:.15s}
+  .chsel button:hover{color:var(--text);border-color:var(--line)}
+  .chsel button.on{color:var(--gold);border-color:var(--gold-b);background:rgba(241,193,76,.1)}
+  .chsel button:disabled{opacity:.4;cursor:not-allowed}
+  @media(max-width:380px){
+    .chsel{flex-wrap:wrap}
+    .chsel button{flex:1 1 calc(50% - 4px)}
+  }
+
+  /* ===== withdraw ===== */
+  .wd-to{margin-bottom:2px}
+  .wd-to code{display:block;background:var(--panel2);border:1px solid var(--hair);
+    border-radius:10px;padding:12px 13px;font-size:12px;font-family:ui-monospace,monospace;
+    color:var(--muted);overflow-wrap:anywhere;line-height:1.4}
+  .wd-ok{width:52px;height:52px;margin:6px auto 16px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+    color:var(--green);border:1px solid rgba(63,209,122,.4);background:rgba(63,209,122,.08)}
+  .wd-pending{margin-top:16px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;
+    font-size:12px;line-height:1.6;color:var(--muted);text-align:center}
+  .wd-pending b{color:var(--text)}
+
+  /* Three buttons across a 320px card leaves each of them too narrow to read
+     or to hit. Below that width they stack. */
+  @media(max-width:400px){
+    .mkbal-btns{flex-wrap:wrap}
+    .mkbal-btns .mkbal-add{flex:1 1 100%}
+  }
+
+  /* ===== hero / portfolio ===== */
+  .mkhero-in{align-items:center;gap:40px}
+  .mkhero-txt{flex:1;min-width:280px}
+  .mkrule{display:block;width:56px;height:2px;margin-top:18px;
+    background:linear-gradient(90deg,var(--gold),transparent)}
+
+  .mkport{width:330px;flex-shrink:0;border:1px solid var(--line);border-radius:16px;
+    padding:20px 22px;background:linear-gradient(155deg,rgba(241,193,76,.08),rgba(241,193,76,.02) 45%,transparent)}
+  .mkport-h{font-size:10.5px;letter-spacing:2.4px;color:var(--gold);margin-bottom:8px}
+  .mkport-v{font-size:34px;font-weight:800;color:var(--gold);letter-spacing:-1px;line-height:1}
+  .mkport-v small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.5px;margin-left:3px}
+  .mkport-s{font-size:11px;color:var(--faint);margin-top:5px;min-height:14px}
+  .mkport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+    margin:18px 0 16px;padding-top:16px;border-top:1px solid var(--hair)}
+  .mkport-stat span{display:block;font-size:9px;letter-spacing:1.1px;color:var(--faint);margin-bottom:4px}
+  .mkport-stat b{font-size:18px;font-weight:800;color:var(--text)}
+
+  /* ===== rarity pills ===== */
+  /* Each rarity carries its own colour here as it does everywhere else, so
+     the filter row reads as the same vocabulary rather than a plain toolbar. */
+  .mkpill[data-r="common"]{color:var(--c-common);border-color:rgba(207,204,196,.28)}
+  .mkpill[data-r="rare"]{color:var(--c-rare);border-color:rgba(91,155,213,.35)}
+  .mkpill[data-r="epic"]{color:var(--c-epic);border-color:rgba(196,104,216,.35)}
+  .mkpill[data-r="legendary"]{color:var(--c-legendary);border-color:rgba(233,184,74,.35)}
+  .mkpill[data-r="mythic"]{color:var(--c-mythic);border-color:rgba(224,85,106,.35)}
+  .mkpill[data-r="special"]{color:var(--gold);border-color:rgba(241,193,76,.4)}
+  .mkpill[data-r]:hover{filter:brightness(1.25)}
+  .mkpill.on[data-r="common"]{background:rgba(207,204,196,.16);border-color:var(--c-common)}
+  .mkpill.on[data-r="rare"]{background:rgba(91,155,213,.18);border-color:var(--c-rare)}
+  .mkpill.on[data-r="epic"]{background:rgba(196,104,216,.18);border-color:var(--c-epic)}
+  .mkpill.on[data-r="legendary"]{background:rgba(233,184,74,.18);border-color:var(--c-legendary)}
+  .mkpill.on[data-r="mythic"]{background:rgba(224,85,106,.18);border-color:var(--c-mythic)}
+  .mkpill.on[data-r="special"]{background:rgba(241,193,76,.2);border-color:var(--gold)}
+  .mkpill.on[data-r]{color:var(--text);font-weight:700}
+
+  /* ===== card tiles ===== */
+  /* A coloured edge and a matching glow, applied in CSS rather than baked
+     into the artwork, so a rarity can be recoloured without new images. */
+  .mkcard{border-width:1px;position:relative}
+  .mkcard::after{content:"";position:absolute;inset:0;border-radius:15px;
+    pointer-events:none;transition:box-shadow .2s,border-color .2s;
+    border:1px solid transparent}
+  .mkcard[data-r="common"]::after{border-color:rgba(207,204,196,.3)}
+  .mkcard[data-r="rare"]::after{border-color:rgba(91,155,213,.4)}
+  .mkcard[data-r="epic"]::after{border-color:rgba(196,104,216,.4)}
+  .mkcard[data-r="legendary"]::after{border-color:rgba(233,184,74,.45)}
+  .mkcard[data-r="mythic"]::after{border-color:rgba(224,85,106,.4)}
+  .mkcard[data-r="special"]::after{border-color:rgba(241,193,76,.5)}
+  .mkcard:hover[data-r="common"]::after{box-shadow:0 0 22px rgba(207,204,196,.2)}
+  .mkcard:hover[data-r="rare"]::after{box-shadow:0 0 22px rgba(91,155,213,.3)}
+  .mkcard:hover[data-r="epic"]::after{box-shadow:0 0 22px rgba(196,104,216,.3)}
+  .mkcard:hover[data-r="legendary"]::after{box-shadow:0 0 22px rgba(233,184,74,.35)}
+  .mkcard:hover[data-r="mythic"]::after{box-shadow:0 0 22px rgba(224,85,106,.3)}
+  .mkcard:hover[data-r="special"]::after{box-shadow:0 0 26px rgba(241,193,76,.4)}
+
+  /* Floor and best offer side by side: the two numbers someone actually
+     weighs against each other before deciding. */
+  .mkquote{display:flex;gap:18px;margin-top:9px}
+  .mkq{min-width:0}
+  .mkq span{display:block;font-size:9.5px;letter-spacing:.8px;color:var(--faint);margin-bottom:2px}
+  .mkq b{font-size:15px;font-weight:800;letter-spacing:-.3px}
+  .mkq b small{font-size:9.5px;font-weight:500;color:var(--muted);margin-left:3px}
+  .mkq.ask b{color:var(--gold)}
+  .mkq.bid b{color:var(--text)}
+  .mknone{font-size:12.5px;color:var(--faint);margin-top:11px}
+
+  /* ===== pagination ===== */
+  .mkpager{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin-top:30px;flex-wrap:wrap}
+  .mkpages{display:flex;gap:6px;flex-wrap:wrap;margin:0 auto}
+  .mkpg{min-width:36px;height:36px;font:inherit;font-size:13px;color:var(--muted);
+    background:var(--panel);border:1px solid var(--hair);border-radius:9px;
+    cursor:pointer;transition:.15s;padding:0 10px}
+  .mkpg:hover:not(:disabled){color:var(--text);border-color:var(--line)}
+  .mkpg.on{color:#100d05;background:linear-gradient(140deg,var(--gold-a),var(--gold));
+    border-color:transparent;font-weight:800}
+  .mkpg:disabled{opacity:.3;cursor:default}
+  .mkpg.dots{border:0;background:transparent;cursor:default;min-width:20px;padding:0}
+
+  @media(max-width:1040px){
+    .mkhero-in{flex-direction:column;align-items:stretch;gap:24px}
+    .mkport{width:auto}
+  }
+  @media(max-width:560px){
+    .mkport{padding:16px 17px}
+    .mkport-v{font-size:28px}
+    .mkport-grid{gap:6px}
+    .mkport-stat b{font-size:15px}
+    .mkq b{font-size:13px}
+    .mkquote{gap:12px}
+    .mkpager{justify-content:center}
+  }
+
+  /* Sits between the wordmark and the portfolio card, and steps aside on
+     anything narrower: on a phone the header should be text and numbers. */
+  .mkhero-art{flex:0 1 420px;min-width:0;display:flex;justify-content:center}
+  .mkhero-art img{width:100%;max-width:420px;height:auto;display:block}
+  @media(max-width:1240px){ .mkhero-art{display:none} }
+
+  .mkport-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .mkport-top .mkport-h{margin:0}
+  .mkport-eye{width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:0;color:var(--muted);cursor:pointer;padding:0;transition:.15s}
+  .mkport-eye:hover{color:var(--gold)}
+  .mkport-eye svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  .mkport-stat{display:flex;align-items:center;gap:8px;min-width:0}
+  .mkport-ic{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:50%;color:var(--gold)}
+  .mkport-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5;
+    stroke-linecap:round;stroke-linejoin:round}
+  .mkport-stat > div{min-width:0}
+
+  /* Balance hidden: the numbers stay in the DOM but are unreadable, so the
+     card keeps its shape and nothing reflows when it is turned back on. */
+  .mkport.hidden .mkport-v b,
+  .mkport.hidden .mkport-s,
+  .mkport.hidden .mkport-stat b{color:transparent;text-shadow:0 0 11px rgba(236,234,228,.55)}
+  .mkport.hidden .mkport-v b{text-shadow:0 0 15px rgba(241,193,76,.6)}
+
+  @media(max-width:560px){
+    .mkport-grid{gap:8px}
+    .mkport-ic{width:22px;height:22px}
+    .mkport-ic svg{width:11px;height:11px}
+    .mkport-stat{gap:6px}
+  }
+
+  /* Mythic artwork is iridescent and special is crimson, but the palette had
+     mythic as red and special as gold — so the two filters that should be
+     easiest to tell apart were the two that looked wrong. Matched to the
+     cards themselves. */
+  :root{ --c-special:#e0556a; --mythic-grad:linear-gradient(115deg,#ff6b81,#ffd86b 33%,#6bd0ff 62%,#c46bff); }
+
+  .mkpill[data-r="mythic"]{color:#c9a2ff;border-color:rgba(201,162,255,.4)}
+  .mkpill.on[data-r="mythic"]{background:var(--mythic-grad);border-color:transparent;color:#1a1020}
+  .mkpill[data-r="special"]{color:var(--c-special);border-color:rgba(224,85,106,.4)}
+  .mkpill.on[data-r="special"]{background:rgba(224,85,106,.2);border-color:var(--c-special);color:var(--text)}
+
+  .mkcard[data-r="mythic"]::after{border-color:rgba(201,162,255,.45)}
+  .mkcard:hover[data-r="mythic"]::after{box-shadow:0 0 26px rgba(160,120,255,.35)}
+  .mkcard[data-r="special"]::after{border-color:rgba(224,85,106,.45)}
+  .mkcard:hover[data-r="special"]::after{box-shadow:0 0 24px rgba(224,85,106,.32)}
+  .r-mythic{color:#c9a2ff} .r-special{color:var(--c-special)}
+  .mkm-rr.r-mythic{color:#c9a2ff} .mkm-rr.r-special{color:var(--c-special)}
+
+  /* The hero was carrying more air than it needed now that the artwork
+     fills the middle. */
+  .mkhero{padding:26px 34px 22px}
+  .mkhero-in{gap:28px}
+  .mkwrap{padding-top:20px}
+  @media(max-width:1040px){ .mkhero{padding:22px 18px 20px} }
+
+  /* Outline only, and squared off. A filled pill made the selected rarity
+     shout while the rest receded; a border and matching label says the same
+     thing without redrawing the row every time the choice changes. */
+  .mkpill{border-radius:8px;padding:9px 15px;background:transparent}
+  .mkpill.on{background:transparent;font-weight:700}
+  .mkpill.on[data-r]{background:transparent}
+  .mkpill[data-v=""]{color:var(--gold);border-color:rgba(241,193,76,.4)}
+  .mkpill[data-v=""].on{background:transparent;border-color:var(--gold);color:var(--gold)}
+  .mkpill.on[data-r="common"]{background:transparent;border-color:var(--c-common);color:var(--c-common)}
+  .mkpill.on[data-r="rare"]{background:transparent;border-color:var(--c-rare);color:var(--c-rare)}
+  .mkpill.on[data-r="epic"]{background:transparent;border-color:var(--c-epic);color:var(--c-epic)}
+  .mkpill.on[data-r="legendary"]{background:transparent;border-color:var(--c-legendary);color:var(--c-legendary)}
+  .mkpill.on[data-r="special"]{background:transparent;border-color:var(--c-special);color:var(--c-special)}
+  /* Mythic keeps its spectrum, but as an edge and a label rather than a fill. */
+  .mkpill[data-r="mythic"]{position:relative;border-color:transparent;
+    background:linear-gradient(var(--bg),var(--bg)) padding-box,
+               var(--mythic-grad) border-box;
+    border:1px solid transparent}
+  .mkpill.on[data-r="mythic"]{color:#e8d5ff;
+    background:linear-gradient(var(--bg),var(--bg)) padding-box,
+               var(--mythic-grad) border-box}
+
+  /* The eye belongs to the word, not to the far edge of the card. */
+  .mkport-top{justify-content:flex-start;gap:7px}
+  .mkport-eye{width:20px;height:20px}
+  .mkport-eye svg{width:14px;height:14px}
+
+  /* Solid glyphs: a 13px outline turns to mush, a filled silhouette holds. */
+  .mkport-ic svg{fill:currentColor;stroke:none}
+
+  .mkport-eye svg{fill:currentColor;stroke:none}
+
+  /* The text was set to grow, which pushed the artwork up against the
+     portfolio card and left a hole in the middle of the header. Letting the
+     text take only what it needs, and sending the slack to the right of the
+     artwork instead, closes the gap. */
+  /* Three things share one row and the middle one was getting whatever was
+     left, which was not much. Capping the wordmark and tightening the gaps
+     hands that space to the artwork instead. */
+  .mkhero-in{gap:22px}
+  .mkhero-txt{flex:0 1 auto;max-width:500px}
+  .mkhero-art{flex:1 1 0;min-width:0;justify-content:flex-start}
+  .mkhero-art img{width:100%;max-width:560px}
+  .mkport{width:310px}
+
+  /* Price on the left, size on the right, and sells red against buys green.
+     Blue for asks was a house choice that meant nothing to anyone arriving
+     from an exchange, where the pair is always red over green. */
+  .mkm-dhead{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.6px;
+    color:var(--faint);padding:0 2px 7px;border-bottom:1px solid var(--hair);margin-bottom:4px}
+  .mkm-dhead small{font-size:9px}
+  .mkm-line .p{font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+  .mkm-line .q{color:var(--muted);font-weight:600;font-size:12.5px;justify-content:flex-end}
+  .mkm-line.empty .q{color:var(--faint);font-weight:400}
+  .mkm-line.ask .p{color:var(--red)}
+  .mkm-line.bid .p{color:var(--green)}
+  .mkm-line .dot{margin-left:2px}
+
+  .mkm-lab{display:block;font-size:10.5px;letter-spacing:1.1px;color:var(--muted);
+    margin:14px 0 7px}
+  .mkm-lab small{font-size:9.5px;color:var(--faint)}
+  .mkm-lab:first-of-type{margin-top:16px}
+  .mkm-total{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px;
+    padding-top:14px;border-top:1px solid var(--hair)}
+  .mkm-total span{flex:1;font-size:12.5px;color:var(--muted)}
+  .mkm-total b{font-size:19px;font-weight:800;color:var(--text);
+    letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+  .mkm-total small{font-size:10.5px;color:var(--muted)}
+
+  /* The book was sizing itself to its contents, so a long list made the row
+     taller instead of scrolling and the panel drifted away from the card
+     beside it. Bounded by the row now — the card's aspect ratio sets the
+     height, and anything past that scrolls. */
+  .mkm-top{align-items:stretch}
+  .mkm-left{align-self:start}
+  .mkm-book{min-height:0;overflow:hidden;height:100%}
+  .mkm-book .mkm-depth{flex:1 1 0;min-height:0;height:auto;max-height:none;overflow-y:auto}
+  @media(max-width:1100px){
+    /* Below this the book sits under the other two at full width, where the
+       card no longer constrains it. */
+    .mkm-book{height:auto}
+    .mkm-book .mkm-depth{flex:none;height:calc(13 * 27px)}
+  }
+
+  /* Eight rows each, fixed. The panel is the same height whether the book
+     holds ten orders or two hundred. */
+  .mkm-book .mkm-depth{flex:none;height:auto;max-height:none;overflow:visible;display:block}
+  .mkm-side{height:calc(8 * 27px);overflow-y:auto;overscroll-behavior:contain}
+  /* Chrome and Safari take the pseudo-elements, which allow a 4px rail and a
+     rounded thumb. Setting scrollbar-color alongside them would make Chrome
+     ignore the lot, so the standard properties are kept for Firefox only. */
+  .mkm-side::-webkit-scrollbar{width:4px}
+  .mkm-side::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:4px}
+  .mkm-side::-webkit-scrollbar-thumb{background:rgba(241,193,76,.4);border-radius:4px}
+  .mkm-side::-webkit-scrollbar-thumb:hover{background:rgba(241,193,76,.7)}
+  @supports not selector(::-webkit-scrollbar){
+    .mkm-side{scrollbar-width:thin;scrollbar-color:rgba(241,193,76,.45) rgba(255,255,255,.03)}
+  }
+  @media(max-width:1100px){
+    .mkm-book .mkm-depth{height:auto}
+    .mkm-side{height:calc(6 * 27px)}
+  }
 </style>
 </head>
 <body>
+<script src="wallet-provider.js"></script>
+<script src="gacha-client.js"></script>
+<script src="mypage-entry.js"></script>
+<script src="memons-pay.js"></script>
 <script>/*embed-mode*/if(location.hash.indexOf("embed")>=0){document.documentElement.classList.add("embed");
   function __mkH(){var a=document.querySelector(".app");return a?Math.ceil(a.getBoundingClientRect().height):document.body.offsetHeight;}
   function __mkPostH(){try{parent.postMessage({embedHeight:__mkH()},"*");}catch(e){}}
@@ -258,337 +1035,282 @@
 <div class="app">
 
 <header class="head">
-  <div class="brand"><span class="mk">M</span><span class="wm">MEMONS</span></div>
+  <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
   <nav class="nav">
-    <a href="index.html">HOME</a>
-    <a href="vault.html">MEMONS VAULT</a>
-    <a href="open-capsule.html">OPEN CAPSULE</a>
-    <a href="marketplace.html" class="on">MARKETPLACE</a>
-    <a href="notice.html">NOTICE</a>
-    <a href="index.html#contact">CONTACT</a>
+    <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a><a href="index.html#vault">MEMONS VAULT</a>
+    <a href="index.html#capsule">OPEN CAPSULE</a><a href="marketplace.html" class="on">MARKETPLACE</a>
+    <a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
   </nav>
   <div class="hr">
     <div class="soc">
-      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
-      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5a14 14 0 0 1 4.1 2 13 13 0 0 0-11.2 0 14 14 0 0 1 4.1-2L11.7 3A19 19 0 0 0 7 4.4 19.6 19.6 0 0 0 3.7 18a19 19 0 0 0 5.8 2.9l.7-1.1a12 12 0 0 1-1.9-.9l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12 12 0 0 1-1.9.9l.7 1.1a19 19 0 0 0 5.8-2.9A19.6 19.6 0 0 0 20 4.4ZM9.3 15.3c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Zm5.4 0c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Z"/></svg></a>
-      <a aria-label="Telegram" href="#"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
     </div>
-    <button class="wbtn"><svg viewBox="0 0 24 24"><path d="M3 7h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 0 3-3h11"/><circle cx="16" cy="12.5" r="1.2" fill="currentColor" stroke="none"/></svg>CONNECT WALLET</button>
+    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
+    <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+    <button class="mpbtn" id="mpbtn">My Page</button>
+    <span class="hidden-chip"><span id="waddr"></span><span id="wstat"></span><button id="wdisc"></button></span>
   </div>
 </header>
 
-<section class="hero">
-  <div class="hero-in">
-    <div class="hcol">
-      <div class="h-eye">DISCOVER</div>
-      <h1 class="h-title"><span class="g">INTERNET CULTURE.</span></h1>
-      <p class="h-sub">Collect iconic moments from meme history.</p>
-      <button class="h-cta">EXPLORE COLLECTION <span>→</span></button>
-      <div class="h-trend">
-        <div class="lab">🔥 TRENDING NOW</div>
-        <div class="tags"><span># APEPE</span><span># DOGE</span><span># NYAN CAT</span><span># SUCCESS KID</span></div>
+<section class="mkhero">
+  <div class="mkhero-in">
+    <div class="mkhero-txt">
+      <div class="mkeye">MARKETPLACE</div>
+      <h1 class="mktitle">TRADE THE <span class="g">CULTURE</span></h1>
+      <p class="mksub">Buy and sell MEMONS cards with other collectors.</p>
+      <span class="mkrule"></span>
+    </div>
+
+    <!-- Drop images/market/hero.png in place to fill this. Hidden until
+         the file exists, so the header does not carry a broken frame. -->
+    <div class="mkhero-art">
+      <img id="heroArt" src="images/market/hero.png" alt=""
+           loading="lazy" onerror="this.parentElement.style.display='none'">
+    </div>
+
+    <div class="mkport" id="mkBal" hidden>
+      <div class="mkport-top">
+        <span class="mkport-h">PORTFOLIO</span>
+        <button class="mkport-eye" id="balEye" aria-label="Hide balance" title="Hide balance">
+          <svg viewBox="0 0 24 24"><path d="M12 5C5.6 5 2 12 2 12s3.6 7 10 7 10-7 10-7-3.6-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/><circle cx="12" cy="12" r="1.9" fill="#0b0b0c"/></svg>
+        </button>
+      </div>
+      <div class="mkport-v"><b id="balAvail">0</b> <small>USDT</small></div>
+      <div class="mkport-s" id="balLocked"></div>
+      <div class="mkport-grid">
+        <div class="mkport-stat">
+          <i class="mkport-ic"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="12" height="16" rx="2.2" opacity=".45"/><rect x="4" y="6" width="12" height="16" rx="2.2"/></svg></i>
+          <div><span>OWNED CARDS</span><b id="statOwned">0</b></div>
+        </div>
+        <div class="mkport-stat">
+          <i class="mkport-ic"><svg viewBox="0 0 24 24"><path d="M3 4.6A1.6 1.6 0 0 1 4.6 3h7.2c.4 0 .8.2 1.1.5l8.1 8.1a1.6 1.6 0 0 1 0 2.3l-7.2 7.2a1.6 1.6 0 0 1-2.3 0L3.5 13a1.6 1.6 0 0 1-.5-1.1Z"/><circle cx="7.8" cy="7.8" r="1.6" fill="#0b0b0c"/></svg></i>
+          <div><span>LISTED</span><b id="statListed">0</b></div>
+        </div>
+        <div class="mkport-stat">
+          <i class="mkport-ic"><svg viewBox="0 0 24 24"><path d="M12 2.5 20 11h-4.6v9.5H8.6V11H4Z"/></svg></i>
+          <div><span>OFFERS</span><b id="statOffers">0</b></div>
+        </div>
+      </div>
+      <div class="mkbal-btns">
+        <button class="mkbal-add" id="topupBtn">+ DEPOSIT</button>
+        <button class="mkbal-add" id="ordersBtn">MY ORDERS</button>
+        <button class="mkbal-add" id="wdBtn">WITHDRAW</button>
       </div>
     </div>
-    <div class="featured" id="featured"></div>
-    <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
   </div>
 </section>
 
-<div class="main">
-  <aside class="side">
-    <div class="sh"><b>FILTERS</b><a id="clearAll">CLEAR ALL</a></div>
-    <div class="fgroup">
-      <h5>RARITY <span class="chev">⌄</span></h5>
-      <div id="rarityFilters"></div>
-    </div>
-    <div class="fgroup">
-      <h5>CATEGORY <span class="chev">⌄</span></h5>
-      <div class="frow cat on"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">CLASSIC MEME</span><span class="ct">314</span></div>
-      <div class="frow cat"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">REACTION MEME</span><span class="ct">156</span></div>
-      <div class="frow cat"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">VIRAL VIDEO</span><span class="ct">68</span></div>
-      <div class="frow cat"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">INTERNET CELEBRITY</span><span class="ct">43</span></div>
-    </div>
-    <div class="fgroup">
-      <h5>PRICE (ETH) <span class="chev">⌃</span></h5>
-      <div class="price-in"><input id="pmin" type="number" placeholder="MIN" min="0" step="0.01"><input id="pmax" type="number" placeholder="MAX" min="0" step="0.01"></div>
-      <button class="apply" id="applyPrice">APPLY FILTERS</button>
-    </div>
-  </aside>
+<section class="mkwrap">
+  <div class="mktabs" id="mktabs">
+    <button class="mktab on" data-t="buy">BUY</button>
+    <button class="mktab" data-t="sell">SELL</button>
+  </div>
 
-  <section class="content">
-    <div class="toolbar">
-      <div class="search">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="search" placeholder="Search by meme, card ID, or creator...">
+  <div class="mkbar">
+    <div class="mksearch">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Search cards" spellcheck="false">
+    </div>
+    <div class="mkpills" id="pills"></div>
+    <select id="sort" class="mksort">
+      <option value="ask">Price: low to high</option>
+      <option value="askd">Price: high to low</option>
+      <option value="vol">24h volume</option>
+      <option value="trades">Most traded</option>
+      <option value="rarity">Rarity</option>
+    </select>
+  </div>
+
+  <div class="mkcount" id="count">Loading…</div>
+  <div class="mkgrid" id="grid"></div>
+  <div class="mkempty" id="empty" hidden></div>
+
+  <div class="mkpager" id="pager" hidden>
+    <div class="mkpages" id="pages"></div>
+    <select id="perPage" class="mksort"></select>
+  </div>
+</section>
+
+<div class="mkmodal" id="wdModal" hidden>
+  <div class="mkmodal-bg" id="wdBg"></div>
+  <div class="mkmodal-box tu-box" role="dialog" aria-modal="true">
+    <header class="mkm-head">
+      <div><h2 class="mkm-title">Withdraw</h2></div>
+      <button class="mkm-x" id="wdClose" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="mkm-body">
+      <div class="tu-step" id="wdForm">
+        <label class="tu-label">Amount</label>
+        <div class="mkm-input">
+          <input id="wdAmount" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
+          <span class="tu-unit">USDT</span>
+        </div>
+        <div class="tu-hint" id="wdAvail"></div>
+        <div class="tu-quick" id="wdQuick"></div>
+
+        <label class="tu-label">Network</label>
+        <div class="chsel" id="wdChains"></div>
+        <div class="tu-hint" id="wdChainHint">You receive USDT on this network.</div>
+
+        <label class="tu-label">To</label>
+        <div class="wd-to"><code id="wdTo">—</code></div>
+        <div class="tu-hint">Your connected wallet. Withdrawals cannot be sent elsewhere.</div>
+
+        <button class="mkm-go" id="wdGo">REQUEST WITHDRAWAL</button>
+        <div class="mkm-note" id="wdNote"></div>
       </div>
-      <div class="rpills" id="rpills"></div>
-      <div class="sortwrap">Sort by
-        <select id="sort">
-          <option value="recent">Recently Listed</option>
-          <option value="plow">Price: Low to High</option>
-          <option value="phigh">Price: High to Low</option>
-          <option value="likes">Most Liked</option>
-        </select>
-      </div>
-      <div class="viewtog">
-        <button id="vGrid" class="on" aria-label="Grid"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
-        <button id="vList" aria-label="List"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+
+      <div class="tu-step" id="wdDone" hidden>
+        <div class="wd-ok">&#10003;</div>
+        <div class="tu-amt"><b id="wdSent">0</b> <small>USDT</small></div>
+        <div class="tu-hint" style="text-align:center;margin-top:8px">
+          Requested. The amount has left your balance and will be sent after review.
+        </div>
+        <div class="wd-pending" id="wdPending"></div>
+        <button class="mkm-go" id="wdBack" style="margin-top:20px">DONE</button>
       </div>
     </div>
-    <div class="grid" id="grid"></div>
-    <div class="pager" id="pager"></div>
-  </section>
+  </div>
 </div>
 
-<section class="sold">
-  <div class="sold-h">
-    <b><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg> RECENTLY SOLD</b>
-    <a>VIEW ALL →</a>
-  </div>
-  <div class="sold-grid" id="soldGrid"></div>
-</section>
-
-<section class="stats">
-  <div class="stats-in">
-    <div class="stat s1">
-      <div class="ic"><img src="images/market/icon-volume.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><path d="M12 2 5.5 12 12 15.8 18.5 12 12 2ZM5.5 13.4 12 22l6.5-8.6L12 17.2 5.5 13.4Z"/></svg></div>
-      <div><div class="lab">Total Volume</div><div class="big">12,458 ETH <span class="delta up">+12.4%</span></div><div class="sub">24H CHANGE</div></div>
-    </div>
-    <div class="stat s2">
-      <div class="ic"><img src="images/market/icon-minted.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="11" height="15" rx="2" opacity=".55"/><rect x="3" y="6" width="11" height="15" rx="2"/></svg></div>
-      <div><div class="lab">Cards Minted</div><div class="big">28,647 <span class="delta up">+8.7%</span></div><div class="sub">TOTAL</div></div>
-    </div>
-    <div class="stat s3">
-      <div class="ic"><img src="images/market/icon-holders.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0Z"/><circle cx="17.5" cy="8.5" r="2.6" opacity=".55"/><path d="M15 20a8 8 0 0 0-1-4 5 5 0 0 1 7 4Z" opacity=".55"/></svg></div>
-      <div><div class="lab">Unique Holders</div><div class="big">8,912 <span class="delta up">+9.3%</span></div><div class="sub">TOTAL</div></div>
-    </div>
-    <div class="stat s4">
-      <div class="ic"><img src="images/market/icon-listings.png" alt="" onerror="this.remove()"><svg viewBox="0 0 24 24"><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h6.4a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-6.4 6.4a2 2 0 0 1-2.8 0l-8-8a2 2 0 0 1-.6-1.4V4.5Z"/><circle cx="7.5" cy="7.5" r="1.6" fill="#060607"/></svg></div>
-      <div><div class="lab">Active Listings</div><div class="big">2,341 <span class="delta down">-3.1%</span></div><div class="sub">TOTAL</div></div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="foot">
-    <div>
-      <div class="fb"><span class="mk">M</span><span class="wm">MEMONS</span></div>
-      <p class="tg">The archive of internet culture. Collect. Trade. Preserve.</p>
-      <div class="fsoc">
-        <a href="#"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
-        <a href="#"><svg viewBox="0 0 24 24"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5a14 14 0 0 1 4.1 2 13 13 0 0 0-11.2 0 14 14 0 0 1 4.1-2L11.7 3A19 19 0 0 0 7 4.4 19.6 19.6 0 0 0 3.7 18a19 19 0 0 0 5.8 2.9l.7-1.1a12 12 0 0 1-1.9-.9l.5-.4a13.6 13.6 0 0 0 11.6 0l.5.4a12 12 0 0 1-1.9.9l.7 1.1a19 19 0 0 0 5.8-2.9A19.6 19.6 0 0 0 20 4.4ZM9.3 15.3c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Zm5.4 0c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Z"/></svg></a>
-        <a href="#"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
-        <a href="#"><svg viewBox="0 0 24 24"><path d="M12 2c2.7 0 3 0 4.1.1 1 0 1.7.2 2.3.5.6.2 1.1.5 1.6 1 .5.5.8 1 1 1.6.3.6.4 1.3.5 2.3.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c0 1-.2 1.7-.5 2.3-.2.6-.5 1.1-1 1.6-.5.5-1 .8-1.6 1-.6.3-1.3.4-2.3.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-1 0-1.7-.2-2.3-.5-.6-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.6-.3-.6-.4-1.3-.5-2.3C2 15 2 14.7 2 12s0-3 .1-4.1c0-1 .2-1.7.5-2.3.2-.6.5-1.1 1-1.6.5-.5 1-.8 1.6-1 .6-.3 1.3-.4 2.3-.5C8.6 2 9 2 12 2Zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM17.8 7a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/></svg></a>
+<div class="mkmodal" id="ordModal" hidden>
+  <div class="mkmodal-bg" id="ordBg"></div>
+  <div class="mkmodal-box ord-box" role="dialog" aria-modal="true">
+    <header class="mkm-head">
+      <div><h2 class="mkm-title">My Orders</h2></div>
+      <button class="mkm-x" id="ordClose" aria-label="Close">&times;</button>
+    </header>
+    <div class="mkm-body">
+      <div class="ord-sum" id="ordSum"></div>
+      <div class="ord-tabs" id="ordTabs">
+        <button class="ord-tab on" data-t="open">OPEN <i id="ocO"></i></button>
+        <button class="ord-tab" data-t="trades">FILLED <i id="ocT"></i></button>
+        <button class="ord-tab" data-t="ledger">BALANCE <i id="ocL"></i></button>
+        <button class="ord-tab" data-t="topups">DEPOSITS <i id="ocD"></i></button>
+        <button class="ord-tab" data-t="withdrawals">WITHDRAWALS <i id="ocW"></i></button>
       </div>
-    </div>
-    <div><h6>MARKETPLACE</h6><ul><li><a href="#">All Memons</a></li><li><a href="#">Recently Sold</a></li><li><a href="#">Trending</a></li></ul></div>
-    <div><h6>SUPPORT</h6><ul><li><a href="#">Help Center</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
-    <div><h6>COMMUNITY</h6><ul><li><a href="#">X (Twitter)</a></li><li><a href="#">Discord</a></li><li><a href="#">Telegram</a></li></ul></div>
-    <div>
-      <h6>STAY UPDATED</h6>
-      <p class="tg" style="margin-bottom:8px">Subscribe for the latest drops and marketplace updates.</p>
-      <div class="sub-in"><input placeholder="Enter your email"><button>SUBSCRIBE</button></div>
+      <div id="ordList"></div>
+      <div id="hisPane" hidden></div>
+      <div class="his-foot" id="hisFoot"></div>
     </div>
   </div>
-  <div class="copy">© 2024 MEMONS. All rights reserved.</div>
-</footer>
-
-<script src="data/memons.js"></script>
-<script>
-const D = window.MEMONS_DATA || {
-  rarities:[
-    {key:'common',label:'COMMON',color:'#cfccc4',card:'images/detail/common.png'},
-    {key:'rare',label:'RARE',color:'#5b9bd5',card:'images/detail/rare.png'},
-    {key:'epic',label:'EPIC',color:'#c468d8',card:'images/detail/epic.png'},
-    {key:'legendary',label:'LEGENDARY',color:'#E9B84A',card:'images/detail/legendary.png'},
-    {key:'mythic',label:'MYTHIC',color:'#e0556a',card:'images/detail/mythic.png'},
-  ],
-  characters:[
-    {num:'0001',name:'APEPE',img:'images/vault/apepe.png'},
-    {num:'0002',name:'DOGE',img:'images/vault/doge.png'},
-    {num:'0003',name:'NYAN CAT',img:'images/vault/nyancat.png'},
-    {num:'0004',name:'PEPE',img:'images/vault/pepe.png'},
-    {num:'0005',name:'CHILL GUY',img:'images/vault/chillguy.png'},
-    {num:'0006',name:'WOJAK',img:'images/vault/wojak.png'},
-  ]
-};
-/* full cards (top/bottom) use images/detail/*.png */
-const DETAIL = {common:'images/detail/common.png',rare:'images/detail/rare.png',epic:'images/detail/epic.png',legendary:'images/detail/legendary.png',mythic:'images/detail/mythic.png'};
-/* one-piece card slots (shared top/bottom): drop into images/market/ to auto-apply, falls back to DETAIL if absent */
-const CARD = {common:'images/market/card-common.png',rare:'images/market/card-rare.png',epic:'images/market/card-epic.png',legendary:'images/market/card-legendary.png',mythic:'images/market/card-mythic.png'};
-const RAR = D.rarities;
-const rarByKey = Object.fromEntries(RAR.map(r=>[r.key,r]));
-const CHARS = D.characters.filter(c=>!c.locked);
-const RKEYS = ['common','rare','epic','legendary','mythic'];
-const PRICE = {common:[0.22,0.45],rare:[0.30,0.95],epic:[1.20,1.90],legendary:[3.50,5.20],mythic:[9.0,14.0]};
-const RCOUNT = {common:243,rare:186,epic:97,legendary:43,mythic:12};
-const seed = i => { const x = Math.sin(i*99.13+7)*10000; return x - Math.floor(x); };
-const addr = i => '0x'+Math.floor(seed(i)*0xffffffff).toString(16).padStart(8,'0').slice(0,4)+'...'+Math.floor(seed(i+13)*0xffff).toString(16).padStart(4,'0').toUpperCase();
-const fmtK = n => n>=1000 ? (n/1000).toFixed(1)+'K' : (''+n);
-
-let LISTINGS = [];
-CHARS.forEach((c,ci)=>{ RKEYS.forEach((rk,ri)=>{
-  if(((ci+ri)%5===2) && ri<2) return;
-  const r = rarByKey[rk]; if(!r) return;
-  const [lo,hi]=PRICE[rk]; const sd=ci*7+ri+1;
-  LISTINGS.push({char:c.name,num:c.num,img:c.img||r.card,rkey:rk,rarity:r.label,color:r.color,
-    price:+(lo+(hi-lo)*seed(sd)).toFixed(2),likes:Math.floor(120+seed(sd+1)*2400),
-    views:Math.floor(900+seed(sd+2)*16000),hours:Math.floor(1+seed(sd+3)*22),seller:addr(sd+4)});
-});});
-
-const state = {rar:new Set(),q:'',sort:'recent',pmin:null,pmax:null,page:1,view:'grid'};
-const PER = 12;
-
-function buildFeatured(){
-  document.getElementById('featured').innerHTML = RKEYS.map(rk=>{
-    const r=rarByKey[rk]; if(!r) return '';
-    return `<div class="fc r-${rk}"><img src="${CARD[rk]}" alt="${r.label}" loading="lazy" onerror="this.onerror=null;this.src='${DETAIL[rk]}'"></div>`;
-  }).join('');
-}
-function buildSold(){
-  document.getElementById('soldGrid').innerHTML = RKEYS.map((rk)=>{
-    const r=rarByKey[rk];
-    return `<div class="sold-c" style="--rc:${r.color}">
-      <img src="${CARD[rk]}" alt="${r.label}" loading="lazy" onerror="this.onerror=null;this.src='${DETAIL[rk]}'">
-    </div>`;
-  }).join('');
-}
-function buildRarityFilters(){
-  document.getElementById('rarityFilters').innerHTML = RKEYS.map(rk=>{
-    const r=rarByKey[rk]; if(!r) return '';
-    return `<div class="frow" data-r="${rk}"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-6"/></svg></span><span class="nm">${r.label}</span><span class="ct">${RCOUNT[rk]||0}</span></div>`;
-  }).join('');
-  document.getElementById('rpills').innerHTML = RKEYS.map(rk=>{
-    const r=rarByKey[rk]; if(!r) return '';
-    return `<button class="rpill" data-r="${rk}">${r.label}</button>`;
-  }).join('');
-  document.querySelectorAll('.frow[data-r], .rpill[data-r]').forEach(el=>el.addEventListener('click',()=>toggleRar(el.dataset.r)));
-}
-function toggleRar(rk){ state.rar.has(rk)?state.rar.delete(rk):state.rar.add(rk); state.page=1; syncRarUI(); render(); }
-function syncRarUI(){
-  document.querySelectorAll('.frow[data-r]').forEach(e=>e.classList.toggle('on',state.rar.has(e.dataset.r)));
-  document.querySelectorAll('.rpill[data-r]').forEach(e=>e.classList.toggle('on',state.rar.has(e.dataset.r)));
-}
-function filtered(){
-  let l=LISTINGS.slice();
-  if(state.rar.size) l=l.filter(x=>state.rar.has(x.rkey));
-  if(state.q){const q=state.q.toLowerCase(); l=l.filter(x=>x.char.toLowerCase().includes(q)||x.num.includes(q)||x.seller.toLowerCase().includes(q));}
-  if(state.pmin!=null) l=l.filter(x=>x.price>=state.pmin);
-  if(state.pmax!=null) l=l.filter(x=>x.price<=state.pmax);
-  if(state.sort==='plow') l.sort((a,b)=>a.price-b.price);
-  else if(state.sort==='phigh') l.sort((a,b)=>b.price-a.price);
-  else if(state.sort==='likes') l.sort((a,b)=>b.likes-a.likes);
-  else l.sort((a,b)=>a.hours-b.hours);
-  return l;
-}
-function cardHTML(x){
-  return `<div class="lc" style="--rc:${x.color}">
-    <div class="thumb"><img src="${x.img}" alt="${x.char}" loading="lazy"><span class="bdg">${x.rarity}</span><span class="idn">#${x.num}</span></div>
-    <div class="info">
-      <div class="nm">${x.char}</div>
-      <div class="pr"><span class="eth">${x.price.toFixed(2)} ETH</span><span class="fs">For Sale</span></div>
-      <div class="meta">
-        <span><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.3-8.4C1 9.4 2.6 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.4 0 5 3.4 3.3 6.6C19 16.6 12 21 12 21Z"/></svg>${fmtK(x.likes)}</span>
-        <span><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="2.5"/></svg>${fmtK(x.views)}</span>
-        <span class="t">${x.hours}h ago</span>
-      </div>
-    </div></div>`;
-}
-function render(){
-  const list=filtered(), total=list.length, pages=Math.max(1,Math.ceil(total/PER));
-  if(state.page>pages) state.page=pages;
-  const grid=document.getElementById('grid');
-  grid.className='grid'+(state.view==='list'?' list':'');
-  if(!total){grid.innerHTML='<div class="empty">No cards match your filters.</div>';document.getElementById('pager').innerHTML='';return;}
-  const start=(state.page-1)*PER;
-  grid.innerHTML=list.slice(start,start+PER).map(cardHTML).join('');
-  renderPager(pages);
-}
-function renderPager(pages){
-  const p=state.page; let nums=[];
-  if(pages<=7){for(let i=1;i<=pages;i++)nums.push(i);}
-  else{nums=[1];if(p>3)nums.push('…');for(let i=Math.max(2,p-1);i<=Math.min(pages-1,p+1);i++)nums.push(i);if(p<pages-2)nums.push('…');nums.push(pages);}
-  const pager=document.getElementById('pager');
-  pager.innerHTML=`<button ${p===1?'disabled':''} data-go="${p-1}">‹</button>`+
-    nums.map(n=>n==='…'?`<span class="ell">…</span>`:`<button class="${n===p?'on':''}" data-go="${n}">${n}</button>`).join('')+
-    `<button ${p===pages?'disabled':''} data-go="${p+1}">›</button>`;
-  pager.querySelectorAll('button[data-go]').forEach(b=>b.addEventListener('click',()=>{
-    const g=+b.dataset.go; if(g>=1&&g<=pages){state.page=g;render();window.scrollTo({top:document.querySelector('.main').offsetTop-70,behavior:'smooth'});}
-  }));
-}
-document.getElementById('search').addEventListener('input',e=>{state.q=e.target.value.trim();state.page=1;render();});
-document.getElementById('sort').addEventListener('change',e=>{state.sort=e.target.value;render();});
-document.getElementById('applyPrice').addEventListener('click',()=>{
-  const mn=parseFloat(document.getElementById('pmin').value),mx=parseFloat(document.getElementById('pmax').value);
-  state.pmin=isNaN(mn)?null:mn;state.pmax=isNaN(mx)?null:mx;state.page=1;render();
-});
-document.querySelectorAll('.frow.cat').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('on')));
-document.getElementById('clearAll').addEventListener('click',()=>{
-  state.rar.clear();state.q='';state.pmin=state.pmax=null;state.page=1;state.sort='recent';
-  document.getElementById('search').value='';document.getElementById('pmin').value='';document.getElementById('pmax').value='';
-  document.getElementById('sort').value='recent';
-  document.querySelectorAll('.frow.cat').forEach((e,i)=>e.classList.toggle('on',i===0));
-  syncRarUI();render();
-});
-document.getElementById('vGrid').addEventListener('click',()=>{state.view='grid';document.getElementById('vGrid').classList.add('on');document.getElementById('vList').classList.remove('on');render();});
-document.getElementById('vList').addEventListener('click',()=>{state.view='list';document.getElementById('vList').classList.add('on');document.getElementById('vGrid').classList.remove('on');render();});
-document.querySelectorAll('.dots i').forEach(d=>d.addEventListener('click',()=>{document.querySelectorAll('.dots i').forEach(x=>x.classList.remove('on'));d.classList.add('on');}));
-buildFeatured();buildSold();buildRarityFilters();render();
-</script>
 </div>
-<script>
-/* horizontal slider: scroll self vertically; at vertical edge, forward wheel to parent to change slide */
-(function(){
-  if(window.top===window.self) return; // only when embedded
-  var lock=false;
-  window.addEventListener('wheel', function(e){
-    var de=document.scrollingElement||document.documentElement;
-    var dir=e.deltaY>0?1:-1;
-    var canV=de.scrollHeight>de.clientHeight+2;
-    var atBottom=de.scrollTop+de.clientHeight>=de.scrollHeight-2;
-    var atTop=de.scrollTop<=2;
-    if(canV && ((dir>0&&!atBottom)||(dir<0&&!atTop))) return; // scroll within this page first
-    e.preventDefault();
-    if(lock) return; lock=true; setTimeout(function(){lock=false;},700);
-    try{ parent.postMessage({navSlide:dir}, '*'); }catch(_){}
-  }, {passive:false});
-})();
-</script>
-<script src="wallet-provider.js"></script>
-<script src="gacha-client.js"></script>
-<script src="mypage-entry.js"></script>
-<style>
-  .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
-  .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
-  .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
-  .m-overlay.open{opacity:1;pointer-events:auto}
-  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
-  .m-drawer.open{transform:translateX(0)}
-  .m-drawer .m-close{align-self:flex-end;background:transparent;border:0;color:#8d8a82;cursor:pointer;padding:4px;margin-bottom:2px}
-  .m-drawer .m-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
-  .m-drawer .m-sec{font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;color:#E9B84A;font-weight:700;padding:12px 12px 6px}
-  .m-drawer a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;color:#8d8a82;font-family:var(--font-head,inherit);text-decoration:none}
-  .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
-  .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
-  .m-drawer a i{font-size:18px;width:20px;text-align:center}
-  html,body{overflow-x:hidden;max-width:100vw}
-  @media(max-width:1040px){
-    .head nav{display:none !important}
-    .m-burger{display:flex}
-    .sidebar{display:none !important}
-    .main{margin-left:0 !important}
-    .shell .wrap,.main .wrap{padding-left:16px !important;padding-right:16px !important}
-    .head .soc{display:none !important}
-    .head{padding-left:14px !important;padding-right:14px !important;gap:10px !important;justify-content:flex-start !important}
-    .head .hr{gap:8px !important;margin-left:auto !important}
-    .head .brand img{height:32px !important}
-    .mypage-entry,.mpbtn{display:none !important}
-    .wrap{margin-left:auto !important;margin-right:auto !important}
-    .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
-    .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
-    .head .brand{font-size:15px !important}
-  }
-</style>
+
+<div class="mkmodal" id="tuModal" hidden>
+  <div class="mkmodal-bg" id="tuBg"></div>
+  <div class="mkmodal-box tu-box" role="dialog" aria-modal="true">
+    <header class="mkm-head">
+      <div><h2 class="mkm-title">Deposit</h2></div>
+      <button class="mkm-x" id="tuClose" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="mkm-body">
+      <div class="tu-step" id="tuStep1">
+        <label class="tu-label">Amount</label>
+        <div class="mkm-input">
+          <input id="tuAmount" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
+          <span class="tu-unit">USDT</span>
+        </div>
+        <div class="tu-hint" id="tuRange"></div>
+        <div class="tu-quick" id="tuQuick"></div>
+        <button class="mkm-go" id="tuNext">CONTINUE</button>
+        <div class="mkm-note" id="tuNote1"></div>
+      </div>
+
+      <div class="tu-step" id="tuStep2" hidden>
+        <div class="tu-amt"><b id="tuSendAmt">0</b> <small>USDT</small></div>
+        <div class="tu-warn">Send this exact amount, or the deposit will not be matched.</div>
+
+        <label class="tu-label">Send to</label>
+        <div class="tu-addr">
+          <code id="tuAddr">—</code>
+          <button id="tuCopy">COPY</button>
+        </div>
+        <label class="tu-label">Network</label>
+        <div class="chsel" id="tuChains"></div>
+        <div class="tu-hint" id="tuChainHint">USDT only. Send on the network selected here.</div>
+
+        <div class="tu-timer" id="tuTimer"></div>
+
+        <button class="mkm-go" id="tuPay">PAY FROM WALLET</button>
+        <button class="tu-cancel" id="tuCancel">Cancel this order</button>
+        <div class="mkm-note" id="tuNote2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mkmodal" id="modal" hidden>
+  <div class="mkmodal-bg" id="modalBg"></div>
+  <div class="mkmodal-box" role="dialog" aria-modal="true">
+    <header class="mkm-head">
+      <div>
+        <div class="mkm-rr" id="mRarity"></div>
+        <h2 class="mkm-title" id="mTitle"></h2>
+      </div>
+      <button class="mkm-x" id="mClose" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="mkm-body">
+      <div class="mkm-top">
+        <div class="mkm-left">
+          <div class="mkm-art"><img id="mImg" alt=""></div>
+        </div>
+
+        <section class="mkm-panel mkm-book">
+          <h3>Open orders</h3>
+          <div class="mkm-dhead" id="mDepthHead"></div>
+          <div class="mkm-depth" id="mDepth"></div>
+        </section>
+
+        <div class="mkm-act">
+          <div class="mkm-mode" id="mMode" hidden>
+            <button class="mkm-tab on" data-m="buy">BUY</button>
+            <button class="mkm-tab" data-m="sell">SELL</button>
+          </div>
+
+          <div class="mkm-row"><span>Balance</span><b id="mBal">—</b></div>
+          <div class="mkm-row"><span>You own</span><b id="mOwn">—</b></div>
+
+          <label class="mkm-lab">Price <small>(USDT)</small></label>
+          <div class="mkm-input">
+            <input id="mPrice" type="number" step="0.01" min="0" inputmode="decimal">
+            <button class="mkm-step" id="mMinus">&minus;</button>
+            <button class="mkm-step" id="mPlus">+</button>
+          </div>
+          <div class="mkm-floor">Floor <b id="mFloor">—</b> USDT</div>
+
+          <label class="mkm-lab">Amount</label>
+          <div class="mkm-input">
+            <input id="mQty" type="number" step="1" min="1" value="1" inputmode="numeric">
+            <button class="mkm-step" id="mQMinus">&minus;</button>
+            <button class="mkm-step" id="mQPlus">+</button>
+          </div>
+          <div class="mkm-floor">Max <b id="mMax">1</b></div>
+
+          <div class="mkm-total"><span>Total</span><b id="mTotal">0</b> <small>USDT</small></div>
+
+          <button class="mkm-go" id="mGo">BUY</button>
+          <div class="mkm-note" id="mNote"></div>
+
+          <section class="mkm-panel mkm-trades">
+            <h3>Trades</h3>
+            <div class="mkm-stats" id="mStats"></div>
+            <div class="mkm-hist" id="mHist"></div>
+          </section>
+        </div>
+      </div>
+
+      <section class="mkm-panel mkm-chart" id="mChartWrap" hidden>
+        <h3>Price history</h3>
+        <canvas id="mChart" height="150"></canvas>
+      </section>
+    </div>
+  </div>
+</div>
+
 <button class="m-burger" id="mBurger" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
 <div class="m-overlay" id="mOverlay"></div>
 <nav class="m-drawer" id="mDrawer"></nav>
@@ -646,5 +1368,1518 @@ buildFeatured();buildSold();buildRarityFilters();render();
 })();
 </script>
 
+
+<script>
+(function(){
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  var API=SB_URL+"/functions/v1";
+  var H={apikey:SB_ANON,Authorization:'Bearer '+SB_ANON};
+
+  var RARITY=['common','rare','epic','legendary','mythic','special'];
+  var LABEL={common:'COMMON',rare:'RARE',epic:'EPIC',legendary:'LEGENDARY',mythic:'MYTHIC',special:'SPECIAL'};
+  var $=function(id){return document.getElementById(id);};
+  var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var num=function(n){return Number(n).toLocaleString(undefined,{maximumFractionDigits:2});};
+
+  /* cards.name holds just the number within its rarity, so the display name
+     is assembled here rather than stored. Rarity is already on the badge, so
+     the number alone is enough to tell two cards apart on screen. */
+  function title(c){
+    var n=String(c.name||'').trim();
+    return /^\d+$/.test(n) ? 'APEPE #'+n : (n || c.card_id);
+  }
+
+  /* Supabase resizes on the fly, so the grid asks for a tile-sized image
+     instead of the full card. At 520px it still looks sharp on a retina
+     phone while costing a fraction of the original. */
+  function thumb(url){
+    if(!url) return '';
+    return url + (url.indexOf('?')<0?'?':'&') + 'width=520&quality=75';
+  }
+
+  var rows=[], shown=[], filter='', q='', sort='ask';
+  /* Six on a phone is two columns by three rows: a screenful, not a scroll.
+     Twenty on a desktop grid is four or five rows, which is the same idea at
+     a different width. */
+  function isPhone(){ return window.matchMedia && window.matchMedia('(max-width:640px)').matches; }
+  var page=1, perPage=isPhone()?6:20;
+  /* buy  - every card, priced by what others are asking
+     sell - only what this wallet holds, since nothing else can be sold */
+  var tab='buy', myCards=null;
+
+  function pills(){
+    var host=$('pills'); if(!host) return;
+    var all=[['','ALL']].concat(RARITY.map(function(r){return [r,LABEL[r]];}));
+    host.innerHTML=all.map(function(p){
+      return '<button class="mkpill'+(filter===p[0]?' on':'')+'"'+
+             (p[0]?' data-r="'+p[0]+'"':'')+' data-v="'+p[0]+'">'+p[1]+'</button>';
+    }).join('');
+    host.querySelectorAll('.mkpill').forEach(function(b){
+      b.onclick=function(){ filter=b.dataset.v; page=1; pills(); apply(); };
+    });
+  }
+
+  function tile(c){
+    var chg='';
+    if(c.change_pct!=null && c.change_pct!==0){
+      var up=c.change_pct>0;
+      chg='<span class="chg '+(up?'up':'dn')+'">'+(up?'+':'')+c.change_pct+'%</span>';
+    }
+    /* The lowest anyone will sell for and the highest anyone will pay: the
+       two numbers a buyer or a seller weighs before opening the card. */
+    var quote;
+    if(c.ask!=null || c.bid!=null){
+      quote='<div class="mkquote">'+
+        (c.ask!=null ? '<div class="mkq ask"><span>FLOOR</span><b>'+num(c.ask)+'<small>USDT</small></b></div>' : '')+
+        (c.bid!=null ? '<div class="mkq bid"><span>BEST OFFER</span><b>'+num(c.bid)+'<small>USDT</small></b></div>' : '')+
+      '</div>';
+    }else{
+      quote='<div class="mknone">'+(c.last_price!=null
+        ? 'Last '+num(c.last_price)+' USDT'
+        : 'No listings')+'</div>';
+    }
+
+    return '<article class="mkcard" data-id="'+esc(c.card_id)+'" data-r="'+esc(c.rarity)+'">'+
+      '<div class="mkart">'+
+        '<img loading="lazy" src="'+esc(thumb(c.image_url))+'" alt="'+esc(title(c))+'"'+
+        ' onerror="this.style.visibility=\'hidden\'">'+
+        '<span class="rr r-'+esc(c.rarity)+'">'+esc(LABEL[c.rarity]||c.rarity)+'</span>'+chg+
+      '</div>'+
+      '<div class="mkinfo">'+
+        '<div class="mkname">'+esc(title(c))+'</div>'+
+        quote+
+      '</div></article>';
+  }
+
+  function render(){
+    var g=$('grid'), e=$('empty');
+    var total=shown.length;
+    var pages=Math.max(1, Math.ceil(total/perPage));
+    if(page>pages) page=pages;
+    var from=(page-1)*perPage, to=Math.min(from+perPage, total);
+
+    $('count').textContent = tab==='sell'
+      ? total+' card'+(total===1?'':'s')+' you can sell'
+      : (total ? 'Showing '+(from+1)+' - '+to+' of '+total+' cards' : '0 cards');
+
+    if(!total){
+      g.innerHTML='';
+      $('pager').hidden=true;
+      e.hidden=false;
+      if(tab==='sell'){
+        e.innerHTML = !(window.MEMONS && MEMONS.connected)
+          ? '<b>Connect your wallet</b>Your cards will appear here.'
+          : '<b>Nothing to sell</b>Cards from the event cannot be traded. Open capsules to collect tradable cards.';
+      }else{
+        e.innerHTML = rows.length
+          ? '<b>Nothing matches</b>Try a different rarity or search term.'
+          : '<b>The market is quiet</b>No cards are listed yet. Be the first to sell one.';
+      }
+      return;
+    }
+    e.hidden=true;
+    g.innerHTML=shown.slice(from,to).map(tile).join('');
+    g.querySelectorAll('.mkcard').forEach(function(el){
+      el.onclick=function(){ open(el.dataset.id); };
+    });
+    renderPager(pages);
+  }
+
+  /* Page numbers with the middle collapsed once there are too many to show.
+     100 cards at 20 a page is only five, but the card count is not fixed and
+     a row of thirty buttons would wrap into a wall. */
+  function renderPager(pages){
+    var host=$('pages'); if(!host) return;
+    $('pager').hidden = pages<=1;
+    if(pages<=1){ host.innerHTML=''; return; }
+
+    var out=[], win=2;
+    var add=function(n){
+      out.push('<button class="mkpg'+(n===page?' on':'')+'" data-p="'+n+'">'+n+'</button>');
+    };
+    var dots=function(){ out.push('<span class="mkpg dots">…</span>'); };
+
+    out.push('<button class="mkpg" data-p="'+(page-1)+'"'+(page===1?' disabled':'')+'>&lsaquo;</button>');
+    add(1);
+    if(page-win>2) dots();
+    for(var i=Math.max(2,page-win); i<=Math.min(pages-1,page+win); i++) add(i);
+    if(page+win<pages-1) dots();
+    if(pages>1) add(pages);
+    out.push('<button class="mkpg" data-p="'+(page+1)+'"'+(page===pages?' disabled':'')+'>&rsaquo;</button>');
+
+    host.innerHTML=out.join('');
+    host.querySelectorAll('.mkpg[data-p]').forEach(function(b){
+      b.onclick=function(){
+        var n=Number(b.dataset.p);
+        if(n<1 || n>pages || n===page) return;
+        page=n; render();
+        // Back to the top of the grid, not the top of the document: the
+        // filters stay in view so a wrong page can be corrected at once.
+        var g2=$('grid');
+        if(g2) window.scrollTo({top:g2.offsetTop-120, behavior:'smooth'});
+      };
+    });
+  }
+
+  function apply(){
+    var t=q.trim().toLowerCase();
+    shown=rows.filter(function(c){
+      if(tab==='sell'){
+        if(!myCards) return false;
+        if(!myCards[c.card_id]) return false;
+      }
+      if(filter && c.rarity!==filter) return false;
+      if(t && title(c).toLowerCase().indexOf(t)<0
+           && String(c.card_id||'').toLowerCase().indexOf(t)<0) return false;
+      return true;
+    });
+    var ri=function(c){ return RARITY.indexOf(c.rarity); };
+    /* Cards with nothing for sale sink to the bottom of a price sort rather
+       than heading it, which is what a plain ascending sort on null would do. */
+    var byAsk=function(a,b,dir){
+      if(a.ask==null && b.ask==null) return ri(b)-ri(a);
+      if(a.ask==null) return 1;
+      if(b.ask==null) return -1;
+      return dir*(a.ask-b.ask);
+    };
+    shown.sort(function(a,b){
+      if(sort==='ask')    return byAsk(a,b,1);
+      if(sort==='askd')   return byAsk(a,b,-1);
+      if(sort==='vol')    return (b.volume_24h||0)-(a.volume_24h||0) || byAsk(a,b,1);
+      if(sort==='trades') return (b.trades_30d||0)-(a.trades_30d||0) || byAsk(a,b,1);
+      return ri(b)-ri(a) || byAsk(a,b,1);
+    });
+    render();
+  }
+
+  /* ===== detail ===================================================== */
+  var cur=null, mine=null, mode='buy', busy=false;
+
+  var $m=function(id){return document.getElementById(id);};
+  function note(t,bad){ var n=$m('mNote'); n.textContent=t||''; n.className='mkm-note'+(bad?' bad':''); }
+
+  async function openCard(id){
+    cur=rows.find(function(c){return c.card_id===id;});
+    if(!cur) return;
+
+    $m('mTitle').textContent=title(cur);
+    var rr=$m('mRarity');
+    rr.textContent=LABEL[cur.rarity]||cur.rarity;
+    rr.className='mkm-rr r-'+cur.rarity;
+    $m('mImg').src=cur.image_url||'';
+    $m('mImg').alt=title(cur);
+    $m('mFloor').textContent=num(cur.floor||0);
+
+    $m('modal').hidden=false;
+    document.body.style.overflow='hidden';
+
+    $m('mDepth').innerHTML='<div class="mkm-none">Loading…</div>';
+    $m('mHist').innerHTML='';
+    $m('mStats').innerHTML='';
+    $m('mChartWrap').hidden=true;
+    note('');
+
+    // Holdings first, on their own. The book marks the rows this wallet owns,
+    // so running them together meant the marks depended on which request
+    // happened to answer first.
+    await loadMine();
+    await Promise.all([loadDepth(), loadHistory()]);
+    setMode(mine && mine.owned.length ? 'sell' : 'buy');
+  }
+
+  function closeCard(){
+    $m('modal').hidden=true;
+    document.body.style.overflow='';
+    cur=null;
+  }
+
+  /* Balance and holdings, needed before either side can be priced: a seller
+     has to pick which copy to part with, a buyer has to have the funds. */
+  async function loadMine(){
+    mine=null;
+    if(!(window.MEMONS && MEMONS.connected)) return;
+    try{
+      var r=await MEMONS.authFetch('/market/me');
+      mine={
+        balance:Number(r.balance||0),
+        owned:(r.sellable||[]).filter(function(o){return o.card_id===cur.card_id;}),
+        listings:(r.listings||[]).filter(function(l){return l.card_id===cur.card_id;}),
+        offers:(r.offers||[]).filter(function(o){return o.card_id===cur.card_id;})
+      };
+    }catch(e){}
+  }
+
+  async function loadDepth(){
+    var host=$m('mDepth');
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/market_depth?card_id=eq.'+encodeURIComponent(cur.card_id)+
+                          '&select=*&order=price.desc',{headers:H});
+      var d=await res.json();
+      if(!Array.isArray(d)) d=[];
+
+      var asks=d.filter(function(x){return x.side==='ask';}).sort(function(a,b){return b.price-a.price;});
+      var bids=d.filter(function(x){return x.side==='bid';}).sort(function(a,b){return b.price-a.price;});
+
+      var line=function(x){
+        var m1 = mine && (x.side==='ask'
+          ? mine.listings.some(function(l){return Number(l.price)===Number(x.price);})
+          : mine.offers.some(function(o){return Number(o.price)===Number(x.price);}));
+        // Clicking a level fills the field with it, which is how anyone who
+        // has used an order book expects to take a price.
+        return '<div class="mkm-line hit '+x.side+(m1?' own':'')+'" data-p="'+x.price+'">'+
+               '<span class="p">'+num(x.price)+(m1?'<i class="dot"></i>':'')+'</span>'+
+               '<span class="q">'+x.qty+'</span></div>';
+      };
+      /* Eight rows a side is the height of the panel, not a limit on what it
+         holds: orders past that are still rendered and reached by scrolling.
+         Cutting the list instead meant a bid well below the spread simply
+         did not appear, which reads as the order never having been placed.
+         Blanks only pad a side that has fewer than eight. */
+      var ROWS=8;
+      var blank=function(side){ return '<div class="mkm-line empty '+side+'"><span class="p">&ndash;</span><span class="q">&ndash;</span></div>'; };
+      var pad=function(list, side, fromTop){
+        var out=list.map(line);
+        var fill=[]; for(var i=out.length;i<ROWS;i++) fill.push(blank(side));
+        return fromTop ? fill.concat(out) : out.concat(fill);
+      };
+
+      // Sells run down to the spread, buys continue below it.
+      // Both sides run high to low, which puts the spread between them.
+      var top=pad(asks, 'ask', true);
+      var bot=pad(bids, 'bid', false);
+
+      var mid='';
+      if(asks.length && bids.length){
+        var sp=asks[asks.length-1].price - bids[0].price;
+        mid='<div class="mkm-spread">SPREAD '+num(sp)+'</div>';
+      }else{
+        mid='<div class="mkm-spread">'+(asks.length||bids.length ? 'ONE SIDE ONLY' : 'NO ORDERS')+'</div>';
+      }
+      /* Each side gets its own eight rows and its own scroll. One shared
+         scroller meant the two halves borrowed height from each other: a
+         deep bid list pushed the asks out of view, and the spread wandered
+         off the middle of the panel. */
+      host.innerHTML =
+        '<div class="mkm-side asks" id="mDepthAsk">'+top.join('')+'</div>'+
+        mid+
+        '<div class="mkm-side bids" id="mDepthBid">'+bot.join('')+'</div>';
+
+      var head=$m('mDepthHead');
+      if(head) head.innerHTML='<span>Price <small>(USDT)</small></span><span>Amount</span>';
+
+      host.querySelectorAll('.mkm-line.hit').forEach(function(el){
+        el.onclick=function(){
+          $m('mPrice').value=Number(el.dataset.p).toFixed(2);
+          onPrice();
+        };
+      });
+
+      /* Both sides open against the spread: the asks scrolled to their
+         bottom, the bids at their top, so the prices nearest to trading are
+         the ones on screen. */
+      requestAnimationFrame(function(){
+        var a=$m('mDepthAsk'); if(a) a.scrollTop=a.scrollHeight;
+        var d=$m('mDepthBid'); if(d) d.scrollTop=0;
+      });
+    }catch(e){
+      host.innerHTML='<div class="mkm-none">Could not load orders.</div>';
+    }
+  }
+
+  async function loadHistory(){
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/market_trades?card_id=eq.'+encodeURIComponent(cur.card_id)+
+                          '&select=*&limit=40',{headers:H});
+      var t=await res.json();
+      if(!Array.isArray(t)) t=[];
+
+      var sres=await fetch(SB_URL+'/rest/v1/market_stats?card_id=eq.'+encodeURIComponent(cur.card_id)+
+                           '&select=*',{headers:H});
+      var st=(await sres.json())[0]||{};
+
+      $m('mStats').innerHTML=
+        '<div class="mkm-stat"><span>30D AVG</span><b>'+(st.avg_30d!=null?num(st.avg_30d):'—')+'</b></div>'+
+        '<div class="mkm-stat"><span>30D HIGH</span><b>'+(st.high_30d!=null?num(st.high_30d):'—')+'</b></div>'+
+        '<div class="mkm-stat"><span>30D LOW</span><b>'+(st.low_30d!=null?num(st.low_30d):'—')+'</b></div>';
+
+      if(!t.length){
+        $m('mHist').innerHTML='<div class="mkm-none">No trades yet.</div>';
+      }else{
+        $m('mHist').innerHTML=t.map(function(x){
+          var d=new Date(x.created_at);
+          var when=(Date.now()-d)<86400000
+            ? d.toTimeString().slice(0,5)
+            : d.toISOString().slice(5,10).replace('-','.');
+          return '<div class="mkm-line"><span class="t">'+when+'</span>'+
+                 '<span class="p '+(x.taker==='buyer'?'up':'dn')+'">'+num(x.price)+'</span></div>';
+        }).join('');
+      }
+      drawChart();
+    }catch(e){
+      $m('mHist').innerHTML='<div class="mkm-none">Could not load trades.</div>';
+    }
+  }
+
+  /* Only drawn once there is a shape to see. Three points on a month-wide
+     axis says less than the empty space around it. */
+  async function drawChart(){
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/market_candles?card_id=eq.'+encodeURIComponent(cur.card_id)+
+                          '&select=*&order=day.asc',{headers:H});
+      var c=await res.json();
+      if(!Array.isArray(c) || c.length<5) return;
+
+      $m('mChartWrap').hidden=false;
+      var cv=$m('mChart');
+      var w=cv.parentElement.clientWidth-30;
+      cv.width=w*2; cv.height=300; cv.style.width=w+'px'; cv.style.height='150px';
+      var g=cv.getContext('2d'); g.scale(2,2);
+      var W=w, HH=150, pad=6;
+
+      var lo=Math.min.apply(null,c.map(function(x){return Number(x.low);}));
+      var hi=Math.max.apply(null,c.map(function(x){return Number(x.high);}));
+      if(hi===lo){ hi=lo*1.1||1; lo=lo*0.9; }
+      var y=function(v){ return pad+(HH-pad*2)*(1-(v-lo)/(hi-lo)); };
+      var step=W/c.length;
+
+      g.clearRect(0,0,W,HH);
+      c.forEach(function(x,i){
+        var cx=step*i+step/2;
+        var up=Number(x.close)>=Number(x.open);
+        g.strokeStyle=up?'#3fd17a':'#e0556a';
+        g.fillStyle=up?'#3fd17a':'#e0556a';
+        g.lineWidth=1;
+        g.beginPath(); g.moveTo(cx,y(Number(x.high))); g.lineTo(cx,y(Number(x.low))); g.stroke();
+        var a=y(Number(x.open)), b=y(Number(x.close));
+        var top=Math.min(a,b), h=Math.max(Math.abs(a-b),1);
+        g.fillRect(cx-Math.min(step*0.3,5), top, Math.min(step*0.6,10), h);
+      });
+    }catch(e){}
+  }
+
+  function setMode(m){
+    if(m==='sell' && !(mine && mine.owned.length)) m='buy';
+    mode=m;
+    var canSell = !!(mine && mine.owned.length);
+    $m('mMode').hidden=!canSell;
+    document.querySelectorAll('.mkm-tab').forEach(function(b){
+      b.classList.toggle('on', b.dataset.m===mode);
+    });
+
+    $m('mBal').textContent = mine ? num(mine.balance)+' USDT' : 'Connect wallet';
+    $m('mOwn').textContent = mine ? (mine.owned.length+' card'+(mine.owned.length===1?'':'s')) : '—';
+
+    var go=$m('mGo');
+    go.className='mkm-go'+(mode==='sell'?' sell':'');
+    go.textContent = mode==='sell' ? 'SELL' : 'BUY';
+
+    /* Prefilled with the price that fills immediately, so the common case is
+       one tap. Typing under it turns the same button into a resting order. */
+    var seed = mode==='sell'
+      ? (cur.bid!=null ? cur.bid : (cur.ask!=null ? cur.ask : cur.floor))
+      : (cur.ask!=null ? cur.ask : (cur.bid!=null ? cur.bid : cur.floor));
+    // Never open below the floor: the field would start in an error state
+    // for a price the user did not choose.
+    seed = Math.max(Number(seed||0), Number(cur.floor||0), 0.01);
+    $m('mPrice').value = seed.toFixed(2);
+    $m('mQty').value = 1;
+    onPrice();
+  }
+
+  /* How many of these can be done at once. Selling is bounded by what is in
+     hand; buying by what the balance covers, so the field cannot be set to a
+     number that is going to fail halfway through. */
+  function maxQty(){
+    var v=Number($m('mPrice').value);
+    if(mode==='sell') return mine ? mine.owned.length : 0;
+    if(!(v>0) || !mine) return 1;
+    return Math.max(1, Math.floor(mine.balance / v));
+  }
+
+  function onPrice(){
+    if(!cur) return;
+    var v=Number($m('mPrice').value);
+    var go=$m('mGo');
+    var floor=Number(cur.floor||0);
+
+    var mx=Math.max(1, maxQty());
+    var q=Math.max(1, Math.min(Math.floor(Number($m('mQty').value)||1), mx));
+    $m('mQty').value=q;
+    $m('mMax').textContent=mx;
+    $m('mTotal').textContent = (v>0) ? num(round2(v*q)) : '0';
+
+    if(!(v>0)){ go.disabled=true; note(''); return; }
+    if(v<floor){ go.disabled=true; note('Below the floor of '+num(floor)+' USDT.',true); return; }
+    if(!(window.MEMONS && MEMONS.connected)){ go.disabled=true; note('Connect your wallet to trade.'); return; }
+
+    go.disabled=false;
+    if(mode==='buy'){
+      if(mine && v*q>mine.balance){ go.disabled=true; note('Not enough balance.',true); return; }
+      note(cur.ask!=null && v>=cur.ask
+        ? (q>1 ? 'Buys up to '+q+' listings at '+num(cur.ask)+' USDT or less.'
+               : 'Buys the lowest listing at '+num(cur.ask)+' USDT now.')
+        : (q>1 ? 'Places '+q+' buy orders. Your funds are held until they fill.'
+               : 'Places a buy order. Your funds are held until it fills or you cancel.'));
+    }else{
+      if(mine && q>mine.owned.length){ go.disabled=true; note('You do not hold that many.',true); return; }
+      note(cur.bid!=null && v<=cur.bid
+        ? (q>1 ? 'Sells up to '+q+' to the highest offers at '+num(cur.bid)+' USDT or more.'
+               : 'Sells to the highest offer at '+num(cur.bid)+' USDT now.')
+        : (q>1 ? 'Lists '+q+' cards. They cannot be enhanced while listed.'
+               : 'Lists your card. It cannot be enhanced while listed.'));
+    }
+  }
+
+  function round2(n){ return Math.round(n*100)/100; }
+
+  /* One button, two outcomes. Crossing the book trades at once; anything
+     short of it rests as an order. The user sets a price, not a mechanism. */
+  async function submit(){
+    if(busy || !cur) return;
+    var v=Number($m('mPrice').value);
+    if(!(v>0)) return;
+    busy=true;
+    var go=$m('mGo'); var label=go.textContent; go.disabled=true; go.textContent='…';
+
+    var qty=Math.max(1, Math.floor(Number($m('mQty').value)||1));
+    var me=String(MEMONS.address).toLowerCase();
+    var done=0, resting=0, lastPrice=null, stopped=null, result=null;
+
+    try{
+      /* Decided against the book as it is now, not as it was when the modal
+         opened. Someone else listing at this price a moment ago would
+         otherwise turn an immediate buy into an order that sits next to the
+         listing it should have taken.
+         Several at once run one after another rather than together: each
+         changes what the next one should take, and a partial result has to
+         be reportable. */
+      if(mode==='buy'){
+        var lr=await fetch(SB_URL+'/rest/v1/listings?card_id=eq.'+encodeURIComponent(cur.card_id)+
+                           '&status=eq.open&select=id,price,seller&order=price.asc&limit=50',{headers:H});
+        var ls=await lr.json();
+        var takeable=(Array.isArray(ls)?ls:[]).filter(function(x){
+          return Number(x.price)<=v && String(x.seller).toLowerCase()!==me;
+        });
+        for(var i=0;i<qty;i++){
+          try{
+            if(takeable[i]){
+              await MEMONS.authFetch('/market/buy',{listing_id:takeable[i].id});
+              lastPrice=takeable[i].price;
+            }else{
+              await MEMONS.authFetch('/market/offer',{card_id:cur.card_id,price:v});
+              resting++;
+            }
+            done++;
+          }catch(e){ stopped=e; break; }
+        }
+      }else{
+        var or=await fetch(SB_URL+'/rest/v1/offers?card_id=eq.'+encodeURIComponent(cur.card_id)+
+                           '&status=eq.open&select=id,price,buyer&order=price.desc&limit=50',{headers:H});
+        var os=await or.json();
+        var fillable=(Array.isArray(os)?os:[]).filter(function(x){
+          return Number(x.price)>=v && String(x.buyer).toLowerCase()!==me;
+        });
+        for(var j=0;j<qty;j++){
+          var card=mine.owned[j];
+          if(!card) break;
+          try{
+            if(fillable[j]){
+              await MEMONS.authFetch('/market/accept',{offer_id:fillable[j].id,owned_id:card.id});
+              lastPrice=fillable[j].price;
+            }else{
+              await MEMONS.authFetch('/market/list',{owned_id:card.id,price:v});
+              resting++;
+            }
+            done++;
+          }catch(e){ stopped=e; break; }
+        }
+      }
+
+      if(!done && stopped) throw stopped;
+
+      var word = mode==='buy'
+        ? (resting===done ? 'Buy order' : 'Bought')
+        : (resting===done ? 'Listed'    : 'Sold');
+      var at = resting===done ? num(v) : num(lastPrice!=null?lastPrice:v);
+      result = done+' x '+word+' at '+at+' USDT.' +
+               (stopped ? ' The rest could not be completed.' : '');
+      note(result);
+      await load();
+      cur=rows.find(function(c){return c.card_id===cur.card_id;})||cur;
+      await loadMine();
+      await Promise.all([loadDepth(), loadHistory()]);
+      setMode(mode);
+      loadBalance();
+    }catch(e){
+      var msg=String((e&&e.message)||e);
+      var human={
+        MARKET_CLOSED:'The market is closed.',
+        INSUFFICIENT_BALANCE:'Not enough balance.',
+        BELOW_FLOOR:'That price is below the floor.',
+        CANNOT_BUY_OWN:'That listing is yours.',
+        CANNOT_SELL_TO_SELF:'That offer is yours.',
+        LISTING_CLOSED:'Someone else took it. Try again.',
+        LISTING_GONE:'Someone else took it. Try again.',
+        OFFER_CLOSED:'That offer is gone. Try again.',
+        OFFER_GONE:'That offer is gone. Try again.',
+        EVENT_CARD_NOT_TRADABLE:'Event cards cannot be traded.',
+        CARD_USED_FOR_REWARD:'That card was used for a reward.'
+      };
+      var key=Object.keys(human).find(function(k){return msg.indexOf(k)>=0;});
+      note(key?human[key]:'Something went wrong. Please try again.',true);
+    }finally{
+      busy=false; go.disabled=false; go.textContent=label;
+      // onPrice rewrites the note with the next-action hint, which would
+      // erase what just happened before anyone read it.
+      onPrice();
+      if(result) note(result);
+    }
+  }
+
+  /* ===== withdraw ======================================================
+     The destination is the connected wallet, not a field. A mistyped address
+     sends the money somewhere nobody can reach, and there is no undo for
+     that; anyone who needs a different destination can be handled by hand. */
+  var wdBusy=false, wdAvail=0;
+
+  var wdChain='polygon';
+
+  async function wdOpen(){
+    if(!(window.MEMONS && MEMONS.connected)){ alert('Connect your wallet first.'); return; }
+    $m('wdModal').hidden=false;
+    document.body.style.overflow='hidden';
+    $m('wdForm').hidden=false; $m('wdDone').hidden=true;
+    $m('wdNote').textContent=''; $m('wdAmount').value='';
+    $m('wdTo').textContent=MEMONS.address||'—';
+    buildChainPicker('wdChains', wdChain, function(key){
+      wdChain=key;
+      var h=$m('wdChainHint');
+      if(h) h.textContent='You receive USDT on '+chainLabel(key)+'.';
+    });
+    wdLoad();
+  }
+  function wdClose(){
+    $m('wdModal').hidden=true;
+    document.body.style.overflow='';
+  }
+
+  async function wdLoad(){
+    $m('wdAvail').textContent='Loading…';
+    try{
+      var r=await MEMONS.authFetch('/market/me');
+      wdAvail=Number(r.balance||0);
+      $m('wdAvail').textContent='Available '+num(wdAvail)+' USDT'+
+        (r.locked ? ' · '+num(r.locked)+' locked in open orders' : '');
+
+      // One at a time: a second request while the first is unpaid would be
+      // indistinguishable when the transfer is made by hand.
+      if(r.withdrawal){
+        $m('wdForm').hidden=true; $m('wdDone').hidden=false;
+        $m('wdSent').textContent=num(r.withdrawal.amount);
+        $m('wdPending').innerHTML='Requested <b>'+
+          new Date(r.withdrawal.requested_at).toLocaleString()+'</b>'+
+          (r.withdrawal.chain ? ' on <b>'+esc(chainLabel(r.withdrawal.chain))+'</b>' : '')+'<br>'+
+          'A new request can be made once this one is settled.';
+        return;
+      }
+
+      var picks=[25,50,100].filter(function(v){return v<=wdAvail;});
+      if(wdAvail>0) picks.push('ALL');
+      $m('wdQuick').innerHTML=picks.map(function(v){
+        return '<button data-v="'+(v==='ALL'?wdAvail:v)+'">'+v+'</button>';
+      }).join('');
+      $m('wdQuick').querySelectorAll('button').forEach(function(b){
+        b.onclick=function(){ $m('wdAmount').value=b.dataset.v; wdCheck(); };
+      });
+    }catch(e){ $m('wdAvail').textContent='Could not read your balance.'; }
+    wdCheck();
+  }
+
+  function wdCheck(){
+    var v=Number($m('wdAmount').value);
+    var go=$m('wdGo');
+    if(!(v>0)){ go.disabled=true; $m('wdNote').textContent=''; return; }
+    if(v>wdAvail){
+      go.disabled=true;
+      $m('wdNote').className='mkm-note bad';
+      $m('wdNote').textContent='More than your available balance.';
+      return;
+    }
+    go.disabled=false;
+    $m('wdNote').className='mkm-note';
+    $m('wdNote').textContent='Sent to your connected wallet after review.';
+  }
+
+  async function wdSubmit(){
+    if(wdBusy) return;
+    var v=Number($m('wdAmount').value);
+    if(!(v>0) || v>wdAvail) return;
+    /* The network is named in the confirmation because it is the one choice
+       here that cannot be undone: USDT sent on a chain the wallet does not
+       hold is not recoverable by cancelling anything. */
+    if(!confirm('Withdraw '+num(v)+' USDT on '+chainLabel(wdChain)+'?\n'+
+                'It goes to your connected wallet on that network.\n'+
+                'The amount leaves your balance now and is sent after review.')) return;
+
+    wdBusy=true;
+    var b=$m('wdGo'); b.disabled=true; var lbl=b.textContent; b.textContent='…';
+    try{
+      var r=await MEMONS.authFetch('/market/withdraw',{amount:v, chain:wdChain});
+      $m('wdForm').hidden=true; $m('wdDone').hidden=false;
+      $m('wdSent').textContent=num(v);
+      $m('wdPending').innerHTML='Requested <b>just now</b> on <b>'+
+        esc(chainLabel(wdChain))+'</b><br>'+
+        'A new request can be made once this one is settled.';
+      loadBalance();
+    }catch(e){
+      var m2=String((e&&e.message)||e);
+      $m('wdNote').className='mkm-note bad';
+      $m('wdNote').textContent = m2.indexOf('WITHDRAWAL_PENDING')>=0
+        ? 'You already have a withdrawal waiting.'
+        : (m2.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.'
+        : (m2.indexOf('BAD_CHAIN')>=0 ? 'That network is not available.'
+                                      : 'Could not submit. Please try again.'));
+      b.disabled=false;
+    }finally{ wdBusy=false; b.textContent=lbl; }
+  }
+
+  $m('wdBtn').onclick=wdOpen;
+  $m('wdClose').onclick=wdClose;
+  $m('wdBg').onclick=wdClose;
+  $m('wdBack').onclick=wdClose;
+  $m('wdGo').onclick=wdSubmit;
+  $m('wdAmount').oninput=wdCheck;
+  $m('wdAmount').onkeydown=function(e){ if(e.key==='Enter' && !$m('wdGo').disabled) wdSubmit(); };
+
+  /* ===== network picker ================================================
+     The chain list comes from memons-pay so there is one place that knows
+     which networks are live. Deposits set it on MEMONS, because the transfer
+     is made from this page and has to go out on the chosen network.
+     Withdrawals only record it: the transfer is made by hand later, so the
+     choice travels to the server instead. */
+  function chainList(){
+    if(window.MEMONS && MEMONS.chains){
+      try{ return MEMONS.chains(); }catch(e){}
+    }
+    return [{key:'polygon',label:'Polygon'}];
+  }
+
+  function buildChainPicker(hostId, initial, onPick){
+    var host=$m(hostId);
+    if(!host) return null;
+    var list=chainList();
+    var cur = initial && list.some(function(c){return c.key===initial;}) ? initial : list[0].key;
+    host.innerHTML='';
+    list.forEach(function(c){
+      var b=document.createElement('button');
+      b.type='button'; b.textContent=c.label; b.dataset.chain=c.key;
+      if(c.key===cur) b.classList.add('on');
+      b.onclick=function(){
+        cur=c.key;
+        Array.prototype.forEach.call(host.children,function(x){
+          x.classList.toggle('on', x.dataset.chain===cur);
+        });
+        onPick(cur);
+      };
+      host.appendChild(b);
+    });
+    onPick(cur);
+    return cur;
+  }
+
+  /* ===== history =======================================================
+     The other four tabs of the orders panel. Open orders say what is locked
+     right now; these say what already happened. Deposits, fills and
+     withdrawals all move the same balance, and none of them were visible to
+     the person whose balance it was, which is what every "where did my
+     deposit go" message was really asking. Read-only: `market-history`
+     writes nothing and calls no market RPC. */
+  var hisData=null, hisErr=null;
+
+  /* num() rounds to two places, right for prices but wrong for a ledger where
+     the sixth place is the difference between balanced and not. */
+  function hnum(v){
+    var n=Number(v); if(!isFinite(n)) n=0;
+    var t=n.toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+    if(t.indexOf('.')<0) t+='.00';
+    else if(t.split('.')[1].length===1) t+='0';
+    var p=t.split('.');
+    return p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',')+'.'+p[1];
+  }
+  function hsign(v){ return (Number(v)>=0?'+':'\u2212')+hnum(Math.abs(Number(v))); }
+  function hshort(a){
+    if(!a) return '\u2014'; a=String(a);
+    return a.length>14 ? a.slice(0,6)+'\u2026'+a.slice(-4) : a;
+  }
+  function hwhen(t){
+    if(!t) return '\u2014';
+    var d=new Date(t); if(isNaN(d)) return '\u2014';
+    var p=function(n){return (n<10?'0':'')+n;};
+    return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+
+           ' '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+  /* Deposits come in on three chains and the same hash means a different
+     page on each, so the explorer is chosen per row. The server says which
+     chain a transaction was on; where it cannot say, the hash is shown as
+     plain text. A link to the wrong explorer looks like a transaction that
+     does not exist, which is worse than no link. */
+  var HIS_CHAIN={
+    polygon:  {label:'Polygon',  scan:'https://polygonscan.com/tx/'},
+    ethereum: {label:'Ethereum', scan:'https://etherscan.io/tx/'},
+    bsc:      {label:'BNB Chain',scan:'https://bscscan.com/tx/'}
+  };
+  var HIS_TESTNET=false;   // set from the server response on load
+  function hchainCfg(c){
+    var cfg=HIS_CHAIN[c];
+    if(!cfg) return null;
+    if(c==='polygon' && HIS_TESTNET){
+      return {label:'Amoy', scan:'https://amoy.polygonscan.com/tx/'};
+    }
+    return cfg;
+  }
+  function hchainPill(c){
+    var cfg=hchainCfg(c);
+    if(!cfg) return '<span class="his-d">\u2014</span>';
+    return '<span class="his-p '+esc(c)+'">'+esc(cfg.label)+'</span>';
+  }
+  function htx(h, chain){
+    if(!h) return '\u2014';
+    var cfg=hchainCfg(chain);
+    if(!cfg) return '<span class="his-mono">'+esc(hshort(h))+'</span>';
+    return '<a class="his-a his-mono" target="_blank" rel="noopener" href="'+
+           cfg.scan+esc(h)+'">'+esc(hshort(h))+'</a>';
+  }
+  /* The reason set is fixed by the database:
+       deposit | withdraw | buy | sell | fee | lock | unlock | admin
+     Three of them carry two meanings, told apart by the sign or the note:
+       withdraw  negative when requested, positive when a rejection returns it
+       buy       negative when paying for a listing; zero when an offer of
+                 yours fills, where the row only records the lock coming off
+       unlock    a cancelled offer or an expired one
+     Anything outside the set is shown as written rather than blanked, so a
+     reason added later still renders. */
+  var HIS_REASON={ deposit:'Deposit', sell:'Card sale', fee:'Trading fee',
+                   lock:'Offer placed', admin:'Adjusted by admin' };
+  function hreason(l){
+    var r=l.reason, d=Number(l.delta), n=String(l.note||'');
+    if(r==='withdraw') return d<0 ? 'Withdrawal requested' : 'Withdrawal returned';
+    if(r==='buy')      return d===0 ? 'Your offer filled' : 'Card purchase';
+    if(r==='unlock')   return n.indexOf('expired')>=0 ? 'Offer expired' : 'Offer cancelled';
+    return HIS_REASON[r] || String(r||'\u2014').replace(/_/g,' ');
+  }
+
+  /* A deposit stores its transaction hash in the note. Left as plain text it
+     is 66 characters of nothing; as a link it is the receipt. */
+  var HIS_TXRE=/^0x[0-9a-f]{64}$/i;
+  function hnote(l){
+    var n=l.note;
+    if(!n) return '\u2014';
+    if(HIS_TXRE.test(n)) return htx(n, l.chain);
+    return esc(n);
+  }
+
+  function htbl(cols, list, rowFn, emptyTitle, emptyBody){
+    if(!list.length){
+      return '<div class="ord-none"><b>'+emptyTitle+'</b>'+emptyBody+'</div>';
+    }
+    var g=cols.map(function(c){return c[1];}).join(' ');
+    return '<div class="his-tbl">'+
+      '<div class="his-row th" style="grid-template-columns:'+g+'">'+
+        cols.map(function(c){return '<span>'+c[0]+'</span>';}).join('')+'</div>'+
+      list.map(function(r){
+        return '<div class="his-row" style="grid-template-columns:'+g+'">'+rowFn(r)+'</div>';
+      }).join('')+'</div>';
+  }
+
+  function hisTrades(){
+    return htbl(
+      [['DATE','1fr'],['CARD','1.5fr'],['SIDE','.7fr'],['WITH','.9fr'],['PRICE','.8fr'],['NET','.9fr']],
+      hisData.trades,
+      function(t){
+        var sell=t.side==='sell';
+        return '<span data-l="DATE" class="his-d">'+hwhen(t.created_at)+'</span>'+
+          '<span data-l="CARD" class="his-ell" title="'+esc(t.card_name||t.card_id)+'">'+
+            esc(t.card_name||t.card_id)+
+            (t.rarity?' <span class="his-d">'+esc(t.rarity)+'</span>':'')+'</span>'+
+          '<span data-l="SIDE"><span class="his-p '+(sell?'sell':'buy')+'">'+
+            (sell?'SOLD':'BOUGHT')+'</span></span>'+
+          '<span data-l="WITH" class="his-mono">'+esc(hshort(t.counterparty))+'</span>'+
+          '<span data-l="PRICE" class="his-n">'+hnum(t.price)+'</span>'+
+          '<span data-l="NET" class="his-n '+(t.net>=0?'his-up':'his-dn')+'">'+hsign(t.net)+
+            (sell && t.fee ? '<span class="his-fee">fee '+hnum(t.fee)+'</span>' : '')+'</span>';
+      },
+      'Nothing filled yet.', 'Orders that complete will be listed here with what you paid or received.');
+  }
+
+  function hisLedger(){
+    return htbl(
+      [['DATE','1fr'],['REASON','1.4fr'],['CHANGE','.9fr'],['NOTE','1.2fr']],
+      hisData.ledger,
+      function(l){
+        /* A zero row is neither a gain nor a loss; colouring it green would
+           read as money arriving when nothing moved. */
+        var d=Number(l.delta);
+        var cls = d===0 ? '' : (d>0 ? 'his-up' : 'his-dn');
+        return '<span data-l="DATE" class="his-d">'+hwhen(l.created_at)+'</span>'+
+          '<span data-l="REASON">'+esc(hreason(l))+'</span>'+
+          '<span data-l="CHANGE" class="his-n '+cls+'">'+(d===0?'\u2014':hsign(d))+'</span>'+
+          '<span data-l="NOTE" class="his-d his-ell" title="'+esc(l.note||'')+'">'+
+            hnote(l)+'</span>';
+      },
+      'No balance activity yet.', 'Every change to your balance is recorded here.');
+  }
+
+  var HIS_TP={paid:['ok','COMPLETED'],pending:['wait','PENDING'],
+              expired:['no','EXPIRED'],cancelled:['no','CANCELLED']};
+
+  function hisTopups(){
+    return htbl(
+      [['DATE','1fr'],['TYPE','.7fr'],['PAID','.8fr'],['RECEIVED','.9fr'],
+       ['NETWORK','.8fr'],['STATUS','.9fr'],['TX','.9fr']],
+      hisData.topups,
+      function(t){
+        var st=HIS_TP[t.status]||['',String(t.status||'').toUpperCase()];
+        var got=t.kind==='pulls'
+          ? (t.quantity!=null ? t.quantity+' capsules' : '\u2014')
+          : hnum(t.amount_usdt)+' balance';
+        return '<span data-l="DATE" class="his-d">'+hwhen(t.created_at)+'</span>'+
+          '<span data-l="TYPE">'+(t.kind==='pulls'?'Capsule':'Balance')+'</span>'+
+          '<span data-l="PAID" class="his-n">'+hnum(t.amount_usdt)+'</span>'+
+          '<span data-l="RECEIVED" class="his-d">'+esc(got)+'</span>'+
+          '<span data-l="NETWORK">'+hchainPill(t.chain)+'</span>'+
+          '<span data-l="STATUS"><span class="his-p '+st[0]+'">'+st[1]+'</span></span>'+
+          '<span data-l="TX">'+htx(t.tx_hash, t.chain)+'</span>';
+      },
+      'No deposits yet.', 'Capsule and balance top-ups both appear here.');
+  }
+
+  var HIS_WD={sent:['ok','SENT'],pending:['wait','PENDING'],rejected:['no','REJECTED']};
+
+  function hisWithdrawals(){
+    return htbl(
+      [['REQUESTED','1fr'],['AMOUNT','.8fr'],['TO','1fr'],['STATUS','.9fr'],['PROCESSED','1fr'],['TX','.9fr']],
+      hisData.withdrawals,
+      function(w){
+        var st=HIS_WD[w.status]||['',String(w.status||'').toUpperCase()];
+        return '<span data-l="REQUESTED" class="his-d">'+hwhen(w.requested_at)+'</span>'+
+          '<span data-l="AMOUNT" class="his-n">'+hnum(w.amount)+'</span>'+
+          '<span data-l="TO" class="his-mono">'+esc(hshort(w.to_address))+'</span>'+
+          '<span data-l="STATUS"><span class="his-p '+st[0]+'">'+st[1]+'</span></span>'+
+          '<span data-l="PROCESSED" class="his-d">'+hwhen(w.processed_at)+'</span>'+
+          '<span data-l="TX">'+htx(w.tx_hash, w.chain)+'</span>';
+      },
+      'No withdrawals yet.', 'Requests are reviewed before the transfer is sent.');
+  }
+
+  var HIS_VIEW={trades:hisTrades, ledger:hisLedger, topups:hisTopups, withdrawals:hisWithdrawals};
+
+  function hisRenderPane(){
+    var host=$m('hisPane');
+    if(hisErr){
+      host.innerHTML='<div class="ord-none"><b>Could not load your history.</b>'+
+        esc(HIS_WHY[hisErr] || hisErr)+'</div>';
+      $m('hisFoot').textContent=''; return;
+    }
+    if(!hisData){
+      host.innerHTML='<div class="ord-none">Loading\u2026</div>';
+      $m('hisFoot').textContent=''; return;
+    }
+    host.innerHTML=HIS_VIEW[ordTab]();
+    /* The server caps each list. Saying so beats letting someone conclude
+       their older records were dropped. */
+    var n=(hisData[ordTab]||[]).length;
+    $m('hisFoot').textContent = n>=hisData.limit
+      ? 'Showing the most recent '+hisData.limit+' entries.' : '';
+  }
+
+  function hisCounts(){
+    $m('ocT').textContent = hisData && hisData.trades.length      ? '('+hisData.trades.length+')' : '';
+    $m('ocL').textContent = hisData && hisData.ledger.length      ? '('+hisData.ledger.length+')' : '';
+    $m('ocD').textContent = hisData && hisData.topups.length      ? '('+hisData.topups.length+')' : '';
+    $m('ocW').textContent = hisData && hisData.withdrawals.length ? '('+hisData.withdrawals.length+')' : '';
+  }
+
+  /* Fetched directly rather than through authFetch. authFetch treats any 401
+     as a dead session and logs the user out, which is right for a trade and
+     wrong for a read-only panel: a misconfigured function should not be able
+     to end someone's session. The distinction below matters too — 401 from
+     our own code means the token is stale, while 401 from Supabase's gateway
+     means it never reached us because Verify JWT is on, and no amount of
+     reconnecting will fix that. */
+  async function hisFetch(){
+    var tok = window.MEMONS && MEMONS.token;
+    if(!tok) throw new Error('NOT_CONNECTED');
+    /* Authorization only. The REST calls elsewhere on this page need an
+       apikey because they go to PostgREST; an edge function does not, and
+       sending one adds a header the preflight has to be told about. */
+    var res = await fetch(SB_URL+'/functions/v1/market-history', {
+      headers: { Authorization: 'Bearer '+tok }
+    });
+    var j = await res.json().catch(function(){ return {}; });
+    if(res.status === 404) throw new Error('NOT_DEPLOYED');
+    if(res.status === 401){
+      throw new Error(j.error === 'unauthorized' ? 'SESSION_STALE' : 'VERIFY_JWT_ON');
+    }
+    if(!res.ok) throw new Error(j.error || ('HTTP '+res.status));
+    return j;
+  }
+
+  var HIS_WHY={
+    VERIFY_JWT_ON: 'The history function is rejecting the wallet token. ' +
+                   'Set Verify JWT to OFF on market-history.',
+    NOT_DEPLOYED:  'The history function is not deployed yet.',
+    SESSION_STALE: 'Your session has lapsed. Reconnect your wallet.',
+    NOT_CONNECTED: 'Connect your wallet to see your history.',
+    /* A blocked request never gets a status, so this arrives as a bare
+       TypeError. Without naming it the screen would show "Failed to fetch",
+       which reads as the server being down. */
+    UNREACHABLE:   'Could not reach the history function. It may not be ' +
+                   'deployed, or the request was blocked before it got there.'
+  };
+
+  async function hisLoad(){
+    hisData=null; hisErr=null;
+    if(ordTab!=='open') hisRenderPane();
+    try{
+      var r=await hisFetch();
+      HIS_TESTNET = r.testnet === true;
+      hisData={
+        trades:r.trades||[], ledger:r.ledger||[],
+        topups:r.topups||[], withdrawals:r.withdrawals||[],
+        limit:r.limit||200
+      };
+    }catch(e){
+      var m=String((e&&e.message)||e);
+      hisErr = (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(m))
+        ? 'UNREACHABLE' : m;
+    }
+    hisCounts();
+    if(ordTab!=='open') hisRenderPane();
+  }
+
+  function ordSetTab(t){
+    ordTab=t;
+    document.querySelectorAll('#ordTabs .ord-tab').forEach(function(b){
+      b.classList.toggle('on', b.dataset.t===t);
+    });
+    var open = t==='open';
+    $m('ordList').hidden = !open;
+    $m('hisPane').hidden = open;
+    if(open){ $m('hisFoot').textContent=''; }
+    else { hisRenderPane(); }
+  }
+
+  /* ===== my orders =====================================================
+     Open orders are spread across whatever cards they were placed on, so
+     cancelling from the book would mean opening each card in turn to find
+     them. This is also the only place that answers what the locked balance
+     is actually holding. */
+  var ordBusy=false, ordTab='open';
+
+  async function ordOpen(){
+    if(!(window.MEMONS && MEMONS.connected)){ alert('Connect your wallet first.'); return; }
+    $m('ordModal').hidden=false;
+    document.body.style.overflow='hidden';
+    ordSetTab('open');
+    ordLoad();
+    hisLoad();
+  }
+  function ordClose(){
+    $m('ordModal').hidden=true;
+    document.body.style.overflow='';
+  }
+
+  function ordCard(id){
+    return rows.find(function(c){return c.card_id===id;}) || {card_id:id,name:'',rarity:'',image_url:''};
+  }
+
+  async function ordLoad(){
+    $m('ordList').innerHTML='<div class="ord-none">Loading…</div>';
+    $m('ordSum').innerHTML='';
+    $m('ocO').textContent='';
+    var r;
+    try{ r=await MEMONS.authFetch('/market/me'); }
+    catch(e){ $m('ordList').innerHTML='<div class="ord-none">Could not load your orders.</div>'; return; }
+
+    var ls=r.listings||[], os=r.offers||[];
+    var locked=(os).reduce(function(a,o){return a+Number(o.price);},0);
+
+    $m('ocO').textContent = (ls.length+os.length) ? '('+(ls.length+os.length)+')' : '';
+
+    $m('ordSum').innerHTML=
+      '<div class="ord-stat"><span>LISTINGS</span><b>'+ls.length+'</b></div>'+
+      '<div class="ord-stat"><span>BUY ORDERS</span><b>'+os.length+'</b></div>'+
+      '<div class="ord-stat lock"><span>LOCKED</span><b>'+num(locked)+'<small>USDT</small></b></div>'+
+      '<div class="ord-stat"><span>AVAILABLE</span><b>'+num(r.balance||0)+'<small>USDT</small></b></div>';
+
+    if(!ls.length && !os.length){
+      $m('ordList').innerHTML='<div class="ord-none"><b>Nothing open right now.</b><br>'+
+        'Listings and buy orders you place will show up here.</div>';
+      return;
+    }
+
+    /* Dates are shown as how long ago rather than a calendar date: an order
+       placed this morning and one from last month need telling apart at a
+       glance, and the exact timestamp is on the title attribute for anyone
+       who wants it. */
+    var ago=function(iso){
+      if(!iso) return '';
+      var d=Date.now()-new Date(iso).getTime();
+      var mn=Math.floor(d/60000);
+      if(mn<1)   return 'just now';
+      if(mn<60)  return mn+'m ago';
+      var h=Math.floor(mn/60);
+      if(h<24)   return h+'h ago';
+      var dd=Math.floor(h/24);
+      return dd+'d ago';
+    };
+    var until=function(iso){
+      var left=new Date(iso).getTime()-Date.now();
+      if(left<=0) return {t:'expired', cls:'gone'};
+      var h=Math.floor(left/3600000);
+      if(h<24) return {t:(h<1 ? Math.floor(left/60000)+'m' : h+'h')+' left', cls:'soon'};
+      return {t:Math.floor(h/24)+'d left', cls:''};
+    };
+
+    var row=function(o,side){
+      var c=ordCard(o.card_id);
+      var exp='';
+      if(side==='bid' && o.expires_at){
+        var u=until(o.expires_at);
+        exp='<span class="ord-exp '+u.cls+'">'+u.t+'</span>';
+      }
+      return '<div class="ord-row '+side+'">'+
+        '<div class="ord-img"><img src="'+esc(thumb(c.image_url))+'" alt=""'+
+          ' onerror="this.style.visibility=\'hidden\'"></div>'+
+        '<div class="ord-mid">'+
+          '<div class="ord-name">'+esc(title(c))+'</div>'+
+          '<div class="ord-tags">'+
+            '<span class="ord-rr r-'+esc(c.rarity)+'">'+esc(LABEL[c.rarity]||c.rarity)+'</span>'+
+            '<span class="ord-when" title="'+esc(o.created_at||'')+'">'+ago(o.created_at)+'</span>'+
+            exp+
+          '</div>'+
+        '</div>'+
+        '<div class="ord-price '+side+'">'+num(o.price)+'<small>USDT</small></div>'+
+        '<button class="ord-x" data-k="'+side+'" data-id="'+o.id+'" title="Cancel">&times;</button>'+
+      '</div>';
+    };
+
+    var sec=function(title2, list, side){
+      if(!list.length) return '';
+      var tot=list.reduce(function(a,o){return a+Number(o.price);},0);
+      return '<section class="ord-sec">'+
+        '<div class="ord-sechead">'+
+          '<h3>'+title2+' <span>'+list.length+'</span></h3>'+
+          '<div class="ord-secright">'+
+            '<span class="ord-tot">'+num(tot)+' USDT</span>'+
+            '<button class="ord-all" data-k="'+side+'">Cancel all</button>'+
+          '</div>'+
+        '</div>'+
+        list.map(function(o){return row(o,side);}).join('')+
+      '</section>';
+    };
+
+    $m('ordList').innerHTML = sec('Listings', ls, 'ask') + sec('Buy orders', os, 'bid');
+
+    $m('ordList').querySelectorAll('.ord-x').forEach(function(b){
+      b.onclick=function(){ ordCancel(b); };
+    });
+    $m('ordList').querySelectorAll('.ord-all').forEach(function(b){
+      b.onclick=function(){ ordCancelAll(b.dataset.k, b.dataset.k==='ask'?ls:os); };
+    });
+  }
+
+  async function ordCancel(btn){
+    if(ordBusy) return;
+    var isAsk=btn.dataset.k==='ask';
+    if(!confirm(isAsk
+      ? 'Cancel this listing? The card goes back to your collection.'
+      : 'Cancel this buy order? The funds return to your balance.')) return;
+
+    ordBusy=true; btn.disabled=true; btn.textContent='…';
+    try{
+      if(isAsk) await MEMONS.authFetch('/market/unlist',{listing_id:Number(btn.dataset.id)});
+      else      await MEMONS.authFetch('/market/cancel-offer',{offer_id:Number(btn.dataset.id)});
+      await ordLoad();
+      await load();
+      loadBalance();
+      // The card behind may be showing the order that just went away.
+      if(cur && !$m('modal').hidden){
+        await loadMine();
+        await loadDepth();
+        setMode(mode);
+      }
+    }catch(e){
+      btn.disabled=false; btn.textContent='CANCEL';
+      alert('Could not cancel. Please try again.');
+    }finally{ ordBusy=false; }
+  }
+
+  /* Cancelling one at a time is fine for two orders and tedious for twenty.
+     Kept per section rather than one button for everything, so clearing out
+     buy orders cannot take the listings with it by accident. */
+  async function ordCancelAll(kind, list){
+    if(ordBusy || !list.length) return;
+    var isAsk=kind==='ask';
+    if(!confirm('Cancel all '+list.length+' '+(isAsk?'listings':'buy orders')+'?\n'+
+      (isAsk ? 'The cards go back to your collection.'
+             : 'The funds return to your balance.'))) return;
+
+    ordBusy=true;
+    var host=$m('ordList');
+    host.querySelectorAll('.ord-x, .ord-all').forEach(function(b){ b.disabled=true; });
+
+    var failed=0;
+    for(var i=0;i<list.length;i++){
+      try{
+        if(isAsk) await MEMONS.authFetch('/market/unlist',{listing_id:Number(list[i].id)});
+        else      await MEMONS.authFetch('/market/cancel-offer',{offer_id:Number(list[i].id)});
+      }catch(e){ failed++; }
+    }
+    ordBusy=false;
+    await ordLoad();
+    await load();
+    loadBalance();
+    if(cur && !$m('modal').hidden){
+      await loadMine(); await loadDepth(); setMode(mode);
+    }
+    if(failed) alert(failed+' order'+(failed>1?'s':'')+' could not be cancelled.');
+  }
+
+  $m('ordersBtn').onclick=ordOpen;
+  $m('ordClose').onclick=ordClose;
+  $m('ordBg').onclick=ordClose;
+
+  /* ===== deposit ===================================================== */
+  var tuCfg=null, tuRecv='', tuOrder=null, tuTick=null;
+
+  function tuOpen(){
+    if(!(window.MEMONS && MEMONS.connected)){ alert('Connect your wallet first.'); return; }
+    $m('tuModal').hidden=false;
+    document.body.style.overflow='hidden';
+    tuLoad();
+  }
+  function tuClose(){
+    $m('tuModal').hidden=true;
+    document.body.style.overflow='';
+    if(tuTick){ clearInterval(tuTick); tuTick=null; }
+  }
+
+  async function tuLoad(){
+    try{
+      var r=await MEMONS.authFetch('/market/topup');
+      tuCfg=r.config||{};
+      tuRecv=(r.receivers&&r.receivers.balance)||'';
+      // An order already running is picked up where it was left, rather than
+      // silently replaced: the user may already have sent the money.
+      if(r.order){ tuShowOrder(r.order); return; }
+    }catch(e){}
+    tuShowForm();
+  }
+
+  function tuShowForm(){
+    $m('tuStep1').hidden=false; $m('tuStep2').hidden=true;
+    if(tuTick){ clearInterval(tuTick); tuTick=null; }
+    var lo=Number(tuCfg&&tuCfg.balance_min||5), hi=Number(tuCfg&&tuCfg.balance_max||5000);
+    $m('tuRange').textContent='Minimum '+num(lo)+' · maximum '+num(hi)+' USDT';
+    $m('tuQuick').innerHTML=[10,50,100,500].filter(function(v){return v>=lo&&v<=hi;})
+      .map(function(v){return '<button data-v="'+v+'">'+v+'</button>';}).join('');
+    $m('tuQuick').querySelectorAll('button').forEach(function(b){
+      b.onclick=function(){ $m('tuAmount').value=b.dataset.v; };
+    });
+    $m('tuNote1').textContent='';
+  }
+
+  /* Setting it on MEMONS is what makes payTo prompt for the right network,
+     so this has to happen before the transfer, not alongside it. */
+  function tuBuildChains(){
+    var cur = (window.MEMONS && MEMONS.getChain) ? MEMONS.getChain() : 'polygon';
+    buildChainPicker('tuChains', cur, function(key){
+      try{ if(window.MEMONS && MEMONS.setChain) MEMONS.setChain(key); }catch(e){}
+      var h=$m('tuChainHint');
+      if(h) h.textContent='USDT on '+chainLabel(key)+'. Send on this network only.';
+      var n=$m('tuNote2'); if(n){ n.textContent=''; n.className='mkm-note'; }
+    });
+  }
+  function chainLabel(key){
+    var f=chainList().filter(function(c){return c.key===key;})[0];
+    return f ? f.label : key;
+  }
+
+  function tuShowOrder(o){
+    tuOrder=o;
+    tuBuildChains();
+    $m('tuStep1').hidden=true; $m('tuStep2').hidden=false;
+    $m('tuSendAmt').textContent=num(o.amount_usdt);
+    $m('tuAddr').textContent=tuRecv||'Not configured';
+    $m('tuPay').disabled=!tuRecv;
+    $m('tuNote2').textContent='';
+    tuStartTimer(o.expires_at);
+  }
+
+  /* The window is the reason the amount can be matched to one person, so it
+     is shown counting down rather than as a timestamp to work out. */
+  function tuStartTimer(iso){
+    if(tuTick) clearInterval(tuTick);
+    var end=new Date(iso).getTime();
+    var el=$m('tuTimer');
+    var draw=function(){
+      var left=Math.max(0, Math.floor((end-Date.now())/1000));
+      var mm=String(Math.floor(left/60)).padStart(2,'0');
+      var ss=String(left%60).padStart(2,'0');
+      el.innerHTML='Expires in <b>'+mm+':'+ss+'</b>';
+      el.className='tu-timer'+(left<300?' soon':'');
+      if(left<=0){
+        clearInterval(tuTick); tuTick=null;
+        el.innerHTML='<b>Expired.</b> A transfer already sent will still be credited.';
+      }
+    };
+    draw(); tuTick=setInterval(draw,1000);
+  }
+
+  async function tuCreate(){
+    var v=Number($m('tuAmount').value);
+    var lo=Number(tuCfg&&tuCfg.balance_min||5), hi=Number(tuCfg&&tuCfg.balance_max||5000);
+    if(!(v>0)){ $m('tuNote1').textContent='Enter an amount.'; return; }
+    if(v<lo||v>hi){ $m('tuNote1').textContent='Between '+num(lo)+' and '+num(hi)+' USDT.'; return; }
+
+    var b=$m('tuNext'); b.disabled=true; var lbl=b.textContent; b.textContent='…';
+    try{
+      var r=await MEMONS.authFetch('/market/topup',{kind:'balance',value:v});
+      tuRecv=r.receiver||tuRecv;
+      tuShowOrder(r.order);
+    }catch(e){
+      var msg=String((e&&e.message)||e);
+      $m('tuNote1').textContent = msg.indexOf('AMOUNT_OUT_OF_RANGE')>=0
+        ? 'That amount is outside the allowed range.'
+        : 'Could not start the deposit. Please try again.';
+    }finally{ b.disabled=false; b.textContent=lbl; }
+  }
+
+  async function tuPayNow(){
+    if(!tuOrder || !tuRecv) return;
+    var b=$m('tuPay'); b.disabled=true; var lbl=b.textContent;
+    $m('tuNote2').className='mkm-note';
+    try{
+      if(!window.MEMONS.payTo) throw new Error('NO_PAY');
+      b.textContent='CONFIRM IN WALLET…';
+      await MEMONS.payTo(tuRecv, Number(tuOrder.amount_usdt), {
+        onStatus:function(st){
+          if(st==='sending')    $m('tuNote2').textContent='Confirm the transfer in your wallet.';
+          if(st==='confirming') $m('tuNote2').textContent='Waiting for confirmations…';
+        }
+      });
+      $m('tuNote2').textContent='Credited. Your balance is updated.';
+      await loadBalance();
+      setTimeout(tuClose, 1200);
+    }catch(e){
+      // Swallowing the reason left nothing to work from when this fails, so
+      // it goes to the console and the visible message names it too.
+      console.error('deposit payment failed:', e);
+      var m2=String((e&&e.message)||e);
+      $m('tuNote2').className='mkm-note bad';
+      if(m2.indexOf('NO_PAY')>=0){
+        $m('tuNote2').textContent='Send from your wallet app using the address above.';
+      }else if(m2.indexOf('4001')>=0 || /user rejected|denied/i.test(m2)){
+        $m('tuNote2').textContent='Cancelled in wallet.';
+      }else if(/not open yet/i.test(m2)){
+        $m('tuNote2').textContent='Deposits are not open yet.';
+      }else if(/insufficient/i.test(m2)){
+        $m('tuNote2').textContent='Not enough balance in your wallet for this transfer.';
+      }else{
+        $m('tuNote2').textContent=m2.slice(0,140);
+      }
+    }finally{ b.disabled=false; b.textContent=lbl; }
+  }
+
+  /* Hiding the balance is for reading the page where someone can see the
+     screen. Remembered, so it does not have to be pressed on every visit. */
+  (function(){
+    var eye=$m('balEye'), card=$m('mkBal');
+    if(!eye || !card) return;
+    var KEY='memons_hide_balance';
+    var shown='<svg viewBox="0 0 24 24"><path d="M12 5C5.6 5 2 12 2 12s3.6 7 10 7 10-7 10-7-3.6-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/><circle cx="12" cy="12" r="1.9" fill="#0b0b0c"/></svg>';
+    var gone ='<svg viewBox="0 0 24 24"><path d="M12 5C5.6 5 2 12 2 12s2 3.9 6 5.9L4.6 21.3l1.4 1.4L21.4 7.3 20 5.9l-2.7 2.7C15.7 5.9 13.9 5 12 5Zm0 11c-.7 0-1.4-.2-2-.5l5.5-5.5c.3.6.5 1.3.5 2a4 4 0 0 1-4 4Z"/></svg>';
+    function paint(hidden){
+      card.classList.toggle('hidden', hidden);
+      eye.innerHTML = hidden ? gone : shown;
+      eye.title = hidden ? 'Show balance' : 'Hide balance';
+      eye.setAttribute('aria-label', eye.title);
+    }
+    var h=false;
+    try{ h = localStorage.getItem(KEY)==='1'; }catch(e){}
+    paint(h);
+    eye.onclick=function(){
+      h=!h;
+      try{ localStorage.setItem(KEY, h?'1':'0'); }catch(e){}
+      paint(h);
+    };
+  })();
+
+  $m('topupBtn').onclick=tuOpen;
+  $m('tuClose').onclick=tuClose;
+  $m('tuBg').onclick=tuClose;
+  $m('tuNext').onclick=tuCreate;
+  $m('tuPay').onclick=tuPayNow;
+  $m('tuCancel').onclick=async function(){
+    try{ await MEMONS.authFetch('/market/topup-cancel',{}); }catch(e){}
+    tuOrder=null; tuShowForm();
+  };
+  $m('tuCopy').onclick=function(){
+    var b=$m('tuCopy');
+    try{ navigator.clipboard.writeText(tuRecv); b.textContent='COPIED';
+      setTimeout(function(){ b.textContent='COPY'; },1400); }catch(e){}
+  };
+  $m('tuAmount').onkeydown=function(e){ if(e.key==='Enter') tuCreate(); };
+
+  $m('mClose').onclick=closeCard;
+  $m('modalBg').onclick=closeCard;
+  document.querySelectorAll('#ordTabs .ord-tab').forEach(function(b){
+    b.onclick=function(){ ordSetTab(b.dataset.t); };
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    if(!$m('tuModal').hidden) tuClose();
+    else if(!$m('wdModal').hidden) wdClose();
+    else if(!$m('ordModal').hidden) ordClose();
+    else if(!$m('modal').hidden) closeCard();
+  });
+  document.querySelectorAll('.mkm-tab').forEach(function(b){
+    b.onclick=function(){ setMode(b.dataset.m); };
+  });
+  $m('mPrice').oninput=onPrice;
+  $m('mMinus').onclick=function(){ var i=$m('mPrice'); i.value=Math.max(0,(Number(i.value)||0)-1).toFixed(2); onPrice(); };
+  $m('mPlus').onclick =function(){ var i=$m('mPrice'); i.value=((Number(i.value)||0)+1).toFixed(2); onPrice(); };
+  $m('mQty').oninput=onPrice;
+  $m('mQMinus').onclick=function(){ var i=$m('mQty'); i.value=Math.max(1,(Number(i.value)||1)-1); onPrice(); };
+  $m('mQPlus').onclick =function(){ var i=$m('mQty'); i.value=(Number(i.value)||1)+1; onPrice(); };
+  $m('mGo').onclick=submit;
+
+  function open(id){ openCard(id); }
+
+  async function loadBalance(){
+    if(!(window.MEMONS && MEMONS.connected)) return;
+    try{
+      var r=await MEMONS.authFetch('/market/me');
+      $('mkBal').hidden=false;
+      $('balAvail').textContent=num(r.balance||0);
+      $('balLocked').textContent = r.locked ? num(r.locked)+' USDT held in open offers' : '';
+      // Cards still in hand, plus whatever is currently on the market: a
+      // listed card has not left the collection yet.
+      var own=(r.sellable||[]).length + (r.listings||[]).length;
+      $('statOwned').textContent  = own;
+      $('statListed').textContent = (r.listings||[]).length;
+      $('statOffers').textContent = (r.offers||[]).length;
+    }catch(e){}
+  }
+
+  async function load(){
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/market_list?select=*',{headers:H});
+      rows=await res.json();
+      if(!Array.isArray(rows)) rows=[];
+    }catch(e){
+      rows=[];
+      $('count').textContent='';
+      $('grid').innerHTML='';
+      $('empty').hidden=false;
+      $('empty').innerHTML='<b>Could not load the market</b>Please try again in a moment.';
+      return;
+    }
+    apply();
+  }
+
+  async function loadMyCards(){
+    myCards=null;
+    if(!(window.MEMONS && MEMONS.connected)) return;
+    try{
+      var r=await MEMONS.authFetch('/market/me');
+      myCards={};
+      (r.sellable||[]).forEach(function(o){
+        myCards[o.card_id]=(myCards[o.card_id]||0)+1;
+      });
+      // A listed card is still yours, and being able to reach it is how a
+      // listing gets cancelled.
+      (r.listings||[]).forEach(function(l){
+        myCards[l.card_id]=(myCards[l.card_id]||0)+1;
+      });
+    }catch(e){}
+  }
+
+  document.querySelectorAll('.mktab').forEach(function(b){
+    b.onclick=async function(){
+      tab=b.dataset.t; page=1;
+      document.querySelectorAll('.mktab').forEach(function(x){x.classList.toggle('on',x===b);});
+      if(tab==='sell' && myCards===null) await loadMyCards();
+      apply();
+    };
+  });
+
+  /* Other people's orders arrive without this page asking, so it asks on a
+     timer. Paused while a dialog is open, because refreshing the grid under
+     an open card would replace the numbers the user is reading, and paused
+     entirely when the tab is in the background. */
+  var poll=null;
+  function pollStart(){
+    if(poll) return;
+    poll=setInterval(async function(){
+      if(document.hidden) return;
+      if(!$m('modal').hidden){
+        // Keep the open card current instead of the grid behind it.
+        try{ await Promise.all([loadDepth(), loadHistory()]); }catch(e){}
+        return;
+      }
+      if(!$m('tuModal').hidden || !$m('ordModal').hidden || !$m('wdModal').hidden) return;
+      try{ await load(); }catch(e){}
+    }, 15000);
+  }
+  function pollStop(){ if(poll){ clearInterval(poll); poll=null; } }
+  document.addEventListener('visibilitychange', function(){
+    // A tab left open for an hour should not show an hour-old book the
+    // moment it comes back.
+    if(!document.hidden){
+      if(!$m('modal').hidden && cur){ loadDepth(); loadHistory(); }
+      else load();
+    }
+  });
+
+  $('q').oninput=function(){ q=this.value; page=1; apply(); };
+  $('sort').onchange=function(){ sort=this.value; page=1; apply(); };
+  function fillPerPage(){
+    var sel=$('perPage'); if(!sel) return;
+    var opts = isPhone() ? [[6,'6 per page'],[12,'12 per page'],[9999,'Show all']]
+                         : [[20,'20 per page'],[40,'40 per page'],[9999,'Show all']];
+    sel.innerHTML=opts.map(function(o){
+      return '<option value="'+o[0]+'"'+(o[0]===perPage?' selected':'')+'>'+o[1]+'</option>';
+    }).join('');
+  }
+  fillPerPage();
+  $('perPage').onchange=function(){ perPage=Number(this.value); page=1; render(); };
+
+  /* Rotating a phone, or dragging a desktop window narrow, changes which of
+     those two shapes applies. Only reset when the bracket actually flips. */
+  var wasPhone=isPhone();
+  window.addEventListener('resize', function(){
+    var now=isPhone();
+    if(now===wasPhone) return;
+    wasPhone=now;
+    perPage = now ? 6 : 20;
+    page=1; fillPerPage(); render();
+  });
+  pills();
+  load();
+  loadBalance();
+  pollStart();
+  document.addEventListener('memons:connected', function(){
+    loadBalance();
+    myCards=null;
+    if(tab==='sell') loadMyCards().then(apply);
+  });
+  document.addEventListener('memons:disconnected', function(){ $('mkBal').hidden=true; });
+})();
+</script>
 </body>
 </html>

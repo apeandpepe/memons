@@ -264,7 +264,7 @@
         <span class="seal">M</span>
         <span>Each MEMONS captures a moment in APEPE's journey.<br>Collect all rarities to complete the archive.</span>
       </div>
-      <button class="viewall">VIEW ALL MEMONS</button>
+      <button class="viewall" id="viewAll">VIEW ALL CARDS</button>
     </div>
   </section>
 </main>
@@ -395,6 +395,22 @@
       }
     }
   });
+})();
+
+/* The archive for the character being viewed, not the whole catalogue: this
+   page is about one of them, and the button should stay on that subject.
+   Inside the landing page's iframe the jump has to break out to the top
+   window, the same way goDetail does on the way in. */
+(function(){
+  var b=document.getElementById('viewAll');
+  if(!b) return;
+  b.onclick=function(){
+    var u='collection.html?char=apepe';
+    if(document.documentElement.classList.contains('embed')){
+      try{ window.top.location.href=u; return; }catch(e){}
+    }
+    location.href=u;
+  };
 })();
 </script>
 

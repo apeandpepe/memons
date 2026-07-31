@@ -15,6 +15,9 @@
   // Capsule purchases are closed until the pricing/reward model is confirmed.
   // Set to true to open them (the server has the same switch and must match).
   const PURCHASES_ENABLED = false;
+  // Separate from capsule purchases: the marketplace opens at season 1, and
+  // until then a top-up would credit a balance nothing can be spent on.
+  const DEPOSITS_ENABLED = false;
 
   const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
 
@@ -264,6 +267,64 @@
     onStatus("pending", txHash);
     return { ok: false, pending: true, txHash,
              message: "Payment sent but not confirmed yet. It will be credited automatically — you can safely leave this page." };
+  };
+
+  /* Send an arbitrary USDT amount to a given address.
+     pay() prices capsules and knows where they go; a marketplace balance
+     top-up is neither, so the amount and the destination both come from the
+     order the user created. Verification is the same endpoint: the server
+     works out what the transfer was for from the address it landed on. */
+  M.payTo = async function payTo(to, amountUsdt, opts = {}) {
+    if (!DEPOSITS_ENABLED) {
+      throw new Error("Balance top-ups are not open yet.");
+    }
+    if (!/^0x[0-9a-fA-F]{40}$/.test(String(to || ""))) throw new Error("Invalid destination address.");
+    const amt = Number(amountUsdt);
+    if (!(amt > 0)) throw new Error("Invalid amount.");
+
+    const eth = window.MEMONS_ETH ? window.MEMONS_ETH() : window.ethereum;
+    if (!eth) throw new Error("No wallet found. Connect your wallet first.");
+    const token = getToken();
+    if (!token) throw new Error("Please connect your wallet first.");
+
+    const cfg = CHAINS[CHAIN];
+    await ensureNetwork(eth, cfg);
+    const [from] = await eth.request({ method: "eth_requestAccounts" });
+
+    // Whole units scaled by the token's decimals, via BigInt so a large
+    // amount cannot lose precision on the way.
+    const raw = BigInt(Math.round(amt * 1e6)) * (10n ** BigInt(cfg.decimals)) / 1000000n;
+    const data = encodeTransfer(to.toLowerCase(), raw);
+
+    const onStatus = opts.onStatus || (() => {});
+    onStatus("sending");
+
+    const txParams = { from, to: cfg.token, data, value: "0x0" };
+    if (cfg.gas) Object.assign(txParams, cfg.gas);
+
+    const txReq = eth.request({ method: "eth_sendTransaction", params: [txParams] });
+    try { if (window.MEMONS_WC && window.MEMONS_WC.openWallet) window.MEMONS_WC.openWallet(); } catch (e) {}
+    const txHash = await txReq;
+    addPending(txHash, 0, from, CHAIN);
+
+    onStatus("confirming");
+    const deadline = Date.now() + 5 * 60 * 1000;
+    while (Date.now() < deadline) {
+      const { res, j } = await verifyTx(txHash, token, CHAIN);
+      if (res.ok && j.ok) {
+        removePending(txHash);
+        onStatus("credited");
+        return { ok: true, credited: j.credited, balance: j.balance, txHash };
+      }
+      if (res.status === 202 || j.error === "TX_NOT_FOUND" || j.error === "PENDING_CONFIRMATIONS") {
+        onStatus("confirming", j.confirmations, j.need); await sleep(5000); continue;
+      }
+      removePending(txHash);
+      throw new Error(j.error || "Deposit verification failed.");
+    }
+    onStatus("pending", txHash);
+    return { ok: false, pending: true, txHash,
+             message: "Transfer sent but not confirmed yet. It will be credited automatically." };
   };
 
   // --- auto-recovery on page load --------------------------------------
