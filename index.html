@@ -823,38 +823,31 @@
     .vhero{min-height:100svh !important}
   }
 
-  /* The intro video, below the nav breakpoint, is two shapes rather than one.
+  /* The intro video below the nav breakpoint.
 
-     A phone held upright is far taller than the video is. Fitting the video
-     whole and leaving the space above and below black gives the header and
-     the scroll cue somewhere to sit that is not on top of the artwork --
-     they were landing over the cards before.
+     The frame is exactly as wide as the screen and its height follows from
+     the file's own proportions. Whatever is left over above and below stays
+     black, which is where the header and the scroll cue then sit.
 
-     A folding phone opened out is close to square and behaves like a small
-     desktop, so it fills the frame the way the desktop does. That only
-     works because it is also handed the desktop video: the mobile file is
-     720x1264, and covering a landscape frame with it would crop away
-     everything but a narrow band through the middle. The switch lives in
-     pick() further down and uses the same 600px line.
+     Not object-fit. contain fits inside the box on whichever axis binds
+     first, so the moment the box is a different shape from the video the
+     bars move to the sides instead of the top -- which is what pinning the
+     height to 80svh caused. Setting the width and letting the height follow
+     means the width is never the axis that gives.
 
-     600px is wider than any phone held upright and narrower than a fold
-     when open, which is the whole reason it is the dividing line. */
-  @media(max-width:600px){
-    /* One number to tune: the band above. The height follows from it --
-       80svh leaves 7 above and 13 below, and the lower band is the deeper
-       one because the scroll cue and the sound toggle both live down there.
+     A video is a replaced element: height:auto reads the file's aspect
+     ratio, but width:auto would read its pixel width and put a 720px frame
+     on a 360px screen. Only one of the two can be auto, and it is height.
 
-       Stated as a length rather than as top and bottom offsets. A video is
-       a replaced element, so width:auto and height:auto resolve to the
-       file's own 720x1264 instead of stretching to the box the offsets
-       describe, and the frame lands far outside the screen. */
+     A fold opened out is handed the landscape file instead, at 600px in
+     pick() below. The portrait file is 720x1264, and a frame that wide made
+     from it would stand about twice the height of the screen. */
+  @media(max-width:1040px){
     .vhero .vbg{
-      top:7svh; left:0;
-      width:100%; height:80svh;
-      object-fit:contain; object-position:center; background:#000}
-  }
-  @media(min-width:601px) and (max-width:1040px){
-    .vhero .vbg{inset:0;width:100%;height:100%;object-fit:cover}
+      top:50%; left:0; right:auto; bottom:auto;
+      transform:translateY(-50%);
+      width:100%; height:auto;
+      object-fit:fill; background:#000}
   }
 </style>
 <!-- Event notice, shown once. The banner links through to the full post;
