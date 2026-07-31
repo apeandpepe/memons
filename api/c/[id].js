@@ -48,6 +48,16 @@ export default function handler(req, res) {
      Raise it whenever the backdrops or the layout change. */
   const IMG_VERSION = 2;
 
+  /* The version the visitor arrived with, echoed back into og:url and the
+     canonical link. Those two are what a crawler treats as this document's
+     real address, and if they drop the version then /c/x and /c/x?v=2 are
+     the same page to X -- which is exactly the cache the version exists to
+     escape. Carried through so a versioned link stays a distinct address
+     from end to end. */
+  const vRaw = Array.isArray(req.query?.v) ? req.query.v[0] : req.query?.v;
+  const v = String(vRaw ?? "").replace(/[^0-9]/g, "").slice(0, 4);
+  const suffix = v ? `?v=${v}` : "";
+
   const image =
     `${origin}/api/og?id=${encodeURIComponent(id)}&v=${IMG_VERSION}`;
 
@@ -82,7 +92,7 @@ export default function handler(req, res) {
 <meta property="og:image:width" content="${OG_W}">
 <meta property="og:image:height" content="${OG_H}">
 <meta property="og:image:alt" content="${esc(RARITY)} MEMONS card">
-<meta property="og:url" content="${esc(origin)}/c/${esc(id)}">
+<meta property="og:url" content="${esc(origin)}/c/${esc(id)}${esc(suffix)}">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
@@ -99,7 +109,7 @@ export default function handler(req, res) {
      crawlers follow it. A script is not -- they do not run it, so they stay
      here with the tags, while a person is moved on as before. The link in
      the body is the fallback for anyone with scripting off. -->
-<link rel="canonical" href="${esc(origin)}/c/${esc(id)}">
+<link rel="canonical" href="${esc(origin)}/c/${esc(id)}${esc(suffix)}">
 </head>
 <body style="margin:0;background:#050505;color:#e8e6e0;font-family:system-ui,sans-serif;
              display:flex;align-items:center;justify-content:center;height:100vh">
