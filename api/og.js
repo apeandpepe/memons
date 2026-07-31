@@ -55,7 +55,7 @@ const BG = {
   rare:      "og-rare.jpg",
   epic:      "og-epic.jpg",
   legendary: "og-legendary.jpg",
-  mythic:    "og-mythic.jpg",
+  // mythic:    "og-mythic.jpg",
   // special: "og-special.jpg",
 };
 
