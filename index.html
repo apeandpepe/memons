@@ -589,7 +589,13 @@
 
   function pick(el){
     if(!el) return;
-    var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
+    /* 600, not the 1040 the nav uses. The two files are different shapes --
+       1200x752 against 720x1264 -- so this is choosing an orientation, not a
+       size, and the point it turns over is where the screen stops being
+       taller than it is wide. A fold opened out lands on the desktop side
+       and gets the landscape file; every phone held upright stays on the
+       portrait one. Matches the CSS at the top of the file. */
+    var small = window.matchMedia && window.matchMedia('(max-width:600px)').matches;
     var slow  = wantsLight();
 
     var src = small
@@ -814,8 +820,36 @@
     .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
     .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
     .head .brand{font-size:15px !important}
-    .vhero .vbg{object-fit:contain !important;object-position:center;background:#000}
     .vhero{min-height:100svh !important}
+  }
+
+  /* The intro video, below the nav breakpoint, is two shapes rather than one.
+
+     A phone held upright is far taller than the video is. Fitting the video
+     whole and leaving the space above and below black gives the header and
+     the scroll cue somewhere to sit that is not on top of the artwork --
+     they were landing over the cards before.
+
+     A folding phone opened out is close to square and behaves like a small
+     desktop, so it fills the frame the way the desktop does. That only
+     works because it is also handed the desktop video: the mobile file is
+     720x1264, and covering a landscape frame with it would crop away
+     everything but a narrow band through the middle. The switch lives in
+     pick() further down and uses the same 600px line.
+
+     600px is wider than any phone held upright and narrower than a fold
+     when open, which is the whole reason it is the dividing line. */
+  @media(max-width:600px){
+    /* Two numbers to tune: the black band above and the one below. The
+       lower one is deeper because the scroll cue and the sound toggle both
+       live down there. */
+    .vhero .vbg{
+      top:7svh; bottom:13svh; left:0; right:0;
+      width:auto; height:auto;
+      object-fit:contain; object-position:center; background:#000}
+  }
+  @media(min-width:601px) and (max-width:1040px){
+    .vhero .vbg{inset:0;width:100%;height:100%;object-fit:cover}
   }
 </style>
 <!-- Event notice, shown once. The banner links through to the full post;
