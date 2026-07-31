@@ -55,7 +55,7 @@ const BG = {
   rare:      "og-rare.jpg",
   epic:      "og-epic.jpg",
   legendary: "og-legendary.jpg",
-  // mythic:    "og-mythic.jpg",
+  // mythic: "og-mythic.jpg",   // 배경 파일 준비되면 주석 해제
   // special: "og-special.jpg",
 };
 

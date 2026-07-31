@@ -39,7 +39,17 @@ export default function handler(req, res) {
 
   // The raw card is portrait; X crops it. /api/og composes it onto a
   // landscape canvas so the whole card survives the crop.
-  const image = `${origin}/api/og?id=${encodeURIComponent(id)}`;
+  /* The version is part of the image's address, and that is the point.
+     X caches the picture at a URL, not the page that named it. Redraw what
+     /api/og produces and the address is unchanged, so X keeps serving the
+     copy it already has -- for days, and forever inside tweets already
+     posted. Bumping this number makes a new address, which it has to fetch.
+
+     Raise it whenever the backdrops or the layout change. */
+  const IMG_VERSION = 2;
+
+  const image =
+    `${origin}/api/og?id=${encodeURIComponent(id)}&v=${IMG_VERSION}`;
 
   // Must match what /api/og actually draws. Declaring 1200x630 for an
   // 1800x942 image asks the crawler to trust a figure it can check.
