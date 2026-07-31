@@ -840,12 +840,17 @@
      600px is wider than any phone held upright and narrower than a fold
      when open, which is the whole reason it is the dividing line. */
   @media(max-width:600px){
-    /* Two numbers to tune: the black band above and the one below. The
-       lower one is deeper because the scroll cue and the sound toggle both
-       live down there. */
+    /* One number to tune: the band above. The height follows from it --
+       80svh leaves 7 above and 13 below, and the lower band is the deeper
+       one because the scroll cue and the sound toggle both live down there.
+
+       Stated as a length rather than as top and bottom offsets. A video is
+       a replaced element, so width:auto and height:auto resolve to the
+       file's own 720x1264 instead of stretching to the box the offsets
+       describe, and the frame lands far outside the screen. */
     .vhero .vbg{
-      top:7svh; bottom:13svh; left:0; right:0;
-      width:auto; height:auto;
+      top:7svh; left:0;
+      width:100%; height:80svh;
       object-fit:contain; object-position:center; background:#000}
   }
   @media(min-width:601px) and (max-width:1040px){
