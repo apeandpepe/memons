@@ -998,9 +998,19 @@ function openShare(text, it){
   // Short share link: /c/<card id>. The endpoint resolves the artwork from the
   // id and serves Open Graph tags, so X shows the card itself and the tweet
   // stays clean.
+  /* The version rides on the shared address itself, not just on the image
+     inside the page. X caches a link preview per URL, and it caches on the
+     compose screen -- opening the tweet box is enough, posting is not
+     required. Every card previewed while testing is already held, and
+     rewriting the page it points at does not dislodge it. A different
+     address is a different card to X, so it fetches afresh.
+
+     Raise this when the artwork or the backdrops change. */
+  const SHARE_VERSION = 2;
+
   let url = SHARE_URL;
   if (it && it.num) {
-    url = location.origin + '/c/' + encodeURIComponent(it.num);
+    url = location.origin + '/c/' + encodeURIComponent(it.num) + '?v=' + SHARE_VERSION;
   }
   const u = 'https://twitter.com/intent/tweet'
     + '?text=' + encodeURIComponent(text)

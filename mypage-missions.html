@@ -1130,7 +1130,12 @@
 
     showPicker(cards, function(card){
       markVisited(m.key);
-      var url  = location.origin + '/c/' + card.id;
+      /* Same version as the reveal screen's share button. X holds a link
+         preview per address and caches it the moment a compose window
+         opens, so a card tried once during testing keeps its old picture
+         however the page is rewritten. A new address is a new card to X. */
+      var SHARE_VERSION = 2;
+      var url  = location.origin + '/c/' + card.id + '?v=' + SHARE_VERSION;
       var text = 'I just pulled a ' + card.rarity.toUpperCase() +
                  ' card from MEMONS \uD83D\uDD25';
       window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
