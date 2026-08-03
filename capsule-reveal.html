@@ -991,7 +991,23 @@ async function saveCard(url, name){
 }
 
 const SHARE_URL  = location.origin + '/open-capsule.html';
-const SHARE_TAGS = 'MEMONS,gacha';
+/* Three sets, one picked per share.
+
+   The same sentence going out from every account with the same two tags
+   is what a coordinated campaign looks like from the outside, and X reads
+   it that way. Varying the tags costs nothing and breaks the pattern.
+
+   They also land in different places. MEMONS alone is the project's own
+   feed; APEPE reaches the character's following; gacha reaches people who
+   follow pull-and-collect games and have never heard of either. MEMONS
+   leads all three, so the one tag that has to be on every post is.
+
+   Even thirds. Weight it by repeating an entry -- listing a set twice in
+   five makes it 40% -- rather than by writing ranges; shareTags reads the
+   length, so nothing else needs touching. */
+const SHARE_TAG_SETS = ['MEMONS', 'MEMONS,APEPE', 'MEMONS,gacha'];
+const shareTags = () =>
+  SHARE_TAG_SETS[Math.floor(Math.random() * SHARE_TAG_SETS.length)];
 const HOT = ['epic','legendary','mythic'];   // worth bragging about
 
 function openShare(text, it){
@@ -1015,7 +1031,7 @@ function openShare(text, it){
   const u = 'https://twitter.com/intent/tweet'
     + '?text=' + encodeURIComponent(text)
     + '&url='  + encodeURIComponent(url)
-    + '&hashtags=' + encodeURIComponent(SHARE_TAGS);
+    + '&hashtags=' + encodeURIComponent(shareTags());
   window.open(u, '_blank', 'noopener,noreferrer,width=600,height=520');
 }
 

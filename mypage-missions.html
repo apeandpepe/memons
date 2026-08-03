@@ -1138,9 +1138,16 @@
       var url  = location.origin + '/c/' + card.id + '?v=' + SHARE_VERSION;
       var text = 'I just pulled a ' + card.rarity.toUpperCase() +
                  ' card from MEMONS \uD83D\uDD25';
+      /* Same three sets as the reveal screen. Kept as its own copy rather
+         than shared, because the two pages do not load a common script and
+         one line is cheaper than adding one. If the sets change, they
+         change in both -- capsule-reveal.html has the other. */
+      var TAG_SETS = ['MEMONS', 'MEMONS,APEPE', 'MEMONS,gacha'];
       window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
                   '&url=' + encodeURIComponent(url) +
-                  '&hashtags=MEMONS,gacha', '_blank');
+                  '&hashtags=' + encodeURIComponent(
+                    TAG_SETS[Math.floor(Math.random() * TAG_SETS.length)]),
+                  '_blank');
       setTimeout(function(){ showClaim(A,m); }, 400);
     });
   }
