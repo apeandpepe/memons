@@ -1575,6 +1575,21 @@
     $m('modal').hidden=false;
     document.body.style.overflow='hidden';
 
+    /* Interest, recorded once the card is on screen.
+
+       Fire and forget: nothing on this page waits for it, and a failure
+       is not the visitor's problem -- they asked to see a card, not to be
+       counted. Signed-out visitors browse exactly as before and are
+       simply not counted; the server collapses repeats to one row per
+       wallet per card per hour, so reopening the same card all afternoon
+       registers as one person who kept coming back rather than as
+       demand. */
+    try{
+      if(window.MEMONS && MEMONS.connected && MEMONS.authFetch){
+        MEMONS.authFetch('/market/view',{card_id:cur.card_id}).catch(function(){});
+      }
+    }catch(e){}
+
     $m('mDepth').innerHTML='<div class="mkm-none">Loading…</div>';
     $m('mHist').innerHTML='';
     $m('mStats').innerHTML='';
