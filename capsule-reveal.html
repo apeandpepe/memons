@@ -196,7 +196,63 @@
     18%  {opacity:1}
     100% {opacity:0; transform:translateX(120%)}
   }
-  /* final flash once all ten have landed */
+  /* ------------------------------------------------------------------
+     Rise — the film between the capsule opening and the card appearing.
+
+     Two versions. Below epic plays one, epic and above plays another, and
+     on a ten-pull the best card in the batch chooses. A pull that is going
+     to be worth watching announces itself before the card is visible,
+     which is the whole point: the wait is where the tension lives, and it
+     only works if the wait is sometimes different.
+
+     Both films end on white. Neither ends on pure white -- the high one
+     fades to 251 at the centre with a slightly darker vignette, the low
+     one to a blue-white -- so a plain sheet sits on top and fades in over
+     the last stretch. Cutting straight from the last frame to a white
+     screen flickers at the edges; this covers the seam.
+     ------------------------------------------------------------------ */
+  .rise{position:fixed;inset:0;z-index:60;background:#000;display:none}
+  .rise.on{display:block}
+  .rise video{
+    position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;background:#000}
+  .rise .sheet{
+    position:absolute;inset:0;background:#fff;opacity:0;
+    transition:opacity var(--white-in,.3s) linear;pointer-events:none}
+  .rise.flash .sheet{opacity:1}
+  /* The card is mounted underneath while the sheet is opaque, then the
+     whole overlay fades away and the card is simply there. Revealing by
+     removing white rather than by animating the card in: two motions in a
+     row -- white lifting and a card growing -- read as the reveal
+     happening twice. */
+  .rise.flash video{opacity:0;transition:opacity .12s linear}
+  .rise.clear{opacity:0;transition:opacity var(--white-out,.28s) ease-out;pointer-events:none}
+  /* Small and quiet, bottom right. Present for the fiftieth pull without
+     inviting the first one to use it. */
+  .rise .skip{
+    position:absolute;right:calc(20px + env(safe-area-inset-right));
+    bottom:calc(20px + env(safe-area-inset-bottom));
+    z-index:2;padding:8px 14px;border-radius:999px;cursor:pointer;
+    font:600 11px/1 inherit;letter-spacing:.12em;
+    color:rgba(255,255,255,.72);background:rgba(0,0,0,.34);
+    border:1px solid rgba(255,255,255,.24);
+    opacity:0;transition:opacity .3s ease}
+  .rise.ready .skip{opacity:1}
+  .rise .skip:hover{color:#fff;border-color:rgba(255,255,255,.5)}
+
+  /* The card used to climb out of the dark on its own. Coming out of a
+     white screen it should arrive already lit, so the dark opening of
+     cardEmerge is dropped when the film ran. */
+  .stage.single.from-rise .result{animation:cardFromWhite .34s ease-out both}
+  @keyframes cardFromWhite{
+    0%   {opacity:1; transform:scale(.955)}
+    100% {opacity:1; transform:scale(1)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .rise video{display:none}
+    .rise .sheet{transition:none}
+  }
+
   .mgrid.done .mcard img{animation:mland .55s ease-out}
   @keyframes mland{
     0%   {box-shadow:0 0 42px -4px var(--rc,#E9B84A)}
@@ -446,6 +502,16 @@
   <div class="impact" id="impact"></div>
   <video class="fxvid" id="fxvid" src="images/reveal/fx-fire.mp4" muted playsinline preload="auto"></video>
 
+  <!-- Rise: plays between the capsule opening and the card landing, for
+       epic and above only. preload="none" here because the file is
+       fetched separately when the page opens; see primeRise(). -->
+  <div class="rise" id="rise" aria-hidden="true">
+    <video id="risevid" muted playsinline preload="none"></video>
+    <div class="sheet"></div>
+    <button type="button" class="skip" id="riseSkip">SKIP</button>
+  </div>
+
+
   <!-- 10-pull result -->
   <div class="multi" id="multi">
     <h3>OPENED ×10</h3>
@@ -694,9 +760,12 @@ function fireImpact(){
     {opacity:0,    transform:'scale(1.55)', offset:1}
   ], {duration:total, easing:'cubic-bezier(.33,0,.25,1)', fill:'forwards'});
 }
-function playOpen(onEnd){
+/* rkey decides how much of the opening is played. Below epic it keeps the
+   timing it always had (openCutPlain); epic and above hands over sooner,
+   because a film is waiting behind it. */
+function playOpen(onEnd, rkey){
   const st=$('stage');
-  st.classList.remove('single','pillar-on');
+  st.classList.remove('single','pillar-on','from-rise');
   st.classList.toggle('parts', LAB.openMode==='parts');
   st.classList.toggle('hinge', LAB.openMode==='hinge');
   st.classList.toggle('vid', LAB.openMode==='vid');
@@ -706,8 +775,8 @@ function playOpen(onEnd){
     const v=$('capvideo'); let done=false;
     const go=()=>{ if(done)return; done=true; st.classList.add('opening'); onEnd(); };
     try{ v.pause(); v.currentTime=0; }catch(e){}
-    v.muted=true; v.playbackRate = LAB.speed||1;
-    const LEAD=4.0;                                       // reveal the card N seconds before the video ends
+    v.muted=true; v.playbackRate = (REVEAL.openSpeed||1) * (LAB.speed||1);
+    const LEAD = riseHas(rkey) ? REVEAL.openCut : REVEAL.openCutPlain;
     v.ontimeupdate=()=>{ if(v.duration && v.currentTime >= v.duration - LEAD) go(); };
     v.onended = go;                                       // safety: always reveal on end
     const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{ setTimeout(go,300); }); // if autoplay is blocked, reveal immediately
@@ -820,34 +889,256 @@ async function single(){
     catch(e){ busy=false; revToast(pullErrMsg(e)); return; }
     it=applyForce(it); LAB._it=it;
     $('stage').style.setProperty('--burst', burstColor(it));
-    playOpen(()=>{ singleReveal(it); });
+    playOpen(()=>{ singleReveal(it); }, it.rkey);
     return;
   }
   // --- local (preview) ---
   busy=true; closeResult();
   let it=rollOne(); it=applyForce(it); LAB._it=it;
   $('stage').style.setProperty('--burst', burstColor(it));
-  playOpen(()=>{ singleReveal(it); });
+  playOpen(()=>{ singleReveal(it); }, it.rkey);
 }
+/* ---------------------------------------------------------------------
+   playRise — the film between the capsule opening and the card landing.
+
+   Two callbacks, not one. build() fires as soon as the film starts, so the
+   card is mounted and its artwork fetched while the film is still playing;
+   show() fires when the screen is white. Waiting for the film to end
+   before touching the DOM meant the card image began downloading only
+   after five seconds of video, and on a slow connection the white screen
+   sat there empty. Now it is already behind the white when the white
+   lifts.
+
+   Everything here has a way out. A file that will not load, a browser that
+   refuses to autoplay, a tab sent to the background mid-play -- each falls
+   through to show() rather than stopping. The film is decoration; the card
+   is the thing the person pulled for.
+   --------------------------------------------------------------------- */
+/* =====================================================================
+   REVEAL — every timing in the sequence, in the order it happens.
+
+   Six numbers. Change one, reload, watch. Nothing else in the file needs
+   touching, and nothing here depends on anything below it.
+
+       button
+         |  openSpeed          the capsule opening, faster or slower
+         |  openCut            how much of that opening to skip
+         v
+       rise film starts
+         |  filmSpeed          the film itself, faster or slower
+         |  (the card is built and placed behind it, out of sight)
+         |  filmCut            end the film early, or 0 to run it out
+         v
+       white
+         |  whiteIn            white covers the last frame
+         |  whiteOut           white lifts, and the card is already there
+         v
+       card
+   ===================================================================== */
+var REVEAL = {
+  // --- the capsule opening (images/reveal/open.mp4, 5.4s) --------------
+  openSpeed: 1,     // 2 plays it twice as fast
+  /* Seconds skipped from the end. 5.4 skips the opening entirely, 0 plays
+     all of it, and anything above 5.4 does nothing.
+
+     Two values because the two paths are not the same sequence. Below epic
+     the opening is the whole show and 4.0 is what it has always been --
+     the card lands 1.4s in, and the last four seconds were never played.
+     Epic and above has five more seconds of film after it, so there the
+     opening gives way at once. */
+  openCut  : 5.4,   // epic and above, with a film to follow
+  openCutPlain: 4.0,// below epic — the original timing, do not raise
+
+  // --- the rise film ---------------------------------------------------
+  filmSpeed: 1,     // 1.5 plays it half again as fast
+  filmCut  : 0,     // seconds to cut from its end. 0 runs it to the finish.
+
+  // --- the handover ----------------------------------------------------
+  whiteIn  : 0.3,   // white covering the last frame
+  whiteOut : 0.28   // white lifting off the finished card
+};
+
+var RISE = {
+  /* One film, and only epic and above gets it.
+     Below epic goes straight to the card the way it always did.
+
+     Two films meant every pull was preceded by five seconds, and five
+     seconds that always arrive stop being a wait and become a loading
+     screen -- the good one loses its meaning because the ordinary one
+     spent it first. Common and rare are most of what comes out, so most
+     pulls are now instant, and the film starting at all is the news.
+
+     rise-low.mp4 is no longer requested. Left in the list so putting it
+     back is one line. */
+  low : 'images/reveal/rise-low.mp4',
+  high: 'images/reveal/rise-high.mp4',
+  film_from: ['epic','legendary','mythic']
+};
+function riseHas(rkey){
+  return RISE.film_from.indexOf(String(rkey||'').toLowerCase()) >= 0;
+}
+
+function riseSrc(rkey){ return RISE.high; }
+
+/* Fetched when the page opens.
+
+   Anyone who has navigated here is about to open a capsule, so there is no
+   passing visitor to spare the download. Waiting for the first epic
+   instead meant the one pull that was supposed to feel special was the
+   one that stalled -- epic is rare, so that stall would land on almost
+   every player's first good card.
+
+   Idle time, after the page's own assets. It is one file and nothing
+   waits on it. */
+function primeRise(){
+  if (primeRise._done) return;
+  primeRise._done = true;
+  var v = document.createElement('video');
+  v.preload = 'auto'; v.muted = true; v.src = RISE.high;
+  primeRise._el = v;                       // held so it is not collected mid-fetch
+}
+(function(){
+  var go = function(){ primeRise(); };
+  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 2500 });
+  else setTimeout(go, 1200);
+})();
+
+function playRise(rkey, build, show){
+  var box = document.getElementById('rise');
+  var vid = document.getElementById('risevid');
+  var skip = document.getElementById('riseSkip');
+
+  /* Below epic there is no film. build() then show() with nothing in
+     between is the original sequence: no from-rise class, so the card
+     climbs out of the dark on cardEmerge and the ten deal themselves out
+     one at a time, exactly as before. */
+  if (!riseHas(rkey) || !box || !vid) { build(); show(); return; }
+
+  var built = false, finished = false;
+
+  function doBuild(){
+    if (built) return;
+    built = true;
+    var stage = document.getElementById('stage');
+    if (stage) stage.classList.add('from-rise');
+    build();
+  }
+
+  function finish(){
+    if (finished) return;
+    finished = true;
+    clearTimeout(guard);
+    vid.removeEventListener('timeupdate', tick);
+    vid.removeEventListener('ended', whiten);
+    vid.removeEventListener('error', bail);
+    skip.onclick = null;
+
+    doBuild();
+    show();                       // card goes up underneath the white
+
+    /* One frame for it to lay out, then the white is taken away and the
+       card is already there. Nothing animates in on top of it.
+
+       from-rise is left on the stage. Removing it swaps the rule back to
+       cardEmerge, and a different animation name on a visible element
+       restarts it -- which showed as the card appearing a second time.
+       playOpen clears it at the start of the next pull instead. */
+    requestAnimationFrame(function(){
+      box.classList.add('clear');
+      setTimeout(function(){
+        box.classList.remove('on','flash','ready','clear');
+        try { vid.pause(); vid.removeAttribute('src'); vid.load(); } catch(e){}
+      }, REVEAL.whiteOut * 1000 + 20);
+    });
+  }
+
+  function whiten(){
+    doBuild();
+    box.classList.add('flash');
+    setTimeout(finish, REVEAL.whiteIn * 1000);
+  }
+  function bail(){ finish(); }
+
+  // Start the fade before the file runs out, so white arrives on time.
+  function tick(){
+    if (vid.duration && vid.currentTime >= vid.duration - REVEAL.whiteIn - REVEAL.filmCut) {
+      vid.removeEventListener('timeupdate', tick);
+      whiten();
+    }
+  }
+
+  box.style.setProperty('--white-in',  REVEAL.whiteIn  + 's');
+  box.style.setProperty('--white-out', REVEAL.whiteOut + 's');
+  box.classList.add('on');
+  vid.src = riseSrc(rkey);
+  vid.currentTime = 0;
+  vid.playbackRate = REVEAL.filmSpeed || 1;
+  vid.addEventListener('timeupdate', tick);
+  vid.addEventListener('ended', whiten);
+  vid.addEventListener('error', bail);
+  skip.onclick = whiten;
+  setTimeout(function(){ box.classList.add('ready'); }, 700);
+
+  /* Built immediately, behind the film. The card and its artwork are
+     finished and laid out while there are still five seconds of video in
+     front of them, so when the film clears there is nothing left to load
+     and nothing left to animate -- it is simply already there. */
+  doBuild();
+
+  /* A ceiling rather than a schedule. Autoplay refused, a file still
+     downloading on a slow connection, the tab in the background with
+     timers throttled -- all of them end here instead of nowhere. */
+  var guard = setTimeout(whiten, 8000);
+
+  var p = vid.play();
+  if (p && p.catch) p.catch(bail);
+}
+
+
 function singleReveal(it){
-  if($('stage')._wantPillar) $('stage').classList.add('pillar-on');
+  /* Split in two. buildSingle fills in the card and starts fetching its
+     artwork while the film is still running; showSingle puts it on screen
+     when the white lifts. */
+  var ready = false, pending = null;
+  playRise(it.rkey,
+    function(){ buildSingle(it, function(){ ready = true; if (pending) pending(); }); },
+    function(){ if (ready) showSingle(it); else pending = function(){ showSingle(it); }; });
+}
+/* Everything visible happens here, behind the film: the artwork, the
+   rarity, the badge, the layout, the buttons. Adding the `single` class is
+   what moves the card into its final place, and doing that after the film
+   meant the card was still assembling as the screen cleared -- the rarity
+   line landing a beat before the card it belongs to.
+
+   All of it now finishes during the five seconds nobody can see. */
+function buildSingle(it, onArt){
+  const st=$('stage');
+  if(st._wantPillar) st.classList.add('pillar-on');
   const art=$('art');
   $('cName').textContent=it.char; $('rr').textContent=it.rarity;
   [ $('result'),$('got') ].forEach(el=>el.style.setProperty('--rc',it.color));
   $('rr').style.color=it.color;
   const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'COLLECTED':'NEW';
-  const reveal=()=>{
-    $('stage').classList.add('single'); $('hint').style.display='none';
+
+  const place=()=>{
+    st.classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
     showShareSingle(it); showSaveSingle(it);
-    refreshStatus(); busy=false;
+    onArt();
   };
+
   const src = LAB.testCard || it.img;
-  if(src){ // reveal after the real card image loads (prevents placeholder flicker)
-    let done=false; const run=()=>{ if(done)return; done=true; art.src=src; reveal(); };
+  if(src){
+    /* Laid out only once the file has decoded. Assigning src to an element
+       already in place shows the previous card for a frame. */
+    let done=false; const run=()=>{ if(done)return; done=true; art.src=src; place(); };
     const pre=new Image(); pre.onload=run; pre.onerror=run; pre.src=src;
     if(pre.complete) run(); else setTimeout(run,2500);
-  } else { art.removeAttribute('src'); reveal(); }
+  } else { art.removeAttribute('src'); place(); }
+}
+/* Nothing visual left -- the card has been sitting there for five seconds. */
+function showSingle(it){
+  refreshStatus(); busy=false;
 }
 async function ten(){
   if(busy) return;
@@ -862,66 +1153,67 @@ async function ten(){
     busy=true; closeResult();
     items=Array.from({length:10},()=>rollOne());
   }
-  const _ord=['common','rare','epic','legendary','mythic'];
-  const _best=items.reduce((a,b)=>_ord.indexOf(b.rkey)>_ord.indexOf(a.rkey)?b:a,items[0]);
+  const _bestKey = tenBest(items);
+  const _best = items.find(x => x.rkey === _bestKey) || items[0];
   LAB._it=_best;
   $('stage').style.setProperty('--burst', burstColor(_best));
-  playOpen(()=>{ tenReveal(items); });
+  playOpen(()=>{ tenReveal(items); }, _bestKey);
+}
+/* The best card in the batch decides, so a legendary buried at position
+   nine still gets announced. */
+function tenBest(items){
+  var o = ['common','rare','epic','legendary','mythic'];
+  return items.reduce(function(a,b){
+    return o.indexOf(b.rkey) > o.indexOf(a.rkey) ? b : a;
+  }, items[0]).rkey;
 }
 function tenReveal(items){
+  var best = { rkey: tenBest(items) };
+  /* The grid is written and its ten images fetched during the film;
+     tenReveal2 only has to reveal it. Building on the white screen meant
+     ten requests starting at the moment the screen cleared. */
+  playRise(best.rkey,
+    function(){ buildTen(items); },
+    function(){ tenReveal2(items); });
+}
+/* Two paces, and which one depends on whether a film is coming.
+
+   Behind a film the ten land almost together (0.025s apart) and are
+   settled before the screen clears -- the film was the arrival, and
+   dealing them out again afterwards tells the same story twice.
+
+   With no film the original 0.13s deal is the arrival, so it stays.
+   Ten cards appearing at once out of nothing is a screenshot. */
+function buildTen(items){
+  var gap = riseHas(tenBest(items)) ? 0.025 : 0.13;
   document.body.classList.add('multi-open');   // hide the stage buttons behind the result
   const grid=$('mgrid');
-  grid.innerHTML=items.map((it,i)=>`
-    <div class="mcard" style="--rc:${it.color}">
-      <span class="mb ${it.dup?'dup':'new'}">${it.dup?'COLLECTED':'NEW'}</span>
-      <img src="${LAB.testCard || it.img}" alt="">
-    </div>`).join('');
+  grid.innerHTML=items.map(function(it){
+    return '<div class="mcard" style="--rc:'+it.color+'">'
+         + '<span class="mb '+(it.dup?'dup':'new')+'">'+(it.dup?'COLLECTED':'NEW')+'</span>'
+         + '<img src="'+(LAB.testCard || it.img)+'" alt="">'
+         + '</div>';
+  }).join('');
 
-  /* Reveal style:
-       'split'  (A) one card in the middle, then it splits into the ten
-       'seq'    (B) the ten are revealed one after another                    */
-  const MODE = (window.TEN_REVEAL_MODE || 'seq');   // B: one card at a time
-
-  requestAnimationFrame(()=>{
-    const cards = [...grid.children];
-
-    if (MODE === 'seq') {
-      cards.forEach((el,i)=>{
-        const delay = i * 0.13;
-        el.style.animationDelay = delay + 's';
-        el.classList.add('seq');
-        // a shine sweeps across each card as it lands, like the single reveal
-        const sh = document.createElement('span');
-        sh.className = 'mshine';
-        sh.style.animationDelay = (delay + 0.30) + 's';
-        el.appendChild(sh);
-      });
-      // once every card has landed, flash the whole set
-      const last = (cards.length - 1) * 0.13 + 0.55;
-      setTimeout(()=>{ grid.classList.add('done'); }, last * 1000);
-      return;
-    }
-
-    // A: every card starts stacked on the centre of the grid, then flies out
-    const gb = grid.getBoundingClientRect();
-    const cx = gb.width  / 2;
-    const cy = gb.height / 2;
-    cards.forEach((el,i)=>{
-      const r  = el.getBoundingClientRect();
-      const ex = (r.left - gb.left) + r.width  / 2;
-      const ey = (r.top  - gb.top ) + r.height / 2;
-      el.style.setProperty('--dx', (cx - ex) + 'px');
-      el.style.setProperty('--dy', (cy - ey) + 'px');
-      el.style.animationDelay = (0.45 + i * 0.05) + 's';
-      el.classList.add('split');
+  requestAnimationFrame(function(){
+    var cards = [].slice.call(grid.children);
+    cards.forEach(function(el,i){
+      var delay = i * gap;
+      el.style.animationDelay = delay + 's';
+      el.classList.add('seq');
+      var sh = document.createElement('span');
+      sh.className = 'mshine';
+      sh.style.animationDelay = (delay + 0.22) + 's';
+      el.appendChild(sh);
     });
+    setTimeout(function(){ grid.classList.add('done'); },
+               ((cards.length - 1) * gap + 0.55) * 1000);
   });
-  const tal={}; items.forEach(p=>tal[p.rarity]=(tal[p.rarity]||0)+1);
-  $('msum').innerHTML=RAR.filter(r=>tal[r.label]).map(r=>`<span style="color:${r.color}">${r.label} <b>×${tal[r.label]}</b></span>`).join('');
-  $('multi').classList.add('show'); $('stage').classList.remove('opening');
-  // the 10-pull screen has its own footer -> hide the stage buttons behind it
-  document.body.classList.add('multi-open');
-  showShareTen(items);
+}
+function tenReveal2(items){
+  /* Nothing visual left. buildTen did it all while the film was playing;
+     this only exists for the path where the film never ran. */
+  if(!$('mgrid').children.length) buildTen(items);
   refreshStatus(); busy=false;
 }
 function __oldSingle(){
@@ -991,23 +1283,7 @@ async function saveCard(url, name){
 }
 
 const SHARE_URL  = location.origin + '/open-capsule.html';
-/* Three sets, one picked per share.
-
-   The same sentence going out from every account with the same two tags
-   is what a coordinated campaign looks like from the outside, and X reads
-   it that way. Varying the tags costs nothing and breaks the pattern.
-
-   They also land in different places. MEMONS alone is the project's own
-   feed; APEPE reaches the character's following; gacha reaches people who
-   follow pull-and-collect games and have never heard of either. MEMONS
-   leads all three, so the one tag that has to be on every post is.
-
-   Even thirds. Weight it by repeating an entry -- listing a set twice in
-   five makes it 40% -- rather than by writing ranges; shareTags reads the
-   length, so nothing else needs touching. */
-const SHARE_TAG_SETS = ['MEMONS', 'MEMONS,APEPE', 'MEMONS,gacha'];
-const shareTags = () =>
-  SHARE_TAG_SETS[Math.floor(Math.random() * SHARE_TAG_SETS.length)];
+const SHARE_TAGS = 'MEMONS,APEPE';
 const HOT = ['epic','legendary','mythic'];   // worth bragging about
 
 function openShare(text, it){
@@ -1031,7 +1307,7 @@ function openShare(text, it){
   const u = 'https://twitter.com/intent/tweet'
     + '?text=' + encodeURIComponent(text)
     + '&url='  + encodeURIComponent(url)
-    + '&hashtags=' + encodeURIComponent(shareTags());
+    + '&hashtags=' + encodeURIComponent(SHARE_TAGS);
   window.open(u, '_blank', 'noopener,noreferrer,width=600,height=520');
 }
 

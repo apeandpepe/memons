@@ -30,6 +30,7 @@ images/reveal/*.mp4
 !images/reveal/open.mp4
 !images/reveal/fx-fire.mp4
 !images/reveal/fx-leak.mp4
+!images/reveal/rise-high.mp4
 
 
 admin-rewards.html
@@ -38,3 +39,4 @@ verify-payment.ts
 referral-index.ts
 *-index.tsmemons.zip
 *.zip
+
