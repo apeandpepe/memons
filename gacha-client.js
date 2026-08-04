@@ -13,6 +13,55 @@
 
   const SS_TOKEN = "memons_jwt_v1", SS_ADDR = "memons_addr_v1";
   const SKEW_MS = 60 * 1000;   // treat a token as dead a minute early
+  const SS_UTM  = "memons_utm_v1";
+
+  /* ------------------------------------------------------------------
+     First touch.
+
+     A visitor arrives on a campaign link, looks around, and connects a
+     wallet three pages later -- by then the parameters are long gone from
+     the address bar. So they are read once on arrival and held until
+     there is a wallet to attach them to.
+
+     Written only if nothing is stored yet. Someone who came through an
+     ad in August and returns through a direct link in October is still an
+     August arrival; the second visit did not find them.
+
+     sessionStorage, so it lasts the visit and no longer. localStorage
+     would keep attributing every future visit to the first campaign
+     forever, and is not available in artifacts here regardless.
+     ------------------------------------------------------------------ */
+  function captureUtm() {
+    try {
+      if (sessionStorage.getItem(SS_UTM)) return;
+      const q = new URLSearchParams(location.search);
+      const ref = document.referrer || "";
+      const sameSite = ref && ref.indexOf(location.origin) === 0;
+
+      const utm = {};
+      const src = q.get("utm_source")   || q.get("ref_src");
+      const med = q.get("utm_medium");
+      const cmp = q.get("utm_campaign") || q.get("ref_cmp");
+      if (src) utm.source   = src;
+      if (med) utm.medium   = med;
+      if (cmp) utm.campaign = cmp;
+      // Own pages are not a source. Only an outside referrer is worth keeping.
+      if (!sameSite && ref) utm.referrer = ref;
+
+      // Nothing to say is itself worth recording: it marks the visit as
+      // direct rather than as unmeasured.
+      sessionStorage.setItem(SS_UTM, JSON.stringify(utm));
+    } catch (e) {}
+  }
+  function readUtm() {
+    try {
+      const raw = sessionStorage.getItem(SS_UTM);
+      if (!raw) return null;
+      const u = JSON.parse(raw);
+      return u && Object.keys(u).length ? u : null;
+    } catch (e) { return null; }
+  }
+  captureUtm();
 
   let token = null;
   let address = null;
@@ -169,7 +218,7 @@
       try { document.dispatchEvent(new CustomEvent("memons:signed")); } catch (e) {}
     }
 
-    const res = await post("/auth/verify", { address, signature }, false);
+    const res = await post("/auth/verify", { address, signature, utm: readUtm() }, false);
     token = res.token;
     persist();
     armExpiryTimer();
