@@ -15,6 +15,9 @@
 //  never a guarantee.
 // =====================================================================
 (function () {
+  /* Checked against the WalletConnect dashboard: this is the project the
+     site is registered under, and both apepe.io and www.apepe.io are on
+     its allowlist. Not the cause of anything. */
   var PROJECT_ID = "21c80dea3961259c6e5473c2531a5a39";
   var VERSION = "2.17.0";
 
@@ -295,15 +298,11 @@
         description: "The archive of internet culture",
         url: location.origin,
         icons: [location.origin + "/images/logo.png"],
-        /* native as well as universal. universal is the iOS mechanism; on
-           Android the wallet reads native to know where to send the user
-           back, and with nothing there MetaMask sits on "Connecting" and
-           never returns to the browser. A web dApp has no app scheme of
-           its own, so the origin goes in both -- which is what
-           WalletConnect expects from a site rather than an app.
-
-           This is why iOS worked and Android did not. */
-        redirect: { native: location.origin, universal: location.origin }
+        /* universal only. native was tried on the theory that Android
+           needed it, and Android got worse rather than better -- a wallet
+           handed an https address as a native scheme has nothing to open.
+           A web dApp has no app scheme, so the field stays empty. */
+        redirect: { universal: location.origin }
       }
     }).then(function (p) {
       dbg('provider ready. session=' + (!!p.session) +
@@ -422,7 +421,7 @@
   }
 
   var api = {
-    build: 13,
+    build: 15,
     provider: null,
     available: true,
 

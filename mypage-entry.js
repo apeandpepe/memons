@@ -519,6 +519,24 @@
          wallet anywhere. What they need is the extension, and the modal has
          no way to say so. */
       if (!isMobileDevice() && !hasAnyInjected()) { showInstallWallet(); return; }
+
+      /* Android sees the sheet first, WalletConnect second.
+
+         The handshake reaches the wallet on Android and stops there: the
+         log shows display_uri sent and nothing after it, on three phones,
+         with MetaMask and with Bitget, on wifi and on mobile data. Some
+         people get through after several attempts; some do not get through
+         at all. iOS is unaffected.
+
+         Whatever the cause, the way that does work on Android is opening
+         the site inside the wallet's own browser, where the provider is
+         injected and no handshake is needed. That path is already built --
+         it was just behind a 45-second timeout, which nobody waits out.
+         Putting it first costs Android users one tap and takes the failure
+         out of the road. WalletConnect stays on the sheet for anyone who
+         prefers it. */
+      if (isAndroid() && !hasAnyInjected()) { showWalletSheet(); return; }
+
       if (window.MEMONS_WC) { connectViaWalletConnect(); return; }
       if (isMobileDevice()) { showWalletSheet(); return; }
       showInstallWallet();
