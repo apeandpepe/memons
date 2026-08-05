@@ -199,7 +199,15 @@
         description: "The archive of internet culture",
         url: location.origin,
         icons: [location.origin + "/images/logo.png"],
-        redirect: { universal: location.origin }
+        /* native as well as universal. universal is the iOS mechanism; on
+           Android the wallet reads native to know where to send the user
+           back, and with nothing there MetaMask sits on "Connecting" and
+           never returns to the browser. A web dApp has no app scheme of
+           its own, so the origin goes in both -- which is what
+           WalletConnect expects from a site rather than an app.
+
+           This is why iOS worked and Android did not. */
+        redirect: { native: location.origin, universal: location.origin }
       }
     });
   }
@@ -274,6 +282,20 @@
     } catch (e) { return false; }
   }
 
+  /* Everything WalletConnect keeps between visits. Removed only after a
+     failed connect: a live session is what lets a refresh stay signed in,
+     so this is not something to do on the way in. */
+  function clearWcStorage() {
+    try {
+      var kill = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf("wc@2:") === 0 || k === "WALLETCONNECT_DEEPLINK_CHOICE")) kill.push(k);
+      }
+      kill.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) {}
+  }
+
   function hasStoredSession() {
     try {
       for (var i = 0; i < localStorage.length; i++) {
@@ -285,7 +307,7 @@
   }
 
   var api = {
-    build: 10,
+    build: 11,
     provider: null,
     available: true,
 
@@ -313,7 +335,32 @@
 
     connect: async function () {
       var p = await ensureInit();
-      await p.enable();
+
+      /* enable() waits on the wallet with no deadline of its own. When the
+         pairing does not complete -- a stale topic from a previous visit,
+         a relay that never answers -- the promise never settles and the
+         button stays on "Connecting" until the page is reloaded.
+
+         Ninety seconds is long enough to find the wallet app, approve, and
+         come back, and short enough that a dead attempt ends in something
+         the caller can report. */
+      try {
+        await Promise.race([
+          p.enable(),
+          new Promise(function (_, rej) {
+            setTimeout(function () { rej(new Error("WC_CONNECT_TIMEOUT")); }, 90000);
+          })
+        ]);
+      } catch (e) {
+        /* A pairing that failed leaves its topic behind, and the next
+           attempt reuses it and fails the same way. Clearing puts the
+           following try back to a first connection. */
+        try { if (p.disconnect) await p.disconnect(); } catch (e2) {}
+        clearWcStorage();
+        initPromise = null;
+        api.provider = null;
+        throw e;
+      }
       return adopt(p);
     },
 
