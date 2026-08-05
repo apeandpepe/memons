@@ -191,8 +191,49 @@
   function get(path, auth) { return call(path, { auth: auth }); }
 
   // --- session -------------------------------------------------------------
+  /* The provider, once the page has finished looking for one.
+
+     wallet-provider starts restoring a stored WalletConnect session as
+     soon as it loads and publishes the attempt as api.ready. Nothing
+     waited on it. On a phone that restore takes a moment and the button
+     is on screen immediately, so an early press found no provider and
+     said a wallet was required -- to someone who had connected one
+     minutes earlier. Pressing again a second later worked, which is how
+     it came to feel like it takes a few tries.
+
+     Waiting is bounded: a stored session that cannot be revived should
+     fall through to the connect prompt rather than leave the button dead.
+     Detection has its own 2.5s ceiling inside the provider, so 3s here is
+     past anything it will do on its own. */
+  async function waitForProvider() {
+    let p = eth();
+    if (p) return p;
+
+    const wc = window.MEMONS_WC;
+    if (wc && wc.ready) {
+      try {
+        await Promise.race([
+          wc.ready,
+          new Promise(function (r) { setTimeout(r, 3000); }),
+        ]);
+      } catch (e) {}
+      p = eth();
+      if (p) return p;
+    }
+    return null;
+  }
+
   async function connect() {
-    const p = eth();
+    let p = await waitForProvider();
+
+    /* No stored session and no extension: this is a first connection, and
+       opening one is what the button is for. Previously this threw, so a
+       phone with no wallet app in the browser got an error where it
+       should have got a QR code. */
+    if (!p && window.MEMONS_WC && window.MEMONS_WC.connect) {
+      try { await window.MEMONS_WC.connect(); } catch (e) {}
+      p = eth();
+    }
     if (!p) throw new Error("A wallet is required.");
 
     const accReq = p.request({ method: "eth_requestAccounts" });
