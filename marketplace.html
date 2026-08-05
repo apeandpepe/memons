@@ -1479,7 +1479,7 @@
            Whether anything is quoted at all is the question. */
         var quoted = rows.some(function(c){ return c.ask!=null || c.bid!=null; });
         e.innerHTML = !quoted
-          ? '<b>No active orders</b>Nothing is listed yet. Be the first to sell a card.'
+          ? '<b>No active orders</b>Nothing is listed yet. Be the first to trade.'
           : '<b>Nothing matches</b>Try a different rarity or search term.';
       }
       return;
