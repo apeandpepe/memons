@@ -1043,13 +1043,18 @@ function playRise(rkey, build, show){
        cardEmerge, and a different animation name on a visible element
        restarts it -- which showed as the card appearing a second time.
        playOpen clears it at the start of the next pull instead. */
-    requestAnimationFrame(function(){
+    /* setTimeout, not requestAnimationFrame. rAF is skipped entirely when
+       the tab is hidden and starved on a device already busy decoding
+       video -- and this is the callback that takes the white sheet away.
+       Miss it and the card is finished, in place, behind a white screen
+       that never lifts. A timer runs regardless. */
+    setTimeout(function(){
       box.classList.add('clear');
       setTimeout(function(){
         box.classList.remove('on','flash','ready','clear');
         try { vid.pause(); vid.removeAttribute('src'); vid.load(); } catch(e){}
       }, REVEAL.whiteOut * 1000 + 20);
-    });
+    }, 16);
   }
 
   function whiten(){
@@ -1129,11 +1134,32 @@ function buildSingle(it, onArt){
 
   const src = LAB.testCard || it.img;
   if(src){
-    /* Laid out only once the file has decoded. Assigning src to an element
-       already in place shows the previous card for a frame. */
-    let done=false; const run=()=>{ if(done)return; done=true; art.src=src; place(); };
-    const pre=new Image(); pre.onload=run; pre.onerror=run; pre.src=src;
-    if(pre.complete) run(); else setTimeout(run,2500);
+    /* Assigned straight away rather than after a separate preload.
+
+       The old order -- fetch into a detached Image, then copy the address
+       across once it arrived -- existed so a card already on screen never
+       flashed the previous artwork. Behind five seconds of opaque film
+       there is nothing to flash, and waiting meant the download did not
+       start until the preload finished, throwing away the only quiet
+       window there was. On a slow phone the white lifted on a card frame
+       with no picture in it.
+
+       Now the browser has the whole film to fetch and decode. */
+    art.src = src;
+
+    let done=false;
+    const run=()=>{ if(done)return; done=true; place(); };
+
+    /* decode() resolves when the image is ready to paint, not merely
+       downloaded -- on a weak device those are seconds apart, and it is
+       the second one that decides whether the card appears. */
+    if (art.decode) { art.decode().then(run).catch(run); }
+    else if (art.complete) { run(); }
+    else { art.onload = run; art.onerror = run; }
+
+    /* Never wait on it. A card frame is a poorer reveal than a card, but
+       a screen that never moves is worse than both. */
+    setTimeout(run, 2500);
   } else { art.removeAttribute('src'); place(); }
 }
 /* Nothing visual left -- the card has been sitting there for five seconds. */
@@ -1195,7 +1221,13 @@ function buildTen(items){
          + '</div>';
   }).join('');
 
-  requestAnimationFrame(function(){
+  /* .mcard starts at opacity 0 and is brought in by the seq class, so the
+     callback that adds it decides whether the grid is visible at all.
+     requestAnimationFrame does not run when the tab is hidden and is
+     starved on a device already decoding video -- ten cards stayed
+     transparent behind a screen that had finished everything else. A
+     timer runs either way. */
+  setTimeout(function(){
     var cards = [].slice.call(grid.children);
     cards.forEach(function(el,i){
       var delay = i * gap;
@@ -1208,7 +1240,7 @@ function buildTen(items){
     });
     setTimeout(function(){ grid.classList.add('done'); },
                ((cards.length - 1) * gap + 0.55) * 1000);
-  });
+  }, 16);
 }
 function tenReveal2(items){
   /* Nothing visual left. buildTen did it all while the film was playing;
