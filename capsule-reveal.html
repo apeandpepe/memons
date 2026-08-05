@@ -1265,6 +1265,21 @@ function buildTen(items){
 
   Promise.all(ready).then(start);
   setTimeout(start, 4000);
+
+  /* The panel itself. Splitting tenReveal into a build half and a show
+     half dropped these four lines, and without the show class the grid
+     was assembled correctly inside a container that never opened -- the
+     capsule finished and nothing followed it.
+
+     They belong here rather than in the show half: the panel has to be
+     laid out for the cards to have somewhere to land, and it is behind
+     the film in any case. */
+  const tal={}; items.forEach(p=>tal[p.rarity]=(tal[p.rarity]||0)+1);
+  $('msum').innerHTML=RAR.filter(r=>tal[r.label]).map(r=>
+    `<span style="color:${r.color}">${r.label} <b>×${tal[r.label]}</b></span>`).join('');
+  $('multi').classList.add('show');
+  $('stage').classList.remove('opening');
+  showShareTen(items);
 }
 function tenReveal2(items){
   /* Nothing visual left. buildTen did it all while the film was playing;
