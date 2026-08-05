@@ -17,7 +17,7 @@
   const PURCHASES_ENABLED = false;
   // Separate from capsule purchases: the marketplace opens at season 1, and
   // until then a top-up would credit a balance nothing can be spent on.
-  const DEPOSITS_ENABLED = false;
+  const DEPOSITS_ENABLED = true;
 
   const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
 
