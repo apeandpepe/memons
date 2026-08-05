@@ -1221,13 +1221,30 @@ function buildTen(items){
          + '</div>';
   }).join('');
 
-  /* .mcard starts at opacity 0 and is brought in by the seq class, so the
-     callback that adds it decides whether the grid is visible at all.
-     requestAnimationFrame does not run when the tab is hidden and is
-     starved on a device already decoding video -- ten cards stayed
-     transparent behind a screen that had finished everything else. A
-     timer runs either way. */
-  setTimeout(function(){
+  /* Held until the artwork can actually be painted.
+
+     The single reveal waits on decode(); this did not, and ten images
+     decoding at once is the heaviest moment of the whole sequence. On a
+     weak phone the film ended, the white lifted, and the grid was there
+     with empty frames in it -- the files had arrived and the device had
+     not finished turning them into pixels.
+
+     There is room to wait: this runs at the start of the film, so on
+     anything reasonable it finishes several seconds before the screen
+     clears. The cap is there for the case where it does not. */
+  var imgs = [].slice.call(grid.querySelectorAll('img'));
+  var ready = imgs.map(function(im){
+    if (im.decode) return im.decode().catch(function(){});
+    if (im.complete) return Promise.resolve();
+    return new Promise(function(res){ im.onload = res; im.onerror = res; });
+  });
+
+  /* A frame with no picture is a poorer reveal than a card. A screen that
+     never moves is worse than both, so the wait has an end. */
+  var run = false;
+  function start(){
+    if (run) return;
+    run = true;
     var cards = [].slice.call(grid.children);
     cards.forEach(function(el,i){
       var delay = i * gap;
@@ -1238,9 +1255,16 @@ function buildTen(items){
       sh.style.animationDelay = (delay + 0.22) + 's';
       el.appendChild(sh);
     });
+    /* setTimeout, not requestAnimationFrame: rAF does not run in a hidden
+       tab and is starved on a device already decoding video, and this is
+       the callback that makes .mcard visible at all -- .mcard starts at
+       opacity 0 and the seq class is what brings it in. */
     setTimeout(function(){ grid.classList.add('done'); },
                ((cards.length - 1) * gap + 0.55) * 1000);
-  }, 16);
+  }
+
+  Promise.all(ready).then(start);
+  setTimeout(start, 4000);
 }
 function tenReveal2(items){
   /* Nothing visual left. buildTen did it all while the film was playing;
