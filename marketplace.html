@@ -424,6 +424,20 @@
   .mkm-note.bad{color:var(--red)}
 
   .mkm-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .mkm-own{margin-top:12px;padding-top:11px;border-top:1px solid var(--hair)}
+  .mkm-own h4{font-size:9px;letter-spacing:1.2px;color:var(--faint);margin:0 0 8px;font-weight:700}
+  .mkm-own-r{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px}
+  .mkm-own-r + .mkm-own-r{border-top:1px solid rgba(255,255,255,.04)}
+  .mkm-own-t{font-size:9px;font-weight:800;letter-spacing:.6px;padding:2px 6px;border-radius:4px;flex:0 0 auto}
+  .mkm-own-t.ask{color:#ff8a8a;background:rgba(255,90,90,.12)}
+  .mkm-own-t.bid{color:#7ee0a0;background:rgba(90,220,140,.12)}
+  .mkm-own-p{font-weight:700;color:var(--text)}
+  .mkm-own-sp{flex:1 1 auto}
+  .mkm-own-x{background:none;border:1px solid var(--hair);color:var(--muted);
+             font-size:10px;font-weight:700;letter-spacing:.6px;padding:3px 9px;
+             border-radius:5px;cursor:pointer;flex:0 0 auto}
+  .mkm-own-x:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
+  .mkm-own-x:disabled{opacity:.5;cursor:default}
   .mkm-panel{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;min-width:0}
   .mkm-panel h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0 0 11px;font-weight:700}
   .mkm-depth,.mkm-hist{max-height:210px;overflow-y:auto;font-size:12.5px}
@@ -769,6 +783,14 @@
   .mkport-h{font-size:10.5px;letter-spacing:2.4px;color:var(--gold);margin-bottom:8px}
   .mkport-v{font-size:34px;font-weight:800;color:var(--gold);letter-spacing:-1px;line-height:1}
   .mkport-v small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.5px;margin-left:3px}
+  .mkport-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .mkport-row.sub{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
+  .mkport-k{font-size:9px;letter-spacing:1.1px;color:var(--faint);flex:0 0 auto}
+  /* Card value sits below the balance in size as well as position: it is an
+     estimate against live bids, and the balance is a number that is simply
+     true. */
+  .mkport-v2{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1}
+  .mkport-v2 small{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.5px;margin-left:3px}
   .mkport-s{font-size:11px;color:var(--faint);margin-top:5px;min-height:14px}
   .mkport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
     margin:18px 0 16px;padding-top:16px;border-top:1px solid var(--hair)}
@@ -874,6 +896,7 @@
 
   /* Balance hidden: the numbers stay in the DOM but are unreadable, so the
      card keeps its shape and nothing reflows when it is turned back on. */
+  .mkport.hidden .mkport-v2 b,
   .mkport.hidden .mkport-v b,
   .mkport.hidden .mkport-s,
   .mkport.hidden .mkport-stat b{color:transparent;text-shadow:0 0 11px rgba(236,234,228,.55)}
@@ -1076,7 +1099,23 @@
           <svg viewBox="0 0 24 24"><path d="M12 5C5.6 5 2 12 2 12s3.6 7 10 7 10-7 10-7-3.6-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/><circle cx="12" cy="12" r="1.9" fill="#0b0b0c"/></svg>
         </button>
       </div>
-      <div class="mkport-v"><b id="balAvail">0</b> <small>USDT</small></div>
+      <!-- Three figures, total first. One number under a heading reading
+           PORTFOLIO, with a card count beneath it, was read as the value
+           of the cards; it was the cash balance. Total is what the word
+           portfolio means, and the two lines under it say where it comes
+           from. -->
+      <div class="mkport-row">
+        <span class="mkport-k">TOTAL</span>
+        <span class="mkport-v"><b id="balTotal">0</b> <small>USDT</small></span>
+      </div>
+      <div class="mkport-row sub">
+        <span class="mkport-k">BALANCE</span>
+        <span class="mkport-v2"><b id="balAvail">0</b> <small>USDT</small></span>
+      </div>
+      <div class="mkport-row">
+        <span class="mkport-k">CARDS</span>
+        <span class="mkport-v2"><b id="balValue">0</b> <small>USDT</small></span>
+      </div>
       <div class="mkport-s" id="balLocked"></div>
       <div class="mkport-grid">
         <div class="mkport-stat">
@@ -1263,6 +1302,13 @@
           <h3>Open orders</h3>
           <div class="mkm-dhead" id="mDepthHead"></div>
           <div class="mkm-depth" id="mDepth"></div>
+
+          <!-- Cancelling meant leaving the card, opening MY ORDERS and
+               finding the row again. The orders are for this card and the
+               person is looking at this card, so they belong here. One
+               button per order rather than per price level: the book
+               groups by price and a level can hold several. -->
+          <div class="mkm-own" id="mOwnOrders" hidden></div>
         </section>
 
         <div class="mkm-act">
@@ -1618,6 +1664,7 @@
     // happened to answer first.
     await loadMine();
     await Promise.all([loadDepth(), loadHistory()]);
+    renderOwnOrders();
     setMode(mine && mine.owned.length ? 'sell' : 'buy');
   }
 
@@ -1641,6 +1688,82 @@
         offers:(r.offers||[]).filter(function(o){return o.card_id===cur.card_id;})
       };
     }catch(e){}
+  }
+
+  /* Takes filled quantity off the book without waiting for the server.
+
+     The rows carry their price on data-p and the quantity in .q, so a
+     fill at a price is one decrement there. A level that reaches zero is
+     blanked rather than removed: the panel is a fixed eight rows a side
+     and pulling one out would shift everything under the cursor. The next
+     loadDepth overwrites all of it a moment later; this only covers the
+     gap. */
+  function dropTaken(taken){
+    if(!taken || !taken.length) return;
+    var host=$m('mDepth'); if(!host) return;
+    taken.forEach(function(t){
+      var rows=host.querySelectorAll('.mkm-line.'+t.side+':not(.empty)');
+      for(var i=0;i<rows.length;i++){
+        if(Number(rows[i].dataset.p)!==Number(t.price)) continue;
+        var q=rows[i].querySelector('.q');
+        var n=Number(q.textContent)-1;
+        if(n>0){ q.textContent=n; }
+        else{
+          rows[i].className='mkm-line empty '+t.side;
+          rows[i].innerHTML='<span class="p">&ndash;</span><span class="q">&ndash;</span>';
+        }
+        break;
+      }
+    });
+  }
+
+  /* This card's own orders, under the book, each with a cancel.
+
+     mine.listings and mine.offers are already filtered to this card by
+     loadMine, and they carry ids -- market_depth does not, being grouped
+     by price, which is why the cancel could not live on a book row. */
+  function renderOwnOrders(){
+    var host=$m('mOwnOrders');
+    if(!host) return;
+    var ls=(mine && mine.listings) || [], os=(mine && mine.offers) || [];
+    if(!ls.length && !os.length){ host.hidden=true; host.innerHTML=''; return; }
+
+    var row=function(o, kind){
+      return '<div class="mkm-own-r">'+
+        '<span class="mkm-own-t '+(kind==='ask'?'ask':'bid')+'">'+(kind==='ask'?'SELL':'BUY')+'</span>'+
+        '<span class="mkm-own-p">'+num(o.price)+'</span>'+
+        '<span class="mkm-own-sp"></span>'+
+        '<button class="mkm-own-x" data-k="'+kind+'" data-id="'+o.id+'">CANCEL</button>'+
+      '</div>';
+    };
+
+    host.hidden=false;
+    host.innerHTML='<h4>YOUR ORDERS ON THIS CARD</h4>'+
+      ls.map(function(l){return row(l,'ask');}).join('')+
+      os.map(function(o){return row(o,'bid');}).join('');
+
+    host.querySelectorAll('.mkm-own-x').forEach(function(b){
+      b.onclick=function(){ cancelOwn(b); };
+    });
+  }
+
+  async function cancelOwn(btn){
+    if(busy) return;
+    var kind=btn.dataset.k, id=Number(btn.dataset.id);
+    btn.disabled=true; btn.textContent='…';
+    try{
+      await MEMONS.authFetch(kind==='ask' ? '/market/unlist' : '/market/cancel-offer',
+                             kind==='ask' ? {listing_id:id} : {offer_id:id});
+      await loadMine();
+      await loadDepth();
+      renderOwnOrders();
+      setMode(mode);
+      loadBalance();
+      note(kind==='ask' ? 'Listing cancelled.' : 'Buy order cancelled.');
+    }catch(e){
+      btn.disabled=false; btn.textContent='CANCEL';
+      note('Could not cancel. Please try again.', true);
+    }
   }
 
   async function loadDepth(){
@@ -1878,6 +2001,9 @@
     var qty=Math.max(1, Math.floor(Number($m('mQty').value)||1));
     var me=String(MEMONS.address).toLowerCase();
     var done=0, resting=0, lastPrice=null, stopped=null, result=null;
+    // Levels this order consumed, so the book can drop them before the
+    // server is asked again.
+    var taken=[];
 
     try{
       /* Decided against the book as it is now, not as it was when the modal
@@ -1899,6 +2025,7 @@
             if(takeable[i]){
               await MEMONS.authFetch('/market/buy',{listing_id:takeable[i].id});
               lastPrice=takeable[i].price;
+              taken.push({side:'ask', price:takeable[i].price});
             }else{
               await MEMONS.authFetch('/market/offer',{card_id:cur.card_id,price:v});
               resting++;
@@ -1920,6 +2047,7 @@
             if(fillable[j]){
               await MEMONS.authFetch('/market/accept',{offer_id:fillable[j].id,owned_id:card.id});
               lastPrice=fillable[j].price;
+              taken.push({side:'bid', price:fillable[j].price});
             }else{
               await MEMONS.authFetch('/market/list',{owned_id:card.id,price:v});
               resting++;
@@ -1938,10 +2066,21 @@
       result = done+' x '+word+' at '+at+' USDT.' +
                (stopped ? ' The rest could not be completed.' : '');
       note(result);
+
+      /* The book drops what was just taken, before anything is fetched.
+
+         Refreshing meant four round trips -- the card list, the wallet,
+         the book, the history -- and the level the buyer had just cleared
+         sat there for one to three seconds looking available. It was not:
+         the fill had already returned. The screen was behind the trade,
+         not ahead of it, and correcting it here only stops it lagging. */
+      dropTaken(taken);
+
       await load();
       cur=rows.find(function(c){return c.card_id===cur.card_id;})||cur;
       await loadMine();
       await Promise.all([loadDepth(), loadHistory()]);
+      renderOwnOrders();
       setMode(mode);
       loadBalance();
     }catch(e){
@@ -2580,7 +2719,7 @@
     await load();
     loadBalance();
     if(cur && !$m('modal').hidden){
-      await loadMine(); await loadDepth(); setMode(mode);
+      await loadMine(); await loadDepth(); renderOwnOrders(); setMode(mode);
     }
     if(failed) alert(failed+' order'+(failed>1?'s':'')+' could not be cancelled.');
   }
@@ -2802,7 +2941,17 @@
     try{
       var r=await MEMONS.authFetch('/market/me');
       $('mkBal').hidden=false;
-      $('balAvail').textContent=num(r.balance||0);
+      /* Cards are valued at the best bid on each copy -- what they would
+         fetch today, not what they are being asked for. A card nobody is
+         bidding on counts as nothing, which is the honest answer.
+
+         Locked funds are inside balance already: an open buy order is
+         money still owned, just not spendable, so counting it again would
+         overstate the total. */
+      var cash=Number(r.balance||0), cards=Number(r.card_value||0);
+      $('balTotal').textContent=num(cash+cards);
+      $('balAvail').textContent=num(cash);
+      $('balValue').textContent=num(cards);
       $('balLocked').textContent = r.locked ? num(r.locked)+' USDT held in open offers' : '';
       // Cards still in hand, plus whatever is currently on the market: a
       // listed card has not left the collection yet.
