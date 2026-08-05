@@ -438,6 +438,14 @@
              border-radius:5px;cursor:pointer;flex:0 0 auto}
   .mkm-own-x:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
   .mkm-own-x:disabled{opacity:.5;cursor:default}
+  .mkm-own h4 em{font-style:normal;color:var(--muted);font-weight:700;margin-left:4px}
+  .mkm-own-pg{display:flex;align-items:center;justify-content:center;gap:10px;
+    margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);
+    font-size:11px;color:var(--muted)}
+  .mkm-own-pb{background:none;border:1px solid var(--hair);color:var(--muted);
+    width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1}
+  .mkm-own-pb:hover:not(:disabled){color:var(--text);border-color:rgba(255,255,255,.28)}
+  .mkm-own-pb:disabled{opacity:.35;cursor:default}
   .mkm-panel{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;min-width:0}
   .mkm-panel h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0 0 11px;font-weight:700}
   .mkm-depth,.mkm-hist{max-height:210px;overflow-y:auto;font-size:12.5px}
@@ -552,6 +560,12 @@
     color:var(--gold);background:transparent;border:1px solid var(--line);border-radius:8px;
     padding:7px;cursor:pointer;transition:.15s}
   .mkbal-add:hover{background:rgba(241,193,76,.1)}
+  /* Deposit is filled, the other two outlined. Three buttons at the same
+     weight say nothing about which one to press, and depositing is what
+     an empty balance needs. */
+  #topupBtn{background:rgba(241,193,76,.12);border-color:rgba(241,193,76,.34)}
+  #ordersBtn,#wdBtn{color:#c9c5bd;border-color:rgba(255,255,255,.16)}
+  #ordersBtn:hover,#wdBtn:hover{color:var(--text);border-color:rgba(255,255,255,.3);background:transparent}
 
   .tu-box{max-width:440px}
   .tu-label{display:block;font-size:11px;letter-spacing:1.4px;color:var(--muted);margin-bottom:8px}
@@ -690,6 +704,28 @@
   .ord-all:hover{color:var(--red);border-color:rgba(224,85,106,.4)}
   .ord-all:disabled{opacity:.4;cursor:default}
 
+  /* Side filter and pager. Sells and buys were two stacked sections, so a
+     wallet with thirty listings never reached its bids; one interleaved
+     list with a filter over it puts either side one tap away. */
+  .ord-filter{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+    padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid var(--hair)}
+  .ord-fsp{flex:1 1 auto}
+  .ord-f{font:inherit;font-size:11px;font-weight:700;letter-spacing:.5px;
+    color:var(--muted);background:transparent;border:1px solid var(--hair);
+    border-radius:999px;padding:6px 13px;cursor:pointer;transition:.15s}
+  .ord-f span{color:var(--faint);font-weight:600;margin-left:3px}
+  .ord-f:hover{color:var(--text);border-color:rgba(255,255,255,.22)}
+  .ord-f.on{color:var(--gold);border-color:var(--line);background:rgba(241,193,76,.10)}
+  .ord-f.on span{color:var(--gold)}
+
+  .ord-pg{display:flex;align-items:center;justify-content:center;gap:12px;
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--hair);
+    font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ord-pb{background:none;border:1px solid var(--hair);color:var(--muted);
+    width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
+  .ord-pb:hover:not(:disabled){color:var(--text);border-color:rgba(255,255,255,.28)}
+  .ord-pb:disabled{opacity:.35;cursor:default}
+
   /* Each order is its own tile. A row of text separated by a hairline made
      it hard to see where one order ended and the next began. */
   .ord-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto auto;gap:14px;
@@ -783,19 +819,25 @@
   .mkport-h{font-size:10.5px;letter-spacing:2.4px;color:var(--gold);margin-bottom:8px}
   .mkport-v{font-size:34px;font-weight:800;color:var(--gold);letter-spacing:-1px;line-height:1}
   .mkport-v small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.5px;margin-left:3px}
-  .mkport-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-  .mkport-row.sub{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
-  .mkport-k{font-size:9px;letter-spacing:1.1px;color:var(--faint);flex:0 0 auto}
-  /* Card value sits below the balance in size as well as position: it is an
-     estimate against live bids, and the balance is a number that is simply
-     true. */
-  .mkport-v2{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1}
-  .mkport-v2 small{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.5px;margin-left:3px}
+  .mkport-tl{font-size:9.5px;letter-spacing:1.4px;color:#a8a49c;margin-bottom:5px}
+  /* Figures share a column width whatever their digits, so the decimal
+     points line up down the card. */
+  .mkport,.mkport-v,.mkport-r{font-variant-numeric:tabular-nums}
+  .mkport-br{border-top:1px solid rgba(255,255,255,.09);margin-top:14px;padding-top:11px;
+    display:grid;grid-template-columns:auto 1fr auto auto;align-items:baseline;gap:8px 8px}
+  .mkport-r{display:contents}
+  .mkport-rk{font-size:12px;color:var(--text)}
+  /* Leader between label and figure. Three rows of numbers with nothing
+     between them makes the eye travel sideways and lose the line. */
+  .mkport-dot{border-bottom:1px dotted rgba(255,255,255,.14);transform:translateY(-3px)}
+  .mkport-r b{font-size:14px;font-weight:800;color:var(--text)}
+  .mkport-r small{font-size:10px;color:#a8a49c;font-weight:500}
+  .mkport-r.dim .mkport-rk,.mkport-r.dim b{color:#a8a49c;font-weight:500}
   .mkport-s{font-size:11px;color:var(--faint);margin-top:5px;min-height:14px}
-  .mkport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
-    margin:18px 0 16px;padding-top:16px;border-top:1px solid var(--hair)}
-  .mkport-stat span{display:block;font-size:9px;letter-spacing:1.1px;color:var(--faint);margin-bottom:4px}
-  .mkport-stat b{font-size:18px;font-weight:800;color:var(--text)}
+  .mkport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+    margin:14px 0 15px;padding-top:13px;border-top:1px solid rgba(255,255,255,.09)}
+  .mkport-stat span{display:block;font-size:9.5px;letter-spacing:1px;color:#a8a49c;margin-bottom:4px}
+  .mkport-stat b{font-size:17px;font-weight:800;color:var(--text)}
 
   /* ===== rarity pills ===== */
   /* Each rarity carries its own colour here as it does everywhere else, so
@@ -866,7 +908,6 @@
   @media(max-width:560px){
     .mkport{padding:16px 17px}
     .mkport-v{font-size:28px}
-    .mkport-grid{gap:6px}
     .mkport-stat b{font-size:15px}
     .mkq b{font-size:13px}
     .mkquote{gap:12px}
@@ -887,7 +928,8 @@
   .mkport-eye svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;
     stroke-linecap:round;stroke-linejoin:round}
 
-  .mkport-stat{display:flex;align-items:center;gap:8px;min-width:0}
+  .mkport-stat{text-align:center;min-width:0;padding:0 4px}
+  .mkport-stat + .mkport-stat{border-left:1px solid rgba(255,255,255,.09)}
   .mkport-ic{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
     border:1px solid var(--line);border-radius:50%;color:var(--gold)}
   .mkport-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5;
@@ -896,16 +938,12 @@
 
   /* Balance hidden: the numbers stay in the DOM but are unreadable, so the
      card keeps its shape and nothing reflows when it is turned back on. */
-  .mkport.hidden .mkport-v2 b,
+  .mkport.hidden .mkport-r b,
   .mkport.hidden .mkport-v b,
-  .mkport.hidden .mkport-s,
   .mkport.hidden .mkport-stat b{color:transparent;text-shadow:0 0 11px rgba(236,234,228,.55)}
   .mkport.hidden .mkport-v b{text-shadow:0 0 15px rgba(241,193,76,.6)}
 
   @media(max-width:560px){
-    .mkport-grid{gap:8px}
-    .mkport-ic{width:22px;height:22px}
-    .mkport-ic svg{width:11px;height:11px}
     .mkport-stat{gap:6px}
   }
 
@@ -1099,37 +1137,39 @@
           <svg viewBox="0 0 24 24"><path d="M12 5C5.6 5 2 12 2 12s3.6 7 10 7 10-7 10-7-3.6-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/><circle cx="12" cy="12" r="1.9" fill="#0b0b0c"/></svg>
         </button>
       </div>
-      <!-- Three figures, total first. One number under a heading reading
-           PORTFOLIO, with a card count beneath it, was read as the value
-           of the cards; it was the cash balance. Total is what the word
-           portfolio means, and the two lines under it say where it comes
-           from. -->
-      <div class="mkport-row">
-        <span class="mkport-k">TOTAL</span>
-        <span class="mkport-v"><b id="balTotal">0</b> <small>USDT</small></span>
+      <!-- Total on its own line, then what it is made of. One number under
+           a heading reading PORTFOLIO, with a card count beneath it, was
+           read as the value of the cards; it was the cash balance.
+
+           Label left, figure right, unit in its own column so the decimal
+           points line up whatever the digits do. -->
+      <div class="mkport-tl">TOTAL VALUE</div>
+      <div class="mkport-v"><b id="balTotal">0</b> <small>USDT</small></div>
+
+      <div class="mkport-br">
+        <div class="mkport-r">
+          <span class="mkport-rk">Balance</span><span class="mkport-dot"></span>
+          <b id="balAvail">0</b><small>USDT</small>
+        </div>
+        <div class="mkport-r">
+          <span class="mkport-rk">Cards</span><span class="mkport-dot"></span>
+          <b id="balValue">0</b><small>USDT</small>
+        </div>
+        <!-- Dimmed: locked funds are already inside Balance. At the same
+             weight they read as a fourth figure and the total stops
+             adding up. -->
+        <div class="mkport-r dim" id="balLockedRow" hidden>
+          <span class="mkport-rk">In open offers</span><span class="mkport-dot"></span>
+          <b id="balLocked">0</b><small>USDT</small>
+        </div>
       </div>
-      <div class="mkport-row sub">
-        <span class="mkport-k">BALANCE</span>
-        <span class="mkport-v2"><b id="balAvail">0</b> <small>USDT</small></span>
-      </div>
-      <div class="mkport-row">
-        <span class="mkport-k">CARDS</span>
-        <span class="mkport-v2"><b id="balValue">0</b> <small>USDT</small></span>
-      </div>
-      <div class="mkport-s" id="balLocked"></div>
       <div class="mkport-grid">
-        <div class="mkport-stat">
-          <i class="mkport-ic"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="12" height="16" rx="2.2" opacity=".45"/><rect x="4" y="6" width="12" height="16" rx="2.2"/></svg></i>
-          <div><span>OWNED CARDS</span><b id="statOwned">0</b></div>
-        </div>
-        <div class="mkport-stat">
-          <i class="mkport-ic"><svg viewBox="0 0 24 24"><path d="M3 4.6A1.6 1.6 0 0 1 4.6 3h7.2c.4 0 .8.2 1.1.5l8.1 8.1a1.6 1.6 0 0 1 0 2.3l-7.2 7.2a1.6 1.6 0 0 1-2.3 0L3.5 13a1.6 1.6 0 0 1-.5-1.1Z"/><circle cx="7.8" cy="7.8" r="1.6" fill="#0b0b0c"/></svg></i>
-          <div><span>LISTED</span><b id="statListed">0</b></div>
-        </div>
-        <div class="mkport-stat">
-          <i class="mkport-ic"><svg viewBox="0 0 24 24"><path d="M12 2.5 20 11h-4.6v9.5H8.6V11H4Z"/></svg></i>
-          <div><span>OFFERS</span><b id="statOffers">0</b></div>
-        </div>
+        <!-- Icons removed. In a third of a 330px card they crowded the
+             figure they were meant to label; a rule between columns does
+             the separating without competing for the space. -->
+        <div class="mkport-stat"><span>OWNED</span><b id="statOwned">0</b></div>
+        <div class="mkport-stat"><span>LISTED</span><b id="statListed">0</b></div>
+        <div class="mkport-stat"><span>OFFERS</span><b id="statOffers">0</b></div>
       </div>
       <div class="mkbal-btns">
         <button class="mkbal-add" id="topupBtn">+ DEPOSIT</button>
@@ -1722,28 +1762,57 @@
      mine.listings and mine.offers are already filtered to this card by
      loadMine, and they carry ids -- market_depth does not, being grouped
      by price, which is why the cancel could not live on a book row. */
+  /* Five to a page. Someone holding ten copies of a card can have twenty
+     orders on it, and the whole list pushed the book off the screen. */
+  var ownPage = 1;
+  var OWN_PER = 5;
+
   function renderOwnOrders(){
     var host=$m('mOwnOrders');
     if(!host) return;
     var ls=(mine && mine.listings) || [], os=(mine && mine.offers) || [];
-    if(!ls.length && !os.length){ host.hidden=true; host.innerHTML=''; return; }
+    // Sells above buys, dearest first within each -- the same order the
+    // book above uses, so the eye does not have to re-sort.
+    var all = ls.map(function(l){ return {o:l, k:'ask'}; })
+                .sort(function(a,b){ return b.o.price-a.o.price; })
+      .concat(os.map(function(o){ return {o:o, k:'bid'}; })
+                .sort(function(a,b){ return b.o.price-a.o.price; }));
 
-    var row=function(o, kind){
+    if(!all.length){ host.hidden=true; host.innerHTML=''; ownPage=1; return; }
+
+    var pages=Math.max(1, Math.ceil(all.length/OWN_PER));
+    if(ownPage>pages) ownPage=pages;
+    if(ownPage<1) ownPage=1;
+    var from=(ownPage-1)*OWN_PER;
+    var slice=all.slice(from, from+OWN_PER);
+
+    var row=function(e){
       return '<div class="mkm-own-r">'+
-        '<span class="mkm-own-t '+(kind==='ask'?'ask':'bid')+'">'+(kind==='ask'?'SELL':'BUY')+'</span>'+
-        '<span class="mkm-own-p">'+num(o.price)+'</span>'+
+        '<span class="mkm-own-t '+e.k+'">'+(e.k==='ask'?'SELL':'BUY')+'</span>'+
+        '<span class="mkm-own-p">'+num(e.o.price)+'</span>'+
         '<span class="mkm-own-sp"></span>'+
-        '<button class="mkm-own-x" data-k="'+kind+'" data-id="'+o.id+'">CANCEL</button>'+
+        '<button class="mkm-own-x" data-k="'+e.k+'" data-id="'+e.o.id+'">CANCEL</button>'+
       '</div>';
     };
 
+    var pager='';
+    if(pages>1){
+      pager='<div class="mkm-own-pg">'+
+        '<button class="mkm-own-pb" data-d="-1"'+(ownPage<=1?' disabled':'')+'>&lsaquo;</button>'+
+        '<span>'+ownPage+' / '+pages+'</span>'+
+        '<button class="mkm-own-pb" data-d="1"'+(ownPage>=pages?' disabled':'')+'>&rsaquo;</button>'+
+      '</div>';
+    }
+
     host.hidden=false;
-    host.innerHTML='<h4>YOUR ORDERS ON THIS CARD</h4>'+
-      ls.map(function(l){return row(l,'ask');}).join('')+
-      os.map(function(o){return row(o,'bid');}).join('');
+    host.innerHTML='<h4>YOUR ORDERS ON THIS CARD <em>'+all.length+'</em></h4>'+
+      slice.map(row).join('') + pager;
 
     host.querySelectorAll('.mkm-own-x').forEach(function(b){
       b.onclick=function(){ cancelOwn(b); };
+    });
+    host.querySelectorAll('.mkm-own-pb').forEach(function(b){
+      b.onclick=function(){ ownPage += Number(b.dataset.d); renderOwnOrders(); };
     });
   }
 
@@ -2571,6 +2640,10 @@
     return rows.find(function(c){return c.card_id===id;}) || {card_id:id,name:'',rarity:'',image_url:''};
   }
 
+  // Kept outside ordLoad so a cancel does not throw the reader back to
+  // page one of All every time.
+  var ordSide='all', ordPage=1;
+
   async function ordLoad(){
     $m('ordList').innerHTML='<div class="ord-none">Loading…</div>';
     $m('ordSum').innerHTML='';
@@ -2657,14 +2730,76 @@
       '</section>';
     };
 
-    $m('ordList').innerHTML = sec('Listings', ls, 'ask') + sec('Buy orders', os, 'bid');
+    /* Five to a page, with a side filter above.
 
-    $m('ordList').querySelectorAll('.ord-x').forEach(function(b){
-      b.onclick=function(){ ordCancel(b); };
-    });
-    $m('ordList').querySelectorAll('.ord-all').forEach(function(b){
-      b.onclick=function(){ ordCancelAll(b.dataset.k, b.dataset.k==='ask'?ls:os); };
-    });
+       Ten copies of a card is twenty orders, and the panel scrolled past
+       what anyone would read. Splitting Listings and Buy orders into
+       separate sections also meant a wallet with thirty listings never
+       saw its bids without scrolling through all of them, which is why
+       the filter defaults to All and the two are interleaved. */
+    var ORD_PER = 5;
+
+    function ordRender(){
+      var side = ordSide;
+      var list = side==='ask' ? ls.map(function(o){return {o:o,k:'ask'};})
+               : side==='bid' ? os.map(function(o){return {o:o,k:'bid'};})
+               : ls.map(function(o){return {o:o,k:'ask'};})
+                   .concat(os.map(function(o){return {o:o,k:'bid'};}));
+
+      // Newest first. An order just placed is the one being looked for.
+      list.sort(function(a,b){
+        return new Date(b.o.created_at||0) - new Date(a.o.created_at||0);
+      });
+
+      var pages=Math.max(1, Math.ceil(list.length/ORD_PER));
+      if(ordPage>pages) ordPage=pages;
+      if(ordPage<1) ordPage=1;
+      var from=(ordPage-1)*ORD_PER;
+      var slice=list.slice(from, from+ORD_PER);
+
+      var chip=function(k,label,n){
+        return '<button class="ord-f'+(ordSide===k?' on':'')+'" data-s="'+k+'">'+
+               label+' <span>'+n+'</span></button>';
+      };
+      var head='<div class="ord-filter">'+
+        chip('all','All', ls.length+os.length)+
+        chip('ask','Sell', ls.length)+
+        chip('bid','Buy',  os.length)+
+        '<span class="ord-fsp"></span>'+
+        (side!=='bid' && ls.length ? '<button class="ord-all" data-k="ask">Cancel all sells</button>' : '')+
+        (side!=='ask' && os.length ? '<button class="ord-all" data-k="bid">Cancel all buys</button>'  : '')+
+      '</div>';
+
+      var pager='';
+      if(pages>1){
+        pager='<div class="ord-pg">'+
+          '<button class="ord-pb" data-d="-1"'+(ordPage<=1?' disabled':'')+'>&lsaquo;</button>'+
+          '<span>'+ordPage+' / '+pages+'</span>'+
+          '<button class="ord-pb" data-d="1"'+(ordPage>=pages?' disabled':'')+'>&rsaquo;</button>'+
+        '</div>';
+      }
+
+      var body = slice.length
+        ? slice.map(function(e){ return row(e.o, e.k); }).join('')
+        : '<div class="ord-none">Nothing on this side.</div>';
+
+      $m('ordList').innerHTML = head + body + pager;
+
+      $m('ordList').querySelectorAll('.ord-f').forEach(function(b){
+        b.onclick=function(){ ordSide=b.dataset.s; ordPage=1; ordRender(); };
+      });
+      $m('ordList').querySelectorAll('.ord-pb').forEach(function(b){
+        b.onclick=function(){ ordPage += Number(b.dataset.d); ordRender(); };
+      });
+      $m('ordList').querySelectorAll('.ord-x').forEach(function(b){
+        b.onclick=function(){ ordCancel(b); };
+      });
+      $m('ordList').querySelectorAll('.ord-all').forEach(function(b){
+        b.onclick=function(){ ordCancelAll(b.dataset.k, b.dataset.k==='ask'?ls:os); };
+      });
+    }
+
+    ordRender();
   }
 
   async function ordCancel(btn){
@@ -2952,7 +3087,9 @@
       $('balTotal').textContent=num(cash+cards);
       $('balAvail').textContent=num(cash);
       $('balValue').textContent=num(cards);
-      $('balLocked').textContent = r.locked ? num(r.locked)+' USDT held in open offers' : '';
+      var lk=Number(r.locked||0);
+      $('balLockedRow').hidden = !lk;
+      $('balLocked').textContent = num(lk);
       // Cards still in hand, plus whatever is currently on the market: a
       // listed card has not left the collection yet.
       var own=(r.sellable||[]).length + (r.listings||[]).length;
