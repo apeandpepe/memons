@@ -729,6 +729,9 @@
     width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
   .ord-pb:hover:not(:disabled){color:var(--text);border-color:rgba(255,255,255,.28)}
   .ord-pb:disabled{opacity:.35;cursor:default}
+  .his-pg{display:flex;align-items:center;justify-content:center;gap:12px;
+    margin-top:12px;padding-top:11px;border-top:1px solid var(--hair);
+    font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
   @media(max-width:600px){
     /* Cancel-all moves under the side chips rather than squeezing beside
        them: at this width all four on one line leaves each unreadable. */
@@ -2456,17 +2459,45 @@
     return esc(n);
   }
 
+  /* Ten to a page, in every history tab.
+
+     The four lists are rendered through this one function, so the paging
+     lives here rather than four times over. A page number per tab, kept
+     outside so switching to Deposits and back does not lose the reader's
+     place in Filled. */
+  var HIS_PER = 10;
+  var hisPage = { trades:1, ledger:1, topups:1, withdrawals:1 };
+
   function htbl(cols, list, rowFn, emptyTitle, emptyBody){
     if(!list.length){
       return '<div class="ord-none"><b>'+emptyTitle+'</b>'+emptyBody+'</div>';
     }
+    var pages=Math.max(1, Math.ceil(list.length/HIS_PER));
+    var p=hisPage[ordTab] || 1;
+    if(p>pages) p=pages;
+    if(p<1) p=1;
+    hisPage[ordTab]=p;
+
+    var from=(p-1)*HIS_PER;
+    var slice=list.slice(from, from+HIS_PER);
     var g=cols.map(function(c){return c[1];}).join(' ');
+
+    var pager='';
+    if(pages>1){
+      pager='<div class="his-pg">'+
+        '<button class="ord-pb" data-hd="-1"'+(p<=1?' disabled':'')+'>&lsaquo;</button>'+
+        '<span>'+(from+1)+'&ndash;'+Math.min(from+HIS_PER, list.length)+
+          ' of '+list.length+'</span>'+
+        '<button class="ord-pb" data-hd="1"'+(p>=pages?' disabled':'')+'>&rsaquo;</button>'+
+      '</div>';
+    }
+
     return '<div class="his-tbl">'+
       '<div class="his-row th" style="grid-template-columns:'+g+'">'+
         cols.map(function(c){return '<span>'+c[0]+'</span>';}).join('')+'</div>'+
-      list.map(function(r){
+      slice.map(function(r){
         return '<div class="his-row" style="grid-template-columns:'+g+'">'+rowFn(r)+'</div>';
-      }).join('')+'</div>';
+      }).join('')+'</div>'+pager;
   }
 
   function hisTrades(){
@@ -2563,11 +2594,19 @@
       $m('hisFoot').textContent=''; return;
     }
     host.innerHTML=HIS_VIEW[ordTab]();
-    /* The server caps each list. Saying so beats letting someone conclude
-       their older records were dropped. */
+    host.querySelectorAll('.ord-pb[data-hd]').forEach(function(b){
+      b.onclick=function(){
+        hisPage[ordTab] = (hisPage[ordTab]||1) + Number(b.dataset.hd);
+        hisRenderPane();
+      };
+    });
+    /* The server caps each list, separately from the paging above. The
+       pager says which ten of the fetched set is on screen; this says the
+       fetched set is itself the most recent N, so a missing older record
+       is not read as one that was dropped. */
     var n=(hisData[ordTab]||[]).length;
     $m('hisFoot').textContent = n>=hisData.limit
-      ? 'Showing the most recent '+hisData.limit+' entries.' : '';
+      ? 'Only the most recent '+hisData.limit+' entries are kept here.' : '';
   }
 
   function hisCounts(){
