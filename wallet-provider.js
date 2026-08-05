@@ -42,36 +42,71 @@
     if (!DBG) return;
     try {
       if (!dbgBox) {
+        /* Folded into a corner tab, not a panel across the bottom.
+
+           The first version covered the lower half of the screen, which is
+           exactly where the WalletConnect modal lists the wallets -- so
+           the log made the thing it was meant to diagnose unreachable.
+
+           Top left, out of the way of the modal and the sheet the wallet
+           slides up. Tap to open, tap again to fold. */
         dbgBox = document.createElement('div');
         dbgBox.style.cssText =
-          'position:fixed;left:0;right:0;bottom:0;max-height:45vh;overflow:auto;z-index:2147483647;' +
-          'background:rgba(0,0,0,.92);color:#cfcfcf;font:11px/1.45 monospace;padding:8px 10px 12px;' +
-          'border-top:1px solid #444;-webkit-overflow-scrolling:touch';
+          'position:fixed;left:6px;top:6px;z-index:2147483647;max-width:min(92vw,420px);' +
+          'background:rgba(0,0,0,.94);color:#cfcfcf;font:10.5px/1.4 monospace;' +
+          'border:1px solid #444;border-radius:6px;overflow:hidden';
+
+        var head = document.createElement('div');
+        head.style.cssText='display:flex;align-items:center;gap:6px;padding:5px 7px;cursor:pointer';
+        var dot = document.createElement('span');
+        dot.textContent='LOG';
+        dot.style.cssText='color:#7ee0a0;font-weight:700;letter-spacing:.5px';
+        var cnt = document.createElement('span');
+        cnt.className='c'; cnt.textContent='0';
+        cnt.style.cssText='color:#888';
+        head.appendChild(dot); head.appendChild(cnt);
+
+        var body = document.createElement('div');
+        body.className='b';
+        body.style.cssText='display:none;max-height:40vh;overflow:auto;padding:0 7px 7px;' +
+          '-webkit-overflow-scrolling:touch';
+
         var bar = document.createElement('div');
-        bar.style.cssText='display:flex;gap:8px;margin-bottom:6px';
+        bar.style.cssText='display:flex;gap:6px;margin:0 0 5px';
         var copy = document.createElement('button');
         copy.textContent='COPY';
-        copy.style.cssText='font:11px monospace;background:#222;color:#eee;border:1px solid #555;padding:3px 9px;border-radius:4px';
-        copy.onclick=function(){
-          var t=[].slice.call(dbgBox.querySelectorAll('.l')).map(function(e){return e.textContent;}).join('\n');
+        copy.style.cssText='font:10px monospace;background:#222;color:#eee;border:1px solid #555;padding:3px 8px;border-radius:4px';
+        copy.onclick=function(ev){
+          ev.stopPropagation();
+          var t=[].slice.call(body.querySelectorAll('.l')).map(function(e){return e.textContent;}).join('\n');
           try{ navigator.clipboard.writeText(t); copy.textContent='COPIED'; }catch(e){}
         };
         var close = document.createElement('button');
         close.textContent='X';
         close.style.cssText=copy.style.cssText;
-        close.onclick=function(){ dbgBox.remove(); dbgBox=null; };
+        close.onclick=function(ev){ ev.stopPropagation(); dbgBox.remove(); dbgBox=null; };
         bar.appendChild(copy); bar.appendChild(close);
-        dbgBox.appendChild(bar);
+        body.appendChild(bar);
+
+        head.onclick=function(){
+          body.style.display = body.style.display==='none' ? 'block' : 'none';
+        };
+
+        dbgBox.appendChild(head);
+        dbgBox.appendChild(body);
         (document.body || document.documentElement).appendChild(dbgBox);
       }
+      var body = dbgBox.querySelector('.b');
       var line = document.createElement('div');
       line.className='l';
       line.style.color = kind==='err' ? '#ff8a8a' : (kind==='ok' ? '#7ee0a0' : '#cfcfcf');
       var t = new Date();
       line.textContent = t.toTimeString().slice(3,8) + '.' +
         String(t.getMilliseconds()).padStart(3,'0') + '  ' + msg;
-      dbgBox.appendChild(line);
-      dbgBox.scrollTop = dbgBox.scrollHeight;
+      body.appendChild(line);
+      body.scrollTop = body.scrollHeight;
+      var c = dbgBox.querySelector('.c');
+      if (c) c.textContent = body.querySelectorAll('.l').length;
     } catch (e) {}
   }
   if (DBG) {
@@ -387,7 +422,7 @@
   }
 
   var api = {
-    build: 12,
+    build: 13,
     provider: null,
     available: true,
 
