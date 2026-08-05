@@ -51,6 +51,20 @@
      own parameters end and the destination's begin, and it answers with "this
      page does not exist". The cost is one extra tap on connect once the wallet
      browser has opened, which is worth paying for a link that actually opens. */
+  /* Set by the wallet deep link, read once, then taken out of the address
+     bar -- so a refresh, a bookmark or a shared link does not reopen the
+     wallet prompt weeks later. */
+  function wantsAutoConnect() {
+    try { return /[?&]wconnect=1/.test(location.search); } catch (e) { return false; }
+  }
+  function consumeAutoConnect() {
+    try {
+      var u = new URL(location.href);
+      u.searchParams.delete('wconnect');
+      history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+    } catch (e) {}
+  }
+
   function targetUrl() {
     try {
       var u = new URL(location.href);
@@ -68,13 +82,28 @@
            ';S.browser_fallback_url=' + encodeURIComponent(httpsUrl) + ';end';
   }
 
+  /* The wallet's own scheme, not its https link.
+
+     metamask.app.link is an https address, and Android offers every
+     browser that can open one -- so the button produced a "Choose
+     activity" list with Chrome at the top, and picking Chrome did
+     nothing at all. A metamask:// intent has exactly one handler and goes
+     straight there.
+
+     browser_fallback_url keeps the https link for a phone with no
+     MetaMask installed, where the app store page is the right answer. */
   function metamaskLink() {
-    return walletLink('io.metamask',
-      'https://metamask.app.link/dapp/' + targetUrl().replace(/^https?:\/\//, ''));
+    var target = targetUrl().replace(/^https?:\/\//, '') + '?wconnect=1';
+    var https = 'https://metamask.app.link/dapp/' + target;
+    if (!isAndroid()) return https;
+    return 'intent://dapp/' + target +
+           '#Intent;scheme=metamask;package=io.metamask' +
+           ';S.browser_fallback_url=' + encodeURIComponent(https) + ';end';
   }
   function trustLink() {
     return walletLink('com.wallet.crypto.trustapp',
-      'https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(targetUrl()));
+      'https://link.trustwallet.com/open_url?coin_id=60&url=' +
+      encodeURIComponent(targetUrl() + '?wconnect=1'));
   }
 
   function ready() {
@@ -610,6 +639,23 @@
 
         if (await resumeIfPending()) return;
         clearPending();
+
+        /* Arrived from the sheet, inside the wallet's own browser.
+
+           The button said "Open in MetaMask" and the person pressed it, so
+           the intent is already given -- asking them to press connect
+           again once the page reloads is a second tap for a decision
+           already made. The flag is set by the deep link and only holds
+           for that one arrival.
+
+           Only with an injected provider. Without one this is an ordinary
+           page load that happens to carry a parameter, and opening a
+           connect flow unbidden would be wrong. */
+        if (wantsAutoConnect() && activeProvider() &&
+            !(window.MEMONS && window.MEMONS.connected)) {
+          consumeAutoConnect();
+          connectInjected();
+        }
       } catch (e) { renderDisconnected(); }
     })();
   }
