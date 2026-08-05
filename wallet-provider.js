@@ -27,6 +27,65 @@
   var LOAD_TIMEOUT = 10000;
   var DETECT_TIMEOUT = 2500;
 
+  /* ------------------------------------------------------------------
+     On-screen log, for a phone that cannot be plugged into a laptop.
+
+     Off unless the address carries ?wcdebug=1, so nobody who has not
+     asked for it will ever see a line of this. It prints where the
+     connect got to, which is the one thing a spinner on the wallet's
+     side cannot tell you.
+     ------------------------------------------------------------------ */
+  var DBG = false;
+  try { DBG = /[?&]wcdebug=1/.test(location.search); } catch (e) {}
+  var dbgBox = null;
+  function dbg(msg, kind) {
+    if (!DBG) return;
+    try {
+      if (!dbgBox) {
+        dbgBox = document.createElement('div');
+        dbgBox.style.cssText =
+          'position:fixed;left:0;right:0;bottom:0;max-height:45vh;overflow:auto;z-index:2147483647;' +
+          'background:rgba(0,0,0,.92);color:#cfcfcf;font:11px/1.45 monospace;padding:8px 10px 12px;' +
+          'border-top:1px solid #444;-webkit-overflow-scrolling:touch';
+        var bar = document.createElement('div');
+        bar.style.cssText='display:flex;gap:8px;margin-bottom:6px';
+        var copy = document.createElement('button');
+        copy.textContent='COPY';
+        copy.style.cssText='font:11px monospace;background:#222;color:#eee;border:1px solid #555;padding:3px 9px;border-radius:4px';
+        copy.onclick=function(){
+          var t=[].slice.call(dbgBox.querySelectorAll('.l')).map(function(e){return e.textContent;}).join('\n');
+          try{ navigator.clipboard.writeText(t); copy.textContent='COPIED'; }catch(e){}
+        };
+        var close = document.createElement('button');
+        close.textContent='X';
+        close.style.cssText=copy.style.cssText;
+        close.onclick=function(){ dbgBox.remove(); dbgBox=null; };
+        bar.appendChild(copy); bar.appendChild(close);
+        dbgBox.appendChild(bar);
+        (document.body || document.documentElement).appendChild(dbgBox);
+      }
+      var line = document.createElement('div');
+      line.className='l';
+      line.style.color = kind==='err' ? '#ff8a8a' : (kind==='ok' ? '#7ee0a0' : '#cfcfcf');
+      var t = new Date();
+      line.textContent = t.toTimeString().slice(3,8) + '.' +
+        String(t.getMilliseconds()).padStart(3,'0') + '  ' + msg;
+      dbgBox.appendChild(line);
+      dbgBox.scrollTop = dbgBox.scrollHeight;
+    } catch (e) {}
+  }
+  if (DBG) {
+    // Anything thrown outside our own try blocks still lands on screen.
+    window.addEventListener('error', function (e) {
+      dbg('window.error: ' + (e && e.message), 'err');
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      var r = e && e.reason;
+      dbg('unhandled: ' + ((r && (r.message || r)) || '?'), 'err');
+    });
+    dbg('debug on / ' + navigator.userAgent.slice(0, 90));
+  }
+
   /* Above anything this site puts on screen, with room to spare. */
   var WC_Z = 2147483000;
 
@@ -150,6 +209,7 @@
   }
 
   async function loadLib() {
+    dbg('loadLib: start');
     try {
       var mod = await Promise.race([import(ESM), timeout(LOAD_TIMEOUT, "ESM_TIMEOUT")]);
       var EP = mod.EthereumProvider || (mod.default && mod.default.EthereumProvider) || mod.default;
@@ -167,6 +227,7 @@
 
   async function init() {
     var EthereumProvider = await loadLib();
+    dbg('lib loaded, init()', 'ok');
     return EthereumProvider.init({
       projectId: PROJECT_ID,
       optionalChains: [1, 137, 56],
@@ -209,6 +270,23 @@
            This is why iOS worked and Android did not. */
         redirect: { native: location.origin, universal: location.origin }
       }
+    }).then(function (p) {
+      dbg('provider ready. session=' + (!!p.session) +
+          ' accounts=' + ((p.accounts && p.accounts.length) || 0), 'ok');
+      /* The events the pairing goes through. A stall shows up as the last
+         line printed: display_uri and then nothing means the wallet was
+         handed the request and never answered. */
+      try {
+        p.on('display_uri', function (uri) {
+          dbg('display_uri (' + String(uri).slice(0, 24) + '…) -> wallet');
+        });
+        p.on('connect', function () { dbg('connect event', 'ok'); });
+        p.on('disconnect', function (e) {
+          dbg('disconnect: ' + ((e && e.message) || ''), 'err');
+        });
+        p.on('session_delete', function () { dbg('session_delete', 'err'); });
+      } catch (e) {}
+      return p;
     });
   }
 
@@ -266,6 +344,8 @@
   function openWallet() {
     if (!api.provider) return false;            // injected wallets need nothing
     var link = walletLink();
+    dbg('openWallet link=' + (link ? String(link).slice(0, 40) : 'NONE'),
+        link ? '' : 'err');
     if (!link) return false;
 
     var now = Date.now();
@@ -307,7 +387,7 @@
   }
 
   var api = {
-    build: 11,
+    build: 12,
     provider: null,
     available: true,
 
@@ -334,7 +414,9 @@
     walletLink: walletLink,
 
     connect: async function () {
+      dbg('connect() called');
       var p = await ensureInit();
+      dbg('enable() waiting for wallet…');
 
       /* enable() waits on the wallet with no deadline of its own. When the
          pairing does not complete -- a stale topic from a previous visit,
@@ -352,6 +434,7 @@
           })
         ]);
       } catch (e) {
+        dbg('enable() failed: ' + ((e && e.message) || e), 'err');
         /* A pairing that failed leaves its topic behind, and the next
            attempt reuses it and fails the same way. Clearing puts the
            following try back to a first connection. */
@@ -361,6 +444,7 @@
         api.provider = null;
         throw e;
       }
+      dbg('enable() returned. accounts=' + ((p.accounts && p.accounts.length) || 0), 'ok');
       return adopt(p);
     },
 
@@ -381,6 +465,7 @@
       // stored WalletConnect session sat unrestored for that whole time. The
       // page had already decided it was disconnected by then, which is what
       // made a refresh look like a logout.
+      dbg('restore: stored=' + hasStoredSession());
       if (!hasStoredSession()) { await detectPromise; return null; }
 
       var p = null;
