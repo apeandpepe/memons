@@ -446,6 +446,10 @@
     width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1}
   .mkm-own-pb:hover:not(:disabled){color:var(--text);border-color:rgba(255,255,255,.28)}
   .mkm-own-pb:disabled{opacity:.35;cursor:default}
+  @media(max-width:560px){
+    .mkm-own-r{gap:6px;font-size:11.5px}
+    .mkm-own-x{padding:3px 7px;font-size:9.5px}
+  }
   .mkm-panel{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;min-width:0}
   .mkm-panel h3{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin:0 0 11px;font-weight:700}
   .mkm-depth,.mkm-hist{max-height:210px;overflow-y:auto;font-size:12.5px}
@@ -725,6 +729,14 @@
     width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
   .ord-pb:hover:not(:disabled){color:var(--text);border-color:rgba(255,255,255,.28)}
   .ord-pb:disabled{opacity:.35;cursor:default}
+  @media(max-width:600px){
+    /* Cancel-all moves under the side chips rather than squeezing beside
+       them: at this width all four on one line leaves each unreadable. */
+    .ord-filter{gap:6px}
+    .ord-fsp{flex-basis:100%}
+    .ord-f{padding:6px 11px;font-size:10.5px}
+    .ord-all{font-size:10px;padding:5px 9px}
+  }
 
   /* Each order is its own tile. A row of text separated by a hairline made
      it hard to see where one order ended and the next began. */
@@ -833,6 +845,26 @@
   .mkport-r b{font-size:14px;font-weight:800;color:var(--text)}
   .mkport-r small{font-size:10px;color:#a8a49c;font-weight:500}
   .mkport-r.dim .mkport-rk,.mkport-r.dim b{color:#a8a49c;font-weight:500}
+
+  @media(max-width:560px){
+    /* Narrow enough that the dotted leader has nowhere to run and the
+       label and figure would collide. Dropped, and the gap carries the
+       separation instead. */
+    .mkport-br{grid-template-columns:auto 1fr auto auto;gap:7px 6px}
+    .mkport-dot{border-bottom:none}
+    .mkport-rk{font-size:11.5px}
+    .mkport-r b{font-size:13px}
+    .mkport-stat{padding:0 2px}
+    .mkport-stat span{font-size:8.5px;letter-spacing:.6px}
+  }
+  /* A cover screen is around 350px. Two of the three buttons keep their
+     labels; WITHDRAW is the long one and wraps rather than shrinking the
+     other two below reading size. */
+  @media(max-width:400px){
+    .mkport-tl{font-size:9px}
+    .mkport-v{font-size:26px}
+    .mkbal-btns .mkbal-add{font-size:10px;letter-spacing:.6px;padding:8px 4px}
+  }
   .mkport-s{font-size:11px;color:var(--faint);margin-top:5px;min-height:14px}
   .mkport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
     margin:14px 0 15px;padding-top:13px;border-top:1px solid rgba(255,255,255,.09)}
@@ -944,7 +976,6 @@
   .mkport.hidden .mkport-v b{text-shadow:0 0 15px rgba(241,193,76,.6)}
 
   @media(max-width:560px){
-    .mkport-stat{gap:6px}
   }
 
   /* Mythic artwork is iridescent and special is crimson, but the palette had
