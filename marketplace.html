@@ -1473,9 +1473,14 @@
           ? '<b>Connect your wallet</b>Your cards will appear here.'
           : '<b>Nothing to sell</b>Cards from the event cannot be traded. Open capsules to collect tradable cards.';
       }else{
-        e.innerHTML = rows.length
-          ? '<b>Nothing matches</b>Try a different rarity or search term.'
-          : '<b>The market is quiet</b>No cards are listed yet. Be the first to sell one.';
+        /* Two different silences. rows.length only says the card list
+           loaded, and it is a hundred either way -- so it cannot tell an
+           unmatched search from a market where nothing has been quoted.
+           Whether anything is quoted at all is the question. */
+        var quoted = rows.some(function(c){ return c.ask!=null || c.bid!=null; });
+        e.innerHTML = !quoted
+          ? '<b>No active orders</b>Nothing is listed yet. Be the first to sell a card.'
+          : '<b>Nothing matches</b>Try a different rarity or search term.';
       }
       return;
     }
@@ -1529,6 +1534,18 @@
       if(tab==='sell'){
         if(!myCards) return false;
         if(!myCards[c.card_id]) return false;
+      }else{
+        /* Cards nobody is trading are left out of the browse tab.
+           market_list returns every active card, so a hundred of them
+           showed as NO LISTING and the handful actually for sale were
+           somewhere down the page.
+
+           A bid with no ask still counts. There is nothing to buy, but it
+           is the market telling a holder where their card can be sold,
+           and in the opening weeks that is most of what is here. The sell
+           tab is unaffected -- it lists what you own, whether or not
+           anyone has quoted it. */
+        if(c.ask==null && c.bid==null) return false;
       }
       if(filter && c.rarity!==filter) return false;
       if(t && title(c).toLowerCase().indexOf(t)<0
