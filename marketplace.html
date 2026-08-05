@@ -1935,6 +1935,11 @@
         BELOW_FLOOR:'That price is below the floor.',
         CANNOT_BUY_OWN:'That listing is yours.',
         CANNOT_SELL_TO_SELF:'That offer is yours.',
+        /* Refused at placement rather than at the fill. A bid at or above
+           your own ask can never trade -- self-trading is blocked -- so it
+           would sit in the book forever with no way out. */
+        CROSSES_OWN_LISTING:'You are already selling this card at or below that price.',
+        CROSSES_OWN_OFFER:'You are already bidding at or above that price.',
         LISTING_CLOSED:'Someone else took it. Try again.',
         LISTING_GONE:'Someone else took it. Try again.',
         OFFER_CLOSED:'That offer is gone. Try again.',
