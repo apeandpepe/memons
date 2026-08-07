@@ -415,22 +415,57 @@
   };
 
   // --- auto-recovery on page load --------------------------------------
-  // If the user paid but the tab was closed before confirmation, credit it now.
+  /* Paid, then the tab was closed or reloaded before the confirmation came
+     back. The transfer is on chain and the record is not, so it is retried
+     from the list in localStorage.
+
+     Retried on a schedule rather than once at load. A transfer needs five
+     Polygon blocks and a page opened straight after paying will find it
+     unconfirmed on the first attempt -- and then wait until the next visit
+     to look again, which for someone who paid and left is a balance that
+     shows up days later. Every fifteen seconds while the tab is in front,
+     stopping as soon as the list is empty.
+
+     Also on return to the tab: on a phone the wallet app takes the
+     foreground during payment, and coming back is exactly when the
+     transfer has just been confirmed. */
   function autoRecover() {
-    if (!loadPending().length) return;
-    // wait until a wallet session exists, then retry quietly
     let tries = 0;
-    const t = setInterval(async () => {
-      tries++;
-      if (getToken()) {
-        clearInterval(t);
-        try {
-          const r = await M.recoverPayments();
-          if (r.recovered > 0 && window.console) console.info("[MEMONS] recovered pending payment(s): +" + r.recovered + " pulls");
-          if (r.recovered > 0) document.dispatchEvent(new CustomEvent("memons:payment-recovered", { detail: r }));
-        } catch (e) {}
-      } else if (tries > 20) { clearInterval(t); }   // ~20s: user never connected
-    }, 1000);
+    let busy = false;
+
+    async function attempt() {
+      if (busy) return;
+      if (!loadPending().length) { stop(); return; }
+      if (!getToken()) {
+        // ~40s of waiting for a wallet, then give up until the next load.
+        if (++tries > 40) stop();
+        return;
+      }
+      busy = true;
+      try {
+        const r = await M.recoverPayments();
+        if (r.recovered > 0) {
+          if (window.console) console.info("[MEMONS] recovered pending payment(s): +" + r.recovered + " pulls");
+          document.dispatchEvent(new CustomEvent("memons:payment-recovered", { detail: r }));
+        }
+        if (!r.pending) stop();
+      } catch (e) {} finally { busy = false; }
+    }
+
+    let fast = null, slow = null;
+    function stop() {
+      if (fast) { clearInterval(fast); fast = null; }
+      if (slow) { clearInterval(slow); slow = null; }
+    }
+
+    // A second apart until a wallet turns up, then every fifteen.
+    fast = setInterval(function () { if (!getToken()) attempt(); }, 1000);
+    slow = setInterval(function () { if (!document.hidden) attempt(); }, 15000);
+    attempt();
+
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) attempt();
+    });
   }
   if (document.readyState !== "loading") autoRecover();
   else document.addEventListener("DOMContentLoaded", autoRecover);

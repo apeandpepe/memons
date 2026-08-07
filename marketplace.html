@@ -2913,6 +2913,15 @@
   });
   window.addEventListener('pagehide', stopLive);
 
+  /* A deposit that finished confirming after the page was reloaded is
+     credited by memons-pay in the background. The number on screen has to
+     hear about it, or it stays at the old figure until something else
+     happens to refresh it. */
+  document.addEventListener('memons:payment-recovered', function(){
+    loadBalance();
+    if(!$m('tuModal').hidden) tuClose();
+  });
+
   /* A hook for feeding the chart made-up data from the console.
 
      The market is days old and most cards have a handful of trades, which
@@ -4074,13 +4083,26 @@
          and it only does that for a wallet allowed to deposit, open switch
          or tester list. The client's own copy of the switch cannot know
          which, so it defers here and lets verify-payment decide. */
-      await MEMONS.payTo(tuRecv, Number(tuOrder.amount_usdt), {
+      var r = await MEMONS.payTo(tuRecv, Number(tuOrder.amount_usdt), {
         allowClosed:true,
         onStatus:function(st){
           if(st==='sending')    $m('tuNote2').textContent='Confirm the transfer in your wallet.';
           if(st==='confirming') $m('tuNote2').textContent='Waiting for confirmations…';
         }
       });
+
+      /* payTo resolves either way: credited, or sent and still waiting on
+         confirmations. Announcing "credited" for both was a message that
+         did not match the balance underneath it -- and the balance is the
+         thing being looked at. */
+      if(r && r.pending){
+        $m('tuNote2').className='mkm-note';
+        $m('tuNote2').textContent =
+          'Payment sent. It will be credited once confirmed — you can close this.';
+        await loadBalance();
+        return;   // left open: closing it would look like the deposit failed
+      }
+
       $m('tuNote2').textContent='Credited. Your balance is updated.';
       await loadBalance();
       setTimeout(tuClose, 1200);
