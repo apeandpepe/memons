@@ -39,6 +39,26 @@
   const SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
   const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 
+  let IS_TESTER = false;
+
+  /* Asks the same function the market functions ask, so there is one
+     answer to "may this wallet act while things are closed" rather than a
+     second list to keep in step. */
+  async function checkTester() {
+    try {
+      const a = window.MEMONS && window.MEMONS.address;
+      if (!a) return false;
+      const r = await fetch(SB_URL + "/rest/v1/rpc/market_open_for", {
+        method: "POST",
+        headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON,
+                   "content-type": "application/json" },
+        body: JSON.stringify({ p_address: a }),
+      });
+      if (!r.ok) return false;
+      return !!(await r.json());
+    } catch (e) { return false; }
+  }
+
   async function refreshFlags() {
     try {
       const r = await fetch(SB_URL + "/rest/v1/rpc/site_flags", {
@@ -51,6 +71,12 @@
       const j = await r.json();
       DEPOSITS_ENABLED  = !!(j && j.deposits);
       PURCHASES_ENABLED = !!(j && j.purchases);
+      /* A wallet on the market's tester list passes the server's check
+         even with the switch off, so the button has to know -- otherwise
+         it stays covered by COMING SOON for the people meant to be
+         testing it. Refreshed with the flags, since it depends on which
+         wallet is connected. */
+      IS_TESTER = await checkTester();
       if (j && j.prices) {
         if (j.prices.single   > 0) SINGLE_USDT   = Number(j.prices.single);
         if (j.prices.bundle10 > 0) BUNDLE10_USDT = Number(j.prices.bundle10);
@@ -59,6 +85,11 @@
     return DEPOSITS_ENABLED;
   }
   refreshFlags();
+  /* Re-asked once a wallet appears. The first call runs at page load, when
+     nobody is connected yet and the tester answer is necessarily no --
+     leaving the charge button covered for the very people meant to press
+     it. */
+  document.addEventListener("memons:connected", function () { refreshFlags(); });
 
   const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
 
@@ -133,8 +164,8 @@
      touching it earlier threw before anything else in here could run. The
      whole module died on load, so payTo was missing and the deposit
      button reported NO_PAY. */
-  M.depositsEnabled  = function () { return DEPOSITS_ENABLED; };
-  M.purchasesEnabled = function () { return PURCHASES_ENABLED; };
+  M.depositsEnabled  = function () { return DEPOSITS_ENABLED || IS_TESTER; };
+  M.purchasesEnabled = function () { return PURCHASES_ENABLED || IS_TESTER; };
   M.refreshFlags     = refreshFlags;
 
   M.chains = function () { return AVAILABLE.map((k) => ({ key: k, label: CHAINS[k].label })); };
@@ -284,7 +315,7 @@
     // Re-read at the moment of paying: a tab left open across a launch
     // would otherwise hold whatever was true when it loaded.
     await refreshFlags();
-    if (!PURCHASES_ENABLED) {
+    if (!PURCHASES_ENABLED && !IS_TESTER) {
       throw new Error("Capsule purchases are temporarily closed. Please try again later.");
     }
     const pulls = parseInt(numPulls, 10);
@@ -397,7 +428,7 @@
        call, with the address in front of it, and the caller passes
        allowClosed when it has already been told the order is valid --
        which only happens if the market function created one. */
-    if (!(await refreshFlags()) && !opts.allowClosed) {
+    if (!(await refreshFlags()) && !IS_TESTER && !opts.allowClosed) {
       throw new Error("Balance top-ups are not open yet.");
     }
     if (!/^0x[0-9a-fA-F]{40}$/.test(String(to || ""))) throw new Error("Invalid destination address.");

@@ -459,38 +459,71 @@ if(document.documentElement.classList.contains('embed')){
 <script src="mypage-entry.js"></script>
 
 <script>
-/* Capsule purchases are closed until the pricing/reward model is confirmed.
-   memons-pay.js holds the switch; the server enforces it independently. */
+/* Capsule purchases are closed until the pricing model is confirmed.
+   market_config.purchases_enabled holds the switch; memons-pay reads it
+   and the server enforces it independently. */
 (function(){
-  function lockPurchases(){
-    if(!window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function') return;
-    if(MEMONS.purchasesEnabled()) return;                 // open: leave everything as is
+  var origLabel = null;
+
+  function applyLock(){
     var btn = document.getElementById('chargeBtn');
-    if(btn){
+    var note = document.querySelector('.chargenote');
+    if(!btn) return;
+
+    /* Undecided until the flags arrive. Locking on an unanswered question
+       and never asking again is what left the button covered after the
+       switch had been turned on. */
+    if(!window.MEMONS || typeof MEMONS.purchasesEnabled !== 'function') return;
+    var open = MEMONS.purchasesEnabled();
+
+    if(open){
+      /* Unlocked as well as locked. The first version only ever locked, so
+         a wallet that turned out to be on the tester list -- or a switch
+         flipped while the page sat open -- stayed behind COMING SOON. */
+      btn.disabled = false;
+      btn.style.cursor = '';
+      btn.classList.remove('locked');
+      var cover = btn.querySelector('.lockcover');
+      if(cover) cover.remove();
+      if(origLabel !== null && !btn.textContent.trim()){
+        btn.textContent = origLabel;
+      }
+      btn.onclick = null;
+      if(note) note.textContent = '';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.style.cursor = 'not-allowed';
+    btn.classList.add('locked');
+    if(!btn.querySelector('.lockcover')){
       /* A cover over the button rather than a longer label on it. The label
          became "CHARGE PULLS · COMING SOON", which is wider than the button
          and was cut off mid-word -- and it read as the name of something you
          could press. */
-      btn.disabled = true;
-      btn.style.cursor = 'not-allowed';
-      btn.classList.add('locked');
-      if(!btn.querySelector('.lockcover')){
-        var label = document.createElement('span');
-        label.textContent = btn.textContent;
-        btn.textContent = '';
-        btn.appendChild(label);
-        var cover = document.createElement('span');
-        cover.className = 'lockcover';
-        cover.textContent = 'COMING SOON';
-        btn.appendChild(cover);
-      }
-      btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
+      if(origLabel === null) origLabel = btn.textContent;
+      var label = document.createElement('span');
+      label.textContent = btn.textContent;
+      btn.textContent = '';
+      btn.appendChild(label);
+      var c = document.createElement('span');
+      c.className = 'lockcover';
+      c.textContent = 'COMING SOON';
+      btn.appendChild(c);
     }
-    var note = document.querySelector('.chargenote');
+    btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
     if(note) note.textContent = 'Purchases open once the capsule pricing is finalised.';
   }
-  if(document.readyState !== 'loading') lockPurchases();
-  else document.addEventListener('DOMContentLoaded', lockPurchases);
+
+  if(document.readyState !== 'loading') applyLock();
+  else document.addEventListener('DOMContentLoaded', applyLock);
+
+  /* The answer changes twice after load: once when the flags come back,
+     and again when a wallet connects and the tester question can be
+     asked at all. */
+  document.addEventListener('memons:connected', applyLock);
+  var n = 0;
+  var t = setInterval(function(){ applyLock(); if(++n > 12) clearInterval(t); }, 1000);
 })();
 </script>
 <style>
