@@ -23,8 +23,9 @@
 
      Defaults hold until the first lookup answers, so a slow network shows
      the usual figures rather than zero. */
-  let SINGLE_USDT = 2;       // 1 pull
-  let BUNDLE10_USDT = 18;    // 10 pulls (10% off)
+  let SINGLE_USDT = 2;       // one capsule
+  let BUNDLE10_USDT = 18;    // one bundle
+  let BUNDLE_SIZE = 10;      // capsules per bundle -- a column, not a constant
   /* Deposits are governed by the database, not by this file.
 
      It used to be a constant here and another in verify-payment, and both
@@ -80,6 +81,7 @@
       if (j && j.prices) {
         if (j.prices.single   > 0) SINGLE_USDT   = Number(j.prices.single);
         if (j.prices.bundle10 > 0) BUNDLE10_USDT = Number(j.prices.bundle10);
+        if (j.prices.bundle_size > 0) BUNDLE_SIZE = Number(j.prices.bundle_size);
       }
     } catch (e) {}
     return DEPOSITS_ENABLED;
@@ -179,15 +181,31 @@
 
 
   // --- pricing (must mirror the server) --------------------------------
-  function priceUsdt(pulls) {
+  /* pulls_price, in JavaScript.
+
+     The server prices the order, the client sends a transfer, and
+     verify-payment settles one against the other to the last decimal --
+     so this has to be the same arithmetic, and it is:
+
+       floor(qty / bundle_size) * bundle_usdt + (qty % bundle_size) * single
+
+     Eleven capsules is one bundle and one single, not two bundles. The
+     bundle size comes from the server too rather than being assumed to be
+     ten, since it is a column in topup_config and not a constant. */
+  function priceUnits(pulls) {
     const n = parseInt(pulls, 10) || 0;
-    return Math.floor(n / 10) * BUNDLE10_USDT + (n % 10) * SINGLE_USDT;
+    const size = BUNDLE_SIZE > 0 ? BUNDLE_SIZE : 10;
+    return Math.floor(n / size) * BUNDLE10_USDT + (n % size) * SINGLE_USDT;
   }
+
   function priceRaw(pulls, decimals) {
     const dec = 10n ** BigInt(decimals);
-    const n = BigInt(parseInt(pulls, 10) || 0);
-    return (n / 10n) * BigInt(BUNDLE10_USDT) * dec + (n % 10n) * BigInt(SINGLE_USDT) * dec;
+    return BigInt(priceUnits(pulls)) * dec;
   }
+
+  /* The figure shown on screen is the figure sent, from one function.
+     They were separate and disagreed above ten. */
+  const priceUsdt = priceUnits;
   M.priceUsdt = priceUsdt;
 
   // --- helpers ---------------------------------------------------------
@@ -332,6 +350,28 @@
     const data = encodeTransfer(RECEIVER, amount);
 
     const onStatus = opts.onStatus || (() => {});
+
+    /* Declare the purchase before paying for it.
+
+       verify-payment settles every transfer against a row in
+       topup_orders -- it is how an arriving amount is tied to the person
+       who meant to send it, rather than guessed at. The balance side has
+       always created one; this side never did, so every capsule payment
+       came back NO_MATCHING_ORDER with the USDT already gone.
+
+       Failure here stops the payment rather than being ignored: sending
+       first and finding out afterwards is exactly the case this prevents. */
+    onStatus("ordering");
+    const ores = await fetch(`${API}/market/topup`, {
+      method: "POST",
+      headers: { "content-type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ kind: "pulls", value: pulls }),
+    });
+    if (!ores.ok) {
+      const oj = await ores.json().catch(() => ({}));
+      throw new Error(oj.error || "Could not start the purchase. Please try again.");
+    }
+
     onStatus("sending");
     // Polygon (both mainnet and Amoy) enforces a minimum priority fee of
     // ~25 gwei; wallets often default below this and the RPC rejects the tx.
