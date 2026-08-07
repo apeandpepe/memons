@@ -389,10 +389,103 @@
   /* Three columns: the card, the book, and the trade panel with the recent
      trades under it. Two columns left the space beside a tall card empty,
      which made the card look like decoration rather than the subject. */
-  .mkm-top{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.73fr) minmax(0,1fr);
+  /* The left column takes half the row. It holds the card or the chart,
+     and a chart squeezed into a third of the width is a chart nobody can
+     read a date off. The book gives up most of what the left column
+     gains: it is a list of two numbers and was wider than it needed. */
+  .mkm-top{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,.62fr) minmax(0,1.15fr);
     gap:22px;margin-bottom:22px;align-items:start}
+
+  .mkm-vtabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .mkm-vtab{font:inherit;font-size:11px;font-weight:800;letter-spacing:1.4px;
+    padding:11px 0;border-radius:10px;cursor:pointer;transition:.15s;
+    background:transparent;border:1px solid var(--hair);color:var(--muted)}
+  .mkm-vtab:hover{color:var(--text);border-color:rgba(255,255,255,.22)}
+  .mkm-vtab.on{background:linear-gradient(135deg,#f4d27a,#E9B84A 55%,#b8862e);
+    border-color:transparent;color:#1c1500}
+
+  /* ---- chart ---- */
+  .mkc-stats{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:14px}
+  .mkc-stats span{display:block;font-size:9px;letter-spacing:1.1px;color:#a8a49c;margin-bottom:5px}
+  .mkc-stats b{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.5px}
+  .mkc-stats small{font-size:10px;color:#a8a49c;font-weight:500;margin-left:2px}
+  .mkc-stats i{display:block;font-style:normal;font-size:11px;font-weight:700;margin-top:3px}
+  .mkc-stats i.up{color:var(--green,#3fd17a)}
+  .mkc-stats i.dn{color:var(--red,#e0556a)}
+
+  .mkc-ranges{display:flex;gap:5px;justify-content:flex-end;margin-bottom:10px}
+  .mkc-ranges button{font:inherit;font-size:10.5px;font-weight:700;letter-spacing:.5px;
+    padding:5px 11px;border-radius:7px;cursor:pointer;
+    background:transparent;border:1px solid var(--hair);color:var(--muted)}
+  .mkc-ranges button.on{color:var(--gold);border-color:var(--line);background:rgba(241,193,76,.10)}
+
+  /* Dead centre of the space the chart would occupy, and faint. It is a
+     note about what is missing, not a thing to read -- at full contrast it
+     draws more attention than the figures above it, which are real. */
+  .mkc-empty{display:flex;align-items:center;justify-content:center;
+    min-height:200px;padding:26px 18px;text-align:center;
+    border:1px dashed rgba(255,255,255,.07);border-radius:11px;
+    color:var(--muted);font-size:13px;letter-spacing:.3px;opacity:.45}
+  .mkc-plot{position:relative}
+  .mkc-plot canvas{display:block;width:100%}
+  .mkc-tip{position:absolute;pointer-events:none;z-index:3;min-width:150px;
+    background:#17171b;border:1px solid var(--hair);border-radius:9px;
+    padding:9px 11px;font-size:11px;line-height:1.55;color:var(--muted);
+    box-shadow:0 10px 30px rgba(0,0,0,.55)}
+  .mkc-tip b{display:block;color:var(--text);font-size:12px;margin-bottom:5px}
+  .mkc-tip .v{color:var(--text);font-weight:700}
+  .mkc-tip .k{display:block;font-size:9px;letter-spacing:.8px;color:#7d7a73;margin-top:6px}
+  .mkc-tip .a{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--muted)}
+
+  .mkc-legend{display:flex;gap:18px;margin-top:12px;font-size:11px;color:var(--muted)}
+  .mkc-legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+  .mkc-legend i.l{width:14px;height:2px;background:var(--gold)}
+  .mkc-legend i.d{width:7px;height:7px;border-radius:50%}
+  .mkc-legend i.d.buy{background:#3fd17a}
+  .mkc-legend i.d.sell{background:#E9B84A}
+
+  /* ---- range slider ---- */
+  .mkc-slider{position:relative;height:46px;margin-top:12px;
+    border:1px solid var(--hair);border-radius:9px;overflow:hidden;
+    background:rgba(255,255,255,.015);touch-action:none}
+  .mkc-slider canvas{display:block;width:100%;height:100%}
+  /* Everything outside the selection is dimmed rather than the selection
+     being highlighted: the shape of the whole series stays readable, and
+     the eye still lands on the part that is in view. */
+  .mkc-sel{position:absolute;top:0;bottom:0;
+    box-shadow:0 0 0 9999px rgba(0,0,0,.55);
+    border-left:1px solid var(--gold);border-right:1px solid var(--gold);
+    background:rgba(241,193,76,.05)}
+  .mkc-sel .h{position:absolute;top:0;bottom:0;width:16px;cursor:ew-resize;
+    display:flex;align-items:center;justify-content:center}
+  .mkc-sel .h.l{left:-8px}
+  .mkc-sel .h.r{right:-8px}
+  /* A grip wide enough for a fingertip, drawn narrow. The hit area is the
+     16px span; the bar is what is seen. */
+  .mkc-sel .h::before{content:'';width:3px;height:18px;border-radius:2px;
+    background:var(--gold)}
+
+  @media(max-width:760px){
+    /* The left column runs the full width here, so the chart has more room
+       than on a desktop third -- but less height to spend, and the three
+       stats have to wrap without pushing the plot off the screen. */
+    .mkc-stats{gap:16px;margin-bottom:11px}
+    .mkc-stats b{font-size:18px}
+    .mkc-ranges button{padding:5px 9px;font-size:10px}
+    .mkc-tip{min-width:0;font-size:10.5px;padding:7px 9px}
+    .mkm-vtab{font-size:10px;padding:9px 0;letter-spacing:1px}
+    .mkc-slider{height:38px}
+    /* A wider grip for a fingertip; the visible bar stays the same. */
+    .mkc-sel .h{width:22px}
+    .mkc-sel .h.l{left:-11px}
+    .mkc-sel .h.r{right:-11px}
+  }
   .mkm-left{min-width:0}
-  .mkm-art{border-radius:12px;overflow:hidden;background:#08080a;aspect-ratio:945/1280}
+  /* Capped and centred. The column is half the row now so the chart has
+     somewhere to go, but a card image at that width would stand taller
+     than the panel beside it and drag the whole row down with it. */
+  .mkm-art{border-radius:12px;overflow:hidden;background:#08080a;aspect-ratio:945/1280;
+    max-width:380px;margin:0 auto}
   .mkm-art img{width:100%;height:100%;object-fit:cover;display:block}
 
   .mkm-act{display:flex;flex-direction:column;min-width:0}
@@ -490,7 +583,7 @@
   .mkm-hist .t{color:var(--faint);font-size:11.5px}
   .mkm-hist .up{color:var(--green)} .mkm-hist .dn{color:var(--red)}
   .mkm-none{color:var(--faint);font-size:12px;padding:18px 4px;text-align:center}
-  .mkm-chart{margin-top:18px}
+  .mkm-chart{min-width:0}
 
   /* Below this the third column starves the trade panel, so the book moves
      under the other two and gets the full width instead. */
@@ -1432,7 +1525,60 @@
     <div class="mkm-body">
       <div class="mkm-top">
         <div class="mkm-left">
-          <div class="mkm-art"><img id="mImg" alt=""></div>
+          <!-- Two views of the same half of the screen. The card is what a
+               collector came for and the chart is what a trader came for,
+               and neither wants the other taking up room. -->
+          <div class="mkm-vtabs">
+            <button class="mkm-vtab on" data-v="card">CARD</button>
+            <button class="mkm-vtab" data-v="chart">CHART</button>
+          </div>
+
+          <div class="mkm-art" id="mArtWrap"><img id="mImg" alt=""></div>
+
+          <section class="mkm-chart" id="mChartWrap" hidden>
+            <div class="mkc-stats">
+              <div><span>FLOOR PRICE</span><b id="mcFloor">&mdash;</b> <small>USDT</small>
+                   <i id="mcFloorD"></i></div>
+              <div><span>AVG PRICE</span><b id="mcAvg">&mdash;</b> <small>USDT</small>
+                   <i id="mcAvgD"></i></div>
+              <div><span>SALES</span><b id="mcSales">0</b></div>
+            </div>
+
+            <div class="mkc-ranges" id="mcRanges">
+              <button data-r="1">24H</button>
+              <button data-r="7" class="on">7D</button>
+              <button data-r="30">30D</button>
+              <button data-r="0">ALL</button>
+            </div>
+
+            <div class="mkc-plot">
+              <canvas id="mChart"></canvas>
+              <div class="mkc-tip" id="mcTip" hidden></div>
+            </div>
+
+            <!-- Shown instead of the plot until there is a shape to see.
+                 Three dots and a line is not a chart; it is a chart's worth
+                 of furniture around almost nothing. -->
+            <div class="mkc-empty" id="mcEmpty" hidden>Not enough trades yet</div>
+
+            <!-- Range slider. The preset buttons above jump to fixed
+                 windows; this picks any two dates between them. Both stay
+                 because they answer different questions -- "the last week"
+                 is a button, "the three days around that spike" is not. -->
+            <div class="mkc-slider" id="mcSlider">
+              <canvas id="mcMini"></canvas>
+              <div class="mkc-sel" id="mcSel">
+                <span class="h l" data-h="l"></span>
+                <span class="h r" data-h="r"></span>
+              </div>
+            </div>
+
+            <div class="mkc-legend">
+              <span><i class="l"></i> Avg Price</span>
+              <span><i class="d buy"></i> Buy</span>
+              <span><i class="d sell"></i> Sell</span>
+            </div>
+          </section>
         </div>
 
         <section class="mkm-panel mkm-book">
@@ -1486,10 +1632,6 @@
         </div>
       </div>
 
-      <section class="mkm-panel mkm-chart" id="mChartWrap" hidden>
-        <h3>Price history</h3>
-        <canvas id="mChart" height="150"></canvas>
-      </section>
     </div>
   </div>
 </div>
@@ -1793,7 +1935,7 @@
     $m('mDepth').innerHTML='<div class="mkm-none">Loading…</div>';
     $m('mHist').innerHTML='';
     $m('mStats').innerHTML='';
-    $m('mChartWrap').hidden=true;
+    setCardView('card');
     note('');
 
     // Holdings first, on their own. The book marks the rows this wallet owns,
@@ -2037,7 +2179,7 @@
                  '<span class="p '+(x.taker==='buyer'?'up':'dn')+'">'+num(x.price)+'</span></div>';
         }).join('');
       }
-      drawChart();
+      loadChart();
     }catch(e){
       $m('mHist').innerHTML='<div class="mkm-none">Could not load trades.</div>';
     }
@@ -2045,40 +2187,755 @@
 
   /* Only drawn once there is a shape to see. Three points on a month-wide
      axis says less than the empty space around it. */
-  async function drawChart(){
-    try{
-      var res=await fetch(SB_URL+'/rest/v1/market_candles?card_id=eq.'+encodeURIComponent(cur.card_id)+
-                          '&select=*&order=day.asc',{headers:H});
-      var c=await res.json();
-      if(!Array.isArray(c) || c.length<5) return;
+  /* ---- price chart ----------------------------------------------------
 
-      $m('mChartWrap').hidden=false;
-      var cv=$m('mChart');
-      var w=cv.parentElement.clientWidth-30;
-      cv.width=w*2; cv.height=300; cv.style.width=w+'px'; cv.style.height='150px';
-      var g=cv.getContext('2d'); g.scale(2,2);
-      var W=w, HH=150, pad=6;
+     Two series over the same days: a floor line and a dot for every sale.
 
-      var lo=Math.min.apply(null,c.map(function(x){return Number(x.low);}));
-      var hi=Math.max.apply(null,c.map(function(x){return Number(x.high);}));
-      if(hi===lo){ hi=lo*1.1||1; lo=lo*0.9; }
-      var y=function(v){ return pad+(HH-pad*2)*(1-(v-lo)/(hi-lo)); };
-      var step=W/c.length;
+     The line is the daily average price -- volume over trades -- and it
+     runs through the middle of the dots, which is what makes the pair
+     readable together.
 
-      g.clearRect(0,0,W,HH);
-      c.forEach(function(x,i){
-        var cx=step*i+step/2;
-        var up=Number(x.close)>=Number(x.open);
-        g.strokeStyle=up?'#3fd17a':'#e0556a';
-        g.fillStyle=up?'#3fd17a':'#e0556a';
-        g.lineWidth=1;
-        g.beginPath(); g.moveTo(cx,y(Number(x.high))); g.lineTo(cx,y(Number(x.low))); g.stroke();
-        var a=y(Number(x.open)), b=y(Number(x.close));
-        var top=Math.min(a,b), h=Math.max(Math.abs(a-b),1);
-        g.fillRect(cx-Math.min(step*0.3,5), top, Math.min(step*0.6,10), h);
-      });
-    }catch(e){}
+     The trailing minimum went in first, on the reasoning that a floor is
+     what a card is worth. It sat along the bottom of the plot and stayed
+     there: a minimum is by definition under every dot, so the line and the
+     scatter never met and the shape of the market was nowhere in it. One
+     giveaway sale also pinned it low for a week. An average moves with the
+     trades instead of under them.
+
+     Days with no trades print as a gap and read as "—", rather than being
+     drawn flat at the last price. Nothing happened; a line saying
+     otherwise is an invention.
+     -------------------------------------------------------------------- */
+  var chartRange = 7;
+  var chartData = null;
+  /* The window actually on screen, in milliseconds. The preset buttons set
+     it and the slider moves it, so both end up describing the same thing
+     rather than each holding a version of the truth. */
+  var chartWin = null;
+  var chartAxis = null;   // pixel<->time mapping, for the cursor line
+  var chartCursor = null; // x of the pointer, or null
+
+  function fmtDay(d){
+    return d.toLocaleDateString('en-US',{month:'short',day:'2-digit'});
   }
+  function shortAddr(a){
+    a=String(a||''); return a ? a.slice(0,6)+'…'+a.slice(-4) : '—';
+  }
+
+  async function loadChart(){
+    /* Held while a demo is pinned. The real fetch lands a second or two
+       after the card opens and quietly replaced whatever was being looked
+       at, which made the sample data look like it expired. */
+    if(window.MK_CHART && MK_CHART._pin){ drawChart(); drawMini(); syncSel(); return; }
+    try{
+      var [cRes,tRes]=await Promise.all([
+        fetch(SB_URL+'/rest/v1/market_candles?card_id=eq.'+encodeURIComponent(cur.card_id)+
+              '&select=*&order=day.asc',{headers:H}),
+        fetch(SB_URL+'/rest/v1/trades?card_id=eq.'+encodeURIComponent(cur.card_id)+
+              '&select=price,seller,buyer,taker,created_at&order=created_at.asc&limit=500',{headers:H})
+      ]);
+      var candles=await cRes.json(), trades=await tRes.json();
+      chartData={
+        candles: Array.isArray(candles)?candles:[],
+        trades:  Array.isArray(trades)?trades:[]
+      };
+    }catch(e){ chartData={candles:[],trades:[]}; }
+    // A new card means a new series; the old window would be meaningless.
+    chartWin=null;
+    drawChart(); drawMini(); syncSel();
+  }
+
+  /* Five days with trades in them, anywhere in the series -- not five in
+     the current window. The threshold is a property of the card, so
+     switching to 24H on a card that has months of history should not make
+     the chart disappear. */
+  var CHART_MIN_DAYS = 3;
+
+  /* The three figures above the plot, from whatever slice is passed in.
+     Split out so the not-enough-data state can still show them: an average
+     and a trade count read fine at two trades, even though a chart does
+     not. */
+  function fillChartStats(c){
+    c = c || [];
+    var sales=c.reduce(function(a,x){ return a+Number(x.trades||0); },0);
+    var vol=c.reduce(function(a,x){ return a+Number(x.volume||0); },0);
+    var avg = sales ? vol/sales : null;
+    // The cheapest thing that actually changed hands.
+    var lows=c.filter(function(x){ return Number(x.trades||0)>0; })
+              .map(function(x){ return Number(x.low); });
+    var floorNow = lows.length ? Math.min.apply(null,lows) : null;
+
+    var setStat=function(id,val){
+      $m(id).textContent = (val==null||!isFinite(val)) ? '—' : num(val);
+    };
+    setStat('mcFloor', floorNow);
+    setStat('mcAvg', avg);
+    $m('mcSales').textContent = sales;
+
+    // Change against the start of the range, when there is one to compare.
+    var delta=function(id, now, then){
+      var e=$m(id);
+      if(now==null||then==null||!then){ e.textContent=''; e.className=''; return; }
+      var p=(now-then)/then*100;
+      e.textContent=(p>=0?'+':'')+p.toFixed(2)+'%';
+      e.className=p>=0?'up':'dn';
+    };
+    delta('mcFloorD', floorNow,
+      c.length && Number(c[0].trades) ? Number(c[0].low) : null);
+    delta('mcAvgD', avg, c.length && Number(c[0].trades)
+      ? Number(c[0].volume)/Number(c[0].trades) : null);
+  }
+
+  function tradingDays(){
+    var all = chartData && chartData.candles;
+    if(!all) return 0;
+    return all.filter(function(x){ return Number(x.trades||0)>0; }).length;
+  }
+
+  function drawChart(){
+    if(!chartData) return;
+    var wrap=$m('mChartWrap');
+    if(wrap.hidden) return;
+
+    /* Below the threshold the plot, the range buttons and the slider all
+       go: controls for a chart that is not there are worse than no
+       controls. The three summary figures stay, because an average and a
+       trade count are readable at any size. */
+    var days=tradingDays(), enough=days>=CHART_MIN_DAYS;
+    $m('mcEmpty').hidden = enough;
+    $m('mcSlider').hidden = !enough;
+    $m('mcRanges').hidden = !enough;
+    $m('mChart').parentElement.hidden = !enough;
+    document.querySelector('.mkc-legend').hidden = !enough;
+    if(!enough){
+      /* Sized to the chart it stands in for, so the panel does not jump
+         when a card with history is opened after one without. Same formula
+         the canvas uses below, since the point is that it occupies the
+         same box. */
+      var eW=Math.max(220, Math.floor(
+        $m('mChart').parentElement.getBoundingClientRect().width || 320));
+      var eH=Math.max(190, Math.min(300, Math.round(eW*0.62)));
+      $m('mcEmpty').style.height=(eH + (eW<520?8:10) +
+        Math.max(38, Math.min(56, Math.round(eH*0.19)))) + 'px';
+
+      fillChartStats(chartData.candles);
+      chartHit=[]; chartCursor=null;
+      return;
+    }
+
+    /* The window is counted back from the most recent trade, not from
+       today. On a market this young "the last 24 hours" is usually empty
+       and an empty chart says nothing about the card. */
+    var all=chartData.candles.slice();
+    if(!all.length){ chartWin=null; }
+    else if(!chartWin){
+      /* Counted back from the last trade, not from today. On a market this
+         young "the last 24 hours" is usually empty, and an empty chart
+         says nothing about the card. */
+      var lastT=new Date(all[all.length-1].day).getTime();
+      var firstT=new Date(all[0].day).getTime();
+      /* N days back, landing between two of them.
+
+         Counting N-1 back put the boundary exactly on a day, and a quiet
+         day inside the span then left six bars under a button reading 7D.
+         Counting a full N back caught the day at each end and gave eight.
+         Half a day short of N puts the edge in the gap between days, so
+         the count is N whatever traded. */
+      chartWin = {
+        a: chartRange ? Math.max(firstT, lastT-(chartRange-0.5)*864e5) : firstT,
+        b: lastT
+      };
+    }
+
+    var c = chartWin ? all.filter(function(x){
+      var t=new Date(x.day).getTime();
+      return t>=chartWin.a && t<=chartWin.b;
+    }) : all;
+
+    var tr = chartData.trades.filter(function(t){
+      if(!chartWin) return true;
+      var ms=new Date(t.created_at).getTime();
+      return ms>=chartWin.a && ms<=chartWin.b+864e5;
+    });
+
+    /* The day's average: what its trades summed to, over how many there
+       were. Days with no trades return null and break the line rather
+       than being drawn flat at yesterday's price. */
+    var avgOf=function(x){
+      var n=Number(x.trades||0);
+      return n ? Number(x.volume||0)/n : null;
+    };
+
+    fillChartStats(c);
+
+
+    var cv=$m('mChart');
+    /* The plot's own box, measured after layout. clientWidth on the parent
+       included padding the canvas does not get, so the right edge -- the
+       newest day, which is the one being looked at -- ran off the panel. */
+    var W=Math.max(220, Math.floor(cv.parentElement.getBoundingClientRect().width));
+    /* H is the whole price block including its date strip, so the volume
+       band starts below the labels rather than on top of them.
+
+       Both scale with the width. A fixed 366px tall chart on a 360px
+       phone is nearly square and pushes the buy panel off the screen; on
+       a desktop the same number is short. Roughly four to seven of the
+       width, floored so a narrow column still has somewhere to plot. */
+    var narrow = W < 520;
+    var H  = Math.max(190, Math.min(300, Math.round(W*0.62)));
+    var VH = Math.max(38,  Math.min(56,  Math.round(H*0.19)));
+    var GAP = narrow ? 8 : 10;
+    var dpr=Math.min(window.devicePixelRatio||1, 2);
+    cv.width=W*dpr; cv.height=(H+GAP+VH)*dpr;
+    cv.style.height=(H+GAP+VH)+'px';
+    var g=cv.getContext('2d');
+    g.setTransform(dpr,0,0,dpr,0,0);
+    g.clearRect(0,0,W,H+GAP+VH);
+
+    if(!c.length){
+      g.fillStyle='#6b6862'; g.font='12px system-ui'; g.textAlign='center';
+      g.fillText('No trades in this period', W/2, H/2);
+      chartHit=[]; return;
+    }
+
+    /* The price scale needs less room when the numbers are smaller, and a
+       narrow plot cannot spare 48px to a gutter. */
+    var padL = narrow ? 36 : 48;
+    var padR = narrow ? 6 : 10;
+    var padT = narrow ? 10 : 14;
+    var padB = narrow ? 24 : 30;
+    var x0=padL, x1=W-padR, y0=padT, y1=H-padB;
+
+    var prices=[];
+    c.forEach(function(x){
+      var a=avgOf(x); if(a!=null) prices.push(a);
+      if(Number(x.trades||0)) prices.push(Number(x.high), Number(x.low));
+    });
+    tr.forEach(function(t){ prices.push(Number(t.price)); });
+    var lo=Math.min.apply(null,prices), hi=Math.max.apply(null,prices);
+    if(hi===lo){ hi=lo*1.1||1; lo=Math.max(0,lo*0.9); }
+    /* Room above and below the extremes. At eight per cent the highest and
+       lowest sales sat on the frame, which reads as data cut off rather
+       than as a range. */
+    var span=hi-lo; lo-=span*0.16; hi+=span*0.16; if(lo<0) lo=0;
+
+    var t0=new Date(c[0].day).getTime();
+    var t1=new Date(c[c.length-1].day).getTime();
+
+    /* One day is a point, not a span. Padding t1 by a day made the maths
+       work and put that day hard against the left edge, where it read as
+       a chart that had failed to load rather than as a single session.
+       Widening the window on both sides puts it in the middle. */
+    var X;
+    if(t1===t0){
+      var half=432e5;                       // half a day either side
+      t0-=half; t1+=half;
+      X=function(ms){ return x0+(x1-x0)*((ms-t0)/(t1-t0)); };
+    }else{
+      X=function(ms){ return x0+(x1-x0)*((ms-t0)/(t1-t0)); };
+    }
+    var Y=function(v){ return y0+(y1-y0)*(1-(v-lo)/(hi-lo)); };
+
+    /* Grid and the price scale. Dotted rather than solid: a solid rule
+       across a scatter competes with the data for the same line weight,
+       and the reader ends up separating them by colour instead of by
+       structure. Eight rows rather than six, since the plot is tall
+       enough to carry them and a denser scale is easier to read a value
+       off. */
+    g.font=(narrow?'9px':'10px')+' system-ui'; g.textAlign='right'; g.textBaseline='middle';
+    g.setLineDash([2,4]);
+    var rows = narrow ? 5 : 8;
+    for(var i=0;i<=rows;i++){
+      var v=lo+(hi-lo)*i/rows, y=Y(v);
+      g.strokeStyle='rgba(255,255,255,.07)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(x0,y+0.5); g.lineTo(x1,y+0.5); g.stroke();
+      g.fillStyle='#6b6862'; g.fillText(v.toFixed(2), x0-8, y);
+    }
+    g.setLineDash([]);
+
+    /* Sales, one dot each, joined in the order they happened.
+
+       The thread matters more than it looks: a scatter alone says what the
+       prices were, and the line through it says which way they were going.
+       Drawn faintly and underneath the dots so it reads as connective
+       tissue rather than as a second price series.
+
+       Colour is the taker -- who crossed the spread. Green where a buyer
+       lifted an ask, amber where a seller hit a bid. That is the part of a
+       trade that says who was in a hurry, and it is the only thing in the
+       plot that distinguishes one sale from another. */
+    chartHit=[];
+    var pts=tr.map(function(t){
+      return { x:X(new Date(t.created_at).getTime()), y:Y(Number(t.price)), t:t };
+    });
+
+    /* One point a day, not one a trade. Threading every sale in order put
+       a vertical stroke between each pair -- forty and forty-six on the
+       same afternoon is a cliff on a chart this tall -- and the sawtooth
+       drowned out both the dots and the average. A day's close is the
+       price the day ended at, which is the thing worth joining. */
+    var closes=c.filter(function(x){ return Number(x.trades||0)>0; });
+    if(closes.length>1){
+      g.strokeStyle='rgba(255,255,255,.28)'; g.lineWidth=1.2;
+      g.beginPath();
+      closes.forEach(function(x,i){
+        var px=X(new Date(x.day).getTime()), py=Y(Number(x.close));
+        i ? g.lineTo(px,py) : g.moveTo(px,py);
+      });
+      g.stroke();
+    }
+
+    pts.forEach(function(p){
+      var buy = p.t.taker !== 'seller';   // unset counts as a buy-side lift
+      g.fillStyle = buy ? '#3fd17a' : '#E9B84A';
+      g.beginPath(); g.arc(p.x,p.y,narrow?2.6:3.2,0,Math.PI*2); g.fill();
+      /* A dark ring, so overlapping dots stay countable. Ten trades in an
+         hour land within a few pixels of each other and without it they
+         merge into one smear. */
+      g.strokeStyle='rgba(10,10,12,.85)'; g.lineWidth=1.2; g.stroke();
+      chartHit.push(p);
+    });
+
+    /* Average, drawn as a curve rather than a polyline.
+
+       Straight segments between daily points put a corner on every day,
+       and thirty corners read as spikes in the data rather than as the
+       drawing. A midpoint curve rounds each turn without inventing a
+       value: every original point is still on the line, and the eye
+       follows the trend instead of counting the joints. */
+    var line=[];
+    c.forEach(function(x){
+      var a=avgOf(x);
+      line.push(a==null ? null : {x:X(new Date(x.day).getTime()), y:Y(a)});
+    });
+
+    g.strokeStyle='#E9B84A'; g.lineWidth=1.5;
+    g.lineJoin='round'; g.lineCap='round';
+    var run=[];
+    var flush=function(){
+      if(run.length===1){
+        g.beginPath(); g.arc(run[0].x,run[0].y,1.6,0,Math.PI*2);
+        g.fillStyle='#E9B84A'; g.fill();
+      }else if(run.length>1){
+        g.beginPath();
+        g.moveTo(run[0].x, run[0].y);
+        for(var i=1;i<run.length-1;i++){
+          var mx=(run[i].x+run[i+1].x)/2, my=(run[i].y+run[i+1].y)/2;
+          g.quadraticCurveTo(run[i].x, run[i].y, mx, my);
+        }
+        g.lineTo(run[run.length-1].x, run[run.length-1].y);
+        g.stroke();
+      }
+      run=[];
+    };
+    // A gap ends the run: days with no trades break the line rather than
+    // being bridged at a price nobody paid.
+    line.forEach(function(p){ p ? run.push(p) : flush(); });
+    flush();
+
+    /* Dates along the bottom.
+
+       Thinned to about seven labels whatever the range, and always
+       including the last day: stepping by a fixed interval from the left
+       usually misses the right-hand end, which is the date most people are
+       looking for.
+
+       Aligned inward at the edges. Centred labels put half of "Aug 07"
+       past the right edge of the canvas, where it was clipped. */
+    g.textBaseline='top'; g.fillStyle='#6b6862';
+    var every=Math.max(1, Math.round(c.length/(narrow?4:7)));
+    var marks=[];
+    for(var mi=0; mi<c.length; mi+=every) marks.push(mi);
+    if(marks[marks.length-1]!==c.length-1) marks.push(c.length-1);
+    // The added last mark can crowd the one before it; drop that one.
+    if(marks.length>2 && marks[marks.length-1]-marks[marks.length-2] < every*0.6){
+      marks.splice(marks.length-2,1);
+    }
+    marks.forEach(function(i){
+      var px=X(new Date(c[i].day).getTime());
+      g.textAlign = px<x0+22 ? 'left' : (px>x1-22 ? 'right' : 'center');
+      g.fillText(fmtDay(new Date(c[i].day)), px, y1+8);
+    });
+    g.textAlign='center';
+
+    /* Kept for the cursor line, which is drawn on top of everything and so
+       cannot be part of this pass. */
+    chartAxis={x0:x0,x1:x1,y0:y0,y1:y1,t0:t0,t1:t1,H:H,GAP:GAP,VH:VH};
+
+    if(chartCursor!=null && chartCursor>=x0 && chartCursor<=x1){
+      g.setLineDash([3,3]);
+      g.strokeStyle='rgba(255,255,255,.30)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(chartCursor+0.5,y0); g.lineTo(chartCursor+0.5,y1); g.stroke();
+      g.setLineDash([]);
+      // The date under the cursor, so the line is a reading and not a mark.
+      var ms=t0+(t1-t0)*((chartCursor-x0)/(x1-x0));
+      g.fillStyle='#a8a49c'; g.font='10px system-ui'; g.textBaseline='top';
+      // Same inward alignment as the axis labels, for the same reason.
+      g.textAlign = chartCursor<x0+22 ? 'left' : (chartCursor>x1-22 ? 'right' : 'center');
+      g.fillText(fmtDay(new Date(ms)), chartCursor, y1+8);
+      g.textAlign='center';
+    }
+
+    // Volume, on its own scale, below the date strip.
+    var vy0=H+GAP, vy1=H+GAP+VH-2;
+    var vmax=Math.max.apply(null, c.map(function(x){ return Number(x.volume||0); }));
+    if(vmax>0){
+      /* Width from where the bars actually land.
+
+         Every earlier attempt computed spacing as plot width over day
+         count, and every one was wrong by whatever the window had been
+         padded by -- it runs half a day past the first and last candles,
+         so the real distance between two bars is smaller than that
+         arithmetic suggests and they overlapped.
+
+         Measuring two consecutive positions through X() cannot drift:
+         whatever the window does to the mapping, this is the gap on
+         screen. The narrowest one wins, since days are not evenly spaced
+         once quiet ones drop out.
+
+         A single day has no spacing at all, so it takes a fixed width and
+         sits centred on its own tick. */
+      var bw;
+      if(c.length<2){
+        bw=Math.min(56,(x1-x0)*0.5);
+      }else{
+        var minGap=Infinity;
+        for(var gi=1; gi<c.length; gi++){
+          var gA=X(new Date(c[gi-1].day).getTime());
+          var gB=X(new Date(c[gi].day).getTime());
+          if(gB-gA>0) minGap=Math.min(minGap, gB-gA);
+        }
+        if(!isFinite(minGap)) minGap=(x1-x0)/c.length;
+        var seam=Math.max(2, Math.min(5, minGap*0.22));
+        bw=Math.max(2, Math.min(96, minGap-seam));
+      }
+      c.forEach(function(x){
+        var v=Number(x.volume||0); if(!v) return;
+        var h=(vy1-vy0)*(v/vmax);
+        g.fillStyle='rgba(233,184,74,.62)';
+        g.fillRect(X(new Date(x.day).getTime())-bw/2, vy1-h, bw, h);
+      });
+    }
+  }
+
+  /* ---- range slider ---------------------------------------------------
+
+     A second, flattened drawing of the whole series with a window over it.
+     The preset buttons and this move the same chartWin, so the two cannot
+     disagree about what is on screen.
+     -------------------------------------------------------------------- */
+  function chartBounds(){
+    var all=chartData && chartData.candles;
+    if(!all || !all.length) return null;
+    return { a:new Date(all[0].day).getTime(),
+             b:new Date(all[all.length-1].day).getTime() };
+  }
+
+  function drawMini(){
+    // Hidden below the threshold, so there is nothing to draw into.
+    if(tradingDays()<CHART_MIN_DAYS) return;
+    var cv=$m('mcMini'); if(!cv) return;
+    var box=cv.parentElement.getBoundingClientRect();
+    var W=Math.max(120,Math.floor(box.width)), H=Math.max(30,Math.floor(box.height));
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.width=W*dpr; cv.height=H*dpr;
+    var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+    g.clearRect(0,0,W,H);
+
+    var all=chartData && chartData.candles;
+    var b=chartBounds();
+    if(!all || !all.length || !b) return;
+
+    var pad=5;
+    var vals=all.filter(function(x){ return Number(x.trades||0)>0; })
+                .map(function(x){ return Number(x.volume||0)/Number(x.trades); });
+    if(!vals.length) return;
+    var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+    if(hi===lo){ hi=lo*1.1||1; lo=lo*0.9; }
+    var span=b.b-b.a || 864e5;
+    var X=function(ms){ return (W)*((ms-b.a)/span); };
+    var Y=function(v){ return pad+(H-pad*2)*(1-(v-lo)/(hi-lo)); };
+
+    // Filled, because at this height a line alone is nearly invisible.
+    g.beginPath(); g.moveTo(0,H);
+    var started=false;
+    all.forEach(function(x){
+      var n=Number(x.trades||0); if(!n) return;
+      var px=X(new Date(x.day).getTime()), py=Y(Number(x.volume)/n);
+      if(!started){ g.lineTo(px,py); started=true; } else { g.lineTo(px,py); }
+    });
+    g.lineTo(W,H); g.closePath();
+    g.fillStyle='rgba(241,193,76,.16)'; g.fill();
+
+    g.beginPath(); started=false;
+    all.forEach(function(x){
+      var n=Number(x.trades||0); if(!n) return;
+      var px=X(new Date(x.day).getTime()), py=Y(Number(x.volume)/n);
+      started ? g.lineTo(px,py) : (g.moveTo(px,py), started=true);
+    });
+    g.strokeStyle='rgba(241,193,76,.55)'; g.lineWidth=1; g.stroke();
+  }
+
+  function syncSel(){
+    var sel=$m('mcSel'), wrap=$m('mcSlider');
+    var b=chartBounds();
+    if(!sel || !wrap || !b || !chartWin){ if(sel) sel.style.display='none'; return; }
+    sel.style.display='block';
+    var W=wrap.getBoundingClientRect().width;
+    var span=b.b-b.a || 1;
+    var l=Math.max(0, Math.min(W, W*(chartWin.a-b.a)/span));
+    var r=Math.max(0, Math.min(W, W*(chartWin.b-b.a)/span));
+    if(r-l<10) r=Math.min(W,l+10);
+    sel.style.left=l+'px';
+    sel.style.width=(r-l)+'px';
+  }
+
+  function bindSlider(){
+    var wrap=$m('mcSlider'); if(!wrap || wrap._bound) return;
+    wrap._bound=true;
+
+    var drag=null;   // 'l' | 'r' | 'move'
+    var startX=0, startWin=null;
+
+    var toMs=function(px){
+      var b=chartBounds(); if(!b) return null;
+      var W=wrap.getBoundingClientRect().width;
+      return b.a + (b.b-b.a)*(px/W);
+    };
+
+    var down=function(ev){
+      var b=chartBounds(); if(!b) return;
+      var h=ev.target && ev.target.dataset ? ev.target.dataset.h : null;
+      var r=wrap.getBoundingClientRect();
+      startX=(ev.touches?ev.touches[0].clientX:ev.clientX)-r.left;
+      startWin={a:chartWin.a,b:chartWin.b};
+      if(h==='l'||h==='r'){ drag=h; }
+      else if(ev.target && ev.target.id==='mcSel'){ drag='move'; }
+      else {
+        /* A click on the strip re-centres the window there rather than
+           doing nothing. Dragging an edge is precise; landing near the
+           part you want is faster. */
+        var w=startWin.b-startWin.a, mid=toMs(startX);
+        chartWin={a:Math.max(b.a,mid-w/2), b:Math.min(b.b,mid+w/2)};
+        if(chartWin.b-chartWin.a<w){
+          if(chartWin.a===b.a) chartWin.b=Math.min(b.b,b.a+w);
+          else chartWin.a=Math.max(b.a,b.b-w);
+        }
+        clearPreset(); syncSel(); drawChart(); return;
+      }
+      ev.preventDefault();
+    };
+
+    var move=function(ev){
+      if(!drag) return;
+      var b=chartBounds(); if(!b) return;
+      var r=wrap.getBoundingClientRect();
+      var x=(ev.touches?ev.touches[0].clientX:ev.clientX)-r.left;
+      var W=r.width, span=b.b-b.a;
+      var dMs=(x-startX)/W*span;
+      var MIN=864e5;                       // never narrower than a day
+
+      if(drag==='l'){
+        chartWin={a:Math.min(startWin.b-MIN, Math.max(b.a, startWin.a+dMs)), b:startWin.b};
+      }else if(drag==='r'){
+        chartWin={a:startWin.a, b:Math.max(startWin.a+MIN, Math.min(b.b, startWin.b+dMs))};
+      }else{
+        var w=startWin.b-startWin.a;
+        var a=Math.max(b.a, Math.min(b.b-w, startWin.a+dMs));
+        chartWin={a:a, b:a+w};
+      }
+      clearPreset(); syncSel(); drawChart();
+      ev.preventDefault();
+    };
+
+    var up=function(){ drag=null; };
+
+    wrap.addEventListener('mousedown',down);
+    wrap.addEventListener('touchstart',down,{passive:false});
+    window.addEventListener('mousemove',move);
+    window.addEventListener('touchmove',move,{passive:false});
+    window.addEventListener('mouseup',up);
+    window.addEventListener('touchend',up);
+  }
+
+  /* The presets stop looking selected the moment the window stops matching
+     one of them. A highlighted 7D over an arbitrary five-day window is a
+     label that has stopped being true. */
+  function clearPreset(){
+    document.querySelectorAll('#mcRanges button').forEach(function(b){
+      b.classList.remove('on');
+    });
+  }
+
+  /* Hover targets, rebuilt with the chart. Hit testing against the array is
+     cheaper than asking the canvas what is under the cursor, and the canvas
+     cannot answer that anyway. */
+  var chartHit=[];
+
+  /* Which half of the left column is showing. Reset to the card on every
+     open: arriving at a chart is disorienting when the thing that was
+     clicked was a picture. */
+  function setCardView(v){
+    $m('mArtWrap').hidden = v!=='card';
+    $m('mChartWrap').hidden = v!=='chart';
+    document.querySelectorAll('.mkm-vtab').forEach(function(b){
+      b.classList.toggle('on', b.dataset.v===v);
+    });
+    if(v==='chart'){
+      bindChartHover();
+      bindSlider();
+      // Width is only measurable once it is on screen.
+      var paint=function(){ drawChart(); drawMini(); syncSel(); };
+      requestAnimationFrame(paint);
+      setTimeout(paint, 60);
+    }
+  }
+
+  document.querySelectorAll('.mkm-vtab').forEach(function(b){
+    b.onclick=function(){ setCardView(b.dataset.v); };
+  });
+  document.querySelectorAll('#mcRanges button').forEach(function(b){
+    b.onclick=function(){
+      chartRange=Number(b.dataset.r);
+      document.querySelectorAll('#mcRanges button').forEach(function(o){
+        o.classList.toggle('on', o===b);
+      });
+      // Recomputed rather than nudged: a preset is an absolute window.
+      var bd=chartBounds();
+      chartWin = bd ? {
+        a: chartRange ? Math.max(bd.a, bd.b-(chartRange-0.5)*864e5) : bd.a,
+        b: bd.b
+      } : null;
+      syncSel();
+      drawChart();
+    };
+  });
+  // A canvas does not reflow, so it is redrawn rather than resized.
+  window.addEventListener('resize', function(){
+    if($m('mChartWrap').hidden) return;
+    drawChart(); drawMini(); syncSel();
+  });
+
+  /* A hook for feeding the chart made-up data from the console.
+
+     The market is days old and most cards have a handful of trades, which
+     is not enough to see whether the floor line, the gaps and the volume
+     bars behave -- and waiting for real volume to find out is not a plan. */
+  /* Left on unconditionally for now.
+
+     It was behind ?chartdemo=1, and the query string does not survive the
+     way this page is served locally -- location.search comes back empty
+     however the address is typed. Gating it on something that cannot be
+     read is a gate that only stops the person who needs it.
+
+     Nothing here touches the database or the server: it replaces the
+     numbers the chart is holding in memory, and a refresh puts the real
+     ones back. Take the block out before the market opens. */
+  try{
+    {
+      window.MK_CHART = {
+        _pin: false,
+        set: function(d){ chartData=d; chartWin=null; this._pin=true;
+                          drawChart(); drawMini(); syncSel(); },
+        draw: function(){ drawChart(); drawMini(); syncSel(); },
+        // Lets the real numbers back in, and fetches them straight away.
+        unpin: function(){ this._pin=false; loadChart(); return 'live data'; },
+        get: function(){ return chartData; },
+        demo: function(days){
+          days = days || 30;
+          var base=60, out=[], tr=[], now=Date.now();
+          for(var i=days-1;i>=0;i--){
+            var t0=now-i*864e5, d=new Date(t0); d.setUTCHours(0,0,0,0);
+            if(Math.random()<0.10) continue;          // a day with no trades
+
+            /* A drift with the odd jump, rather than pure noise. Prices
+               that only wander look like static; a market that trends and
+               then turns is what the chart has to be legible against. */
+            base = Math.max(10, base*(1 + (Math.random()-0.47)*0.09
+                                        + (Math.random()<0.08 ? (Math.random()-0.5)*0.3 : 0)));
+
+            var n=3+Math.floor(Math.random()*9), ps=[];
+            for(var k=0;k<n;k++){
+              var p=Math.max(6, base*(1+(Math.random()-0.5)*0.22));
+              ps.push(p);
+              tr.push({price:p.toFixed(2),
+                taker: Math.random()<0.55 ? 'buyer' : 'seller',
+                seller:'0x'+Math.random().toString(16).slice(2,10)+'0000000000000000000000000000000',
+                buyer:'0x'+Math.random().toString(16).slice(2,10)+'1111111111111111111111111111111',
+                // Spread across the day, in order, so the thread joining
+                // the dots runs left to right instead of doubling back.
+                created_at:new Date(d.getTime() + (k+1)/(n+1)*864e5).toISOString()});
+            }
+            out.push({day:d.toISOString(),
+              open:ps[0].toFixed(2), close:ps[ps.length-1].toFixed(2),
+              high:Math.max.apply(null,ps).toFixed(2),
+              low:Math.min.apply(null,ps).toFixed(2),
+              trades:n,
+              volume:ps.reduce(function(a,b){return a+b;},0).toFixed(2)});
+          }
+          tr.sort(function(a,b){ return new Date(a.created_at)-new Date(b.created_at); });
+          chartData={candles:out, trades:tr};
+          chartWin=null;
+          window.MK_CHART._pin=true;
+          drawChart(); drawMini(); syncSel();
+          return out.length+' days / '+tr.length+' trades — pinned. '+
+                 'MK_CHART.unpin() for real data.';
+        }
+      };
+      console.log('%cMK_CHART.demo(30) to fill the chart with sample data',
+                  'color:#E9B84A');
+    }
+  }catch(e){}
+
+  function bindChartHover(){
+    var cv=$m('mChart'), tip=$m('mcTip');
+    if(!cv || cv._bound) return;
+    cv._bound=true;
+
+    var move=function(ev){
+      var r=cv.getBoundingClientRect();
+      var mx=(ev.touches?ev.touches[0].clientX:ev.clientX)-r.left;
+      var my=(ev.touches?ev.touches[0].clientY:ev.clientY)-r.top;
+
+      /* The cursor line is part of the drawing, so following the pointer
+         means repainting. Only when it has actually moved a pixel --
+         mousemove fires far more often than that. */
+      if(chartCursor===null || Math.abs(chartCursor-mx)>=1){
+        chartCursor=mx; drawChart();
+      }
+      var best=null, bd=1e9;
+      chartHit.forEach(function(h){
+        var d=(h.x-mx)*(h.x-mx)+(h.y-my)*(h.y-my);
+        if(d<bd){ bd=d; best=h; }
+      });
+      if(!best || bd>900){ tip.hidden=true; return; }
+      var t=best.t, d=new Date(t.created_at);
+      var side = t.taker !== 'seller' ? 'Buy' : 'Sell';
+      tip.innerHTML='<b>'+d.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'})+
+        ' '+d.toTimeString().slice(0,5)+'</b>'+
+        '<span class="k">TYPE</span><span class="v" style="color:'+
+        (side==='Buy'?'#3fd17a':'#E9B84A')+'">'+side+'</span>'+
+        '<span class="k">PRICE</span><span class="v">'+num(t.price)+'</span> USDT'+
+        '<span class="k">BUYER</span><span class="a">'+shortAddr(t.buyer)+'</span>'+
+        '<span class="k">SELLER</span><span class="a">'+shortAddr(t.seller)+'</span>';
+      tip.hidden=false;
+      // Flips to the other side near the right edge rather than overflowing.
+      var tw=tip.offsetWidth, th=tip.offsetHeight;
+      var lx=best.x+14, ly=best.y+14;
+      if(lx+tw>cv.clientWidth) lx=best.x-tw-14;
+      if(ly+th>cv.clientHeight) ly=best.y-th-14;
+      tip.style.left=Math.max(0,lx)+'px';
+      tip.style.top=Math.max(0,ly)+'px';
+    };
+    cv.addEventListener('mousemove',move);
+    cv.addEventListener('touchstart',move,{passive:true});
+    cv.addEventListener('touchmove',move,{passive:true});
+    cv.addEventListener('mouseleave',function(){
+      tip.hidden=true;
+      if(chartCursor!==null){ chartCursor=null; drawChart(); }
+    });
+  }
+
 
   function setMode(m){
     if(m==='sell' && !(mine && mine.owned.length)) m='buy';
