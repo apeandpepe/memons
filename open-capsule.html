@@ -244,8 +244,14 @@
          listed and capsule payments appear beside them. Someone who has
          just paid looks for the record here, not there, so the way across
          is on this page. Hidden until a wallet is connected: there is no
-         history to show without one. -->
-    <a class="payhist" id="payHist" href="marketplace.html#deposits" hidden>
+         history to show without one.
+
+         target="_top" because this page is also served inside an iframe on
+         the front page. Without it the link replaced the capsule section
+         with the marketplace and left no way back -- the section stayed
+         marketplace for the rest of the visit. -->
+    <a class="payhist" id="payHist" href="marketplace.html#deposits"
+       target="_top" hidden>
       <i class="ti ti-receipt"></i> Payment history
     </a>
     <div class="bnote">
@@ -293,7 +299,7 @@
   var gateOk=false;   // locked until we confirm (pessimistic; closes the load-window gap)
   var GATE_KEYS=['x_connect','follow','retweet'];   // missions sort 1..3
   function showGate(){ var el=document.getElementById('gateNote');
-    if(el){ el.querySelector('p').innerHTML='Complete <a href="mypage-missions.html" style="color:var(--gold)">missions 1&ndash;3</a> to open capsules.'; el.style.display='flex'; } }
+    if(el){ el.querySelector('p').innerHTML='Complete <a href="mypage-missions.html" target="_top" style="color:var(--gold)">missions 1&ndash;3</a> to open capsules.'; el.style.display='flex'; } }
   function hideGate(){ var el=document.getElementById('gateNote'); if(el) el.style.display='none'; }
   function setButtons(on){ ['openOne','openTen'].forEach(function(id){ var b=document.getElementById(id);
     if(!b) return; b.disabled=!on; b.style.opacity=on?'':'.45'; b.style.cursor=on?'':'not-allowed'; }); }
