@@ -59,8 +59,6 @@
     return DEPOSITS_ENABLED;
   }
   refreshFlags();
-  M.depositsEnabled = function () { return DEPOSITS_ENABLED; };
-  M.refreshFlags = refreshFlags;
 
   const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
 
@@ -129,6 +127,15 @@
   let CHAIN = "polygon";                       // current selection
 
   const M = (window.MEMONS = window.MEMONS || {});
+
+  /* Attached after M exists, not beside refreshFlags where they were
+     first written -- M is declared with const further down this file, and
+     touching it earlier threw before anything else in here could run. The
+     whole module died on load, so payTo was missing and the deposit
+     button reported NO_PAY. */
+  M.depositsEnabled  = function () { return DEPOSITS_ENABLED; };
+  M.purchasesEnabled = function () { return PURCHASES_ENABLED; };
+  M.refreshFlags     = refreshFlags;
 
   M.chains = function () { return AVAILABLE.map((k) => ({ key: k, label: CHAINS[k].label })); };
   M.getChain = function () { return CHAIN; };
@@ -238,8 +245,6 @@
   };
 
   // --- main: pay for N pulls -------------------------------------------
-  M.purchasesEnabled = function () { return PURCHASES_ENABLED; };
-
   M.pay = async function pay(numPulls, opts = {}) {
     // Re-read at the moment of paying: a tab left open across a launch
     // would otherwise hold whatever was true when it loaded.
