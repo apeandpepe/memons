@@ -3726,14 +3726,35 @@
      is actually holding. */
   var ordBusy=false, ordTab='open';
 
-  async function ordOpen(){
+  async function ordOpen(tab){
     if(!(window.MEMONS && MEMONS.connected)){ alert('Connect your wallet first.'); return; }
     $m('ordModal').hidden=false;
     document.body.style.overflow='hidden';
-    ordSetTab('open');
+    ordSetTab(tab || 'open');
     ordLoad();
     hisLoad();
   }
+
+  /* Arrived from somewhere that has no order list of its own -- the capsule
+     page sends people here for their receipts, since capsule payments and
+     balance top-ups are the same table and appear on the same tab.
+
+     Waits for a wallet: the panel needs one, and a link followed before
+     connecting would otherwise do nothing but show an alert. */
+  function ordFromHash(){
+    var h = (location.hash || '').toLowerCase();
+    var tab = h.indexOf('#deposits') === 0 ? 'topups'
+            : h.indexOf('#orders')   === 0 ? 'open' : null;
+    if(!tab) return;
+    if(!(window.MEMONS && MEMONS.connected)) return;
+    // Taken out of the address so a refresh does not reopen it.
+    history.replaceState(null, '', location.pathname + location.search);
+    ordOpen(tab);
+  }
+  document.addEventListener('memons:connected', ordFromHash);
+  window.addEventListener('hashchange', ordFromHash);
+  if(document.readyState !== 'loading') setTimeout(ordFromHash, 400);
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(ordFromHash, 400); });
   function ordClose(){
     $m('ordModal').hidden=true;
     document.body.style.overflow='';

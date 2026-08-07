@@ -79,6 +79,12 @@
   .obtn.ghost{background:transparent;border:1px solid var(--line);color:#c9b06a;font-size:13px;letter-spacing:.6px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
   .obtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
   .obtn.ghost .off{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;color:#1a1206;background:var(--gold);font-size:9.5px;font-weight:800;letter-spacing:0;line-height:1.05}
+  .payhist{display:inline-flex;align-items:center;gap:7px;margin-top:10px;
+    font-size:12px;letter-spacing:.4px;color:var(--muted,#9a968e);
+    text-decoration:none;padding:7px 13px;border-radius:8px;
+    border:1px solid rgba(255,255,255,.12);transition:.15s}
+  .payhist:hover{color:#eceae4;border-color:rgba(255,255,255,.28)}
+  .payhist i{font-size:14px}
   .bnote{display:flex;gap:9px;align-items:flex-start;margin-top:16px}
   .bnote .ic{width:18px;height:18px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:11px;font-style:italic;font-family:var(--font-body)}
   .bnote p{font-size:11px;color:#978b62;font-weight:400;line-height:1.5}
@@ -234,6 +240,14 @@
       <p>Complete missions 1–3 to open capsules.</p>
     </div>
     <button class="obtn gold" id="chargeBtn" style="margin-top:12px">CHARGE PULLS · USDT</button>
+    <!-- Receipts live in the marketplace, where balance top-ups are already
+         listed and capsule payments appear beside them. Someone who has
+         just paid looks for the record here, not there, so the way across
+         is on this page. Hidden until a wallet is connected: there is no
+         history to show without one. -->
+    <a class="payhist" id="payHist" href="marketplace.html#deposits" hidden>
+      <i class="ti ti-receipt"></i> Payment history
+    </a>
     <div class="bnote">
       <span class="ic">i</span>
       <p>Charge pull credits with USDT, then open capsules anytime.</p>
@@ -515,15 +529,26 @@ if(document.documentElement.classList.contains('embed')){
     if(note) note.textContent = 'Purchases open once the capsule pricing is finalised.';
   }
 
-  if(document.readyState !== 'loading') applyLock();
-  else document.addEventListener('DOMContentLoaded', applyLock);
+  function showHistoryLink(){
+    var a = document.getElementById('payHist');
+    if(a) a.hidden = !(window.MEMONS && MEMONS.connected);
+  }
+
+  if(document.readyState !== 'loading'){ applyLock(); showHistoryLink(); }
+  else document.addEventListener('DOMContentLoaded', function(){
+    applyLock(); showHistoryLink();
+  });
+  document.addEventListener('memons:connected', showHistoryLink);
 
   /* The answer changes twice after load: once when the flags come back,
      and again when a wallet connects and the tester question can be
      asked at all. */
   document.addEventListener('memons:connected', applyLock);
   var n = 0;
-  var t = setInterval(function(){ applyLock(); if(++n > 12) clearInterval(t); }, 1000);
+  var t = setInterval(function(){
+    applyLock(); showHistoryLink();
+    if(++n > 12) clearInterval(t);
+  }, 1000);
 })();
 </script>
 <style>
