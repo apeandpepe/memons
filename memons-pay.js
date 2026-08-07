@@ -222,26 +222,61 @@
 
   // Retry every unfinished payment. Safe to call any time: the server is
   // idempotent (already-credited txs just return duplicate:true).
+  /* A hash that never reaches the chain never stops being retried, and
+     "speed up" or "cancel" in MetaMask produces exactly that: the original
+     is replaced and the one written down here is orphaned. Two of those
+     accumulated during testing and sat in the queue ahead of the real
+     transfer, which is why a deposit that confirms in fifteen seconds took
+     three minutes to appear.
+
+     Ten minutes. Polygon settles in seconds and Ethereum in a couple of
+     minutes, so anything still missing after ten was replaced or dropped
+     and is not coming. */
+  const PENDING_TTL = 10 * 60 * 1000;
+
   M.recoverPayments = async function recoverPayments(opts = {}) {
     const onStatus = opts.onStatus || (() => {});
     const token = getToken();
     if (!token) return { recovered: 0, pending: loadPending().length };
-    let recovered = 0;
+
+    const now = Date.now();
+    const live = [];
     for (const p of loadPending()) {
+      if (now - (p.at || 0) > PENDING_TTL) { onStatus("expired", p.tx); continue; }
+      live.push(p);
+    }
+    if (live.length !== loadPending().length) savePending(live);
+
+    /* Asked all at once rather than one after another. Serially, a hash
+       the node cannot find holds up every entry behind it for the length
+       of its own round trip. */
+    const out = await Promise.all(live.map(async (p) => {
       try {
         const { res, j } = await verifyTx(p.tx, token, p.chain);
-        if (res.ok && j.ok) { removePending(p.tx); recovered += j.granted || 0; onStatus("credited", p.tx, j.granted); continue; }
+        if (res.ok && j.ok) return { tx: p.tx, drop: true, granted: j.granted || 0, st: "credited" };
         // still confirming -> keep it for next time
-        if (res.status === 202 || j.error === "TX_NOT_FOUND" || j.error === "PENDING_CONFIRMATIONS") { onStatus("pending", p.tx); continue; }
+        if (res.status === 202 || j.error === "TX_NOT_FOUND" || j.error === "PENDING_CONFIRMATIONS") {
+          return { tx: p.tx, drop: false, st: "pending" };
+        }
         // permanently rejected (failed tx / wrong amount) -> stop retrying
         if (j.error === "TX_FAILED" || j.error === "AMOUNT_NO_MATCHING_PACKAGE" ||
             j.error === "NO_TOKEN_TRANSFER_TO_RECEIVER" || j.error === "SENDER_MISMATCH") {
-          removePending(p.tx); onStatus("rejected", p.tx, j.error); continue;
+          return { tx: p.tx, drop: true, granted: 0, st: "rejected", err: j.error };
         }
-        onStatus("pending", p.tx);   // unknown/transient error -> retry later
-      } catch (e) { /* network hiccup: keep it and retry later */ }
+        return { tx: p.tx, drop: false, st: "pending" };
+      } catch (e) {
+        return { tx: p.tx, drop: false, st: "pending" };  // network hiccup
+      }
+    }));
+
+    let recovered = 0;
+    const keep = [];
+    for (const r of out) {
+      if (r.drop) { recovered += r.granted || 0; onStatus(r.st, r.tx, r.granted || r.err); }
+      else { keep.push(live.find((p) => p.tx === r.tx)); onStatus("pending", r.tx); }
     }
-    return { recovered, pending: loadPending().length };
+    savePending(keep);
+    return { recovered, pending: keep.length };
   };
 
   // --- main: pay for N pulls -------------------------------------------
@@ -452,15 +487,35 @@
       } catch (e) {} finally { busy = false; }
     }
 
-    let fast = null, slow = null;
+    let waitTok = null, poll = null;
+    let since = Date.now();
+
     function stop() {
-      if (fast) { clearInterval(fast); fast = null; }
-      if (slow) { clearInterval(slow); slow = null; }
+      if (waitTok) { clearInterval(waitTok); waitTok = null; }
+      if (poll) { clearTimeout(poll); poll = null; }
     }
 
-    // A second apart until a wallet turns up, then every fifteen.
-    fast = setInterval(function () { if (!getToken()) attempt(); }, 1000);
-    slow = setInterval(function () { if (!document.hidden) attempt(); }, 15000);
+    /* Close together at first, further apart later.
+
+       Polygon needs five blocks, which is ten to fifteen seconds, so the
+       answer usually arrives within the first minute -- and a flat fifteen
+       second gap meant a transfer confirming just after a check waited
+       most of another one for nothing. Three seconds covers that window.
+
+       Past a minute the delay is no longer the chain, and asking four
+       times as often will not change it. */
+    function schedule() {
+      if (poll) clearTimeout(poll);
+      const elapsed = Date.now() - since;
+      const gap = elapsed < 60000 ? 3000 : 15000;
+      poll = setTimeout(function () {
+        if (!document.hidden) attempt();
+        schedule();
+      }, gap);
+    }
+
+    waitTok = setInterval(function () { if (!getToken()) attempt(); }, 1000);
+    schedule();
     attempt();
 
     document.addEventListener("visibilitychange", function () {
