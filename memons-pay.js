@@ -12,19 +12,60 @@
 //  The deployed verify-payment function must be in the SAME mode.
 // =====================================================================
 (function () {
-  // Capsule purchases are closed until the pricing/reward model is confirmed.
-  // Set to true to open them (the server has the same switch and must match).
-  const PURCHASES_ENABLED = false;
-  // Separate from capsule purchases: the marketplace opens at season 1, and
-  // until then a top-up would credit a balance nothing can be spent on.
-  const DEPOSITS_ENABLED = true;
+  // Capsule purchases, from the same row as deposits. Was a constant here
+  // and another on the server, with the same ordering trap.
+  let PURCHASES_ENABLED = false;
+
+  /* Prices come from the same row as the switches. They were constants
+     here and in verify-payment, and the two had to agree exactly -- the
+     client decides what to send, the server decides what an amount bought,
+     and a mismatch produces a transfer nobody can identify.
+
+     Defaults hold until the first lookup answers, so a slow network shows
+     the usual figures rather than zero. */
+  let SINGLE_USDT = 2;       // 1 pull
+  let BUNDLE10_USDT = 18;    // 10 pulls (10% off)
+  /* Deposits are governed by the database, not by this file.
+
+     It used to be a constant here and another in verify-payment, and both
+     had to be flipped in the right order or the pay button was live
+     against a server that would refuse the transfer. One value, read by
+     both, cannot disagree with itself.
+
+     Closed until told otherwise: a failed lookup leaves the button shut
+     rather than open. */
+  let DEPOSITS_ENABLED = false;
+
+  const SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
+  const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+  async function refreshFlags() {
+    try {
+      const r = await fetch(SB_URL + "/rest/v1/rpc/site_flags", {
+        method: "POST",
+        headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON,
+                   "content-type": "application/json" },
+        body: "{}",
+      });
+      if (!r.ok) return DEPOSITS_ENABLED;
+      const j = await r.json();
+      DEPOSITS_ENABLED  = !!(j && j.deposits);
+      PURCHASES_ENABLED = !!(j && j.purchases);
+      if (j && j.prices) {
+        if (j.prices.single   > 0) SINGLE_USDT   = Number(j.prices.single);
+        if (j.prices.bundle10 > 0) BUNDLE10_USDT = Number(j.prices.bundle10);
+      }
+    } catch (e) {}
+    return DEPOSITS_ENABLED;
+  }
+  refreshFlags();
+  M.depositsEnabled = function () { return DEPOSITS_ENABLED; };
+  M.refreshFlags = refreshFlags;
 
   const TESTNET = false; // <-- MAINNET (real USDT). Set to true for Amoy testnet.
 
   const API = "https://neixdrtamznrooougcda.supabase.co/functions/v1";
   const RECEIVER = "0xcCe26E367aC0c04e0a9ADD40e1141d6eaBF93b8c";
-  const SINGLE_USDT = 2;       // 1 pull
-  const BUNDLE10_USDT = 18;    // 10 pulls (10% off)
   const TRANSFER_SELECTOR = "0xa9059cbb"; // transfer(address,uint256)
 
   // --- supported chains ------------------------------------------------
@@ -200,15 +241,15 @@
   M.purchasesEnabled = function () { return PURCHASES_ENABLED; };
 
   M.pay = async function pay(numPulls, opts = {}) {
+    // Re-read at the moment of paying: a tab left open across a launch
+    // would otherwise hold whatever was true when it loaded.
+    await refreshFlags();
     if (!PURCHASES_ENABLED) {
       throw new Error("Capsule purchases are temporarily closed. Please try again later.");
     }
     const pulls = parseInt(numPulls, 10);
     if (!Number.isInteger(pulls) || pulls < 1) throw new Error("Invalid pull count.");
-    // Read the active provider through the shared accessor. On mobile this is
-    // the WalletConnect provider, which cannot always be placed on
-    // window.ethereum, so reading the global directly fails after a page load.
-    const eth = window.MEMONS_ETH ? window.MEMONS_ETH() : window.ethereum;
+    const eth = await activeWallet();
     if (!eth) throw new Error("No wallet found. Connect your wallet first.");
     const token = getToken();
     if (!token) throw new Error("Please connect your wallet first.");
@@ -269,20 +310,54 @@
              message: "Payment sent but not confirmed yet. It will be credited automatically — you can safely leave this page." };
   };
 
+  /* The active wallet, waking the session up if it has gone quiet.
+
+     A signed-in visitor on a phone is signed in because the token is in
+     localStorage. The WalletConnect session that produced it is not
+     restored by that -- every navigation is a fresh page, and the pairing
+     only comes back when something asks for it. Nothing did, so the first
+     payment of a visit found no provider and told someone looking at
+     their own address in the header that no wallet was connected.
+
+     restore() reopens a session that already exists and returns null if
+     there is none, so it costs a moment and never prompts. connect() is
+     the fallback and does prompt -- right at that point, because by then
+     there really is nothing to send with. */
+  async function activeWallet() {
+    let eth = window.MEMONS_ETH ? window.MEMONS_ETH() : window.ethereum;
+    if (eth) return eth;
+
+    const wc = window.MEMONS_WC;
+    if (wc) {
+      if (wc.restore) { try { await wc.restore(); } catch (e) {} }
+      eth = window.MEMONS_ETH ? window.MEMONS_ETH() : window.ethereum;
+      if (eth) return eth;
+
+      if (wc.connect) { try { await wc.connect(); } catch (e) {} }
+      eth = window.MEMONS_ETH ? window.MEMONS_ETH() : window.ethereum;
+      if (eth) return eth;
+    }
+    return null;
+  }
+
   /* Send an arbitrary USDT amount to a given address.
      pay() prices capsules and knows where they go; a marketplace balance
      top-up is neither, so the amount and the destination both come from the
      order the user created. Verification is the same endpoint: the server
      works out what the transfer was for from the address it landed on. */
   M.payTo = async function payTo(to, amountUsdt, opts = {}) {
-    if (!DEPOSITS_ENABLED) {
+    /* Checked again at the moment of paying, not only at page load. A tab
+       left open through a launch would otherwise still believe deposits
+       were shut -- or, worse, still believe they were open after they
+       closed. */
+    if (!(await refreshFlags())) {
       throw new Error("Balance top-ups are not open yet.");
     }
     if (!/^0x[0-9a-fA-F]{40}$/.test(String(to || ""))) throw new Error("Invalid destination address.");
     const amt = Number(amountUsdt);
     if (!(amt > 0)) throw new Error("Invalid amount.");
 
-    const eth = window.MEMONS_ETH ? window.MEMONS_ETH() : window.ethereum;
+    const eth = await activeWallet();
     if (!eth) throw new Error("No wallet found. Connect your wallet first.");
     const token = getToken();
     if (!token) throw new Error("Please connect your wallet first.");

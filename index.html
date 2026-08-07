@@ -589,13 +589,7 @@
 
   function pick(el){
     if(!el) return;
-    /* 600, not the 1040 the nav uses. The two files are different shapes --
-       1200x752 against 720x1264 -- so this is choosing an orientation, not a
-       size, and the point it turns over is where the screen stops being
-       taller than it is wide. A fold opened out lands on the desktop side
-       and gets the landscape file; every phone held upright stays on the
-       portrait one. Matches the CSS at the top of the file. */
-    var small = window.matchMedia && window.matchMedia('(max-width:600px)').matches;
+    var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
     var slow  = wantsLight();
 
     var src = small
@@ -607,35 +601,13 @@
        auto in the tag the browser began fetching on src assignment and
        autoplay then started its own read, so the file came down twice. */
     el.preload = slow ? 'metadata' : 'auto';
-    /* Reassigning src restarts playback from the first frame, so the same
-       address must never be written twice. */
-    if (el.getAttribute('src') === src) return;
     el.src = src;
     var p = el.play(); if(p && p.catch) p.catch(function(){});
 
     // Leaves a trace for anyone checking why they got the file they got.
     try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
   }
-
-  var introEl = document.getElementById('introVid');
-  pick(introEl);
-
-  /* A folding phone changes the viewport without reloading anything, and the
-     two files are different shapes -- 1200x752 against 720x1264. A frame
-     chosen while the phone was shut is the wrong one the moment it opens,
-     and it showed: the landscape file on the cover screen with the picture
-     stranded in the middle, the portrait one opened out standing twice the
-     height of the screen.
-
-     Listening for the crossing rather than for resize. Resize fires
-     continuously while a desktop window is dragged, and every call that
-     changed the address would send the video back to its first frame. */
-  if (window.matchMedia) {
-    var mqShape = window.matchMedia('(max-width:600px)');
-    var repick = function(){ pick(introEl); };
-    if (mqShape.addEventListener) mqShape.addEventListener('change', repick);
-    else if (mqShape.addListener) mqShape.addListener(repick);
-  }
+  pick(document.getElementById('introVid'));
 
 
   /* The sections sit side by side, so lazy iframes count as nearly visible
@@ -691,7 +663,7 @@
 
      The iframes keep data-src, so they still only load when the visitor
      scrolls near them -- a section nobody reaches costs nothing. -->
-<section id="about" class="embedsec veiled">
+<section id="about" class="embedsec veiled" data-section="about">
   <iframe class="embed abembed" data-src="about.html" title="ABOUT MEMONS" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
   <div class="veil">
     <div class="soon">
@@ -704,7 +676,7 @@
 </section>
 
 <!-- MEMONS VAULT -->
-<section id="vault" class="embedsec veiled">
+<section id="vault" class="embedsec veiled" data-section="vault">
   <iframe class="embed vembed" data-src="vault.html#embed" title="MEMONS VAULT" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
   <div class="veil">
     <div class="soon">
@@ -722,7 +694,7 @@
 </section>
 
 <!-- MARKETPLACE -->
-<section id="marketplace" class="embedsec veiled">
+<section id="marketplace" class="embedsec veiled" data-section="marketplace">
   <iframe class="embed" data-src="marketplace.html#embed" title="MARKETPLACE" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
   <div class="veil">
     <div class="soon">
@@ -842,69 +814,9 @@
     .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
     .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
     .head .brand{font-size:15px !important}
-    :root{--headh:60px; --vgap:12px}
+    .vhero .vbg{object-fit:contain !important;object-position:center;background:#000}
     .vhero{min-height:100svh !important}
-    /* The cue is for a pointer. On a touch screen the gesture is already
-       the obvious one, and the label was landing over the artwork. */
-    .vscroll{display:none !important}
   }
-
-  /* The cover screen of a folding phone is around 350px across, and the
-     header still had the spacing it was drawn with: the wallet button ran
-     past the right edge with half its label gone. Tightened rather than
-     dropped -- connecting a wallet is the one thing the header is for, and
-     an icon on its own does not say so. */
-  @media(max-width:430px){
-    :root{--headh:54px}
-    .head{padding-left:10px !important;padding-right:10px !important;gap:6px !important}
-    .head .brand img{height:26px !important}
-    .head .brand{font-size:13px !important;letter-spacing:1px !important;gap:7px !important}
-    .head .hr{gap:6px !important}
-    .wbtn,.mpbtn,.wicon{padding:7px 8px !important;font-size:9.5px !important;
-      letter-spacing:.6px !important;gap:5px !important}
-    .wbtn svg,.wicon svg{width:12px !important;height:12px !important}
-    .m-burger{padding:7px !important}
-  }
-
-  /* The intro video below the nav breakpoint.
-
-     The frame is exactly as wide as the screen and its height follows from
-     the file's own proportions. Whatever is left over above and below stays
-     black, which is where the header and the scroll cue then sit.
-
-     Not object-fit. contain fits inside the box on whichever axis binds
-     first, so the moment the box is a different shape from the video the
-     bars move to the sides instead of the top -- which is what pinning the
-     height to 80svh caused. Setting the width and letting the height follow
-     means the width is never the axis that gives.
-
-     A video is a replaced element: height:auto reads the file's aspect
-     ratio, but width:auto would read its pixel width and put a 720px frame
-     on a 360px screen. Only one of the two can be auto, and it is height.
-
-     A fold opened out is handed the landscape file instead, at 600px in
-     pick() below. The portrait file is 720x1264, and a frame that wide made
-     from it would stand about twice the height of the screen. */
-  @media(max-width:1040px){
-    .vhero .vbg{
-      /* Centred in the space below the header, not in the screen. The
-         header is fixed and its background is transparent, so it floats
-         over whatever is behind it; centring in the whole screen put the
-         top of the frame underneath it. On a cover screen there is only
-         about 50px of slack to start with, so the wallet button ended up
-         sitting on the artwork.
-
-         --vgap is the gap left under the header. Raising it pushes the
-         picture down and, once the screen runs out of room, narrows it --
-         so a wider band above costs a thin one at the sides. */
-      top:calc(50% + (var(--headh, 60px) + var(--vgap, 12px)) / 2);
-      left:0; right:auto; bottom:auto;
-      transform:translateY(-50%);
-      width:100%; height:auto;
-      max-height:calc(100svh - var(--headh, 60px) - var(--vgap, 12px));
-      object-fit:contain; background:#000}
-  }
-
 </style>
 <!-- Event notice, shown once. The banner links through to the full post;
      the popup itself only has to be seen. -->
@@ -1326,6 +1238,60 @@
     requestAnimationFrame(show);
   }
 
+})();
+</script>
+<script>
+/* Which sections are open, from the database rather than from this file.
+
+   Each one used to be unveiled by deleting a class and deploying, which
+   is a developer's job on a day when nobody may want to involve one. The
+   admin page writes site_sections; this reads it.
+
+   Closed is the default and the markup ships closed, so a failed request,
+   a slow network or a database that is unreachable all leave the page
+   exactly as it renders now. Nothing opens by accident. */
+(function () {
+  var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+  function unveil(sec) {
+    sec.classList.remove('veiled');
+    var veil = sec.querySelector(':scope > .veil');
+    if (veil) veil.remove();
+    /* The iframe was left inert while it sat behind glass. Restoring it
+       here rather than in the markup keeps the closed state genuinely
+       closed -- a keyboard could not reach into it either. */
+    var f = sec.querySelector(':scope > iframe');
+    if (f) { f.removeAttribute('tabindex'); f.removeAttribute('aria-hidden'); }
+  }
+
+  function apply(open) {
+    document.querySelectorAll('[data-section]').forEach(function (sec) {
+      if (open[sec.dataset.section]) unveil(sec);
+    });
+  }
+
+  function load() {
+    fetch(SB_URL + '/rest/v1/rpc/site_flags', {
+      method: 'POST',
+      headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON,
+                 'content-type': 'application/json' },
+      body: '{}'
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.sections) apply(j.sections); })
+      .catch(function () {});
+  }
+
+  load();
+  /* Picked up without a reload, so a section opened during a launch
+     reaches people already sitting on the page. Only while the tab is in
+     front -- a background tab polling for an hour is a request nobody
+     asked for. */
+  setInterval(function () { if (!document.hidden) load(); }, 20000);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) load();
+  });
 })();
 </script>
 </body>
