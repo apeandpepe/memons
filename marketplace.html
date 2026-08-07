@@ -1275,6 +1275,12 @@
 </style>
 </head>
 <body>
+<!-- Realtime only. Everything else on this page talks to PostgREST over
+     plain fetch and has no need of the client library; live order-book
+     updates are a websocket, which does. Loaded async and failure-tolerant:
+     if it never arrives the market still works, just without pushed
+     updates. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
@@ -1953,9 +1959,15 @@
     await Promise.all([loadDepth(), loadHistory()]);
     renderOwnOrders();
     setMode(mine && mine.owned.length ? 'sell' : 'buy');
+
+    // From here the book keeps itself current without anyone touching it.
+    connectLive(cur.card_id);
   }
 
   function closeCard(){
+    // Dropped on the way out. A socket per card visited would accumulate
+    // across an afternoon of browsing.
+    stopLive();
     $m('modal').hidden=true;
     document.body.style.overflow='';
     cur=null;
@@ -2626,6 +2638,69 @@
     }
   }
 
+  /* ---- live updates ---------------------------------------------------
+
+     One seam between "the market changed" and "redraw the panel".
+
+     Everything the page does about live data goes through onMarketChange.
+     Today that is Supabase Realtime, which is a websocket the database
+     itself publishes to; if this ever outgrows the connection limit and
+     moves to a websocket of our own, or falls back to polling, only the
+     inside of connectLive changes. No screen code knows which it is.
+
+     Scoped to the open card. A wallet watching one card does not need to
+     hear about the other ninety-nine, and filtering server-side keeps the
+     socket quiet.
+     -------------------------------------------------------------------- */
+  var liveSub = null;      // current subscription, whatever transport
+  var liveTimer = null;    // coalescing timer
+  var liveCard = null;
+
+  /* Bursts arrive together -- a fill writes to trades, listings and
+     balances in one transaction, and each is a separate message. Redrawing
+     per message would fetch the book three times for one event. */
+  function onMarketChange(){
+    if(liveTimer) return;
+    liveTimer=setTimeout(function(){
+      liveTimer=null;
+      if(!cur || $m('modal').hidden) return;
+      loadDepth();
+      loadHistory();
+      // The wallet's own rows only matter if there is a wallet.
+      if(window.MEMONS && MEMONS.connected){ loadMine().then(renderOwnOrders); }
+    }, 250);
+  }
+
+  function stopLive(){
+    if(liveSub){
+      try{ liveSub.unsubscribe(); }catch(e){}
+      liveSub=null;
+    }
+    liveCard=null;
+    if(liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
+  }
+
+  function connectLive(cardId){
+    if(liveCard===cardId && liveSub) return;
+    stopLive();
+    liveCard=cardId;
+
+    var lib = window.supabase;
+    if(!lib || !lib.createClient) return;   // library never arrived
+
+    try{
+      if(!window._mkSb) window._mkSb = lib.createClient(SB_URL, SB_ANON);
+      var sb = window._mkSb;
+      var f = 'card_id=eq.'+cardId;
+
+      liveSub = sb.channel('mk:'+cardId)
+        .on('postgres_changes',{event:'*',schema:'public',table:'listings',filter:f}, onMarketChange)
+        .on('postgres_changes',{event:'*',schema:'public',table:'offers',  filter:f}, onMarketChange)
+        .on('postgres_changes',{event:'*',schema:'public',table:'trades',  filter:f}, onMarketChange)
+        .subscribe();
+    }catch(e){ liveSub=null; }
+  }
+
   /* ---- range slider ---------------------------------------------------
 
      A second, flattened drawing of the whole series with a window over it.
@@ -2823,6 +2898,16 @@
     if($m('mChartWrap').hidden) return;
     drawChart(); drawMini(); syncSel();
   });
+
+  /* A phone that goes to the wallet app and comes back may have had the
+     socket dropped while it was away. Reconnecting on return costs nothing
+     when it is still alive -- connectLive is a no-op for the same card. */
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden || !cur || $m('modal').hidden) return;
+    connectLive(cur.card_id);
+    onMarketChange();
+  });
+  window.addEventListener('pagehide', stopLive);
 
   /* A hook for feeding the chart made-up data from the console.
 
