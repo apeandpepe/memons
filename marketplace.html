@@ -588,11 +588,20 @@
   /* Below this the third column starves the trade panel, so the book moves
      under the other two and gets the full width instead. */
   @media(max-width:1100px){
-    .mkm-top{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px}
-    .mkm-left{grid-column:1;grid-row:1}
-    .mkm-act{grid-column:2;grid-row:1}
-    .mkm-book{grid-column:1/-1;grid-row:2;min-height:0;margin-top:2px}
-    
+    /* The card takes the whole first row and the other two share the
+       second, the same shape the narrower breakpoint already used.
+
+       Keeping the card beside the trade panel here left it about half the
+       width -- and the chart with it, which is the view this column exists
+       for below a certain size. The book and the buy form are both lists
+       of short numbers and lose nothing by sharing a row. */
+    .mkm-top{grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:18px}
+    .mkm-left{grid-column:1/-1;grid-row:1}
+    .mkm-book{grid-column:1;grid-row:2;min-height:0;margin-top:2px}
+    .mkm-act{grid-column:2;grid-row:2}
+    /* No longer capped at 380: it is the full row now, and the chart wants
+       the width. The image is centred and bounded on its own. */
+    .mkm-art{max-width:340px}
   }
   @media(max-width:760px){
     .mkmodal{padding:0}
@@ -1240,10 +1249,9 @@
   .mkm-book{min-height:0;overflow:hidden;height:100%}
   .mkm-book .mkm-depth{flex:1 1 0;min-height:0;height:auto;max-height:none;overflow-y:auto}
   @media(max-width:1100px){
-    /* Below this the book sits under the other two at full width, where the
-       card no longer constrains it. */
+    /* The card is no longer beside it, so nothing sets its height. */
     .mkm-book{height:auto}
-    .mkm-book .mkm-depth{flex:none;height:calc(13 * 27px)}
+    .mkm-book .mkm-depth{flex:none;height:calc(8 * 27px)}
   }
 
   /* Eight rows each, fixed. The panel is the same height whether the book
@@ -2840,6 +2848,13 @@
         draw: function(){ drawChart(); drawMini(); syncSel(); },
         // Lets the real numbers back in, and fetches them straight away.
         unpin: function(){ this._pin=false; loadChart(); return 'live data'; },
+        /* The day threshold, so a card with two days of real trades can
+           still be checked against real trades rather than against made-up
+           ones. Resets on reload. */
+        minDays: function(n){
+          if(n!=null){ CHART_MIN_DAYS=n; drawChart(); drawMini(); syncSel(); }
+          return CHART_MIN_DAYS;
+        },
         get: function(){ return chartData; },
         demo: function(days){
           days = days || 30;
