@@ -4066,7 +4066,12 @@
     try{
       if(!window.MEMONS.payTo) throw new Error('NO_PAY');
       b.textContent='CONFIRM IN WALLET…';
+      /* An order exists, which means the market function created one --
+         and it only does that for a wallet allowed to deposit, open switch
+         or tester list. The client's own copy of the switch cannot know
+         which, so it defers here and lets verify-payment decide. */
       await MEMONS.payTo(tuRecv, Number(tuOrder.amount_usdt), {
+        allowClosed:true,
         onStatus:function(st){
           if(st==='sending')    $m('tuNote2').textContent='Confirm the transfer in your wallet.';
           if(st==='confirming') $m('tuNote2').textContent='Waiting for confirmations…';

@@ -349,8 +349,15 @@
     /* Checked again at the moment of paying, not only at page load. A tab
        left open through a launch would otherwise still believe deposits
        were shut -- or, worse, still believe they were open after they
-       closed. */
-    if (!(await refreshFlags())) {
+       closed.
+
+       The refusal is soft: the page cannot tell whether this wallet is on
+       the market's tester list, so a closed switch is not proof that this
+       particular transfer will be rejected. verify-payment makes that
+       call, with the address in front of it, and the caller passes
+       allowClosed when it has already been told the order is valid --
+       which only happens if the market function created one. */
+    if (!(await refreshFlags()) && !opts.allowClosed) {
       throw new Error("Balance top-ups are not open yet.");
     }
     if (!/^0x[0-9a-fA-F]{40}$/.test(String(to || ""))) throw new Error("Invalid destination address.");
