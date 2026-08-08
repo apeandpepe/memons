@@ -4113,6 +4113,7 @@
     try{
       if(!window.MEMONS.payTo) throw new Error('NO_PAY');
       b.textContent='CONFIRM IN WALLET…';
+      $m('tuNote2')._t0=0;
       /* An order exists, which means the market function created one --
          and it only does that for a wallet allowed to deposit, open switch
          or tester list. The client's own copy of the switch cannot know
@@ -4120,8 +4121,23 @@
       var r = await MEMONS.payTo(tuRecv, Number(tuOrder.amount_usdt), {
         allowClosed:true,
         onStatus:function(st){
+          if(st==='ordering')   $m('tuNote2').textContent='Preparing…';
           if(st==='sending')    $m('tuNote2').textContent='Confirm the transfer in your wallet.';
-          if(st==='confirming') $m('tuNote2').textContent='Waiting for confirmations…';
+          if(st==='confirming'){
+            /* After a while, say what a long wait usually means. Polygon
+               settles in seconds; a minute of "waiting" is not a slow
+               confirmation, it is a transaction the network has not picked
+               up -- and the person is looking at a screen that gives them
+               no reason to check their wallet. */
+            var el=$m('tuNote2');
+            if(!el._t0) el._t0=Date.now();
+            var secs=Math.round((Date.now()-el._t0)/1000);
+            el.textContent = secs < 45
+              ? 'Waiting for confirmations…'
+              : 'Still waiting (' + secs + 's). If your wallet shows this as '
+                + 'pending, the network has not picked it up yet — you can '
+                + 'close this page, it will be credited when it confirms.';
+          }
         }
       });
 

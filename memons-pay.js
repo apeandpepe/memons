@@ -110,8 +110,19 @@
         ? "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582"   // Amoy test USDC
         : "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",  // Polygon USDT
       decimals: 6,
-      // Polygon enforces a ~25 gwei priority fee floor; wallets often default below it
-      gas: { maxPriorityFeePerGas: "0x6FC23AC00", maxFeePerGas: "0x174876E800" },
+      /* Fees left to the wallet.
+
+         These were pinned at 30 and 100 gwei because Polygon enforces a
+         priority floor around 25 and wallets once defaulted below it. That
+         is no longer true, and a fixed ceiling is worse than no ceiling:
+         when the network is busy the real base fee climbs past 100 and a
+         transaction capped there is simply never picked up. It sits in the
+         wallet marked pending, forever, while the page waits for a
+         confirmation that cannot arrive.
+
+         MetaMask reads the current base fee and adds a margin. Letting it
+         do so is the difference between a slow deposit and a stuck one. */
+      gas: null,
       params: TESTNET ? {
         chainId: "0x13882",
         chainName: "Polygon Amoy Testnet",
