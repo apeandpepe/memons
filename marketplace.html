@@ -4086,10 +4086,23 @@
       tuRecv=r.receiver||tuRecv;
       tuShowOrder(r.order);
     }catch(e){
+      /* One message for every failure told the reader to try again when
+         trying again could not work -- a dead session, a wallet that is
+         not on the tester list, and an amount out of range all read the
+         same. On a phone the session is the usual one: the tab is
+         discarded while the wallet app is in front, and the header still
+         shows an address. */
       var msg=String((e&&e.message)||e);
-      $m('tuNote1').textContent = msg.indexOf('AMOUNT_OUT_OF_RANGE')>=0
-        ? 'That amount is outside the allowed range.'
-        : 'Could not start the deposit. Please try again.';
+      var note=$m('tuNote1');
+      if(msg.indexOf('AMOUNT_OUT_OF_RANGE')>=0){
+        note.textContent='That amount is outside the allowed range.';
+      }else if(msg.indexOf('SESSION_EXPIRED')>=0 || msg.indexOf('AUTH')>=0){
+        note.textContent='Your session expired. Reconnect your wallet and try again.';
+      }else if(msg.indexOf('MARKET_CLOSED')>=0){
+        note.textContent='Deposits are not open yet.';
+      }else{
+        note.textContent='Could not start the deposit. ('+msg+')';
+      }
     }finally{ b.disabled=false; b.textContent=lbl; }
   }
 
