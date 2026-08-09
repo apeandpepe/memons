@@ -3346,13 +3346,25 @@
         'A new request can be made once this one is settled.';
       loadBalance();
     }catch(e){
+      /* Named reasons, with the raw error for anything unnamed. One
+         catch-all telling the reader to try again was useless whenever
+         trying again could not work -- a closed switch, a dead session and
+         an amount under the minimum all read the same. */
       var m2=String((e&&e.message)||e);
-      $m('wdNote').className='mkm-note bad';
-      $m('wdNote').textContent = m2.indexOf('WITHDRAWAL_PENDING')>=0
-        ? 'You already have a withdrawal waiting.'
-        : (m2.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.'
-        : (m2.indexOf('BAD_CHAIN')>=0 ? 'That network is not available.'
-                                      : 'Could not submit. Please try again.'));
+      var note=$m('wdNote');
+      note.className='mkm-note bad';
+      var min=(m2.match(/BELOW_MIN_WITHDRAWAL:([\d.]+)/)||[])[1];
+      note.textContent =
+          m2.indexOf('WITHDRAWAL_PENDING')>=0   ? 'You already have a withdrawal waiting.'
+        : m2.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.'
+        : m2.indexOf('BAD_CHAIN')>=0            ? 'That network is not available.'
+        : min                                   ? 'The minimum withdrawal is '+num(min)+' USDT.'
+        : m2.indexOf('KYC_REQUIRED')>=0          ? 'Identity verification is required before withdrawing.'
+        : m2.indexOf('WITHDRAWALS_CLOSED')>=0   ? 'Withdrawals are not open yet.'
+        : m2.indexOf('SESSION_EXPIRED')>=0      ? 'Your session expired. Reconnect your wallet and try again.'
+        : m2.indexOf('BAD_ADDRESS')>=0          ? 'That destination address is not valid.'
+        : m2.indexOf('BAD_AMOUNT')>=0           ? 'Enter a valid amount.'
+        : 'Could not submit. ('+m2+')';
       b.disabled=false;
     }finally{ wdBusy=false; b.textContent=lbl; }
   }
