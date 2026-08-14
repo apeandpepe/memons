@@ -431,6 +431,13 @@
      exists the answer is a fact, and the page has to say which it is. */
   var drawState = { taken: false, snapshotAt: null, wins: {} };
 
+  /* 스냅샷이 찍힌 뒤의 보유 현황.
+     추첨 자격은 스냅샷 시점 기준이지, 지금 무엇을 들고 있는지가 아니다.
+     찍힌 뒤에 카드를 팔거나 강화로 태워도 자격이 흔들리면 안 되고,
+     시즌이 넘어가 지난 시즌 카드가 화면에서 사라져도 마찬가지다.
+     null 이면 아직 스냅샷 전 — 그때는 실시간 보유 수를 쓴다. */
+  var snapCounts = null;
+
   async function loadDraw(d){
     var H = { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON };
 
@@ -464,6 +471,17 @@
       if(t){
         drawState.snapshotAt = t;
         $('evSnap').textContent = new Date(t).toISOString().slice(0,10);
+
+        /* 이 지갑의 스냅샷 시점 등급별 장수. 가장 최근 스냅샷만 본다 —
+           재촬영이 있었다면 마지막 것이 유효하다. */
+        var qres = await fetch(SB_URL + '/rest/v1/lottery_snapshot'+
+          '?select=rarity,qty&address=eq.' + encodeURIComponent(String(MEMONS.address).toLowerCase()) +
+          '&taken_at=eq.' + encodeURIComponent(t), { headers: H });
+        var qrows = await qres.json();
+        if(Array.isArray(qrows)){
+          snapCounts = {};
+          qrows.forEach(function(x){ snapCounts[x.rarity] = Number(x.qty)||0; });
+        }
       }
     }catch(e){}
 
@@ -471,6 +489,18 @@
   }
 
   function renderPot(d){
+    /* 스냅샷이 있으면 그 값이 기준이다. 없으면 지금 보유분. */
+    var base = snapCounts || d;
+
+    // 스냅샷이 잡힌 뒤에는 상단 두 칸도 그 시점 기준으로 표시한다.
+    if(snapCounts){
+      var tot = 0, k;
+      for(k in snapCounts) tot += snapCounts[k];
+      $('evEntries').textContent = tot;
+      $('evEligible').innerHTML = tot > 0
+        ? '<span class="good">Yes</span>' : '<span>—</span>';
+    }
+
     $('pgrid').innerHTML=POT.map(function(p){
       var img = p.coin ? 'images/mypage/event/apepe-'+p.r+'.webp' : 'images/mypage/event/reward-'+p.r+'.webp';
       var rewInner = p.coin
@@ -478,7 +508,7 @@
           (p.rewardFull ? ' title="'+p.rewardFull+'"' : '')+'>'+p.rewardText+'<small>APEPE</small></div>'
         : '<img src="'+img+'" alt="" onerror="this.style.display=\'none\'"><div class="pv" style="font-size:12px">'+p.rewardText+'</div>';
       var hi = (p.r==='epic'||p.r==='legendary'||p.r==='mythic') ? ' hi' : '';
-      var eligible = d[p.r] > 0;
+      var eligible = (base[p.r] || 0) > 0;
       var win = drawState.wins[p.r];
 
       /* Three states, not two. Holding a card before the draw means a chance;
