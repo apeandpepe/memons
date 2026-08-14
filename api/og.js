@@ -61,6 +61,14 @@ const BG = {
 
 const el = (type, props) => ({ type, props });
 
+// 번개. 문자 글리프는 색이 먹지 않아 도형으로 그린다.
+const boltSvg = (color) =>
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">` +
+    `<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="${color}"/></svg>`,
+  );
+
 // ---------------------------------------------------------------------
 // 카드 값. 환매가가 붙는 등급이면 그 값을, 아니면 마켓 시세를 쓴다.
 //
@@ -155,32 +163,87 @@ export default async function handler(req) {
      받침 한가운데 떠 있는 스티커처럼 보인다. */
   /* 받침 아래. 받침 위에 겹치면 조명 링을 덮어 판이 받침을 뚫고
      올라온 것처럼 보인다. 카드 아래 남은 공간에 그대로 앉힌다. */
-  const PLATE_W = 560;
-  const PLATE_H = 96;
-  const PLATE_TOP = 838;
+  /* 값 판. 받침 위에 걸치게 앉힌다 — 받침 아래로 내리면 캔버스 바닥에
+     닿아 잘리고, 카드와 따로 노는 꼬리표처럼 보인다.
 
-  const plateBody = priced ? [
+     두 모양이 있다. 환매는 회사가 사주는 확정 금액이라 아이콘·라벨·값
+     상자를 한 줄로 놓고, 시세는 변하는 값이라 라벨 아래 큰 숫자만 둔다.
+     같은 모양이면 확정가와 변동가를 구분할 수 없다. */
+  const isBuy = priced && priced.label === "INSTANT BUYBACK";
+  /* 받침은 배경 아트에서 x 620~1172, y 784~860 에 있다. 판을 그 안에
+     앉혀 받침의 일부처럼 보이게 한다. 위에 얹으면 받침을 가린 스티커가
+     되고, 아래로 내리면 캔버스 바닥에 잘린다. */
+  const PLATE_W = isBuy ? 520 : 400;
+  const PLATE_H = 84;
+  const PLATE_TOP = 808;
+
+  /* 색은 카드 등급을 따른다. 테두리·글로우·숫자가 모두 같은 색이라
+     판이 카드에 딸린 것으로 읽힌다. */
+  const plateBody = !priced ? [] : isBuy ? [
     el("div", {
       style: {
-        fontSize: "24px", letterSpacing: "5px", fontWeight: 700,
-        color: "rgba(255,255,255,0.62)",
+        display: "flex", alignItems: "center", width: "100%",
+        paddingLeft: "20px", paddingRight: "10px",
+      },
+      children: [
+        el("div", {
+          style: {
+            width: "36px", height: "36px", flexShrink: 0, borderRadius: "18px",
+            border: `2px solid ${rgba(rgbc, 0.5)}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          },
+          /* 번개를 문자로 두면 글리프가 흑백으로 나와 등급 색이 죽는다.
+             도형으로 그려 색을 그대로 받게 한다. */
+          children: el("img", { src: boltSvg(rgb(rgbc)), width: 17, height: 17 }),
+        }),
+        el("div", {
+          style: {
+            display: "flex", flexGrow: 1, paddingLeft: "16px",
+            fontSize: "18px", letterSpacing: "2.5px", fontWeight: 700,
+            color: rgb(rgbc), whiteSpace: "nowrap",
+          },
+          children: "INSTANT BUYBACK",
+        }),
+        el("div", {
+          style: {
+            display: "flex", alignItems: "baseline", gap: "8px",
+            padding: "10px 18px", borderRadius: "11px",
+            backgroundColor: "#050506",
+            border: `2px solid ${rgba(rgbc, 0.3)}`,
+            fontSize: "30px", fontWeight: 800, color: "#fff", lineHeight: 1,
+          },
+          children: [
+            el("div", { children: priced.price.toFixed(2) }),
+            el("div", {
+              style: { fontSize: "17px", letterSpacing: "2px", color: "rgba(255,255,255,0.6)" },
+              children: "USDT",
+            }),
+          ],
+        }),
+      ],
+    }),
+  ] : [
+    el("div", {
+      style: {
+        fontSize: "18px", letterSpacing: "3.5px", fontWeight: 700,
+        color: "rgba(255,255,255,0.66)",
       },
       children: `${priced.label} (USDT)`,
     }),
     el("div", {
       style: {
-        display: "flex", alignItems: "baseline", gap: "10px", marginTop: "9px",
-        fontSize: "42px", fontWeight: 800, color: rgb(rgbc), lineHeight: 1,
+        display: "flex", alignItems: "baseline", gap: "9px", marginTop: "7px",
+        fontSize: "34px", fontWeight: 800, color: rgb(rgbc), lineHeight: 1,
       },
       children: [
         el("div", { children: priced.price.toFixed(2) }),
         el("div", {
-          style: { fontSize: "20px", letterSpacing: "2px", color: "rgba(255,255,255,0.6)" },
+          style: { fontSize: "20px", letterSpacing: "2px", color: "rgba(255,255,255,0.66)" },
           children: "USDT",
         }),
       ],
     }),
-  ] : [];
+  ];
 
   const plateStyle = (top) => ({
     position: "absolute",
@@ -189,9 +252,10 @@ export default async function handler(req) {
     width: `${PLATE_W}px`, height: `${PLATE_H}px`,
     display: "flex", flexDirection: "column",
     alignItems: "center", justifyContent: "center",
-    borderRadius: "16px",
-    border: `2px solid ${rgba(rgbc, 0.58)}`,
-    backgroundColor: "rgba(4,4,6,0.94)",
+    borderRadius: "14px",
+    border: `2px solid ${rgba(rgbc, 0.55)}`,
+    backgroundColor: "rgba(3,3,5,0.95)",
+    boxShadow: `0 0 40px -12px ${rgb(rgbc)}`,
   });
 
   const plate = priced
