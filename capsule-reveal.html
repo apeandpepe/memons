@@ -42,53 +42,68 @@
   .got{font-weight:700;font-size:20px;opacity:0;transition:.3s}.got b{color:var(--rc,#E9B84A);margin-left:8px}
   .stage.single ~ .info .you,.stage.single ~ .info .got{opacity:1}
 
-  /* 뽑은 카드의 값. 카드와 버튼 사이에 둔다 — 결과를 보고 바로
-     "얼마짜리인가" 를 확인한 뒤 다음 행동을 고르는 순서다.
+  /* 뽑은 카드의 값.
 
-     폭을 카드에 맞춘다. 값만큼만 좁히면 카드 아래에 동떨어진 알약처럼
-     보인다. 카드 폭은 화면에 따라 변하므로 JS 가 재서 --cw 로 넘긴다. */
-  /* 결과 화면에는 화면 전체에 어두운 막이 깔리고, 그 위로 올라온
-     것만 보인다. 바는 결과에서만 뜨므로 처음부터 고정으로 둔다 —
-     형제 선택자로 올리려 했더니 규칙이 먹지 않아 막 뒤에 깔렸다. */
+     두 모양이 있다. 환매는 회사가 사주는 확정 금액이라 값을 상자에
+     담고, 시세는 변하는 값이라 라벨 아래 숫자로 두고 옆에 마켓으로
+     가는 문을 낸다. 같은 모양이면 확정가와 변동가를 구분할 수 없다.
+
+     모서리를 깎는다. 카드도 버튼도 같은 각진 형태라, 둥근 알약 하나만
+     끼면 다른 화면에서 가져온 것처럼 보인다. */
   .pricebar{position:fixed;left:0;right:var(--panel);bottom:118px;z-index:41;
-    display:flex;align-items:center;justify-content:space-between;
-    margin:0 auto;width:var(--cw,336px);min-height:54px;
-    padding:8px 8px 8px 16px;gap:12px;
-    border:1px solid color-mix(in srgb, var(--rc,#888) 55%, transparent);border-radius:13px;
-    background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+    display:flex;align-items:stretch;margin:0 auto;
+    width:var(--cw,336px);min-height:58px;padding:0;gap:0;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+    border:1px solid color-mix(in srgb, var(--rc,#888) 45%, transparent);
+    clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
     box-shadow:0 0 30px -14px var(--rc,#888)}
-  /* 마켓 변형은 값 상자에 마켓 버튼까지 붙어 카드 폭에 들어가지 않는다.
-     그만큼만 넓힌다. */
   .pricebar.wide{width:calc(var(--cw,336px) + 110px)}
   .pricebar.hidden{display:none}
 
+  /* 왼쪽 칸 — 아이콘과 라벨, 시세일 때는 값까지 */
+  .pricebar .pcell{flex:1 1 auto;min-width:0;display:flex;align-items:center;
+    gap:12px;padding:0 14px 0 16px}
   .pricebar .pi{width:30px;height:30px;flex:none;border-radius:50%;
-    border:1px solid color-mix(in srgb, var(--rc,#888) 50%, transparent);
-    display:grid;place-items:center;font-size:15px;color:var(--rc,#e8e6e0)}
-  .pricebar .ptxt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;
-    text-align:left;overflow:hidden}
-  .pricebar .pl{font-size:11.5px;letter-spacing:1.9px;color:var(--rc,#cfcabf);font-weight:700;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* 값 상자. 바 배경과 대비가 약하면 숫자가 얹혀 보이지 않는다.
-     거의 검정으로 눌러 안쪽으로 파인 것처럼 만든다. */
-  .pricebar .pv{flex:0 0 auto;font-size:20px;font-weight:800;color:#fff;letter-spacing:.3px;
-    padding:8px 15px;border-radius:10px;background:#050506;
-    border:1px solid color-mix(in srgb, var(--rc,#888) 32%, transparent);white-space:nowrap;
-    box-shadow:inset 0 1px 5px rgba(0,0,0,.9)}
+    border:1.5px solid color-mix(in srgb, var(--rc,#888) 55%, transparent);
+    display:grid;place-items:center;color:var(--rc,#e8e6e0)}
+  .pricebar .pi svg{width:15px;height:15px;fill:currentColor}
+  .pricebar .ptxt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+    gap:2px;text-align:left;overflow:hidden}
+  .pricebar .pl{font-size:11px;letter-spacing:1.8px;color:var(--rc,#cfcabf);
+    font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* 값. 환매는 오른쪽 상자, 시세는 라벨 아래 */
+  .pricebar .pv{flex:0 0 auto;align-self:center;margin:7px 7px 7px 0;
+    font-size:20px;font-weight:800;color:#fff;letter-spacing:.3px;
+    padding:8px 15px;background:#050506;white-space:nowrap;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 35%, transparent);
+    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
   .pricebar .pv u{text-decoration:none;font-size:11px;opacity:.6;margin-left:6px}
-  .pricebar .pgo{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:12px 15px;
-    border:1px solid var(--rc,rgba(255,255,255,.22));border-radius:11px;
-    color:var(--rc,#e8e6e0);text-decoration:none;font-size:10.5px;letter-spacing:1.2px;
-    font-weight:800;white-space:nowrap;transition:.15s}
+  .pricebar .pvi{font-size:19px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap}
+  .pricebar .pvi u{text-decoration:none;font-size:10.5px;opacity:.55;margin-left:5px}
+
+  /* 마켓으로 가는 문. 칸 사이를 세로선으로 가른다. */
+  .pricebar .pgo{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;
+    padding:0 18px;margin:7px 7px 7px 0;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 60%, transparent);
+    background:color-mix(in srgb, var(--rc,#888) 12%, transparent);
+    color:var(--rc,#e8e6e0);text-decoration:none;font-size:10.5px;
+    letter-spacing:1.2px;font-weight:800;white-space:nowrap;transition:.15s;
+    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
   .pricebar .pgo:hover{background:var(--rc,#888);color:#08080a}
   .pricebar .pgo.hidden,.pricebar .pv.hidden{display:none}
+  .pricebar .pdiv{flex:0 0 auto;width:1px;margin:12px 0;
+    background:color-mix(in srgb, var(--rc,#888) 30%, transparent)}
+  .pricebar .pdiv.hidden{display:none}
 
   @media(max-width:560px){
-    .pricebar{padding:8px 8px 8px 13px;gap:9px;min-height:50px}
-    .pricebar .pi{width:26px;height:26px;font-size:12px}
-    .pricebar .pl{font-size:10px;letter-spacing:1.2px}
+    .pricebar{min-height:52px}
+    .pricebar .pcell{gap:9px;padding:0 10px 0 12px}
+    .pricebar .pi{width:26px;height:26px}
+    .pricebar .pl{font-size:9.5px;letter-spacing:1.1px}
     .pricebar .pv{font-size:17px;padding:7px 11px}
-    .pricebar .pgo{font-size:9.5px;padding:9px 10px;letter-spacing:.6px}
+    .pricebar .pvi{font-size:16px}
+    .pricebar .pgo{font-size:9px;padding:0 11px;letter-spacing:.6px}
   }
   .acts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
   .b{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:12px 22px;border-radius:9px;
@@ -387,7 +402,7 @@
     border-radius:16px;box-shadow:0 0 80px -6px var(--rc,#E9B84A),0 0 150px -12px var(--rc,#E9B84A)}
   .stage.single .badge{top:14px;left:14px;font-size:12px;padding:5px 11px}
   /* YOU GOT text + CONTINUE lifted above backdrop */
-  .stage.single ~ .info{position:fixed !important;left:0;right:var(--panel);top:auto;bottom:96px;z-index:41;height:auto;text-align:center;animation:rvFade .5s ease .25s both}
+  .stage.single ~ .info{position:fixed !important;left:0;right:var(--panel);top:auto;bottom:190px;z-index:41;height:auto;text-align:center;animation:rvFade .5s ease .25s both}
   .stage.single ~ .info .you{font-size:13px}
   .stage.single ~ .info .got{font-size:24px}
   .stage.single ~ .acts{position:fixed !important;left:0;right:var(--panel);top:auto;bottom:26px;z-index:41;display:flex;justify-content:center;animation:rvFade .5s ease .3s both}
@@ -521,10 +536,16 @@
   <!-- 뽑은 카드의 값. 환매가 붙는 등급이면 그 값을, 아니면 마켓 시세를
        보여준다. 값이 없으면 통째로 감춘다. -->
   <div class="pricebar hidden" id="priceBar">
-    <span class="pi" id="pbIcon"></span>
-    <span class="ptxt"><span class="pl" id="pbLabel"></span></span>
+    <span class="pcell">
+      <span class="pi" id="pbIcon"></span>
+      <span class="ptxt">
+        <span class="pl" id="pbLabel"></span>
+        <span class="pvi hidden" id="pbValueIn"></span>
+      </span>
+    </span>
+    <span class="pdiv hidden" id="pbDiv"></span>
     <span class="pv" id="pbValue"></span>
-    <a class="pgo hidden" id="pbGo" href="index.html#market">MARKETPLACE <span>&rarr;</span></a>
+    <a class="pgo hidden" id="pbGo" href="index.html#market">GO TO MARKETPLACE <span>&rarr;</span></a>
   </div>
 
   <div class="acts">
@@ -762,7 +783,6 @@ function paintPrice(it){
   var found = it && PRICE.of(it.cap, it.rkey);
   if(!found){
     bar.classList.add('hidden');
-    var iv=document.querySelector('.info'); if(iv) iv.style.visibility='';
     return;
   }
   var info = found;
@@ -771,19 +791,26 @@ function paintPrice(it){
   var val = Number(info.price).toFixed(2)+'<u>USDT</u>';
 
   if(info.kind==='buyback'){
-    // 회사가 사주는 확정 금액. 그 자리에서 팔 수 있으니 다른 안내가 없다.
-    $('pbIcon').textContent='\u26A1';
-    $('pbLabel').textContent='INSTANT BUYBACK';
+    // 확정 금액. 값을 오른쪽 상자에 담고 다른 안내는 두지 않는다.
     bar.classList.remove('wide');
+    $('pbIcon').innerHTML='<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>';
+    $('pbLabel').textContent='INSTANT BUYBACK';
+    $('pbValueIn').classList.add('hidden');
+    $('pbDiv').classList.add('hidden');
     $('pbGo').classList.add('hidden');
+    $('pbValue').classList.remove('hidden');
+    $('pbValue').innerHTML=val;
   }else{
-    // 변하는 값. 여기서 팔 방법이 없으므로 마켓으로 보낸다.
-    $('pbIcon').textContent='\u25CE';
-    $('pbLabel').textContent = info.src==='bid' ? 'HIGHEST BID' : 'MARKET PRICE';
+    // 변하는 값. 라벨 아래 두고 오른쪽은 마켓으로 가는 문에 내준다.
     bar.classList.add('wide');
+    $('pbIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>';
+    $('pbLabel').textContent=(info.src==='bid'?'HIGHEST BID':'MARKET PRICE')+' (USDT)';
+    $('pbValueIn').innerHTML=val;
+    $('pbValueIn').classList.remove('hidden');
+    $('pbValue').classList.add('hidden');
+    $('pbDiv').classList.remove('hidden');
     $('pbGo').classList.remove('hidden');
   }
-  $('pbValue').innerHTML=val;
 
   /* 바를 카드 폭에 맞춘다. 카드는 화면 크기에 따라 늘고 줄어서 고정
      값으로는 어긋난다.
@@ -805,11 +832,6 @@ function paintPrice(it){
 
   bar.classList.remove('hidden');
 
-  /* 값 바가 OPENED / N COMMON 자리를 대신한다. 등급은 카드 안에 이미
-     적혀 있어 같은 말이 두 번이고, 카드를 줄이지 않고 두 줄을 다
-     세우면 문구가 카드 뒤로 들어간다. 레퍼런스도 이 자리에 값만 둔다. */
-  var info=document.querySelector('.info');
-  if(info) info.style.visibility='hidden';
 }
 
 /* one draw: rarity (pity applied) + character + duplicate check + save */
@@ -1613,7 +1635,6 @@ function closeResult(){
   $('again').classList.add('hidden'); $('open1').classList.remove('hidden'); $('open10').classList.remove('hidden');
   // 이전 카드의 값이 다음 결과까지 남아 있으면 안 된다.
   var pb=$('priceBar'); if(pb) pb.classList.add('hidden');
-  var iv=document.querySelector('.info'); if(iv) iv.style.visibility='';
   hideShare();
   $('hint').style.display='';
   const cap=$('capvideo');
