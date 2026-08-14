@@ -61,7 +61,51 @@ const BG = {
 
 const el = (type, props) => ({ type, props });
 
-export default function handler(req) {
+// ---------------------------------------------------------------------
+// 카드 값. 환매가가 붙는 등급이면 그 값을, 아니면 마켓 시세를 쓴다.
+//
+// 값을 쿼리로 받지 않고 서버에서 읽는다. 공유 이미지는 타임라인에
+// 남아 돌아다니는데, 클라이언트가 넘긴 숫자를 그대로 그리면 아무나
+// 임의의 가격이 박힌 MEMONS 이미지를 만들 수 있다.
+//
+// 조회에 실패하면 값 없이 그린다. 이미지가 아예 안 나오는 것보다 낫다.
+// ---------------------------------------------------------------------
+const SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
+const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+async function priceOf(rarity, capsule) {
+  const H = { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON,
+              "content-type": "application/json" };
+  const rpc = (fn) =>
+    fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: H, body: "{}" })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+
+  try {
+    const [open, src, floors] = await Promise.all([
+      rpc("buyback_open"), rpc("market_floor_source"), rpc("market_floor_by_rarity"),
+    ]);
+
+    if (open === true) {
+      const r = await fetch(
+        `${SB_URL}/rest/v1/buyback_prices?select=price&enabled=is.true&price=gt.0` +
+        `&capsule_id=eq.${encodeURIComponent(capsule)}&rarity=eq.${encodeURIComponent(rarity)}`,
+        { headers: H },
+      ).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+      const p = Array.isArray(r) && r[0] && Number(r[0].price);
+      if (p > 0) return { label: "INSTANT BUYBACK", price: p };
+    }
+
+    const row = Array.isArray(floors) && floors.find((f) => f && f.rarity === rarity);
+    const fp = row && Number(row.price);
+    if (fp > 0) {
+      return { label: src === "bid" ? "HIGHEST BID" : "MARKET PRICE", price: fp };
+    }
+  } catch (_) { /* 값 없이 그린다 */ }
+  return null;
+}
+
+export default async function handler(req) {
   const url = new URL(req.url);
 
   // id is safe by construction: letters, digits and underscore only
@@ -100,6 +144,60 @@ export default function handler(req) {
   const CARD_W = 525;
   const CARD_H2 = 700;
   const CARD_BOTTOM = 745;
+  /* 캡슐 종류에 따라 환매가가 다르다. 안 주면 결제 캡슐 기준으로 본다 —
+     공유 이미지는 유료 캡슐을 알리는 자리이기 때문이다. */
+  const capsule = (url.searchParams.get("cap") || "paid")
+    .replace(/[^a-z]/g, "").slice(0, 16) || "paid";
+  const priced = await priceOf(rarity, capsule);
+
+  /* 값 판. 카드 아래 받침 위에 얹는다. 레퍼런스와 같이 라벨을 위,
+     값을 아래에 두고 받침 폭에 맞춰 넓게 잡는다 — 좁은 알약으로 두면
+     받침 한가운데 떠 있는 스티커처럼 보인다. */
+  /* 받침 아래. 받침 위에 겹치면 조명 링을 덮어 판이 받침을 뚫고
+     올라온 것처럼 보인다. 카드 아래 남은 공간에 그대로 앉힌다. */
+  const PLATE_W = 560;
+  const PLATE_H = 96;
+  const PLATE_TOP = 838;
+
+  const plateBody = priced ? [
+    el("div", {
+      style: {
+        fontSize: "24px", letterSpacing: "5px", fontWeight: 700,
+        color: "rgba(255,255,255,0.62)",
+      },
+      children: `${priced.label} (USDT)`,
+    }),
+    el("div", {
+      style: {
+        display: "flex", alignItems: "baseline", gap: "10px", marginTop: "9px",
+        fontSize: "42px", fontWeight: 800, color: rgb(rgbc), lineHeight: 1,
+      },
+      children: [
+        el("div", { children: priced.price.toFixed(2) }),
+        el("div", {
+          style: { fontSize: "20px", letterSpacing: "2px", color: "rgba(255,255,255,0.6)" },
+          children: "USDT",
+        }),
+      ],
+    }),
+  ] : [];
+
+  const plateStyle = (top) => ({
+    position: "absolute",
+    left: `${Math.round((W - PLATE_W) / 2)}px`,
+    top: `${top}px`,
+    width: `${PLATE_W}px`, height: `${PLATE_H}px`,
+    display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center",
+    borderRadius: "16px",
+    border: `2px solid ${rgba(rgbc, 0.58)}`,
+    backgroundColor: "rgba(4,4,6,0.94)",
+  });
+
+  const plate = priced
+    ? el("div", { style: plateStyle(PLATE_TOP), children: plateBody })
+    : null;
+
   const bgFile = BG[rarity];
   const bgUrl = bgFile ? `${url.origin}/images/og/${bgFile}` : null;
   // Whatever the card does not use, split evenly either side. Floored, so
@@ -138,6 +236,7 @@ export default function handler(req) {
           objectFit: "contain",
         },
       }),
+      plate,
     ],
   });
 
@@ -151,6 +250,7 @@ export default function handler(req) {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
+      position: "relative",
       // Flat black left two thirds of the frame reading as empty. A wash
       // of the card's own rarity colour, dark enough to stay a backdrop,
       // makes the space look composed instead of unused -- and tells a
@@ -192,6 +292,9 @@ export default function handler(req) {
         },
       }),
       el("div", { style: { width: `${SIDE}px`, flexShrink: 0, display: "flex" } }),
+      // 배경 아트가 없는 등급도 값은 보여야 한다. 이쪽은 카드가 세로
+      // 가운데라 판을 아래에 띄운다.
+      priced ? el("div", { style: plateStyle(PLATE_TOP), children: plateBody }) : null,
     ],
   });
 
@@ -201,8 +304,10 @@ export default function handler(req) {
       width: W,
       height: H,
       headers: {
-        // the artwork for a given id never changes — let X cache it hard
-        "cache-control": "public, max-age=86400, s-maxage=604800, immutable",
+        /* 카드 그림은 안 바뀌지만 값은 바뀐다. immutable 로 박아두면
+           어드민에서 환매가를 고쳐도 옛 값이 박힌 이미지가 계속 돌아
+           다닌다. 한 시간이면 타임라인에서는 충분히 빠르다. */
+        "cache-control": "public, max-age=3600, s-maxage=3600",
       },
     }
   );

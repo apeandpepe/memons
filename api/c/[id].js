@@ -58,8 +58,14 @@ export default function handler(req, res) {
   const v = String(vRaw ?? "").replace(/[^0-9]/g, "").slice(0, 4);
   const suffix = v ? `?v=${v}` : "";
 
+  /* 어느 캡슐에서 나온 카드인지. 환매가가 캡슐마다 다르므로 그림에
+     찍히는 값도 달라진다. 안 오면 og 쪽 기본값(결제 캡슐)을 쓴다. */
+  const capRaw = Array.isArray(req.query?.cap) ? req.query.cap[0] : req.query?.cap;
+  const cap = String(capRaw ?? "").replace(/[^a-z]/g, "").slice(0, 16);
+
   const image =
-    `${origin}/api/og?id=${encodeURIComponent(id)}&v=${IMG_VERSION}`;
+    `${origin}/api/og?id=${encodeURIComponent(id)}&v=${IMG_VERSION}` +
+    (cap ? `&cap=${cap}` : "");
 
   // Must match what /api/og actually draws. Declaring 1200x630 for an
   // 1800x942 image asks the crawler to trust a figure it can check.

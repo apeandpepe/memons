@@ -42,6 +42,54 @@
   .got{font-weight:700;font-size:20px;opacity:0;transition:.3s}.got b{color:var(--rc,#E9B84A);margin-left:8px}
   .stage.single ~ .info .you,.stage.single ~ .info .got{opacity:1}
 
+  /* 뽑은 카드의 값. 카드와 버튼 사이에 둔다 — 결과를 보고 바로
+     "얼마짜리인가" 를 확인한 뒤 다음 행동을 고르는 순서다.
+
+     폭을 카드에 맞춘다. 값만큼만 좁히면 카드 아래에 동떨어진 알약처럼
+     보인다. 카드 폭은 화면에 따라 변하므로 JS 가 재서 --cw 로 넘긴다. */
+  /* 결과 화면에는 화면 전체에 어두운 막이 깔리고, 그 위로 올라온
+     것만 보인다. 바는 결과에서만 뜨므로 처음부터 고정으로 둔다 —
+     형제 선택자로 올리려 했더니 규칙이 먹지 않아 막 뒤에 깔렸다. */
+  .pricebar{position:fixed;left:0;right:var(--panel);bottom:118px;z-index:41;
+    display:flex;align-items:center;justify-content:space-between;
+    margin:0 auto;width:var(--cw,336px);min-height:54px;
+    padding:8px 8px 8px 16px;gap:12px;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 55%, transparent);border-radius:13px;
+    background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+    box-shadow:0 0 30px -14px var(--rc,#888)}
+  /* 마켓 변형은 값 상자에 마켓 버튼까지 붙어 카드 폭에 들어가지 않는다.
+     그만큼만 넓힌다. */
+  .pricebar.wide{width:calc(var(--cw,336px) + 110px)}
+  .pricebar.hidden{display:none}
+
+  .pricebar .pi{width:30px;height:30px;flex:none;border-radius:50%;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 50%, transparent);
+    display:grid;place-items:center;font-size:15px;color:var(--rc,#e8e6e0)}
+  .pricebar .ptxt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;
+    text-align:left;overflow:hidden}
+  .pricebar .pl{font-size:11.5px;letter-spacing:1.9px;color:var(--rc,#cfcabf);font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 값 상자. 바 배경과 대비가 약하면 숫자가 얹혀 보이지 않는다.
+     거의 검정으로 눌러 안쪽으로 파인 것처럼 만든다. */
+  .pricebar .pv{flex:0 0 auto;font-size:20px;font-weight:800;color:#fff;letter-spacing:.3px;
+    padding:8px 15px;border-radius:10px;background:#050506;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 32%, transparent);white-space:nowrap;
+    box-shadow:inset 0 1px 5px rgba(0,0,0,.9)}
+  .pricebar .pv u{text-decoration:none;font-size:11px;opacity:.6;margin-left:6px}
+  .pricebar .pgo{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:12px 15px;
+    border:1px solid var(--rc,rgba(255,255,255,.22));border-radius:11px;
+    color:var(--rc,#e8e6e0);text-decoration:none;font-size:10.5px;letter-spacing:1.2px;
+    font-weight:800;white-space:nowrap;transition:.15s}
+  .pricebar .pgo:hover{background:var(--rc,#888);color:#08080a}
+  .pricebar .pgo.hidden,.pricebar .pv.hidden{display:none}
+
+  @media(max-width:560px){
+    .pricebar{padding:8px 8px 8px 13px;gap:9px;min-height:50px}
+    .pricebar .pi{width:26px;height:26px;font-size:12px}
+    .pricebar .pl{font-size:10px;letter-spacing:1.2px}
+    .pricebar .pv{font-size:17px;padding:7px 11px}
+    .pricebar .pgo{font-size:9.5px;padding:9px 10px;letter-spacing:.6px}
+  }
   .acts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
   .b{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:12px 22px;border-radius:9px;
     font-weight:600;font-size:13px;letter-spacing:1.4px;cursor:pointer;transition:.2s}
@@ -320,7 +368,7 @@
   @keyframes rvFade{from{opacity:0}to{opacity:1}}
   @keyframes rvPop{0%{opacity:0;transform:scale(.55) translateY(6%)}60%{opacity:1}100%{opacity:1;transform:scale(1) translateY(0)}}
   .stage.single::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(20,16,10,.85),rgba(3,3,3,.96));z-index:38;animation:rvFade .6s ease both}
-  .stage.single .result{position:fixed;top:4vh;left:0;right:var(--panel);margin:0 auto;width:auto;height:min(70vh, calc(100vh - 210px));max-width:min(46vw,540px);aspect-ratio:958/1280;
+  .stage.single .result{position:fixed;top:12vh;left:0;right:var(--panel);margin:0 auto;width:auto;height:min(64vh, calc(100vh - 240px));max-width:min(46vw,540px);aspect-ratio:958/1280;
     z-index:40;opacity:1;transform:none;animation:cardEmerge .8s cubic-bezier(.16,.84,.28,1) both}
   /* rises from below as a small dark card, grows, then a final shine */
   @keyframes cardEmerge{
@@ -347,6 +395,7 @@
 
   @media(max-width:900px){
     .stage.single .result{max-width:84vw;top:5vh;height:min(62vh, calc(100vh - 190px))}
+    .pricebar{bottom:88px}
   }
 
   /* ===== HINGE OPEN SYSTEM ===== */
@@ -467,6 +516,15 @@
     <div class="hint" id="hint">CLICK THE CAPSULE · OR OPEN ×10</div>
     <div class="you" id="you">OPENED</div>
     <div class="got" id="got"><span id="cName">APEPE</span> <b id="rr">LEGENDARY</b></div>
+  </div>
+
+  <!-- 뽑은 카드의 값. 환매가 붙는 등급이면 그 값을, 아니면 마켓 시세를
+       보여준다. 값이 없으면 통째로 감춘다. -->
+  <div class="pricebar hidden" id="priceBar">
+    <span class="pi" id="pbIcon"></span>
+    <span class="ptxt"><span class="pl" id="pbLabel"></span></span>
+    <span class="pv" id="pbValue"></span>
+    <a class="pgo hidden" id="pbGo" href="index.html#market">MARKETPLACE <span>&rarr;</span></a>
   </div>
 
   <div class="acts">
@@ -650,6 +708,110 @@ function weightedRarity(){
   const total=RAR.reduce((s,x)=>s+x.weight,0); let n=Math.random()*total;
   for(const x of RAR){ if((n-=x.weight)<0) return x; } return RAR[0];
 }
+/* ── 뽑은 카드의 값 ────────────────────────────────────────────────
+   환매가가 붙는 등급이면 그 값을, 아니면 마켓 시세를 보여준다. 둘 다
+   없으면 바를 감춘다 — 값을 지어내거나 빈 칸을 남기지 않는다.
+
+   가격표는 열 때마다 부르지 않고 한 번 받아 들고 있는다. 연달아 뽑는
+   화면이라 매번 왕복하면 결과가 늦게 뜬다. */
+var PRICE = (function(){
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  var H={apikey:SB_ANON,Authorization:'Bearer '+SB_ANON,'content-type':'application/json'};
+
+  var buy=null, floor=null, src='ask', ready=null;
+
+  function rpc(fn){
+    return fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:'{}'})
+      .then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; });
+  }
+
+  function load(){
+    if(ready) return ready;
+    ready = rpc('buyback_open').then(function(on){
+      var jobs=[ rpc('market_floor_source'), rpc('market_floor_by_rarity') ];
+      if(on===true){
+        jobs.push(fetch(SB_URL+'/rest/v1/buyback_prices?select=capsule_id,rarity,price&enabled=is.true&price=gt.0',{headers:H})
+          .then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }));
+      }
+      return Promise.all(jobs);
+    }).then(function(res){
+      src = res[0]==='bid' ? 'bid' : 'ask';
+      floor={}; (res[1]||[]).forEach(function(x){ if(x&&x.price>0) floor[x.rarity]=Number(x.price); });
+      buy={};   (res[2]||[]).forEach(function(x){ if(x&&x.price>0) buy[x.capsule_id+'/'+x.rarity]=Number(x.price); });
+    }).catch(function(){ buy={}; floor={}; });
+    return ready;
+  }
+
+  return {
+    load: load,
+    /* 환매가가 우선이다. 환매가 있는 등급은 마켓에서 빠져 있어 시세가
+       없고, 있더라도 회사가 사주는 값이 유저에게 확실한 값이다. */
+    of: function(cap, rkey){
+      var b = buy && buy[(cap||'basic')+'/'+rkey];
+      if(b!=null) return {kind:'buyback', price:b};
+      var f = floor && floor[rkey];
+      if(f!=null) return {kind:'market', price:f, src:src};
+      return null;
+    }
+  };
+})();
+
+function paintPrice(it){
+  var bar=$('priceBar'); if(!bar) return;
+  var found = it && PRICE.of(it.cap, it.rkey);
+  if(!found){
+    bar.classList.add('hidden');
+    var iv=document.querySelector('.info'); if(iv) iv.style.visibility='';
+    return;
+  }
+  var info = found;
+
+  bar.style.setProperty('--rc', it.color);
+  var val = Number(info.price).toFixed(2)+'<u>USDT</u>';
+
+  if(info.kind==='buyback'){
+    // 회사가 사주는 확정 금액. 그 자리에서 팔 수 있으니 다른 안내가 없다.
+    $('pbIcon').textContent='\u26A1';
+    $('pbLabel').textContent='INSTANT BUYBACK';
+    bar.classList.remove('wide');
+    $('pbGo').classList.add('hidden');
+  }else{
+    // 변하는 값. 여기서 팔 방법이 없으므로 마켓으로 보낸다.
+    $('pbIcon').textContent='\u25CE';
+    $('pbLabel').textContent = info.src==='bid' ? 'HIGHEST BID' : 'MARKET PRICE';
+    bar.classList.add('wide');
+    $('pbGo').classList.remove('hidden');
+  }
+  $('pbValue').innerHTML=val;
+
+  /* 바를 카드 폭에 맞춘다. 카드는 화면 크기에 따라 늘고 줄어서 고정
+     값으로는 어긋난다.
+
+     한 번만 재면 안 된다. 이 함수는 카드가 제자리에 앉기 전에 불리고,
+     등장 애니메이션이 도는 동안 폭이 계속 변한다. 애니메이션이 끝난 뒤
+     다시 재고, 창 크기가 바뀌어도 따라가게 한다. */
+  function fit(){
+    var img=document.querySelector('.stage.single .result img');
+    var w=img && img.getBoundingClientRect().width;
+    if(w>120) bar.style.setProperty('--cw', Math.round(w)+'px');
+  }
+  fit();
+  setTimeout(fit, 300); setTimeout(fit, 900);
+  if(!paintPrice._bound){
+    paintPrice._bound=true;
+    window.addEventListener('resize', fit);
+  }
+
+  bar.classList.remove('hidden');
+
+  /* 값 바가 OPENED / N COMMON 자리를 대신한다. 등급은 카드 안에 이미
+     적혀 있어 같은 말이 두 번이고, 카드를 줄이지 않고 두 줄을 다
+     세우면 문구가 카드 뒤로 들어간다. 레퍼런스도 이 자리에 값만 둔다. */
+  var info=document.querySelector('.info');
+  if(info) info.style.visibility='hidden';
+}
+
 /* one draw: rarity (pity applied) + character + duplicate check + save */
 function rollOne(){
   let pity=getPity()+1, rar;
@@ -841,8 +1003,12 @@ function mapCard(card){
   const r = RAR.find(x=>x.key===rarity) || RAR[0];
   const id = c.card_id != null ? c.card_id : (c.num != null ? c.num : n.card_id);
   const dup = MEMONS_COLLECTION.all().some(x=>x.num===id && x.rarity===r.label);
+  /* capsule_id 는 환매가를 고르는 축이다. 같은 COMMON 이라도 결제
+     캡슐이면 0.60, 에어드랍이면 0.30 이다. 서버가 안 주면 basic 으로
+     둔다 — 값이 붙지 않아 가격이 안 뜰 뿐, 틀린 값이 뜨지는 않는다. */
+  const cap = c.capsule_id || n.capsule_id || 'basic';
   const it = { num:id, char:name, rarity:r.label, rkey:r.key, color:r.color,
-               img: image || r.card, dup };
+               img: image || r.card, dup, cap };
   MEMONS_COLLECTION.add(it); session.push(it);
   return it;
 }
@@ -1129,6 +1295,7 @@ function buildSingle(it, onArt){
     st.classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
     showShareSingle(it); showSaveSingle(it);
+    PRICE.load().then(function(){ paintPrice(it); });
     onArt();
   };
 
@@ -1300,6 +1467,7 @@ function __oldSingle(){
     $('stage').classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
     showShareSingle(it); showSaveSingle(it);
+    PRICE.load().then(function(){ paintPrice(it); });
     refreshStatus(); busy=false;
   });
 }
@@ -1373,7 +1541,9 @@ function openShare(text, it){
 
   let url = SHARE_URL;
   if (it && it.num) {
-    url = location.origin + '/c/' + encodeURIComponent(it.num) + '?v=' + SHARE_VERSION;
+    // 캡슐 종류를 같이 넘긴다. 공유 이미지에 찍히는 환매가가 여기서 갈린다.
+    url = location.origin + '/c/' + encodeURIComponent(it.num) + '?v=' + SHARE_VERSION
+        + (it.cap ? '&cap=' + encodeURIComponent(it.cap) : '');
   }
   const u = 'https://twitter.com/intent/tweet'
     + '?text=' + encodeURIComponent(text)
@@ -1441,6 +1611,9 @@ function closeResult(){
   $('stage')._wantPillar=false;
   $('stage').style.setProperty('--burst','#E9B84A');
   $('again').classList.add('hidden'); $('open1').classList.remove('hidden'); $('open10').classList.remove('hidden');
+  // 이전 카드의 값이 다음 결과까지 남아 있으면 안 된다.
+  var pb=$('priceBar'); if(pb) pb.classList.add('hidden');
+  var iv=document.querySelector('.info'); if(iv) iv.style.visibility='';
   hideShare();
   $('hint').style.display='';
   const cap=$('capvideo');
