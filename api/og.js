@@ -240,7 +240,7 @@ export default async function handler(req) {
      좌표는 배경 그림에서 실측한 값이다 (배경 크기가 등급마다 달라
      비율이 아니라 그림별로 잡는다). */
   const BAKED = {
-    common: { right: 1052, cy: 844, fsNum: 24 },
+    common: { right: 1052, cy: 814, fsNum: 24 },
     rare:   { right: 1026, cy: 824, fsNum: 22 },
   };
   const baked = BAKED[rarity];
