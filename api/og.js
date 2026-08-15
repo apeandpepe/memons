@@ -242,8 +242,8 @@ export default async function handler(req) {
      좌표는 배경 그림에서 실측한 값이다 (배경 크기가 등급마다 달라
      비율이 아니라 그림별로 잡는다). */
   const BAKED = {
-    common: { right: 1058, cy: 844, cellL: 987,  fsNum: 28 },
-    rare:   { right: 1026, cy: 824, cellL: 1034, fsNum: 24 },
+    common: { right: 1052, cy: 844, cellL: 1059, fsNum: 24 },
+    rare:   { right: 1026, cy: 824, cellL: 1031, fsNum: 22 },
   };
   const baked = BAKED[rarity];
 
@@ -329,14 +329,22 @@ export default async function handler(req) {
      늘어나므로 실측 좌표도 같은 비율로 옮긴다. */
   /* 배경에 판이 그려진 등급은 숫자만 얹는다. 좌표는 1800x942 기준이라
      환산이 필요 없다 — 배경 그림이 그 크기로 늘어나 그려진다. */
+  /* 배경에 판이 그려진 등급은 숫자만 얹는다. 좌표는 1800x942 기준이라
+     환산이 필요 없다 — 배경 그림이 그 크기로 늘어나 그려진다.
+
+     cellL 이 right 보다 크면 칸 폭이 음수가 된다. 조절판에서는 그 경우
+     폭이 무시되고 글자가 cellL 에서 시작한다. 같은 결과가 나오도록
+     폭을 넣지 않는다. */
   const bakedNum = (priced && baked)
     ? el("div", {
         style: {
           position: "absolute",
           left: `${baked.cellL}px`,
           top: `${Math.round(baked.cy - baked.fsNum * 0.75)}px`,
-          width: `${baked.right - baked.cellL}px`,
           height: `${Math.round(baked.fsNum * 1.5)}px`,
+          ...(baked.right > baked.cellL
+            ? { width: `${baked.right - baked.cellL}px` }
+            : {}),
           display: "flex", alignItems: "center", justifyContent: "flex-end",
           fontSize: `${baked.fsNum}px`, fontWeight: 800,
           color: "#fff", lineHeight: 1,
