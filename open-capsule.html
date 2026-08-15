@@ -12,7 +12,11 @@
     --text:#e8e6e0; --muted:#8d8a82;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+  /* Fit one screen. Equal room above and below, spare space gathered in
+     the middle, so the title is never dragged off the top. */
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);
+    overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;
+    justify-content:center;gap:0}
   a{color:inherit;text-decoration:none}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
   .head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 34px;border-bottom:1px solid var(--hair)}
@@ -34,7 +38,7 @@
   body{position:relative}
   header.head{position:relative;z-index:5}
   .foot{position:relative;z-index:1}
-  .ocwrap{display:grid;grid-template-columns:230px minmax(0,520px) 245px;gap:18px;align-items:center;justify-content:center;width:100%;max-width:1090px;margin:0 auto;padding:18px 28px 0;flex:1 1 auto;position:relative;z-index:1}
+  .ocwrap{display:grid;grid-template-columns:230px minmax(0,520px) 245px;gap:18px;align-items:center;justify-content:center;width:100%;max-width:1090px;margin:0 auto;padding:0 28px;flex:0 0 auto;position:relative;z-index:1}
   .left{align-self:center}
   .title{font-family:var(--font-head),'Saira Condensed';font-weight:400;font-size:51px;line-height:.92;letter-spacing:1.5px}
   .title .a{display:block;background:linear-gradient(180deg,#e3b462,#b5873a);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -46,6 +50,161 @@
   .aboutbox .abh .ic svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.3}
   .aboutbox .abh h4{font-size:11.5px;letter-spacing:2px;color:var(--gold);font-weight:600}
   .aboutbox p{font-family:var(--font-body);font-size:13.5px;color:#837c68;font-weight:400;line-height:1.5}
+
+  /* Buyback prices. Same box as ABOUT CAPSULE, split by a rule: what a
+     card sells back for is read before buying, so it belongs directly
+     under the capsule's own description. */
+  /* Opens inside the box. Pushing the list downwards would change the
+     box height and carry the card strip with it, so it is raised as a
+     layer over the whole aboutbox; closing returns the original view and
+     the page keeps its proportions. */
+  .aboutbox{position:relative}
+  .bbsec{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .bbtabs{display:flex;gap:6px}
+  .bbtabs button{flex:1;padding:6px 4px;border:1px solid var(--line);border-radius:8px;
+    background:none;color:#6d6754;font-family:var(--font-body);font-size:9.5px;
+    letter-spacing:1.1px;font-weight:600;cursor:pointer;transition:.15s}
+  .bbtabs button:hover{color:#9a9382;border-color:#3a3428}
+  .bbtabs button.on{color:#100d05;background:var(--gold);border-color:var(--gold)}
+
+  .bbover{position:absolute;inset:0;z-index:6;border-radius:13px;
+    background:linear-gradient(180deg,#0d0c0a,#08080a);border:1px solid rgba(233,184,74,.26);
+    padding:14px 15px;display:none;flex-direction:column;overflow-y:auto}
+  .bbover.on{display:flex}
+  .bbover .oh{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+  .bbover .oh b{flex:1;font-family:var(--font-body);font-size:10.5px;letter-spacing:1.6px;
+    color:var(--gold);font-weight:600}
+  .bbover .ox{width:22px;height:22px;flex:none;border:1px solid var(--line);border-radius:6px;
+    background:none;color:#8d8578;font-size:13px;line-height:1;cursor:pointer;
+    display:grid;place-items:center;padding:0}
+  .bbover .ox:hover{color:#e8e6e0;border-color:#3a3428}
+
+  .bbrow{display:flex;align-items:center;gap:8px;padding:4px 0}
+  .bbrow .dot{width:9px;height:9px;border-radius:50%;flex:none;
+    background:var(--rc,#cfd3dc);box-shadow:0 0 7px -1px var(--rc,#cfd3dc)}
+  .bbrow .rn{font-family:var(--font-body);font-size:12px;color:#9a9382;flex:1;letter-spacing:.4px}
+  .bbrow .rp{font-family:var(--font-body);font-size:12.5px;color:var(--gold);font-weight:600}
+  .bbnote{display:flex;gap:7px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+  .bbnote .ic{width:13px;height:13px;border:1px solid #57503f;border-radius:50%;
+    flex:none;margin-top:1px;display:grid;place-items:center;
+    font-size:9px;color:#6d6754;font-family:var(--font-body)}
+  .bbnote p{font-size:11.5px;line-height:1.45;color:#6d6754}
+  /* Conditions in red: not a footnote but a rule that must be met. */
+  .bbnote.warn{margin-top:7px;padding-top:0;border-top:0}
+  .bbnote.warn .ic{border-color:#e0556a;color:#e0556a}
+  .bbnote.warn p{color:#e0556a}
+  .bbempty{font-family:var(--font-body);font-size:12px;color:#6d6754;line-height:1.5}
+
+  /* Sell dialog, shaped like the card picker on the missions page: a
+     flow already seen once, so there is nothing new to learn. */
+  .sellhit{cursor:pointer;transition:.15s}
+  .sellhit:hover{border-color:#E9B84A}
+  .pick{position:fixed;inset:0;z-index:1600;display:flex;align-items:center;
+    justify-content:center;padding:20px;background:rgba(0,0,0,.86)}
+  .pick-box{width:100%;max-width:620px;max-height:calc(100vh - 40px);display:flex;
+    flex-direction:column;background:linear-gradient(180deg,#0e0e11,#08080a 62%);
+    border:1px solid rgba(233,184,74,.28);
+    clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px)}
+  .pick-h{padding:22px 24px 14px;text-align:center;flex:0 0 auto}
+  .pick-h b{display:block;font-family:var(--font-head);font-weight:700;font-size:21px;
+    letter-spacing:1.4px;color:#E9B84A;line-height:1}
+  .pick-h span{display:block;color:#8d8a82;font-size:12.5px;margin-top:9px;line-height:1.6}
+  .pick-grid{flex:1 1 auto;min-height:0;overflow-y:auto;padding:4px 20px 20px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:12px}
+  .pick-c{border:1px solid rgba(255,255,255,.14);background:#0b0b0d;padding:8px;
+    cursor:pointer;text-align:center;border-radius:10px}
+  .pick-c:hover{border-color:#E9B84A}
+  .pick-c img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;
+    border-radius:6px;background:#141418}
+  .pick-c .n{font-size:11.5px;color:#e8e6e0;margin-top:7px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .pick-c .p{font-family:var(--font-head);font-size:13px;color:#E9B84A;
+    font-weight:700;margin-top:4px}
+  .pick-x{flex:0 0 auto;padding:12px;border:0;background:none;color:#8d8a82;
+    font:inherit;font-size:12.5px;cursor:pointer;border-top:1px solid rgba(255,255,255,.06)}
+  .pick-x:hover{color:#e8e6e0}
+  .pick-empty{padding:34px 24px 30px;text-align:center}
+  .pick-empty p{color:#8d8a82;font-size:13px;line-height:1.7;margin:12px 0 0}
+  /* Confirmation. A buyback cannot be undone, so ask once more. */
+  .pick-cf{padding:26px 24px 22px;text-align:center}
+  .pick-cf img{width:132px;aspect-ratio:3/4;object-fit:cover;border-radius:8px;
+    background:#141418;margin:0 auto 16px;display:block}
+  .pick-cf .amt{font-family:var(--font-head);font-size:30px;font-weight:700;color:#E9B84A}
+  .pick-cf .cap{font-size:12.5px;color:#8d8a82;margin-top:8px;line-height:1.6}
+  .pick-cf .err{font-size:12.5px;color:#e0556a;margin-top:12px;min-height:16px}
+  .pick-cf .btns{display:flex;gap:10px;margin-top:20px}
+  .pick-cf button{flex:1;padding:13px;border:1px solid rgba(255,255,255,.14);
+    background:none;color:#8d8a82;font:inherit;font-size:12.5px;cursor:pointer;border-radius:9px}
+  .pick-cf button.go{border-color:#b8862e;background:linear-gradient(140deg,#FCE39A,#F1C14C);
+    color:#100d05;font-weight:700;letter-spacing:1px}
+  .pick-cf button[disabled]{opacity:.5;cursor:default}
+
+  /* Assets. What someone standing at the capsule actually wants to know:
+     what they hold now, what they have spent, what came back. The market
+     portfolio answers a different question (what is my collection worth)
+     and its figures only distract here. */
+  .as-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:2px 22px 20px}
+  .as-top{display:flex;gap:10px}
+  .as-box{flex:1;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px}
+  .as-box .k{font-size:10px;letter-spacing:1.6px;color:#6d6754}
+  .as-box .v{margin-top:6px;display:flex;align-items:baseline;gap:5px}
+  .as-box .v b{font-family:var(--font-head);font-size:24px;font-weight:700;color:#fff}
+  .as-box .v small{font-size:11px;color:#8d8a82}
+  .as-box .v b.gold{color:#E9B84A}
+
+  .as-sum{display:flex;gap:14px;margin-top:12px;padding:11px 14px;
+    border:1px solid rgba(255,255,255,.07);border-radius:10px}
+  .as-sum .c{flex:1}
+  .as-sum .sep{width:1px;background:rgba(255,255,255,.08)}
+  .as-sum .k{font-size:10px;letter-spacing:1.4px;color:#6d6754}
+  .as-sum .v{font-size:14px;color:#e8e6e0;margin-top:4px}
+  .as-sum .v.in{color:#5dcaa5}
+
+  .as-h{font-size:10px;letter-spacing:1.8px;color:#6d6754;margin:20px 0 4px}
+  .as-r{display:flex;align-items:center;gap:10px;padding:11px 2px;
+    border-bottom:1px solid rgba(255,255,255,.06)}
+  .as-r:last-child{border-bottom:0}
+  .as-r .ic{width:26px;height:26px;flex:none;border-radius:50%;display:grid;
+    place-items:center;font-size:13px;border:1px solid rgba(255,255,255,.18);color:#c9c4b8}
+  .as-r.in .ic{border-color:rgba(93,202,165,.5);color:#5dcaa5}
+  .as-r.cap .ic{border-color:rgba(233,184,74,.45);color:#E9B84A}
+  .as-r .t{flex:1;min-width:0}
+  .as-r .t b{display:block;font-size:12.5px;color:#e8e6e0;font-weight:400;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .as-r .t span{display:block;font-size:10.5px;color:#6d6754;margin-top:2px}
+  .as-r .a{font-size:13px;font-weight:700;color:#c9c4b8;white-space:nowrap}
+  .as-r.in .a{color:#5dcaa5}
+  .as-empty{color:#6d6754;font-size:12px;padding:12px 2px}
+  .as-dep{width:100%;margin-top:18px;padding:13px;border:0;border-radius:9px;
+    background:linear-gradient(180deg,#f4d27a,#b8862e);color:#fff;
+    font:inherit;font-size:12px;letter-spacing:1.2px;font-weight:700;cursor:pointer}
+  .as-dep:hover{filter:brightness(1.08)}
+  @media(max-width:560px){
+    .pick-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;padding:4px 14px 16px}
+    .pick-h{padding:18px 16px 12px}.pick-h b{font-size:18px}
+  }
+
+  /* Card badge: its own box below the card, as in the reference. The
+     reflection already occupies that space and the two cannot share it,
+     so a card carrying a badge drops its reflection -- better than mirrored
+     text showing through. */
+  .rcw{display:flex;flex-direction:column;align-items:stretch}
+  
+  .rcbb{margin-top:9px;min-height:58px;border:1.5px solid var(--rc,#888);border-radius:10px;
+    padding:8px 6px;text-align:center;
+    display:flex;flex-direction:column;justify-content:center;gap:3px;
+    background:linear-gradient(180deg,#131313,#070707);
+    box-shadow:0 0 18px -8px var(--rc,#888), inset 0 0 0 1px rgba(255,255,255,.05)}
+  .rcbb .l{font-family:var(--font-body);font-size:9px;letter-spacing:1.4px;
+    color:var(--rc,#8d8578);opacity:.8;font-weight:600;line-height:1.35}
+  .rcbb .v{font-family:var(--font-body);font-size:16px;font-weight:700;color:var(--rc,var(--gold))}
+  /* Rarities with no price yet. The slot stays and only the figure is
+     blank; an empty cell would leave badges at different heights. */
+  .rcbb .v.na{opacity:.45}
+  .rcbb.mk{border-style:dashed}
+  .rcbb.mk{opacity:.8}
+  .rcbb.sellhit{cursor:pointer;transition:.15s}
+  .rcbb.sellhit:hover{background:rgba(233,184,74,.08)}
   .capframe{position:relative;width:100%;max-width:520px;aspect-ratio:739/628;margin:0 auto;justify-self:center;cursor:pointer}
   .capframe .capframeimg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
   .capframe .capwin{position:absolute;left:5.0%;top:5.9%;width:92.2%;height:87.6%;overflow:hidden;border-radius:9px;z-index:2}
@@ -79,16 +238,14 @@
   .obtn.ghost{background:transparent;border:1px solid var(--line);color:#c9b06a;font-size:13px;letter-spacing:.6px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
   .obtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
   .obtn.ghost .off{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;color:#1a1206;background:var(--gold);font-size:9.5px;font-weight:800;letter-spacing:0;line-height:1.05}
-  .payhist{display:inline-flex;align-items:center;gap:7px;margin-top:10px;
-    font-size:12px;letter-spacing:.4px;color:var(--muted,#9a968e);
-    text-decoration:none;padding:7px 13px;border-radius:8px;
-    border:1px solid rgba(255,255,255,.12);transition:.15s}
-  .payhist:hover{color:#eceae4;border-color:rgba(255,255,255,.28)}
-  .payhist i{font-size:14px}
+  /* Same size and colour as the charge button, and it stands in that
+     slot while purchases are locked -- better than a slot carrying nothing
+     but COMING SOON. */
+  .payhist{margin-top:12px}
   .bnote{display:flex;gap:9px;align-items:flex-start;margin-top:16px}
   .bnote .ic{width:18px;height:18px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:11px;font-style:italic;font-family:var(--font-body)}
   .bnote p{font-size:11px;color:#978b62;font-weight:400;line-height:1.5}
-  .rarity{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;width:100%;max-width:1500px;margin:14px auto 0;padding:0 28px 20px;position:relative;z-index:1}
+  .rarity{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;width:100%;max-width:1500px;margin:26px auto 0;padding:0 28px;position:relative;z-index:1}
   .rc{width:192px;height:300px;border-radius:13px;position:relative;border:1.5px solid var(--rc,#888);background:linear-gradient(180deg,#131313,#070707);color:var(--rc,#888);box-shadow:0 0 36px -4px var(--rc,#888), 0 30px 50px -16px var(--rc,#888), inset 0 0 0 1px rgba(255,255,255,.06), inset 0 0 64px rgba(0,0,0,.5);display:flex;flex-direction:column;padding:15px 16px}
   .rc:not(.hasimg){-webkit-box-reflect:below 9px linear-gradient(transparent,transparent 38%,rgba(255,255,255,.24))}
   .rc::before{content:"";position:absolute;inset:0;z-index:0;opacity:.2;border-radius:12px;background:radial-gradient(78% 55% at 50% 46%, var(--rc,#888) 0%, transparent 64%)}
@@ -106,9 +263,48 @@
   .rc.holo .rl,.rc.holo .rf{color:#d9b8ff}
   .rc.holo .rl::before{background:#c46bff;box-shadow:0 0 8px #c46bff}
   .rc.holo .rm svg{filter:drop-shadow(0 0 14px rgba(196,107,255,.6))}
+  /* A card with a badge drops its reflection: it lands where the badge
+     goes and leaves mirrored text below. Must sit after .rc.hasimg to
+     override it. */
+  /* Kill the reflection. none is not always honoured, so it is masked
+     with a fully transparent gradient instead: still drawn, nothing
+     visible. The badge sits directly below the card, where it fell. */
+  .rarity .rc,
+  .rarity .rc.hasimg,
+  .rarity .rc:not(.hasimg),
+  .rcw > .rc{-webkit-box-reflect:below 0 linear-gradient(transparent,transparent) !important}
+  .rcw{width:192px}
+
+  /* On a short screen the cards shrink to keep the page to one screen.
+     Moving the badge below the card made the strip taller, and the width
+     has to come down with it to hold the ratio. */
+  @media(min-width:1041px) and (max-height:1000px){ .rarity{margin-top:18px} }
+  @media(min-width:1041px) and (max-height:900px){ .rarity{margin-top:12px} }
+  @media(min-width:1041px) and (max-height:960px){
+    .rc{width:170px;height:266px}
+    .rcw{width:170px}
+    .rcbb{margin-top:8px;padding:6px 5px}
+    .rcbb .v{font-size:14px}
+    .rarity{gap:13px}
+  }
+  @media(min-width:1041px) and (max-height:860px){
+    .rc{width:146px;height:228px}
+    .rcw{width:146px}
+    .rcbb{margin-top:7px;padding:5px 4px;gap:2px}
+    .rcbb .l{font-size:8px;letter-spacing:1.1px}
+    .rcbb .v{font-size:13px}
+    .rarity{gap:11px;margin-top:2px;padding-bottom:10px}
+    .ocwrap{padding-top:10px}
+  }
+  @media(min-width:1041px) and (max-height:770px){
+    .rc{width:126px;height:197px}
+    .rcw{width:126px}
+    .rarity{gap:9px;padding-bottom:8px}
+  }
   @media(max-width:1040px){
     .rarity{display:grid !important;grid-template-columns:repeat(5,1fr) !important;gap:7px;padding:0 12px 20px;max-width:640px;margin:14px auto 0}
     .rc{width:auto !important;height:auto !important;aspect-ratio:192/300;padding:8px 5px}
+    .rcw{width:auto}
     .rc .rm{font-size:34px}.rc .rl{font-size:8px;letter-spacing:.2px}.rc .rf{font-size:6.5px}
   }
   @media(max-width:980px){.ocwrap{grid-template-columns:1fr;gap:18px;max-width:600px;text-align:center;padding-top:76px}
@@ -196,6 +392,25 @@
         <h4>ABOUT CAPSULE</h4>
       </div>
       <p>Each capsule contains<br>a randomized MEMONS card.<br>The rarity is based on probability.<br>Better luck, bigger memes.</p>
+
+      <!-- Buyback prices, read from buyback_prices so a change in the
+           admin lands here too. With buyback closed, or no rarity open,
+           the whole panel stays hidden. -->
+      <div class="bbsec" id="bbSec" style="display:none">
+        <div class="abh" style="margin-bottom:10px">
+          <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h5M9.5 14.5h5"/></svg></span>
+          <h4>INSTANT BUYBACK</h4>
+        </div>
+        <div id="bbBody"></div>
+      </div>
+
+      <!-- The layer the price list opens into. It covers the aboutbox
+           whole, so the box height holds and the card strip stays put. -->
+      <div class="bbover" id="bbOver">
+        <div class="oh"><b id="bbOverT"></b>
+          <button class="ox" id="bbOverX" aria-label="Close">&times;</button></div>
+        <div id="bbOverB"></div>
+      </div>
     </div>
   </div>
   <div class="capframe" id="capFrame">
@@ -250,10 +465,7 @@
          the front page. Without it the link replaced the capsule section
          with the marketplace and left no way back -- the section stayed
          marketplace for the rest of the visit. -->
-    <a class="payhist" id="payHist" href="marketplace.html#deposits"
-       target="_top" hidden>
-      <i class="ti ti-receipt"></i> Payment history
-    </a>
+    <button class="obtn gold payhist" id="payHist" type="button" hidden>ASSETS</button>
     <div class="bnote">
       <span class="ic">i</span>
       <p>Charge pull credits with USDT, then open capsules anytime.</p>
@@ -261,13 +473,408 @@
   </div>
 </section>
 <section class="rarity">
-  <div class="rc" style="--rc:#cfccc4"><img class="rcimg" src="images/open-capsule/card-common.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#5b9bd5"><img class="rcimg" src="images/open-capsule/card-rare.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#c468d8"><img class="rcimg" src="images/open-capsule/card-epic.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc" style="--rc:#E9B84A"><img class="rcimg" src="images/open-capsule/card-legendary.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
-  <div class="rc holo" style="--rc:#e0556a"><img class="rcimg" src="images/open-capsule/card-mythic.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div data-r="common" class="rc" style="--rc:#cfccc4"><img class="rcimg" src="images/open-capsule/card-common.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">COMMON</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfccc4"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgC)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div data-r="rare" class="rc" style="--rc:#5b9bd5"><img class="rcimg" src="images/open-capsule/card-rare.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">RARE</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0ff"/><stop offset="1" stop-color="#5b9bd5"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgR)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div data-r="epic" class="rc" style="--rc:#c468d8"><img class="rcimg" src="images/open-capsule/card-epic.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">EPIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dcff"/><stop offset="1" stop-color="#c468d8"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgE)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div data-r="legendary" class="rc" style="--rc:#E9B84A"><img class="rcimg" src="images/open-capsule/card-legendary.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">LEGENDARY</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0cf"/><stop offset="1" stop-color="#E9B84A"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgL)"/></svg></div><div class="rf">MEMONS CARD</div></div>
+  <div data-r="mythic" class="rc holo" style="--rc:#e0556a"><img class="rcimg" src="images/open-capsule/card-mythic.webp" alt="" onload="this.parentElement.classList.add('hasimg')" onerror="this.remove()"><div class="rl">MYTHIC</div><div class="rm"><svg viewBox="0 0 100 100"><defs><linearGradient id="mgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b81"/><stop offset=".33" stop-color="#ffd86b"/><stop offset=".62" stop-color="#6bd0ff"/><stop offset="1" stop-color="#c46bff"/></linearGradient></defs><path d="M12 88 V16 H30 L50 52 L70 16 H88 V88 H70 V44 L50 76 L30 44 V88 Z" fill="url(#mgM)"/></svg></div><div class="rf">MEMONS CARD</div></div>
 </section>
 <footer class="foot"><span><b>MEMONS CAPSULE</b>&nbsp;&nbsp;|&nbsp;&nbsp;POWERED BY APEPE</span></footer>
+<script>
+/* Buyback prices.
+   Written into the code, a price edited in the admin would leave the old
+   figure on screen. buyback_prices is read directly and only the open
+   rarities are drawn, at whatever they are worth then -- opening EPIC
+   later needs no change here.
+
+   No wallet is required: this is a board read before buying, so it has to
+   show before anyone signs in. Selling itself goes through the wallet. */
+(function(){
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+  var RC={common:'#cfccc4',rare:'#5b9bd5',epic:'#c468d8',legendary:'#E9B84A',mythic:'#e0556a'};
+  var ORDER=['common','rare','epic','legendary','mythic','secret','special','creator','genesis','relic'];
+  // Capsules shown on the board. event has no buyback, so it is left out.
+  var CAPS=[{id:'paid',label:'PAID CAPSULE',tab:'PAID',note:null},
+            {id:'airdrop',label:'AIRDROP CAPSULE',tab:'AIRDROP',
+             note:'Identity verification required before selling.'}];
+
+  function money(v){ return '$'+Number(v).toFixed(2); }
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function rows(list){
+    return list.map(function(b){
+      var c=RC[b.rarity]||'#cfccc4';
+      return '<div class="bbrow sellhit" style="--rc:'+c+'"><span class="dot"></span>'+
+        '<span class="rn">'+esc(b.rarity.toUpperCase())+'</span>'+
+        '<span class="rp">'+money(b.price)+'</span></div>';
+    }).join('');
+  }
+
+  function paintPanel(byCap){
+    var sec=document.getElementById('bbSec'), body=document.getElementById('bbBody');
+    if(!sec||!body) return;
+
+    var have=CAPS.filter(function(c){ return (byCap[c.id]||[]).length; });
+    // With no rarity open the panel hides itself. An empty box reads as
+    // buyback being available but priced at nothing.
+    if(!have.length){ sec.style.display='none'; return; }
+
+    body.innerHTML='<div class="bbtabs">'+have.map(function(c,i){
+      return '<button data-i="'+i+'">'+esc(c.tab)+'</button>';
+    }).join('')+'</div>';
+
+    var over=document.getElementById('bbOver'),
+        oT=document.getElementById('bbOverT'),
+        oB=document.getElementById('bbOverB'),
+        oX=document.getElementById('bbOverX');
+
+    function close(){
+      over.classList.remove('on');
+      body.querySelectorAll('.bbtabs button').forEach(function(x){ x.classList.remove('on'); });
+    }
+    oX.onclick=close;
+
+    body.querySelectorAll('.bbtabs button').forEach(function(b){
+      b.onclick=function(){
+        var i=Number(b.dataset.i), c=have[i];
+        // Pressing the open tab again closes it.
+        if(b.classList.contains('on')){ close(); return; }
+        body.querySelectorAll('.bbtabs button').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on');
+        oT.textContent=c.label;
+        oB.innerHTML=rows(byCap[c.id]||[])+
+          (c.note?'<div class="bbnote warn"><span class="ic">!</span><p>'+esc(c.note)+'</p></div>':'')+
+          '<div class="bbnote"><span class="ic">i</span>'+
+          '<p>Event Capsule cards are not eligible for buyback.</p></div>';
+        over.classList.add('on');
+      };
+    });
+
+    sec.style.display='';
+  }
+
+  /* Badges on the card strip, priced against the paid capsule: the strip
+     is where what comes out of a paid capsule is shown.
+     With buyback closed nothing is added at all. Five cards each reading
+     only "tradable on the market" is noise, not information. */
+  function paintStrip(byCap){
+    var paid={}, any=false;
+    (byCap.paid||[]).forEach(function(b){ paid[b.rarity]=b.price; any=true; });
+    if(!any) return;
+    /* The badge goes outside the card: a wrapper holds card and badge
+       stacked. Inside the card it would cover the artwork, and loose
+       beside it the strip's alignment breaks. */
+    document.querySelectorAll('.rarity .rc').forEach(function(rc){
+      var r=rc.getAttribute('data-r'); if(!r) return;
+      if(rc.parentNode && rc.parentNode.classList.contains('rcw')) return;
+
+      var w=document.createElement('div'); w.className='rcw';
+      /* The rarity colour is set on the card alone. Lift it to the
+         wrapper so the badge border picks up the same one. */
+      var rcv=rc.style.getPropertyValue('--rc');
+      if(rcv) w.style.setProperty('--rc', rcv.trim());
+      rc.parentNode.insertBefore(w, rc);
+      w.appendChild(rc);
+
+      var box=document.createElement('div');
+      if(paid[r]!=null){
+        box.className='rcbb sellhit';
+        box.innerHTML='<div class="l">INSTANT BUYBACK</div><div class="v">'+money(paid[r])+'</div>';
+      }else{
+        /* Rarities without a buyback price take the market figure. With
+           nothing listed yet, no figure is invented -- only the fact that
+           the card can be traded remains. */
+        box.className='rcbb mk'; box.dataset.r=r;
+        box.innerHTML='<div class="l">MARKETPLACE</div><div class="v na">$--</div>';
+      }
+      w.appendChild(box);
+    });
+  }
+
+  /* Market prices: the floor per rarity, laid onto the badges.
+     If the function is not there yet, or nothing is listed, it passes
+     quietly -- the price is extra, and failing to read it must not empty
+     the screen. */
+  function paintFloors(H){
+    /* Whether that is the lowest ask or the highest bid is an admin
+       choice, and the label has to move with it: leave the label alone
+       and what a card costs is read as what it fetches. */
+    Promise.all([
+      fetch(SB_URL+'/rest/v1/rpc/market_floor_source',{method:'POST',headers:H,body:'{}'})
+        .then(function(r){ return r.ok?r.json():'ask'; }).catch(function(){ return 'ask'; }),
+      fetch(SB_URL+'/rest/v1/rpc/market_floor_by_rarity',{method:'POST',headers:H,body:'{}'})
+        .then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })
+    ]).then(function(res){
+      var src=res[0]==='bid'?'bid':'ask', rows=res[1];
+      var label=src==='bid'?'HIGHEST BID':'LOWEST ASK';
+      if(!Array.isArray(rows)) return;
+      var f={};
+      rows.forEach(function(x){ if(x && x.price>0) f[x.rarity]=Number(x.price); });
+      document.querySelectorAll('.rcbb.mk').forEach(function(box){
+        var p=f[box.dataset.r];
+        if(p==null) return;
+        box.classList.remove('mk');
+        box.innerHTML='<div class="l">'+label+'</div><div class="v">'+money(p)+'</div>';
+      });
+    });
+  }
+
+  function load(){
+    var H={apikey:SB_ANON,Authorization:'Bearer '+SB_ANON,'content-type':'application/json'};
+    /* The buyback switch is asked for through buyback_open(). Reading
+       market_config directly returns 401: that table carries values that
+       must not be public, so only the one column comes out, as a
+       function. */
+    fetch(SB_URL+'/rest/v1/rpc/buyback_open',{method:'POST',headers:H,body:'{}'})
+      .then(function(r){ return r.json(); })
+      .then(function(on){
+        if(on!==true){ paintStrip({}); return null; }
+        return fetch(SB_URL+'/rest/v1/buyback_prices?select=capsule_id,rarity,price&enabled=is.true&price=gt.0',{headers:H})
+          .then(function(r){ return r.json(); });
+      })
+      .then(function(list){
+        if(!Array.isArray(list)) return;
+        var byCap={};
+        list.forEach(function(b){
+          (byCap[b.capsule_id]=byCap[b.capsule_id]||[]).push(b);
+        });
+        Object.keys(byCap).forEach(function(k){
+          byCap[k].sort(function(a,b){
+            var ia=ORDER.indexOf(a.rarity), ib=ORDER.indexOf(b.rarity);
+            return (ia<0?99:ia)-(ib<0?99:ib);
+          });
+        });
+        paintPanel(byCap);
+        paintStrip(byCap);
+        paintFloors(H);
+      })
+      // A failed lookup must still leave the page usable -- only the panel goes.
+      .catch(function(){ paintStrip({}); });
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',load);
+  else load();
+
+  /* ── Sell dialog ─────────────────────────────────────────────
+     Opens from anywhere a price is printed. The list is whatever the
+     server sent: deciding here what can be sold would drift from the
+     rule the server actually enforces. */
+
+  function box(html){
+    var old=document.getElementById('sellPick'); if(old) old.remove();
+    var wrap=document.createElement('div'); wrap.id='sellPick'; wrap.className='pick';
+    var b=document.createElement('div'); b.className='pick-box'; b.innerHTML=html;
+    wrap.appendChild(b); document.body.appendChild(wrap);
+    wrap.addEventListener('click',function(e){ if(e.target===wrap) wrap.remove(); });
+    var x=b.querySelector('.pick-x'); if(x) x.onclick=function(){ wrap.remove(); };
+    return b;
+  }
+
+  function notice(title, text){
+    box('<div class="pick-empty"><div class="pick-h" style="padding:0"><b>'+esc(title)+'</b></div>'+
+        '<p>'+text+'</p></div><button class="pick-x">Close</button>');
+  }
+
+  function confirmSell(card){
+    var b=box('<div class="pick-h"><b>SELL THIS CARD</b>'+
+        '<span>This cannot be undone. The card leaves your collection.</span></div>'+
+      '<div class="pick-cf">'+
+        (card.image_url?'<img src="'+esc(card.image_url)+'" alt="">':'')+
+        '<div class="amt">'+money(card.price)+'</div>'+
+        '<div class="cap">'+esc(card.name||card.card_id)+' &middot; '+esc(String(card.rarity).toUpperCase())+
+          '<br>Paid into your site balance. Withdraw from the marketplace.</div>'+
+        '<div class="err" id="sellErr"></div>'+
+        '<div class="btns"><button id="sellNo">Cancel</button>'+
+        '<button class="go" id="sellYes">SELL</button></div>'+
+      '</div>');
+
+    b.querySelector('#sellNo').onclick=function(){
+      document.getElementById('sellPick').remove(); openSell();
+    };
+
+    var yes=b.querySelector('#sellYes'), err=b.querySelector('#sellErr');
+    yes.onclick=async function(){
+      yes.disabled=true; yes.textContent='SELLING…'; err.textContent='';
+      try{
+        var r=await MEMONS.authFetch('/market/buyback',{owned_id:card.owned_id});
+        var row=Array.isArray(r)?r[0]:r;
+        document.getElementById('sellPick').remove();
+        notice('SOLD', 'You received <b style="color:#E9B84A">'+
+          money(row&&row.price!=null?row.price:card.price)+'</b>.<br>'+
+          'Balance: <b style="color:#E9B84A">'+
+          money(row&&row.balance!=null?row.balance:0)+'</b>');
+      }catch(e){
+        // Say what the server refused on, rather than making them ask.
+        var m=String((e&&e.message)||e||'');
+        var MSG={BUYBACK_CLOSED:'Buyback is currently closed.',
+                 NOT_BUYABLE:'This card is not eligible for buyback.',
+                 CARD_NOT_HELD:'This card is no longer available.',
+                 NOT_OWNER:'This card is not yours.',
+                 WRONG_SEASON:'This card is from a past season.',
+                 DAILY_CAP_REACHED:'The daily buyback limit has been reached. Try again tomorrow.',
+                 RESERVE_FLOOR:'Buyback is paused. Please try again later.'};
+        var k=Object.keys(MSG).filter(function(x){ return m.indexOf(x)>=0; })[0];
+        err.textContent=k?MSG[k]:'Could not complete. Please try again.';
+        yes.disabled=false; yes.textContent='SELL';
+      }
+    };
+  }
+
+  async function openSell(){
+    if(!(window.MEMONS && MEMONS.connected)){
+      try{ await MEMONS.connect(); }catch(e){ return; }
+    }
+    box('<div class="pick-h"><b>INSTANT BUYBACK</b><span>Loading your cards\u2026</span></div>'+
+        '<button class="pick-x">Cancel</button>');
+
+    var r;
+    try{ r=await MEMONS.authFetch('/market/buyback-list'); }
+    catch(e){ notice('UNAVAILABLE','Could not load your cards.<br>Please try again.'); return; }
+
+    if(!r || !r.enabled){ notice('BUYBACK CLOSED','Buyback is not open right now.'); return; }
+    var list=r.cards||[];
+    if(!list.length){
+      notice('NOTHING TO SELL','None of your cards are eligible for buyback.<br>'+
+             'Only cards from paid and airdrop capsules qualify.');
+      return;
+    }
+
+    var b=box('<div class="pick-h"><b>INSTANT BUYBACK</b>'+
+        '<span>Pick a card to sell back at the fixed price.</span></div>'+
+      '<div class="pick-grid"></div><button class="pick-x">Cancel</button>');
+
+    var g=b.querySelector('.pick-grid');
+    list.forEach(function(c){
+      var d=document.createElement('div'); d.className='pick-c';
+      d.innerHTML=(c.image_url?'<img src="'+esc(c.image_url)+'" alt="">':'')+
+        '<div class="n">'+esc(c.name||c.card_id)+'</div>'+
+        '<div class="p">'+money(c.price)+'</div>';
+      d.onclick=function(){ document.getElementById('sellPick').remove(); confirmSell(c); };
+      g.appendChild(d);
+    });
+  }
+
+  /* ── Assets ──────────────────────────────────────────────────
+     Balance, spending and buybacks in one place. Checking it where the
+     money was spent beats being sent to the marketplace with no way
+     back. */
+  function fmt(n){
+    return Number(n||0).toLocaleString('en-US',
+      {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function day(t){
+    if(!t) return '';
+    var d=new Date(t);
+    return isNaN(d) ? '' : d.toISOString().slice(0,10).replace(/-/g,'.');
+  }
+
+  async function openAsset(){
+    if(!(window.MEMONS && MEMONS.connected)){
+      try{ await MEMONS.connect(); }catch(e){ return; }
+    }
+    box('<div class="pick-h"><b>ASSETS</b><span>Loading\u2026</span></div>'+
+        '<button class="pick-x">Close</button>');
+
+    var r=null, st=null;
+    try{ r=await MEMONS.authFetch('/market/me'); }catch(e){}
+    try{ st=await MEMONS.state(); }catch(e){}
+    if(!r){ notice('UNAVAILABLE','Could not load your assets.<br>Please try again.'); return; }
+
+    var bal=Number(r.balance||0);
+    var pulls=(st && st.pulls_remaining!=null) ? st.pulls_remaining : '\u2013';
+
+    /* Two sources, on purpose. Capsule payments are paid on chain and land
+       in topup_orders; buybacks move the site balance and land in the
+       ledger. Reading one would miss half the story, and reading both for
+       the same event would count it twice -- so each supplies only what
+       the other cannot see. */
+    var pays=(r.topups||[]).filter(function(t){
+      return t.status==='paid' || t.status==='credited' || t.paid_at;
+    });
+    var moves=(r.ledger||[]).filter(function(l){
+      return l.reason==='buyback' || l.reason==='deposit' || l.reason==='withdraw';
+    });
+
+    var spent=pays.reduce(function(a,t){ return a+Number(t.amount_usdt||0); },0);
+    var back=moves.reduce(function(a,l){
+      return l.reason==='buyback' ? a+Number(l.delta||0) : a;
+    },0);
+
+    var acts=[];
+    pays.forEach(function(t){
+      acts.push({ t:t.paid_at||t.created_at, cls:'cap', icon:'ti-box',
+        name:(t.quantity ? t.quantity+' pulls' : 'Capsule'),
+        amt:-Number(t.amount_usdt||0) });
+    });
+    moves.forEach(function(l){
+      var d=Number(l.delta||0);
+      acts.push({ t:l.created_at, cls:d>0?'in':'', icon:d>0?'ti-coin':'ti-arrow-up',
+        name:(l.reason==='buyback' ? 'Buyback'
+             : l.reason==='deposit' ? 'Deposit' : 'Withdrawal'),
+        amt:d });
+    });
+    acts.sort(function(a,b){ return new Date(b.t)-new Date(a.t); });
+
+    var html=
+      '<div class="as-top">'+
+        '<div class="as-box"><div class="k">BALANCE</div>'+
+          '<div class="v"><b>'+fmt(bal)+'</b><small>USDT</small></div></div>'+
+        '<div class="as-box"><div class="k">PULLS LEFT</div>'+
+          '<div class="v"><b class="gold">'+pulls+'</b></div></div>'+
+      '</div>'+
+      '<div class="as-sum">'+
+        '<div class="c"><div class="k">SPENT</div>'+
+          '<div class="v">'+fmt(spent)+' USDT</div></div>'+
+        '<div class="sep"></div>'+
+        '<div class="c"><div class="k">BOUGHT BACK</div>'+
+          '<div class="v in">'+fmt(back)+' USDT</div></div>'+
+      '</div>'+
+      '<div class="as-h">ACTIVITY</div>'+
+      (acts.length
+        ? acts.slice(0,12).map(function(a){
+            var sign=a.amt>0?'+':'\u2212';
+            return '<div class="as-r '+a.cls+'">'+
+              '<span class="ic"><i class="ti '+a.icon+'"></i></span>'+
+              '<span class="t"><b>'+esc(a.name)+'</b>'+
+              '<span>'+esc(day(a.t))+'</span></span>'+
+              '<span class="a">'+sign+fmt(Math.abs(a.amt))+'</span></div>';
+          }).join('')
+        : '<div class="as-empty">No activity yet.</div>')+
+      '<button class="as-dep" id="asDep">DEPOSIT</button>';
+
+    var b=box('<div class="pick-h"><b>ASSETS</b>'+
+        '<span>Your balance and capsule activity.</span></div>'+
+      '<div class="as-body">'+html+'</div>'+
+      '<button class="pick-x">Close</button>');
+
+    /* Deposit opens the charge dialog already on this page. Sending
+       someone to the marketplace for it means leaving the capsule -- and
+       inside the embed there is no way back. */
+    var dep=b.querySelector('#asDep');
+    if(dep) dep.onclick=function(){
+      var w=document.getElementById('sellPick'); if(w) w.remove();
+      var c=document.getElementById('chargeBtn'); if(c) c.click();
+    };
+  }
+
+  /* Delegated, so it survives the button appearing or being redrawn. */
+  document.addEventListener('click', function(e){
+    var t=e.target.closest && e.target.closest('#payHist');
+    if(!t) return;
+    e.preventDefault(); openAsset();
+  });
+
+  // Anywhere a price is printed is a way in.
+  document.addEventListener('click',function(e){
+    var t=e.target.closest && e.target.closest('.bbrow, .rcbb:not(.mk)');
+    if(!t) return;
+    e.preventDefault(); openSell();
+  });
+})();
+</script>
 <script>
 (function(){
   /* How many pulls are left. Read once the wallet is connected, and again
@@ -508,6 +1115,8 @@ if(document.documentElement.classList.contains('embed')){
       if(origLabel !== null && !btn.textContent.trim()){
         btn.textContent = origLabel;
       }
+      // With purchases open the charge button returns and Assets drops below it.
+      showHistoryLink();
       btn.onclick = null;
       if(note) note.textContent = '';
       return;
@@ -533,11 +1142,22 @@ if(document.documentElement.classList.contains('embed')){
     }
     btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); };
     if(note) note.textContent = 'Purchases open once the capsule pricing is finalised.';
+    showHistoryLink();
   }
 
   function showHistoryLink(){
     var a = document.getElementById('payHist');
-    if(a) a.hidden = !(window.MEMONS && MEMONS.connected);
+    if(!a) return;
+    a.hidden = !(window.MEMONS && MEMONS.connected);
+
+    /* While purchases are locked, Assets stands in that slot. Same size,
+       so nothing is left empty, and the charge button comes back when
+       purchases open. */
+    var btn = document.getElementById('chargeBtn');
+    if(!btn) return;
+    var locked = btn.classList.contains('locked');
+    btn.style.display = locked ? 'none' : '';
+    a.style.marginTop = locked ? '12px' : '12px';
   }
 
   if(document.readyState !== 'loading'){ applyLock(); showHistoryLink(); }

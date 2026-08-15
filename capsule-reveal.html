@@ -42,14 +42,15 @@
   .got{font-weight:700;font-size:20px;opacity:0;transition:.3s}.got b{color:var(--rc,#E9B84A);margin-left:8px}
   .stage.single ~ .info .you,.stage.single ~ .info .got{opacity:1}
 
-  /* 뽑은 카드의 값.
+  /* What the card is worth.
 
-     두 모양이 있다. 환매는 회사가 사주는 확정 금액이라 값을 상자에
-     담고, 시세는 변하는 값이라 라벨 아래 숫자로 두고 옆에 마켓으로
-     가는 문을 낸다. 같은 모양이면 확정가와 변동가를 구분할 수 없다.
+     Two shapes. Buyback is a fixed figure the company pays, so the value
+     sits in a box; the market price moves, so it goes under a label with
+     a door through to the market beside it. One shape for both would hide
+     which kind of figure is on screen.
 
-     모서리를 깎는다. 카드도 버튼도 같은 각진 형태라, 둥근 알약 하나만
-     끼면 다른 화면에서 가져온 것처럼 보인다. */
+     Corners are cut. The cards and the buttons are all angular, and a
+     single rounded pill reads as borrowed from another screen. */
   .pricebar{position:fixed;left:0;right:var(--panel);bottom:118px;z-index:41;
     display:flex;align-items:stretch;margin:0 auto;
     width:var(--cw,336px);min-height:58px;padding:0;gap:0;
@@ -59,22 +60,23 @@
     box-shadow:0 0 30px -14px var(--rc,#888)}
   .pricebar.wide{width:calc(var(--cw,336px) + 110px)}
 
-  /* 등급별 그림 바. 테두리·라벨·아이콘·마켓 버튼이 그림에 다 그려져
-     있어 CSS 로 흉내 내지 않는다. 빈 칸에 글자만 얹는다.
+  /* Per-rarity bar artwork. The frame, label, icon and market button are
+     all drawn into the image, so nothing here imitates them in CSS -- only
+     the figures go into the empty cells.
 
-     수치는 bar-tuner.html 로 맞춘 값이다. 그림마다 칸 위치가 달라
-     등급별로 따로 잡는다. */
+     The measurements come from bar-tuner.html. Each image puts its cells
+     in a slightly different place, so each rarity carries its own. */
   .pricebar.art{position:fixed;left:0;right:var(--panel);
     bottom:var(--bottom,118px);z-index:41;margin:0 auto;padding:0;min-height:0;
     background:none;border:0;box-shadow:none;clip-path:none;
     width:var(--aw,470px);
     height:calc(var(--aw,470px) * var(--arH,140) / var(--arW,871));
-    /* 원본 비율을 지킨다. 폭과 높이를 따로 늘리면 그림이 찌그러진다. */
+    /* Keep the source ratio. Stretching width and height apart distorts it. */
     background-image:var(--art);background-size:contain;
     background-position:center;background-repeat:no-repeat;
     display:flex;align-items:stretch}
 
-  /* 마켓 등급 — 왼쪽 칸에 라벨과 값 */
+  /* Market rarities: label and value in the left cell */
   .pricebar.art .pcell{border:0;clip-path:none;margin:0;
     display:flex;align-items:center;flex:0 0 auto;
     width:var(--split,54%);padding:0 0 0 var(--padL,6%);
@@ -87,7 +89,7 @@
   .pricebar.art .pvi u{font-size:calc(var(--aw) * var(--fsUnit,.019));opacity:.6}
   .pricebar.art .pdiv,.pricebar.art .pgo,.pricebar.art .pv{display:none}
 
-  /* 환매 등급 — 값 칸에 숫자만. 라벨과 USDT 는 그림에 있다. */
+  /* Buyback rarities: just the figure. Label and USDT are in the image. */
   .pricebar.art.buy .pcell{display:none}
   .pricebar.art.buy .pv{display:flex;align-items:center;justify-content:flex-end;
     position:absolute;left:var(--cellL,61.5%);right:var(--usdtR,16%);
@@ -99,7 +101,7 @@
 
   .pricebar.hidden{display:none}
 
-  /* 왼쪽 칸 — 아이콘과 라벨, 시세일 때는 값까지 */
+  /* Left cell: icon and label, plus the value on market rarities */
   .pricebar .pcell{flex:1 1 auto;min-width:0;display:flex;align-items:center;
     gap:12px;margin:7px 0 7px 7px;padding:0 4px 0 11px;
     border:1px solid color-mix(in srgb, var(--rc,#888) 26%, transparent);
@@ -114,9 +116,9 @@
   .pricebar .pl{font-size:11px;letter-spacing:1.8px;color:var(--rc,#cfcabf);
     font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  /* 값. 환매는 오른쪽 상자, 시세는 라벨 아래 */
-  /* 값 칸. 왼쪽 변이 사선이라 왼쪽 칸과 맞물린다. 직각으로 두면 그냥
-     붙여 놓은 상자가 되고, 레퍼런스의 맞물린 느낌이 사라진다. */
+  /* The value: boxed on the right for buyback, under the label for market */
+  /* Value cell. Its left edge slants so it interlocks with the cell
+     beside it; square, the two read as boxes set down side by side. */
   .pricebar .pv{flex:0 0 auto;align-self:stretch;margin:7px 7px 7px 0;
     display:flex;align-items:center;
     font-size:20px;font-weight:800;color:#fff;letter-spacing:.3px;
@@ -127,7 +129,7 @@
   .pricebar .pvi{font-size:19px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap}
   .pricebar .pvi u{text-decoration:none;font-size:10.5px;opacity:.55;margin-left:5px}
 
-  /* 마켓으로 가는 문. 칸 사이를 세로선으로 가른다. */
+  /* The door through to the market, split off by a rule. */
   .pricebar .pgo{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;
     padding:0 18px;margin:7px 7px 7px 0;
     border:1px solid color-mix(in srgb, var(--rc,#888) 60%, transparent);
@@ -578,8 +580,8 @@
     <div class="got" id="got"><span id="cName">APEPE</span> <b id="rr">LEGENDARY</b></div>
   </div>
 
-  <!-- 뽑은 카드의 값. 환매가 붙는 등급이면 그 값을, 아니면 마켓 시세를
-       보여준다. 값이 없으면 통째로 감춘다. -->
+  <!-- What the card is worth: the buyback price where one applies,
+       otherwise the market price. With neither, the bar stays hidden. -->
   <div class="pricebar hidden" id="priceBar">
     <span class="pcell">
       <span class="pi" id="pbIcon"></span>
@@ -774,12 +776,12 @@ function weightedRarity(){
   const total=RAR.reduce((s,x)=>s+x.weight,0); let n=Math.random()*total;
   for(const x of RAR){ if((n-=x.weight)<0) return x; } return RAR[0];
 }
-/* ── 뽑은 카드의 값 ────────────────────────────────────────────────
-   환매가가 붙는 등급이면 그 값을, 아니면 마켓 시세를 보여준다. 둘 다
-   없으면 바를 감춘다 — 값을 지어내거나 빈 칸을 남기지 않는다.
+/* ── What the card is worth ───────────────────────────────────────
+   The buyback price where one applies, otherwise the market price. With
+   neither, the bar is hidden: no invented figure, no empty cell.
 
-   가격표는 열 때마다 부르지 않고 한 번 받아 들고 있는다. 연달아 뽑는
-   화면이라 매번 왕복하면 결과가 늦게 뜬다. */
+   The price table is fetched once and held. Pulls come one after another
+   here, and a round trip on each would land the result late. */
 var PRICE = (function(){
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
@@ -811,8 +813,9 @@ var PRICE = (function(){
 
   return {
     load: load,
-    /* 환매가가 우선이다. 환매가 있는 등급은 마켓에서 빠져 있어 시세가
-       없고, 있더라도 회사가 사주는 값이 유저에게 확실한 값이다. */
+    /* Buyback wins. Rarities with a buyback price are kept off the
+       market so there is no floor to read, and even where there is one,
+       the price the company pays is the certain figure. */
     of: function(cap, rkey){
       var b = buy && buy[(cap||'basic')+'/'+rkey];
       if(b!=null) return {kind:'buyback', price:b};
@@ -835,8 +838,9 @@ function paintPrice(it){
   bar.style.setProperty('--rc', it.color);
   var val = Number(info.price).toFixed(2)+'<u>USDT</u>';
 
-  /* bar-tuner.html 로 맞춘 값. 그림마다 칸 위치가 달라 등급별로 따로 둔다.
-     그림이 없는 등급은 아래 else 로 떨어져 예전 CSS 바로 그린다. */
+  /* Measured with bar-tuner.html. Each image puts its cells in a slightly
+     different place, so each rarity carries its own. A rarity with no
+     artwork falls through to the CSS bar below. */
   var BARS={
     common:   {buy:1, art:[871,140], aw:2.40, bottom:37,
                cellL:26.5, usdtR:34.2, numPad:2.5, fsNum:2.0, numY:3},
@@ -864,7 +868,7 @@ function paintPrice(it){
   }
 
   if(info.kind==='buyback'){
-    // 확정 금액. 그림에 라벨과 USDT 가 있어 숫자만 얹는다.
+    // A fixed figure. Label and USDT are in the image; only the number goes on.
     $('pbValueIn').classList.add('hidden');
     $('pbDiv').classList.add('hidden');
     $('pbGo').classList.add('hidden');
@@ -883,7 +887,7 @@ function paintPrice(it){
       $('pbLabel').textContent='INSTANT BUYBACK';
     }
   }else{
-    // 변하는 값. 라벨과 값을 왼쪽 칸에 두고, 바 전체가 마켓으로 가는 문이다.
+    // A moving figure. Label and value on the left, and the whole bar is the door through.
     $('pbLabel').textContent=(info.src==='bid'?'HIGHEST BID':'MARKET PRICE')+' (USDT)';
     $('pbValueIn').innerHTML=val;
     $('pbValueIn').classList.remove('hidden');
@@ -909,12 +913,12 @@ function paintPrice(it){
     }
   }
 
-  /* 바 폭은 카드 폭에 비례한다. 카드는 화면 크기에 따라 늘고 줄어서
-     고정값으로는 어긋난다.
+  /* The bar is sized against the card, which grows and shrinks with the
+     window, so a fixed width drifts.
 
-     한 번만 재면 안 된다. 이 함수는 카드가 제자리에 앉기 전에 불리고,
-     등장 애니메이션이 도는 동안 폭이 계속 변한다. 끝난 뒤 다시 재고,
-     창 크기가 바뀌어도 따라가게 한다. */
+     Measuring once is not enough: this runs before the card has settled
+     and its width keeps changing while the entry animation plays. Measure
+     again once it is done, and again whenever the window resizes. */
   function fit(){
     var img=document.querySelector('.stage.single .result img');
     var w=img && img.getBoundingClientRect().width;
@@ -1129,9 +1133,10 @@ function mapCard(card){
   const r = RAR.find(x=>x.key===rarity) || RAR[0];
   const id = c.card_id != null ? c.card_id : (c.num != null ? c.num : n.card_id);
   const dup = MEMONS_COLLECTION.all().some(x=>x.num===id && x.rarity===r.label);
-  /* capsule_id 는 환매가를 고르는 축이다. 같은 COMMON 이라도 결제
-     캡슐이면 0.60, 에어드랍이면 0.30 이다. 서버가 안 주면 basic 으로
-     둔다 — 값이 붙지 않아 가격이 안 뜰 뿐, 틀린 값이 뜨지는 않는다. */
+  /* capsule_id is the axis the buyback price hangs on: the same COMMON is
+     0.60 from a paid capsule and 0.30 from an airdrop. Absent from the
+     server it falls back to basic, which carries no price -- the bar stays
+     empty rather than showing a wrong figure. */
   const cap = c.capsule_id || n.capsule_id || 'basic';
   const it = { num:id, char:name, rarity:r.label, rkey:r.key, color:r.color,
                img: image || r.card, dup, cap };
@@ -1667,7 +1672,7 @@ function openShare(text, it){
 
   let url = SHARE_URL;
   if (it && it.num) {
-    // 캡슐 종류를 같이 넘긴다. 공유 이미지에 찍히는 환매가가 여기서 갈린다.
+    // Carry the capsule across: the price printed on the share image follows it.
     url = location.origin + '/c/' + encodeURIComponent(it.num) + '?v=' + SHARE_VERSION
         + (it.cap ? '&cap=' + encodeURIComponent(it.cap) : '');
   }
@@ -1737,7 +1742,7 @@ function closeResult(){
   $('stage')._wantPillar=false;
   $('stage').style.setProperty('--burst','#E9B84A');
   $('again').classList.add('hidden'); $('open1').classList.remove('hidden'); $('open10').classList.remove('hidden');
-  // 이전 카드의 값이 다음 결과까지 남아 있으면 안 된다.
+  // The last card's figure must not linger into the next result.
   var pb=$('priceBar'); if(pb) pb.classList.add('hidden');
   hideShare();
   $('hint').style.display='';

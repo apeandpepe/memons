@@ -431,11 +431,12 @@
      exists the answer is a fact, and the page has to say which it is. */
   var drawState = { taken: false, snapshotAt: null, wins: {} };
 
-  /* 스냅샷이 찍힌 뒤의 보유 현황.
-     추첨 자격은 스냅샷 시점 기준이지, 지금 무엇을 들고 있는지가 아니다.
-     찍힌 뒤에 카드를 팔거나 강화로 태워도 자격이 흔들리면 안 되고,
-     시즌이 넘어가 지난 시즌 카드가 화면에서 사라져도 마찬가지다.
-     null 이면 아직 스냅샷 전 — 그때는 실시간 보유 수를 쓴다. */
+  /* Holdings as of the snapshot.
+     Eligibility is judged at the moment the snapshot was taken, not by
+     what is held now: selling a card or burning it in an enhancement
+     afterwards must not move it, and neither must a season rolling over
+     and hiding last season's cards. null means no snapshot yet, and the
+     live count stands in. */
   var snapCounts = null;
 
   async function loadDraw(d){
@@ -472,8 +473,8 @@
         drawState.snapshotAt = t;
         $('evSnap').textContent = new Date(t).toISOString().slice(0,10);
 
-        /* 이 지갑의 스냅샷 시점 등급별 장수. 가장 최근 스냅샷만 본다 —
-           재촬영이 있었다면 마지막 것이 유효하다. */
+        /* This wallet's per-rarity counts at the snapshot. Only the latest
+           one counts: if it was retaken, the last stands. */
         var qres = await fetch(SB_URL + '/rest/v1/lottery_snapshot'+
           '?select=rarity,qty&address=eq.' + encodeURIComponent(String(MEMONS.address).toLowerCase()) +
           '&taken_at=eq.' + encodeURIComponent(t), { headers: H });
@@ -489,10 +490,10 @@
   }
 
   function renderPot(d){
-    /* 스냅샷이 있으면 그 값이 기준이다. 없으면 지금 보유분. */
+    /* With a snapshot, it decides. Without one, current holdings do. */
     var base = snapCounts || d;
 
-    // 스냅샷이 잡힌 뒤에는 상단 두 칸도 그 시점 기준으로 표시한다.
+    // Once a snapshot exists the two figures above follow it too.
     if(snapCounts){
       var tot = 0, k;
       for(k in snapCounts) tot += snapCounts[k];

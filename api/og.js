@@ -55,38 +55,39 @@ const BG = {
   rare:      "og-rare.jpg",
   epic:      "og-epic.jpg",
   legendary: "og-legendary.jpg",
-  // mythic: "og-mythic.jpg",   // 배경 파일 준비되면 주석 해제
+  // mythic: "og-mythic.jpg",   // uncomment once the backdrop exists
   // special: "og-special.jpg",
 };
 
 const el = (type, props) => ({ type, props });
 
-/* 판 전체를 한 장의 도형으로 그린다. 이미지 렌더러가 clip-path 를
-   지원하지 않아 테두리를 SVG 로 얹는다.
+/* The whole plate as one drawing. The image renderer has no clip-path,
+   so the frame is laid over as SVG.
 
-   조각이 둘이고 경계가 사선이다. 왼쪽은 오른쪽 변이, 오른쪽은 왼쪽
-   변이 같은 각도로 기울어 서로 맞물린다. 직사각형 둘로 두면 맞물린
-   느낌이 사라져 그냥 붙여 놓은 상자가 된다.
+   Two pieces, and the seam between them is a slant: the left piece's right
+   edge and the right piece's left edge lean at the same angle so they
+   interlock. Two plain rectangles lose that and read as boxes set down
+   side by side.
 
-   sk 는 사선이 가로로 벌어지는 폭. 조각 사이 틈은 gap. */
+   sk is how far the slant leans across; gap is the space between. */
 const plateSvg = (w, h, c, sk, gap, split, stroke, fill, innerFill) => {
-  // 바깥 틀 — 네 모서리가 깎인 팔각형
+  // Outer frame: an octagon, all four corners cut
   const outer =
     `M ${c} 1 L ${w - c} 1 L ${w - 1} ${c} L ${w - 1} ${h - c} L ${w - c} ${h - 1} ` +
     `L ${c} ${h - 1} L 1 ${h - c} L 1 ${c} Z`;
 
-  const p = 8;              // 틀 안쪽 여백
-  const ic = c - 4;         // 안쪽 조각의 깎임
-  const lx = split - gap;   // 왼쪽 조각이 끝나는 곳 (아래 기준)
-  const rx = split;         // 오른쪽 조각이 시작하는 곳 (아래 기준)
+  const p = 8;              // inset from the frame
+  const ic = c - 4;         // corner cut on the inner pieces
+  const lx = split - gap;   // where the left piece ends, at the bottom
+  const rx = split;         // where the right piece starts, at the bottom
   const t = p, b = h - p;
 
-  // 왼쪽 조각 — 오른쪽 변이 위로 갈수록 오른쪽으로 벌어진다
+  // Left piece: its right edge leans further right towards the top
   const left =
     `M ${p + ic} ${t} L ${lx + sk} ${t} L ${lx} ${b - ic} L ${lx - ic} ${b} ` +
     `L ${p + ic} ${b} L ${p} ${b - ic} L ${p} ${t + ic} Z`;
 
-  // 오른쪽 조각 — 왼쪽 변이 같은 각도로 기울어 맞물린다
+  // Right piece: its left edge leans at the same angle and interlocks
   const right =
     `M ${rx + sk} ${t} L ${w - p - ic} ${t} L ${w - p} ${t + ic} L ${w - p} ${b - ic} ` +
     `L ${w - p - ic} ${b} L ${rx - ic} ${b} L ${rx} ${b - ic} Z`;
@@ -99,7 +100,7 @@ const plateSvg = (w, h, c, sk, gap, split, stroke, fill, innerFill) => {
     `</svg>`);
 };
 
-/* 시세 쪽은 조각이 하나다. */
+/* The market plate is a single piece. */
 const bevelSvg = (w, h, c, stroke, fill) =>
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
@@ -108,7 +109,7 @@ const bevelSvg = (w, h, c, stroke, fill) =>
     `L ${c} ${h - 1} L 1 ${h - c} L 1 ${c} Z" fill="${fill}" stroke="${stroke}" stroke-width="2"/></svg>`,
   );
 
-// 번개. 문자 글리프는 색이 먹지 않아 도형으로 그린다.
+// The bolt. A text glyph renders monochrome here, so it is drawn.
 const boltSvg = (color) =>
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
@@ -117,13 +118,15 @@ const boltSvg = (color) =>
   );
 
 // ---------------------------------------------------------------------
-// 카드 값. 환매가가 붙는 등급이면 그 값을, 아니면 마켓 시세를 쓴다.
+// What the card is worth: the buyback price where one applies, otherwise
+// the market floor.
 //
-// 값을 쿼리로 받지 않고 서버에서 읽는다. 공유 이미지는 타임라인에
-// 남아 돌아다니는데, 클라이언트가 넘긴 숫자를 그대로 그리면 아무나
-// 임의의 가격이 박힌 MEMONS 이미지를 만들 수 있다.
+// Read on the server rather than taken from the query. A share image
+// lives on in timelines, and drawing whatever number the client sent
+// would let anyone mint a MEMONS image carrying a price of their choosing.
 //
-// 조회에 실패하면 값 없이 그린다. 이미지가 아예 안 나오는 것보다 낫다.
+// If the lookup fails the plate is left off. A card with no figure beats
+// no image at all.
 // ---------------------------------------------------------------------
 const SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
 const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
@@ -156,7 +159,7 @@ async function priceOf(rarity, capsule) {
     if (fp > 0) {
       return { label: src === "bid" ? "HIGHEST BID" : "MARKET PRICE", price: fp };
     }
-  } catch (_) { /* 값 없이 그린다 */ }
+  } catch (_) { /* draw without a figure */ }
   return null;
 }
 
@@ -199,46 +202,35 @@ export default async function handler(req) {
   const CARD_W = 525;
   const CARD_H2 = 700;
   const CARD_BOTTOM = 745;
-  /* 캡슐 종류에 따라 환매가가 다르다. 안 주면 결제 캡슐 기준으로 본다 —
-     공유 이미지는 유료 캡슐을 알리는 자리이기 때문이다. */
+  /* Buyback prices differ per capsule. Absent, assume the paid one: a
+     share image is where the paid capsule gets shown off. */
   const capsule = (url.searchParams.get("cap") || "paid")
     .replace(/[^a-z]/g, "").slice(0, 16) || "paid";
   const priced = await priceOf(rarity, capsule);
 
-  /* 값 판. 카드 아래 받침 위에 얹는다. 레퍼런스와 같이 라벨을 위,
-     값을 아래에 두고 받침 폭에 맞춰 넓게 잡는다 — 좁은 알약으로 두면
-     받침 한가운데 떠 있는 스티커처럼 보인다. */
-  /* 받침 아래. 받침 위에 겹치면 조명 링을 덮어 판이 받침을 뚫고
-     올라온 것처럼 보인다. 카드 아래 남은 공간에 그대로 앉힌다. */
-  /* 값 판. 받침 위에 걸치게 앉힌다 — 받침 아래로 내리면 캔버스 바닥에
-     닿아 잘리고, 카드와 따로 노는 꼬리표처럼 보인다.
-
-     두 모양이 있다. 환매는 회사가 사주는 확정 금액이라 아이콘·라벨·값
-     상자를 한 줄로 놓고, 시세는 변하는 값이라 라벨 아래 큰 숫자만 둔다.
-     같은 모양이면 확정가와 변동가를 구분할 수 없다. */
+  /* Two shapes. Buyback is a fixed figure the company pays, so icon,
+     label and value sit in one row; the market price moves, so the label
+     goes above a large number. One shape for both would hide which kind
+     of figure is on screen. */
   const isBuy = priced && priced.label === "INSTANT BUYBACK";
-  /* 받침은 배경 아트에서 x 620~1172, y 784~860 에 있다. 판을 그 안에
-     앉혀 받침의 일부처럼 보이게 한다. 위에 얹으면 받침을 가린 스티커가
-     되고, 아래로 내리면 캔버스 바닥에 잘린다. */
-  /* 받침은 배경 아트에서 x 620~1172, y 784~860 에 있다. 레퍼런스를 재보면
-     판은 받침보다 좁고(약 90%) 받침 앞면 안쪽에 박혀 있다. 받침보다 넓게
-     잡거나 위로 올리면 받침에 얹은 꼬리표로 보인다. */
-  /* 판 크기·위치. share-tuner.html 로 맞춘 값. */
+  /* Plate size and position, set with share-tuner.html. The podium in the
+     backdrop runs x 620-1172, y 784-860; the plate sits inside its front
+     face, narrower than the podium. Wider or higher and it reads as a
+     label stuck on top; lower and the canvas cuts it off. */
   const PLATE_W = 470;
   const PLATE_H = 112;
   const PLATE_TOP = 800;
   const PLATE_R = 18;
 
   const rc = rgb(rgbc);
-  /* MYTHIC 은 카드도 바도 무지개다. 색 하나로는 표현할 수 없어
-     테두리와 숫자에 그라디언트를 쓴다. */
+  /* MYTHIC is a rainbow on the card and on the bar. One colour cannot
+     stand in for it, so the border and the figure take a gradient. */
   const RAINBOW = "linear-gradient(90deg,#ff3b3b,#ffb03b,#ffe83b,#4bd964,#3bd0ff,#7a5bff,#ff3bd0)";
   const isRainbow = rarity === "mythic";
 
-  /* 배경 그림에 판이 이미 그려져 있는 등급. 판을 또 그리면 겹친다.
-     값 칸의 USDT 왼쪽에 숫자만 오른쪽 정렬로 얹는다.
-     좌표는 배경 그림에서 실측한 값이다 (배경 크기가 등급마다 달라
-     비율이 아니라 그림별로 잡는다). */
+  /* Rarities whose backdrop already carries the plate. Drawing another
+     would double it, so only the figure goes on, right-aligned to the
+     left of the USDT already printed there. */
   const BAKED = {
     common: { right: 1052, cy: 820, fsNum: 24 },
     rare:   { right: 1026, cy: 824, fsNum: 22 },
@@ -247,9 +239,9 @@ export default async function handler(req) {
 
   const plateBody = !priced ? [] : baked ? [] : isBuy ? [
   ] : [
-    /* 시세 판. 모서리를 살짝 둥글게 — 각지면 카드의 둥근 프레임과
-       따로 놀고, 많이 둥글면 알약처럼 보인다.
-       테두리를 두 겹 둘러 배경 빛에 묻히지 않게 한다. */
+    /* Market plate. Corners rounded a little: square fights the card's
+       rounded frame, and any rounder reads as a pill. Two rings of border
+       so the edge survives the light behind it. */
     el("div", {
       style: {
         position: "absolute", left: "0px", top: "0px",
@@ -298,7 +290,7 @@ export default async function handler(req) {
           style: {
             display: "flex", alignItems: "baseline", gap: "12px", marginTop: "10px",
             fontSize: "33px", fontWeight: 800, lineHeight: 1,
-            /* 무지개는 글자 자체에 그라디언트를 입힌다. */
+            /* Rainbow paints the glyphs themselves. */
             ...(isRainbow
               ? { backgroundImage: RAINBOW, backgroundClip: "text", color: "transparent" }
               : { color: rgb(rgbc) }),
@@ -323,22 +315,13 @@ export default async function handler(req) {
     display: "flex",
   });
 
-  /* 배경에 판이 그려진 등급은 숫자만 얹는다. 배경 그림이 1800x942 로
-     늘어나므로 실측 좌표도 같은 비율로 옮긴다. */
-  /* 배경에 판이 그려진 등급은 숫자만 얹는다. 좌표는 1800x942 기준이라
-     환산이 필요 없다 — 배경 그림이 그 크기로 늘어나 그려진다. */
-  /* 배경에 판이 그려진 등급은 숫자만 얹는다. 좌표는 1800x942 기준이라
-     환산이 필요 없다 — 배경 그림이 그 크기로 늘어나 그려진다.
+  /* Coordinates are in the 1800x942 space the canvas is drawn in, so the
+     backdrop needs no conversion.
 
-     cellL 이 right 보다 크면 칸 폭이 음수가 된다. 조절판에서는 그 경우
-     폭이 무시되고 글자가 cellL 에서 시작한다. 같은 결과가 나오도록
-     폭을 넣지 않는다. */
-  /* 배경에 판이 그려진 등급은 숫자만 얹는다. 좌표는 1800x942 기준이라
-     환산이 필요 없다 — 배경 그림이 그 크기로 늘어나 그려진다.
-
-     칸 폭 대신 오른쪽 끝 한 점으로 자리를 정한다. 폭을 두면 브라우저와
-     이 렌더러의 계산이 달라져, 조절판에서 맞춘 위치와 어긋났다.
-     넉넉한 칸을 오른쪽 끝에 맞춰 붙이면 두 곳이 같은 결과를 낸다. */
+     The figure is placed by its right edge alone. Giving the box a width
+     made the browser and this renderer measure differently, and the
+     position drifted from what the tuner showed; a generous box pinned to
+     the right edge lands the same in both. */
   const bakedNum = (priced && baked)
     ? el("div", {
         style: {
@@ -453,8 +436,8 @@ export default async function handler(req) {
         },
       }),
       el("div", { style: { width: `${SIDE}px`, flexShrink: 0, display: "flex" } }),
-      // 배경 아트가 없는 등급도 값은 보여야 한다. 이쪽은 카드가 세로
-      // 가운데라 판을 아래에 띄운다.
+      // Rarities without backdrop art still need the figure. The card is
+      // centred vertically here, so the plate floats below it.
       priced ? el("div", { style: plateStyle(PLATE_TOP), children: plateBody }) : null,
     ],
   });
@@ -465,9 +448,9 @@ export default async function handler(req) {
       width: W,
       height: H,
       headers: {
-        /* 카드 그림은 안 바뀌지만 값은 바뀐다. immutable 로 박아두면
-           어드민에서 환매가를 고쳐도 옛 값이 박힌 이미지가 계속 돌아
-           다닌다. 한 시간이면 타임라인에서는 충분히 빠르다. */
+        /* The artwork never changes but the figure does. Pinned immutable,
+           a price edited in the admin would leave the old one circulating.
+           An hour is quick enough for a timeline. */
         "cache-control": "public, max-age=3600, s-maxage=3600",
       },
     }

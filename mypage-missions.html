@@ -1121,6 +1121,9 @@
         cards.push({ id:id, name:c.name || id,
                      rarity:(c.rarity||'common').toLowerCase(),
                      image:c.image_url || '',
+                     // Buyback prices differ per capsule, and the figure
+                     // printed on the share image follows from this.
+                     cap:o.capsule_id || 'basic',
                      at:o.pulled_at || '' });
       });
       // Newest first: the card someone just opened is the one they came to
@@ -1135,7 +1138,8 @@
          opens, so a card tried once during testing keeps its old picture
          however the page is rewritten. A new address is a new card to X. */
       var SHARE_VERSION = 2;
-      var url  = location.origin + '/c/' + card.id + '?v=' + SHARE_VERSION;
+      var url  = location.origin + '/c/' + card.id + '?v=' + SHARE_VERSION
+               + (card.cap ? '&cap=' + encodeURIComponent(card.cap) : '');
       var text = 'I just pulled a ' + card.rarity.toUpperCase() +
                  ' card from MEMONS \uD83D\uDD25';
       /* Same three sets as the reveal screen. Kept as its own copy rather
