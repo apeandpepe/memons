@@ -76,7 +76,8 @@
   <h1>공유 이미지 조절</h1>
   <div class="note">1800×942 기준으로 값을 다룹니다.<br>
     COMMON·RARE 는 배경에 판이 있어 숫자만,<br>
-    EPIC 이상은 판까지 그립니다.</div>
+    EPIC 이상은 판까지 그립니다. 세 등급이 같은 판을 쓰므로<br>
+    하나만 맞추면 셋 다 적용됩니다.</div>
   <div class="rar" id="rar"></div>
   <div id="ctrls"></div>
   <div class="sec">결과</div>
@@ -106,13 +107,11 @@ var RAINBOW='linear-gradient(90deg,#ff3b3b,#ffb03b,#ffe83b,#4bd964,#3bd0ff,#7a5b
 
 /* 전부 1800x942 기준. og.js 가 쓰는 좌표계와 같다. */
 var DEF={
-  common:   {cardW:525, cardBottom:745, right:1052, cy:823, cellL:987, fsNum:53},
-  rare:     {cardW:525, cardBottom:745, right:1026, cy:824, cellL:970, fsNum:53},
-  epic:     {cardW:525, cardBottom:745, pw:470, ph:112, top:800, radius:18,
-             fsLabel:22, fsVal:46, fsUnit:22, gapLV:10},
-  legendary:{cardW:525, cardBottom:745, pw:470, ph:112, top:800, radius:18,
-             fsLabel:22, fsVal:46, fsUnit:22, gapLV:10},
-  mythic:   {cardW:525, cardBottom:745, pw:470, ph:112, top:800, radius:18,
+  common:   {cardW:525, cardBottom:745, right:1052, cy:844, fsNum:24},
+  rare:     {cardW:525, cardBottom:745, right:1026, cy:824, fsNum:22},
+  /* EPIC 이상은 판 규격이 같다. plate 하나를 셋이 함께 쓴다 —
+     따로 두면 같은 값을 세 번 맞춰야 하고, 하나만 어긋나기 쉽다. */
+  plate:    {cardW:525, cardBottom:745, pw:470, ph:112, top:800, radius:18,
              fsLabel:22, fsVal:46, fsUnit:22, gapLV:10}
 };
 
@@ -122,7 +121,6 @@ var FIELDS={
     ['cardBottom','카드 아랫변',400,942,1,'px'],
     ['right','숫자 오른쪽 끝',400,1700,1,'px'],
     ['cy','숫자 세로 중심',500,942,1,'px'],
-    ['cellL','숫자 칸 왼쪽',300,1600,1,'px'],
     ['fsNum','숫자 크기',10,120,1,'px']
   ],
   plate:[
@@ -141,6 +139,8 @@ var FIELDS={
 
 var cur='common';
 var val=JSON.parse(JSON.stringify(DEF));
+/* 등급이 어느 값 묶음을 쓰는지. EPIC 이상은 모두 plate 를 가리킨다. */
+function slot(r){ return BAKED[r] ? r : 'plate'; }
 var $=function(id){return document.getElementById(id);};
 
 function scale(){
@@ -158,15 +158,15 @@ function buildCtrls(){
       '<input type="range" min="'+f[2]+'" max="'+f[3]+'" step="'+f[4]+'" id="s_'+k+'">';
     box.appendChild(row);
     var sl=$('s_'+k), nb=$('n_'+k);
-    sl.value=val[cur][k]; nb.value=val[cur][k];
-    sl.oninput=function(){ val[cur][k]=parseFloat(sl.value); nb.value=sl.value; apply(); };
+    sl.value=val[slot(cur)][k]; nb.value=val[slot(cur)][k];
+    sl.oninput=function(){ val[slot(cur)][k]=parseFloat(sl.value); nb.value=sl.value; apply(); };
     nb.oninput=function(){ var x=parseFloat(nb.value); if(isNaN(x))return;
-      val[cur][k]=x; sl.value=x; apply(); };
+      val[slot(cur)][k]=x; sl.value=x; apply(); };
   });
 }
 
 function apply(){
-  var v=val[cur], baked=BAKED[cur], c=RC[cur], rainbow=(cur==='mythic');
+  var v=val[slot(cur)], baked=BAKED[cur], c=RC[cur], rainbow=(cur==='mythic');
   $('bg').src='images/og/'+BGF[cur];
   var card=$('card');
   card.src=CARD[cur];
@@ -182,14 +182,17 @@ function apply(){
   var num=$('num'), plate=$('plate'), gd=$('guide');
   if(baked){
     plate.style.display='none'; num.style.display='flex';
-    num.style.left=v.cellL+'px';
-    num.style.top=(v.cy-v.fsNum*0.75)+'px';
-    num.style.width=(v.right-v.cellL)+'px';
-    num.style.height=(v.fsNum*1.5)+'px';
+    /* 오른쪽 끝 한 점으로 자리를 정한다. 넉넉한 칸을 그 끝에 맞춰
+       붙이므로, 공유 이미지 쪽과 계산이 같다. */
+    var BOX=600;
+    num.style.left=(v.right-BOX)+'px';
+    num.style.top=(v.cy-v.fsNum)+'px';
+    num.style.width=BOX+'px';
+    num.style.height=(v.fsNum*2)+'px';
     num.style.fontSize=v.fsNum+'px';
     num.textContent=PRICE[cur];
-    gd.style.cssText='left:'+v.cellL+'px;top:'+(v.cy-v.fsNum*0.75)+'px;width:'+
-      (v.right-v.cellL)+'px;height:'+(v.fsNum*1.5)+'px';
+    gd.style.cssText='left:'+(v.right-BOX)+'px;top:'+(v.cy-v.fsNum)+'px;width:'+
+      BOX+'px;height:'+(v.fsNum*2)+'px';
   }else{
     num.style.display='none'; plate.style.display='flex';
     var x=Math.round((1800-v.pw)/2);
@@ -234,7 +237,7 @@ function dump(){ $('out').textContent=JSON.stringify(val,null,1); }
 
 $('copy').onclick=function(){ navigator.clipboard.writeText($('out').textContent).then(function(){
   $('copy').textContent='복사됨'; setTimeout(function(){$('copy').textContent='복사';},1200); }); };
-$('reset').onclick=function(){ val[cur]=JSON.parse(JSON.stringify(DEF[cur])); buildCtrls(); apply(); };
+$('reset').onclick=function(){ val[slot(cur)]=JSON.parse(JSON.stringify(DEF[slot(cur)])); buildCtrls(); apply(); };
 $('gd').onclick=function(){ document.body.classList.toggle('noguide'); };
 
 $('card').addEventListener('load', apply);

@@ -223,10 +223,11 @@ export default async function handler(req) {
   /* 받침은 배경 아트에서 x 620~1172, y 784~860 에 있다. 레퍼런스를 재보면
      판은 받침보다 좁고(약 90%) 받침 앞면 안쪽에 박혀 있다. 받침보다 넓게
      잡거나 위로 올리면 받침에 얹은 꼬리표로 보인다. */
-  const PLATE_W = isBuy ? 505 : 400;
-  const PLATE_H = 72;
-  const PLATE_TOP = 822;
-  const VBOX_W = 178;
+  /* 판 크기·위치. share-tuner.html 로 맞춘 값. */
+  const PLATE_W = 470;
+  const PLATE_H = 112;
+  const PLATE_TOP = 800;
+  const PLATE_R = 18;
 
   const rc = rgb(rgbc);
   /* MYTHIC 은 카드도 바도 무지개다. 색 하나로는 표현할 수 없어
@@ -234,16 +235,13 @@ export default async function handler(req) {
   const RAINBOW = "linear-gradient(90deg,#ff3b3b,#ffb03b,#ffe83b,#4bd964,#3bd0ff,#7a5bff,#ff3bd0)";
   const isRainbow = rarity === "mythic";
 
-  const SPLIT = 320;   // 사선 경계가 아래쪽에서 지나는 곳
-  const SKEW  = 34;    // 위로 갈수록 오른쪽으로 벌어지는 폭
-
   /* 배경 그림에 판이 이미 그려져 있는 등급. 판을 또 그리면 겹친다.
      값 칸의 USDT 왼쪽에 숫자만 오른쪽 정렬로 얹는다.
      좌표는 배경 그림에서 실측한 값이다 (배경 크기가 등급마다 달라
      비율이 아니라 그림별로 잡는다). */
   const BAKED = {
-    common: { right: 1052, cy: 844, cellL: 1059, fsNum: 24 },
-    rare:   { right: 1026, cy: 824, cellL: 1031, fsNum: 22 },
+    common: { right: 1052, cy: 844, fsNum: 24 },
+    rare:   { right: 1026, cy: 824, fsNum: 22 },
   };
   const baked = BAKED[rarity];
 
@@ -299,7 +297,7 @@ export default async function handler(req) {
         el("div", {
           style: {
             display: "flex", alignItems: "baseline", gap: "12px", marginTop: "10px",
-            fontSize: "46px", fontWeight: 800, lineHeight: 1,
+            fontSize: "33px", fontWeight: 800, lineHeight: 1,
             /* 무지개는 글자 자체에 그라디언트를 입힌다. */
             ...(isRainbow
               ? { backgroundImage: RAINBOW, backgroundClip: "text", color: "transparent" }
@@ -335,16 +333,20 @@ export default async function handler(req) {
      cellL 이 right 보다 크면 칸 폭이 음수가 된다. 조절판에서는 그 경우
      폭이 무시되고 글자가 cellL 에서 시작한다. 같은 결과가 나오도록
      폭을 넣지 않는다. */
+  /* 배경에 판이 그려진 등급은 숫자만 얹는다. 좌표는 1800x942 기준이라
+     환산이 필요 없다 — 배경 그림이 그 크기로 늘어나 그려진다.
+
+     칸 폭 대신 오른쪽 끝 한 점으로 자리를 정한다. 폭을 두면 브라우저와
+     이 렌더러의 계산이 달라져, 조절판에서 맞춘 위치와 어긋났다.
+     넉넉한 칸을 오른쪽 끝에 맞춰 붙이면 두 곳이 같은 결과를 낸다. */
   const bakedNum = (priced && baked)
     ? el("div", {
         style: {
           position: "absolute",
-          left: `${baked.cellL}px`,
-          top: `${Math.round(baked.cy - baked.fsNum * 0.75)}px`,
-          height: `${Math.round(baked.fsNum * 1.5)}px`,
-          ...(baked.right > baked.cellL
-            ? { width: `${baked.right - baked.cellL}px` }
-            : {}),
+          left: `${baked.right - 600}px`,
+          top: `${Math.round(baked.cy - baked.fsNum)}px`,
+          width: "600px",
+          height: `${baked.fsNum * 2}px`,
           display: "flex", alignItems: "center", justifyContent: "flex-end",
           fontSize: `${baked.fsNum}px`, fontWeight: 800,
           color: "#fff", lineHeight: 1,
