@@ -58,11 +58,53 @@
     clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
     box-shadow:0 0 30px -14px var(--rc,#888)}
   .pricebar.wide{width:calc(var(--cw,336px) + 110px)}
+
+  /* 등급별 그림 바. 테두리·라벨·아이콘·마켓 버튼이 그림에 다 그려져
+     있어 CSS 로 흉내 내지 않는다. 빈 칸에 글자만 얹는다.
+
+     수치는 bar-tuner.html 로 맞춘 값이다. 그림마다 칸 위치가 달라
+     등급별로 따로 잡는다. */
+  .pricebar.art{position:fixed;left:0;right:var(--panel);
+    bottom:var(--bottom,118px);z-index:41;margin:0 auto;padding:0;min-height:0;
+    background:none;border:0;box-shadow:none;clip-path:none;
+    width:var(--aw,470px);
+    height:calc(var(--aw,470px) * var(--arH,140) / var(--arW,871));
+    /* 원본 비율을 지킨다. 폭과 높이를 따로 늘리면 그림이 찌그러진다. */
+    background-image:var(--art);background-size:contain;
+    background-position:center;background-repeat:no-repeat;
+    display:flex;align-items:stretch}
+
+  /* 마켓 등급 — 왼쪽 칸에 라벨과 값 */
+  .pricebar.art .pcell{border:0;clip-path:none;margin:0;
+    display:flex;align-items:center;flex:0 0 auto;
+    width:var(--split,54%);padding:0 0 0 var(--padL,6%);
+    transform:translateY(var(--textY,0px))}
+  .pricebar.art .pi{display:none}
+  .pricebar.art .ptxt{gap:var(--lineGap,1px)}
+  .pricebar.art .pl{font-size:calc(var(--aw) * var(--fsLabel,.021));
+    letter-spacing:.14em;color:rgba(255,255,255,.72)}
+  .pricebar.art .pvi{font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff}
+  .pricebar.art .pvi u{font-size:calc(var(--aw) * var(--fsUnit,.019));opacity:.6}
+  .pricebar.art .pdiv,.pricebar.art .pgo,.pricebar.art .pv{display:none}
+
+  /* 환매 등급 — 값 칸에 숫자만. 라벨과 USDT 는 그림에 있다. */
+  .pricebar.art.buy .pcell{display:none}
+  .pricebar.art.buy .pv{display:flex;align-items:center;justify-content:flex-end;
+    position:absolute;left:var(--cellL,61.5%);right:var(--usdtR,16%);
+    top:var(--numY,0px);bottom:calc(var(--numY,0px) * -1);
+    margin:0;padding:0 var(--numPad,2.5%) 0 0;
+    background:none;border:0;clip-path:none;
+    font-size:calc(var(--aw) * var(--fsNum,.05));color:#fff;line-height:1}
+  .pricebar.art.buy .pv u{display:none}
+
   .pricebar.hidden{display:none}
 
   /* 왼쪽 칸 — 아이콘과 라벨, 시세일 때는 값까지 */
   .pricebar .pcell{flex:1 1 auto;min-width:0;display:flex;align-items:center;
-    gap:12px;padding:0 14px 0 16px}
+    gap:12px;margin:7px 0 7px 7px;padding:0 4px 0 11px;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 26%, transparent);
+    border-right:0;
+    clip-path:polygon(9px 0,100% 0,calc(100% - 22px) 100%,9px 100%,0 calc(100% - 9px),0 9px)}
   .pricebar .pi{width:30px;height:30px;flex:none;border-radius:50%;
     border:1.5px solid color-mix(in srgb, var(--rc,#888) 55%, transparent);
     display:grid;place-items:center;color:var(--rc,#e8e6e0)}
@@ -73,11 +115,14 @@
     font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* 값. 환매는 오른쪽 상자, 시세는 라벨 아래 */
-  .pricebar .pv{flex:0 0 auto;align-self:center;margin:7px 7px 7px 0;
+  /* 값 칸. 왼쪽 변이 사선이라 왼쪽 칸과 맞물린다. 직각으로 두면 그냥
+     붙여 놓은 상자가 되고, 레퍼런스의 맞물린 느낌이 사라진다. */
+  .pricebar .pv{flex:0 0 auto;align-self:stretch;margin:7px 7px 7px 0;
+    display:flex;align-items:center;
     font-size:20px;font-weight:800;color:#fff;letter-spacing:.3px;
-    padding:8px 15px;background:#050506;white-space:nowrap;
-    border:1px solid color-mix(in srgb, var(--rc,#888) 35%, transparent);
-    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+    padding:0 16px 0 30px;background:#050506;white-space:nowrap;
+    border:1px solid color-mix(in srgb, var(--rc,#888) 40%, transparent);
+    clip-path:polygon(22px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%)}
   .pricebar .pv u{text-decoration:none;font-size:11px;opacity:.6;margin-left:6px}
   .pricebar .pvi{font-size:19px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap}
   .pricebar .pvi u{text-decoration:none;font-size:10.5px;opacity:.55;margin-left:5px}
@@ -790,44 +835,103 @@ function paintPrice(it){
   bar.style.setProperty('--rc', it.color);
   var val = Number(info.price).toFixed(2)+'<u>USDT</u>';
 
+  /* bar-tuner.html 로 맞춘 값. 그림마다 칸 위치가 달라 등급별로 따로 둔다.
+     그림이 없는 등급은 아래 else 로 떨어져 예전 CSS 바로 그린다. */
+  var BARS={
+    common:   {buy:1, art:[871,140], aw:2.40, bottom:37,
+               cellL:26.5, usdtR:34.2, numPad:2.5, fsNum:2.0, numY:3},
+    rare:     {buy:1, art:[861,140], aw:2.30, bottom:39,
+               cellL:61.6, usdtR:15.8, numPad:19.7, fsNum:2.0, numY:2},
+    epic:     {art:[979,140], aw:2.81, bottom:23,
+               split:54.3, padL:34.8, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:3, textY:-1},
+    legendary:{art:[976,140], aw:2.78, bottom:18,
+               split:51.7, padL:35.5, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:2},
+    mythic:   {art:[935,140], aw:2.56, bottom:31,
+               split:50.0, padL:34.6, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:0}
+  };
+  var B=BARS[it.rkey];
+  var st=bar.style;
+
+  bar.classList.remove('wide','art','buy');
+  bar.style.cursor=''; bar.onclick=null;
+
+  if(B){
+    bar.classList.add('art');
+    st.setProperty('--art', 'url(images/reveal/bar-'+it.rkey+'.png)');
+    st.setProperty('--arW', B.art[0]);
+    st.setProperty('--arH', B.art[1]);
+    st.setProperty('--bottom', B.bottom+'px');
+  }
+
   if(info.kind==='buyback'){
-    // 확정 금액. 값을 오른쪽 상자에 담고 다른 안내는 두지 않는다.
-    bar.classList.remove('wide');
-    $('pbIcon').innerHTML='<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>';
-    $('pbLabel').textContent='INSTANT BUYBACK';
+    // 확정 금액. 그림에 라벨과 USDT 가 있어 숫자만 얹는다.
     $('pbValueIn').classList.add('hidden');
     $('pbDiv').classList.add('hidden');
     $('pbGo').classList.add('hidden');
     $('pbValue').classList.remove('hidden');
     $('pbValue').innerHTML=val;
+
+    if(B && B.buy){
+      bar.classList.add('buy');
+      st.setProperty('--cellL', B.cellL+'%');
+      st.setProperty('--usdtR', B.usdtR+'%');
+      st.setProperty('--numPad', B.numPad+'%');
+      st.setProperty('--fsNum', B.fsNum/100);
+      st.setProperty('--numY', B.numY+'px');
+    }else{
+      $('pbIcon').innerHTML='<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>';
+      $('pbLabel').textContent='INSTANT BUYBACK';
+    }
   }else{
-    // 변하는 값. 라벨 아래 두고 오른쪽은 마켓으로 가는 문에 내준다.
-    bar.classList.add('wide');
-    $('pbIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>';
+    // 변하는 값. 라벨과 값을 왼쪽 칸에 두고, 바 전체가 마켓으로 가는 문이다.
     $('pbLabel').textContent=(info.src==='bid'?'HIGHEST BID':'MARKET PRICE')+' (USDT)';
     $('pbValueIn').innerHTML=val;
     $('pbValueIn').classList.remove('hidden');
     $('pbValue').classList.add('hidden');
-    $('pbDiv').classList.remove('hidden');
-    $('pbGo').classList.remove('hidden');
+    $('pbDiv').classList.add('hidden');
+    $('pbGo').classList.add('hidden');
+
+    if(B){
+      st.setProperty('--split', B.split+'%');
+      st.setProperty('--padL', B.padL+'%');
+      st.setProperty('--fsLabel', B.fsLabel/100);
+      st.setProperty('--fsVal', B.fsVal/100);
+      st.setProperty('--fsUnit', B.fsUnit/100);
+      st.setProperty('--lineGap', B.lineGap+'px');
+      st.setProperty('--textY', B.textY+'px');
+      bar.style.cursor='pointer';
+      bar.onclick=function(){ location.href='index.html#market'; };
+    }else{
+      bar.classList.add('wide');
+      $('pbIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>';
+      $('pbDiv').classList.remove('hidden');
+      $('pbGo').classList.remove('hidden');
+    }
   }
 
-  /* 바를 카드 폭에 맞춘다. 카드는 화면 크기에 따라 늘고 줄어서 고정
-     값으로는 어긋난다.
+  /* 바 폭은 카드 폭에 비례한다. 카드는 화면 크기에 따라 늘고 줄어서
+     고정값으로는 어긋난다.
 
      한 번만 재면 안 된다. 이 함수는 카드가 제자리에 앉기 전에 불리고,
-     등장 애니메이션이 도는 동안 폭이 계속 변한다. 애니메이션이 끝난 뒤
-     다시 재고, 창 크기가 바뀌어도 따라가게 한다. */
+     등장 애니메이션이 도는 동안 폭이 계속 변한다. 끝난 뒤 다시 재고,
+     창 크기가 바뀌어도 따라가게 한다. */
   function fit(){
     var img=document.querySelector('.stage.single .result img');
     var w=img && img.getBoundingClientRect().width;
-    if(w>120) bar.style.setProperty('--cw', Math.round(w)+'px');
+    if(w>120){
+      bar.style.setProperty('--cw', Math.round(w)+'px');
+      var mul=(B && B.aw) || 1.42;
+      bar.style.setProperty('--aw', Math.round(w*mul)+'px');
+    }
   }
   fit();
   setTimeout(fit, 300); setTimeout(fit, 900);
   if(!paintPrice._bound){
     paintPrice._bound=true;
-    window.addEventListener('resize', fit);
+    window.addEventListener('resize', function(){
+      var b=document.getElementById('priceBar');
+      if(b && !b.classList.contains('hidden')) fit();
+    });
   }
 
   bar.classList.remove('hidden');

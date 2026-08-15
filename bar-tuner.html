@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS — 값 바 조절</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* 실제 뽑기 화면과 같은 값을 그대로 옮겨왔다. 여기서 보이는 크기가
+     실제 크기다. 슬라이더는 바에만 걸리고 카드는 건드리지 않는다. */
+  :root{--panel:0px;--gold:#E9B84A}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#000;color:#e8e6e0;font-family:var(--font-body),system-ui,sans-serif;overflow:hidden}
+
+  /* ── 실제 화면 재현 ─────────────────────────────────────────── */
+  .back{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,
+    rgba(20,16,10,.85),rgba(3,3,3,.96));z-index:38}
+
+  .result{position:fixed;top:12vh;left:0;right:var(--panel);margin:0 auto;width:auto;
+    height:min(64vh, calc(100vh - 240px));max-width:min(46vw,540px);aspect-ratio:958/1280;
+    z-index:40}
+  .result img{height:100%;width:auto;max-width:100%;aspect-ratio:958/1280;
+    object-fit:contain;border-radius:16px;display:block;margin:0 auto;
+    box-shadow:0 0 80px -6px var(--rc,#E9B84A),0 0 150px -12px var(--rc,#E9B84A)}
+  .badge{position:absolute;top:14px;left:14px;font-size:12px;font-weight:700;
+    padding:5px 11px;border-radius:5px;background:#555;color:#fff;z-index:2}
+
+  .info{position:fixed;left:0;right:var(--panel);bottom:190px;z-index:41;text-align:center}
+  .info .you{font-size:13px;letter-spacing:3px;color:var(--gold)}
+  .info .got{font-weight:700;font-size:24px;margin-top:6px}
+  .info .got b{color:var(--rc,#E9B84A);margin-left:8px}
+
+  .acts{position:fixed;left:0;right:var(--panel);bottom:26px;z-index:41;
+    display:flex;justify-content:center;gap:12px}
+  .acts button{border:1px solid rgba(255,255,255,.25);color:#cfccc4;background:transparent;
+    padding:12px 22px;border-radius:9px;font-weight:600;font-size:13px;letter-spacing:1.4px}
+
+  /* ── 값 바 (조절 대상) ──────────────────────────────────────── */
+  .pricebar{position:fixed;left:0;right:var(--panel);bottom:var(--bottom,118px);
+    z-index:41;margin:0 auto;padding:0;
+    background:none;border:0;box-shadow:none;
+    /* 높이는 그림 비율에서 나온다. 따로 만지지 않는다. */
+    width:var(--aw,470px);
+    height:calc(var(--aw,470px) * var(--arH,140) / var(--arW,871));
+    /* 그림 원본 비율을 지킨다. 폭과 높이를 따로 늘리면 찌그러진다. */
+    background-image:var(--art);background-size:contain;
+    background-position:center;background-repeat:no-repeat;
+    display:flex;align-items:stretch}
+
+  /* 마켓 등급 — 왼쪽 칸에 라벨과 값 */
+  .pricebar .pcell{display:flex;align-items:center;flex:0 0 auto;
+    width:var(--split,54%);padding:0 0 0 var(--padL,6%);
+    transform:translateY(var(--textY,0px))}
+  .pricebar .ptxt{display:flex;flex-direction:column;gap:var(--lineGap,1px);text-align:left}
+  .pricebar .pl{font-size:calc(var(--aw) * var(--fsLabel,.021));letter-spacing:.14em;
+    color:rgba(255,255,255,.72);font-weight:700;white-space:nowrap}
+  .pricebar .pvi{font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff;
+    font-weight:800;white-space:nowrap}
+  .pricebar .pvi u{text-decoration:none;font-size:calc(var(--aw) * var(--fsUnit,.019));
+    opacity:.6;margin-left:6px}
+
+  /* 환매 등급 — 값 칸에 숫자만 */
+  .pricebar .pv{display:none;position:absolute;
+    left:var(--cellL,61.5%);right:var(--usdtR,16%);
+    top:var(--numY,0px);bottom:calc(var(--numY,0px) * -1);
+    align-items:center;justify-content:flex-end;
+    padding:0 var(--numPad,2.5%) 0 0;
+    font-size:calc(var(--aw) * var(--fsNum,.05));color:#fff;font-weight:800;line-height:1}
+
+  body.buy .pcell{display:none}
+  body.buy .pv{display:flex}
+
+  /* ── 조절판 ─────────────────────────────────────────────────── */
+  .tuner{position:fixed;top:0;right:0;bottom:0;width:290px;z-index:90;
+    background:rgba(10,10,12,.96);border-left:1px solid rgba(233,184,74,.25);
+    padding:14px;overflow-y:auto;font-size:11px;backdrop-filter:blur(6px)}
+  .tuner h1{font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:4px}
+  .tuner .note{color:#7a756a;line-height:1.5;margin-bottom:12px}
+  .tuner .rar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+  .tuner .rar button{flex:1;min-width:52px;padding:7px 3px;background:#1b1b1b;
+    border:1px solid #333;color:#ccc;border-radius:6px;font-size:10px;cursor:pointer}
+  .tuner .rar button.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+  .row{margin-bottom:9px}
+  .row label{display:flex;justify-content:space-between;color:#9a9382;margin-bottom:3px}
+  .row label .numin{width:66px;background:#08080a;border:1px solid #333;color:#fff;
+    border-radius:5px;padding:2px 5px;font-size:11px;font-weight:700;text-align:right}
+  .row label .u{color:#6f6a60;margin-left:3px}
+  .row input[type=range]{width:100%;accent-color:var(--gold)}
+  .sec{color:#6f6a60;letter-spacing:1.5px;font-size:9px;margin:14px 0 6px;
+    border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+  .out{margin-top:14px;background:#08080a;border:1px solid #262620;border-radius:8px;
+    padding:10px;color:#9fd8a8;font-family:ui-monospace,monospace;font-size:10px;
+    line-height:1.6;white-space:pre-wrap;word-break:break-all}
+  .tuner .btns{display:flex;gap:6px;margin-top:10px}
+  .tuner .btns button{flex:1;padding:9px;background:var(--gold);color:#000;border:0;
+    border-radius:7px;font-weight:700;font-size:11px;cursor:pointer}
+  .tuner .btns button.ghost{background:#1b1b1b;color:#ccc;border:1px solid #333}
+</style></head>
+<body>
+
+<div class="back"></div>
+<div class="result"><span class="badge">COLLECTED</span><img id="art" alt=""></div>
+<div class="info"><div class="you">OPENED</div>
+  <div class="got"><span id="cName">APEPE</span> <b id="rr">COMMON</b></div></div>
+
+<div class="pricebar" id="bar">
+  <span class="pcell"><span class="ptxt">
+    <span class="pl" id="pl">MARKET PRICE (USDT)</span>
+    <span class="pvi" id="pvi">12.45<u>USDT</u></span>
+  </span></span>
+  <span class="pv" id="pv">0.60</span>
+</div>
+
+<div class="acts"><button>SHARE</button><button>SAVE</button><button>CONTINUE</button></div>
+
+<div class="tuner">
+  <h1>값 바 조절</h1>
+  <div class="note">등급을 고르고 슬라이더로 맞추세요.<br>다 맞으면 아래 값을 복사해 전달하시면 됩니다.</div>
+
+  <div class="rar" id="rar"></div>
+
+  <div id="ctrls"></div>
+
+  <div class="sec">결과</div>
+  <div class="out" id="out"></div>
+  <div class="btns">
+    <button id="copy">복사</button>
+    <button class="ghost" id="reset">되돌리기</button>
+  </div>
+</div>
+
+<script>
+var SB="https://neixdrtamznrooougcda.supabase.co";
+var KEY="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+var RC={common:'#cfccc4',rare:'#5b9bd5',epic:'#c468d8',legendary:'#E9B84A',mythic:'#e0556a'};
+var BUY={common:1,rare:1};
+var PRICE={common:'0.60',rare:'0.90',epic:'12.45',legendary:'624.80',mythic:'1840.00'};
+
+/* 그림마다 가로세로 비율이 다르다. 폭을 정하면 높이가 따라온다. */
+var ART={
+  common:{w:871,h:140}, rare:{w:861,h:140},
+  epic:{w:979,h:140},   legendary:{w:976,h:140}, mythic:{w:935,h:140}
+};
+
+/* 슬라이더로 만질 값. 처음 값은 지금 코드에 들어 있는 것과 같다. */
+var DEF={
+  common:   {aw:1.10, bottom:118, cellL:61.5, usdtR:16.0, numPad:2.5, fsNum:5.0, numY:0},
+  rare:     {aw:1.10, bottom:118, cellL:61.6, usdtR:15.8, numPad:2.5, fsNum:5.0, numY:0},
+  epic:     {aw:1.42, bottom:118, split:54.3, padL:6.0, fsLabel:2.1, fsVal:4.2, fsUnit:1.9, lineGap:1, textY:0},
+  legendary:{aw:1.42, bottom:118, split:51.7, padL:6.0, fsLabel:2.1, fsVal:4.2, fsUnit:1.9, lineGap:1, textY:0},
+  mythic:   {aw:1.42, bottom:118, split:55.0, padL:6.0, fsLabel:2.1, fsVal:4.2, fsUnit:1.9, lineGap:1, textY:0}
+};
+
+/* 슬라이더 정의. [키, 이름, 최소, 최대, 단계, 단위] */
+var FIELDS={
+  buy:[
+    ['aw','바 폭 (카드 폭 대비)',0.2,4.0,0.01,'x'],
+    ['bottom','바 위치 (아래에서)',0,600,1,'px'],
+    ['cellL','숫자 칸 왼쪽',0,100,0.1,'%'],
+    ['usdtR','숫자 칸 오른쪽',0,60,0.1,'%'],
+    ['numPad','숫자 오른 여백',0,30,0.1,'%'],
+    ['fsNum','숫자 크기',0.5,20,0.1,'%'],
+    ['numY','숫자 위아래',-60,60,1,'px']
+  ],
+  mk:[
+    ['aw','바 폭 (카드 폭 대비)',0.2,4.0,0.01,'x'],
+    ['bottom','바 위치 (아래에서)',0,600,1,'px'],
+    ['split','글자 칸 폭',0,100,0.1,'%'],
+    ['padL','글자 왼 여백',0,40,0.1,'%'],
+    ['fsLabel','라벨 크기',0.3,10,0.05,'%'],
+    ['fsVal','값 크기',0.5,16,0.05,'%'],
+    ['fsUnit','USDT 크기',0.3,10,0.05,'%'],
+    ['lineGap','줄 간격',-20,40,1,'px'],
+    ['textY','글자 위아래',-60,60,1,'px']
+  ]
+};
+
+var cur='common';
+var val=JSON.parse(JSON.stringify(DEF));
+var CARDS={
+  common:   SB+'/storage/v1/object/public/cards/common/common_mrh1job2q55.webp',
+  rare:     SB+'/storage/v1/object/public/cards/rare/rare_mrn95pmfnye.webp',
+  epic:     SB+'/storage/v1/object/public/cards/epic/epic_mrh1kyc9y66.webp',
+  legendary:SB+'/storage/v1/object/public/cards/legendary/legendary_mrh1n4xztgt.webp',
+  mythic:   SB+'/storage/v1/object/public/cards/mythic/mythic_ms5riukaa8b.webp'
+};
+
+var $=function(id){return document.getElementById(id);};
+
+/* 카드 주소는 위에 박아뒀다. cards 를 로그인 없이 못 읽어서
+   조회 방식으로는 그림이 뜨지 않았다. */
+
+function num(v,step){ return step>=1 ? String(Math.round(v)) : v.toFixed(String(step).split('.')[1].length); }
+
+function buildCtrls(){
+  var buy=BUY[cur], list=FIELDS[buy?'buy':'mk'], box=$('ctrls');
+  box.innerHTML='';
+  list.forEach(function(f){
+    var key=f[0], row=document.createElement('div'); row.className='row';
+    row.innerHTML='<label>'+f[1]+'<span><input class="numin" id="n_'+key+'" '+
+      'type="number" step="'+f[4]+'"><span class="u">'+f[5]+'</span></span></label>'+
+      '<input type="range" min="'+f[2]+'" max="'+f[3]+'" step="'+f[4]+'" id="s_'+key+'">';
+    box.appendChild(row);
+    var sl=$('s_'+key), nb=$('n_'+key);
+    sl.value=val[cur][key]; nb.value=num(val[cur][key],f[4]);
+    /* 슬라이더로 대충, 칸에 숫자를 직접 넣어 정밀하게.
+       칸에는 슬라이더 범위 밖 값도 넣을 수 있다. */
+    sl.oninput=function(){
+      val[cur][key]=parseFloat(sl.value);
+      nb.value=num(val[cur][key],f[4]); apply();
+    };
+    nb.oninput=function(){
+      var x=parseFloat(nb.value); if(isNaN(x)) return;
+      val[cur][key]=x; sl.value=x; apply();
+    };
+  });
+}
+
+function apply(){
+  var v=val[cur], buy=BUY[cur], a=ART[cur];
+  document.body.classList.toggle('buy', !!buy);
+  document.documentElement.style.setProperty('--rc', RC[cur]);
+
+  var img=$('art');
+  img.src = CARDS[cur] || ('images/open-capsule/card-'+cur+'.png');
+  $('rr').textContent=cur.toUpperCase();
+  $('rr').style.color=RC[cur];
+
+  // 바 폭은 카드 폭에 비례한다. 실제 화면과 같은 방식.
+  var cw=img.getBoundingClientRect().width || 380;
+  var bar=$('bar'), st=bar.style;
+  st.setProperty('--aw', Math.round(cw*v.aw)+'px');
+  st.setProperty('--arW', a.w); st.setProperty('--arH', a.h);
+  st.setProperty('--art', 'url(images/reveal/bar-'+cur+'.png)');
+  st.setProperty('--bottom', v.bottom+'px');
+
+  if(buy){
+    $('pv').textContent=PRICE[cur];
+    st.setProperty('--cellL', v.cellL+'%');
+    st.setProperty('--usdtR', v.usdtR+'%');
+    st.setProperty('--numPad', v.numPad+'%');
+    st.setProperty('--fsNum', (v.fsNum/100));
+    st.setProperty('--numY', v.numY+'px');
+  }else{
+    $('pvi').innerHTML=PRICE[cur]+'<u>USDT</u>';
+    st.setProperty('--split', v.split+'%');
+    st.setProperty('--padL', v.padL+'%');
+    st.setProperty('--fsLabel', (v.fsLabel/100));
+    st.setProperty('--fsVal', (v.fsVal/100));
+    st.setProperty('--fsUnit', (v.fsUnit/100));
+    st.setProperty('--lineGap', v.lineGap+'px');
+    st.setProperty('--textY', v.textY+'px');
+  }
+  dump();
+}
+
+function dump(){
+  var o={};
+  Object.keys(val).forEach(function(k){ o[k]=val[k]; });
+  $('out').textContent=JSON.stringify(o,null,1);
+}
+
+function buildRar(){
+  var box=$('rar');
+  ['common','rare','epic','legendary','mythic'].forEach(function(k){
+    var b=document.createElement('button');
+    b.textContent=k.slice(0,3).toUpperCase();
+    b.onclick=function(){
+      cur=k;
+      Array.prototype.forEach.call(box.children,function(x){x.classList.remove('on');});
+      b.classList.add('on');
+      buildCtrls(); apply();
+    };
+    if(k===cur) b.classList.add('on');
+    box.appendChild(b);
+  });
+}
+
+$('copy').onclick=function(){
+  navigator.clipboard.writeText($('out').textContent).then(function(){
+    $('copy').textContent='복사됨'; setTimeout(function(){ $('copy').textContent='복사'; },1200);
+  });
+};
+$('reset').onclick=function(){
+  val[cur]=JSON.parse(JSON.stringify(DEF[cur]));
+  buildCtrls(); apply();
+};
+
+// 카드가 실린 뒤 폭이 정해지므로 다시 잰다.
+$('art').addEventListener('load', apply);
+window.addEventListener('resize', apply);
+
+buildRar(); buildCtrls(); apply();
+</script>
+</body></html>
