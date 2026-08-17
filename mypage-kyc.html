@@ -174,6 +174,11 @@
   .qrplate{display:flex;justify-content:center;padding:18px;background:#fff;
     border-radius:12px;margin:6px 0 14px}
   .qrplate img{display:block;width:210px;height:210px}
+  .nocam{display:flex;gap:12px;margin-top:16px;padding:14px 16px;border-radius:11px;
+    border:1px solid rgba(233,184,74,.28);background:rgba(233,184,74,.05)}
+  .nocam i{color:var(--gold);font-size:18px;margin-top:1px}
+  .nocam p{font-size:12px;color:var(--muted);line-height:1.75}
+  .nocam b{color:var(--text);display:block;margin-bottom:3px}
 
   /* The turn is shown rather than done quietly. A picture that arrives
      already straightened looks like it was uploaded that way, and the one
@@ -430,6 +435,17 @@
       </div>
 
       <button class="gbtn" id="start" disabled>START VERIFICATION <span class="ar"><i class="ti ti-arrow-right"></i></span></button>
+
+      <!-- Raised before anything is filled in, not at the step that needs
+           it. The camera comes last, and finding out there means the
+           document was photographed on a machine that cannot finish. -->
+      <div class="nocam" id="noCam" hidden>
+        <i class="ti ti-device-mobile"></i>
+        <p><b>This device has no camera.</b>
+          The last step films your face, so it has to be done on a phone or a
+          machine with one. Starting here means beginning again there.</p>
+        <button type="button" class="deta" id="startPhone">Continue on your phone</button>
+      </div>
     </section>
 
     <!-- ── step 1: document type ──────────────────────────────── -->
@@ -610,8 +626,8 @@
       <div class="vhead">
         <div class="vbrand"><span class="sh"><i class="ti ti-device-mobile"></i></span>MEMONS VERIFICATION</div>
         <div class="vtitle">Continue on your phone</div>
-        <p class="vsub">No camera on this machine. Scan this to finish there &mdash;
-          the link lasts five minutes and opens the same check.</p>
+        <p class="vsub">Scan this with your phone. The link lasts five minutes and
+          opens the same check there, from the beginning.</p>
       </div>
       <div class="qrplate" id="qrPlate">
         <img id="qr" alt="" width="210" height="210">
@@ -730,9 +746,13 @@
   var modelsReady=null;
   function models(){
     if(!modelsReady){
+      /* The full landmark model rather than the tiny one. Blinks are read
+         off six points around each eye, and the tiny model places them
+         coarsely enough that a real blink can pass unnoticed. It costs
+         about a megabyte more, once. */
       modelsReady=Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
-        faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODELS),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODELS)
       ]);
     }
@@ -841,7 +861,7 @@
     for (var i=0, degs=[0,90,180,270]; i<degs.length; i++){
       var cand = degs[i] === 0 ? base : turn(base, degs[i]);
       var hit = await faceapi.detectSingleFace(cand, opts)
-            .withFaceLandmarks(true).withFaceDescriptor();
+            .withFaceLandmarks().withFaceDescriptor();
       if (!hit) continue;
       var score = hit.detection.score;
       if (score > best){
@@ -987,10 +1007,21 @@
   }
 
   var ACTIONS=[
+    /* Measured against how open this face's eyes usually are, not against
+       a number. Eye shape varies, and a phone held close reads differently
+       from a laptop across a desk -- a fixed threshold passes some people
+       on the first try and never passes others.
+   
+       The widest reading seen so far stands in for open. A drop to two
+       thirds of it counts as shut, and a return past four fifths as open
+       again; both have to happen for a blink to count, or a face that
+       merely looks down would do. */
     {k:'blink', label:'Blink slowly', test:function(st,lm){
       var v=(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
-      if(v<0.19) st.closed=true;
-      return st.closed && v>0.26;
+      if(!st.open || v>st.open) st.open=v;
+      if(!st.open) return false;
+      if(v < st.open*0.68) st.closed=true;
+      return st.closed && v > st.open*0.82;
     }},
     {k:'left', label:'Turn your head left', test:function(st,lm){ return yaw(lm) > 0.22; }},
     {k:'right', label:'Turn your head right', test:function(st,lm){ return yaw(lm) < -0.22; }}
@@ -1037,7 +1068,7 @@
     cap.className='facecap act'; cap.textContent=plan[0].label;
 
     async function tick(){
-      var r=await faceapi.detectSingleFace(vid, opts).withFaceLandmarks(true);
+      var r=await faceapi.detectSingleFace(vid, opts).withFaceLandmarks();
       ctx.clearRect(0,0,ovl.width,ovl.height);
 
       if(!r){
@@ -1057,7 +1088,7 @@
             /* Taken after the actions, from the same session that just
                moved -- not from a frame grabbed before any of it. */
             var full=await faceapi.detectSingleFace(vid, opts)
-              .withFaceLandmarks(true).withFaceDescriptor();
+              .withFaceLandmarks().withFaceDescriptor();
             if(full){
               face.vec=Array.from(full.descriptor);
               face.blob=await grab(vid);
@@ -1077,6 +1108,7 @@
 
   /* ── phone handoff ───────────────────────────────────────── */
   async function toPhone(){
+    qrFrom = $('s0').hidden ? 's3' : 's0';
     stopCam(); show('sqr');
     var r;
     try{ r=await send('/identity/handoff'); }
@@ -1128,11 +1160,17 @@
       }catch(e){}
     }, 4000);
   }
+  /* Back to wherever it was opened from: the start screen when the camera
+     was missing from the outset, the face step when it failed there. */
+  var qrFrom='s3';
   $('qrBack').onclick=function(){
     if(poll){ clearInterval(poll); poll=null; }
-    show('s3'); $('faceStart').hidden=false;
-    $('faceCap').className='facecap';
-    $('faceCap').textContent='Position your face inside the oval';
+    show(qrFrom);
+    if(qrFrom==='s3'){
+      $('faceStart').hidden=false;
+      $('faceCap').className='facecap';
+      $('faceCap').textContent='Position your face inside the oval';
+    }
   };
 
   /* ── submit ──────────────────────────────────────────────── */
@@ -1186,6 +1224,18 @@
   }
 
   /* ── boot ────────────────────────────────────────────────── */
+  /* Asks the browser what devices exist rather than opening one. Labels
+     are withheld until permission is granted, but the count is not, which
+     is all this needs -- and nothing turns on. */
+  async function hasCamera(){
+    try{
+      if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return true;
+      var list=await navigator.mediaDevices.enumerateDevices();
+      return list.some(function(d){ return d.kind==='videoinput'; });
+    }catch(e){ return true; }   // unknown: let them try
+  }
+
+  $('startPhone').onclick=function(e){ e.preventDefault(); toPhone(); };
   $('agree').onchange=function(){ $('start').disabled=!this.checked; };
   $('showTerms').onclick=function(e){
     e.preventDefault();
@@ -1223,6 +1273,10 @@
     var s=(st && st.state) || 'none';
 
     if(s==='approved' || s==='pending'){ result(s); return; }
+
+    /* Checked on the way in. The warning belongs before the document is
+       photographed, not after. */
+    if(!(await hasCamera())) $('noCam').hidden=false;
 
     if(s==='rejected'){
       $('statusBadge').className='vbadge no';
