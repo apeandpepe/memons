@@ -626,7 +626,10 @@
 
   <!-- fullscreen impact flash (covers transition) -->
   <div class="impact" id="impact"></div>
-  <video class="fxvid" id="fxvid" src="images/reveal/fx-fire.mp4" muted playsinline preload="auto"></video>
+  <!-- src attached on first use rather than in the markup. fireImpact only
+       runs from the test panel, so with the file named here every reveal
+       fetched 6.7MB that nothing played. Same treatment as fx-leak. -->
+  <video class="fxvid" id="fxvid" data-src="images/reveal/fx-fire.mp4" muted playsinline preload="none"></video>
 
   <!-- Rise: plays between the capsule opening and the card landing, for
        epic and above only. preload="none" here because the file is
@@ -1030,6 +1033,7 @@ function impactColor(){
 }
 function playFire(){
   const f=$('fxvid'); if(!f) return;
+  if(!f.src && f.dataset.src) f.src=f.dataset.src;
   try{ f.pause(); f.currentTime=IMPACT.fireStart; }catch(e){}
   f.style.transition='opacity .25s ease'; f.style.opacity=1;
   const pr=f.play(); if(pr&&pr.catch) pr.catch(()=>{});
