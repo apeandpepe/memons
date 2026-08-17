@@ -3373,7 +3373,7 @@
         : m2.indexOf('BAD_CHAIN')>=0            ? 'That network is not available.'
         : min                                   ? 'The minimum withdrawal is '+num(min)+' USDT.'
         : m2.indexOf('IDENTITY_REQUIRED')>=0     ? (MEMONS.verify(
-            (m2.match(/pending|first_withdrawal|over_free_limit|over_deposit/)||[])[0],
+            (m2.match(/pending|locked|suspended|first_withdrawal|over_free_limit|over_deposit/)||[])[0],
             function(){ wdClose(); }
           ), '')
         : m2.indexOf('KYC_REQUIRED')>=0          ? 'Identity verification is required before withdrawing.'

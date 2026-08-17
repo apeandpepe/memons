@@ -399,6 +399,10 @@
     over_deposit:     "This takes you past what you have put in, so we check again.",
     pending:          "Your last submission is with a reviewer.",
     buyback:          "Selling airdrop cards needs a one-off identity check.",
+    /* Neither of these is fixed by trying again, so the panel says what it
+       is rather than opening a camera that cannot pass. */
+    locked:           "Verification is on hold for this account. Contact support to continue.",
+    suspended:        "This account has been suspended. Contact support if you believe this is wrong.",
   };
 
   function openHere(w, reason, onPass) {
@@ -406,7 +410,8 @@
     let wrap = d.getElementById("memonsVerify");
     if (wrap) wrap.remove();
 
-    const waiting = reason === "pending";
+    /* A dead end shows the reason and nothing else -- no frame, no camera. */
+    const waiting = reason === "pending" || reason === "locked" || reason === "suspended";
 
     wrap = d.createElement("div");
     wrap.id = "memonsVerify";

@@ -403,7 +403,7 @@
       </div>
       <p class="vsub center" id="statusNote" hidden></p>
 
-      <label class="agree">
+      <label class="agree" id="agreeWrap">
         <input type="checkbox" id="agree">
         <span>I consent to the collection and use of my personal data.
           <button type="button" class="deta" id="showTerms">Details</button></span>
@@ -1312,6 +1312,28 @@
        photographed, not after. */
     if(!(await hasCamera())) $('noCam').hidden=false;
 
+    /* Locked and suspended are dead ends, and the screen has to say so.
+       Offering to start again would send someone through a camera check
+       that cannot pass, and the reason it cannot is not something they
+       can fix by photographing the document better. */
+    if(s==='suspended' || s==='locked'){
+      $('statusBadge').className='vbadge no';
+      $('statusText').textContent = s==='suspended' ? 'SUSPENDED' : 'ON HOLD';
+      $('statusNote').hidden=false;
+      $('statusNote').innerHTML =
+        (st && st.note
+          ? '<span style="color:var(--dim)">Reason</span> '+
+            '<b style="color:var(--text)">'+esc(st.note)+'</b><br>' : '') +
+        (s==='suspended'
+          ? 'This account has been suspended. Contact support if you believe this is wrong.'
+          : 'Verification is on hold for this account. Contact support to continue.');
+      $('agreeWrap').hidden=true;
+      $('start').hidden=true;
+      $('noCam').hidden=true;
+      show('s0');
+      return;
+    }
+
     if(s==='rejected'){
       $('statusBadge').className='vbadge no';
       $('statusText').textContent='NOT ACCEPTED';
@@ -1320,8 +1342,11 @@
       /* The reviewer's words where they were meant to be passed on. Sent
          back with nothing, someone photographs the same document the same
          way and is turned down for the same reason. */
+      /* Labelled, because on its own a line of the reviewer's text reads
+         as a stray sentence rather than the reason for the refusal. */
       $('statusNote').innerHTML = st && st.note
-        ? '<b style="color:var(--text)">'+esc(st.note)+'</b><br>'+
+        ? '<span style="color:var(--dim)">Reason</span> '+
+          '<b style="color:var(--text)">'+esc(st.note)+'</b><br>'+
           'Please try again with that corrected.'
         : 'The last submission was not accepted. You can try again.';
     }
