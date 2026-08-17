@@ -743,18 +743,31 @@
     return qrReady;
   }
 
+  /* Which landmark model ended up loading. The call has to match, or it
+     asks for weights that were never fetched. */
+  var fineMarks=true;
   var modelsReady=null;
   function models(){
     if(!modelsReady){
-      /* The full landmark model rather than the tiny one. Blinks are read
-         off six points around each eye, and the tiny model places them
-         coarsely enough that a real blink can pass unnoticed. It costs
-         about a megabyte more, once. */
-      modelsReady=Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODELS),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODELS)
-      ]);
+      /* The full landmark model is preferred: blinks are read off six
+         points around each eye, and the tiny one places them coarsely
+         enough that a real blink can pass unnoticed.
+
+         It is not required, though. If that file will not come down, the
+         tiny model still detects faces -- losing the blink is better than
+         losing detection altogether, which leaves the screen asking for a
+         face that is already in front of it. */
+      modelsReady=(async function(){
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODELS);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODELS);
+        try{
+          await faceapi.nets.faceLandmark68Net.loadFromUri(MODELS);
+          fineMarks=true;
+        }catch(e){
+          await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS);
+          fineMarks=false;
+        }
+      })();
     }
     return modelsReady;
   }
@@ -861,7 +874,7 @@
     for (var i=0, degs=[0,90,180,270]; i<degs.length; i++){
       var cand = degs[i] === 0 ? base : turn(base, degs[i]);
       var hit = await faceapi.detectSingleFace(cand, opts)
-            .withFaceLandmarks().withFaceDescriptor();
+            .withFaceLandmarks(!fineMarks).withFaceDescriptor();
       if (!hit) continue;
       var score = hit.detection.score;
       if (score > best){
@@ -1018,10 +1031,16 @@
        merely looks down would do. */
     {k:'blink', label:'Blink slowly', test:function(st,lm){
       var v=(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
+
+      /* A few frames of watching before judging anything. The first
+         reading is whatever the face happened to be doing, and taking it
+         as "open" leaves nothing to fall from. */
+      st.n=(st.n||0)+1;
       if(!st.open || v>st.open) st.open=v;
-      if(!st.open) return false;
-      if(v < st.open*0.68) st.closed=true;
-      return st.closed && v > st.open*0.82;
+      if(st.n<8) return false;
+
+      if(v < st.open*0.72) st.closed=true;
+      return st.closed && v > st.open*0.80;
     }},
     {k:'left', label:'Turn your head left', test:function(st,lm){ return yaw(lm) > 0.22; }},
     {k:'right', label:'Turn your head right', test:function(st,lm){ return yaw(lm) < -0.22; }}
@@ -1055,7 +1074,7 @@
 
     /* Drawn fresh each run. A fixed order can be met with a clip recorded
        once. */
-    var plan=shuffle(ACTIONS), at=0, st={};
+    var plan=shuffle(ACTIONS), at=0, st={}, miss=0;
     $('ticks').innerHTML=plan.map(function(a){
       return '<span class="tick" data-k="'+a.k+'" style="font-size:11px;letter-spacing:.5px;'+
         'color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:6px 11px">'+
@@ -1068,12 +1087,22 @@
     cap.className='facecap act'; cap.textContent=plan[0].label;
 
     async function tick(){
-      var r=await faceapi.detectSingleFace(vid, opts).withFaceLandmarks();
+      var r=await faceapi.detectSingleFace(vid, opts).withFaceLandmarks(!fineMarks);
       ctx.clearRect(0,0,ovl.width,ovl.height);
 
       if(!r){
-        cap.className='facecap'; cap.textContent='Move so your face fills the oval';
+        /* A closed eye can cost the detector the face for a frame or two,
+           which is exactly when a blink is being judged. Reporting that as
+           "no face" tells someone mid-blink they are out of frame; worse,
+           the prompt used to reset the reading and the blink could never
+           complete. A few empty frames are allowed to pass in silence. */
+        miss++;
+        if(miss>12){
+          cap.className='facecap';
+          cap.textContent='Move so your face fills the oval';
+        }
       }else{
+        miss=0;
         var b=r.detection.box;
         ctx.strokeStyle='rgba(233,184,74,.85)'; ctx.lineWidth=2;
         ctx.strokeRect(ovl.width-b.x-b.width, b.y, b.width, b.height);
@@ -1085,17 +1114,14 @@
           at++; st={};
 
           if(at>=plan.length){
-            /* Taken after the actions, from the same session that just
-               moved -- not from a frame grabbed before any of it. */
-            var full=await faceapi.detectSingleFace(vid, opts)
-              .withFaceLandmarks().withFaceDescriptor();
-            if(full){
-              face.vec=Array.from(full.descriptor);
-              face.blob=await grab(vid);
-              stopCam();
-              $('rvFace').src=URL.createObjectURL(face.blob);
-              return show('s4');
-            }
+            /* The last instruction may have been a turn, and a frame taken
+               the moment it completes is a face in profile. That picture is
+               held against a portrait on a document, where the head is
+               square to the camera -- so this waits for the face to come
+               back round before taking it. */
+            cap.className='facecap act';
+            cap.textContent='Look straight ahead';
+            return front();
           }else{
             cap.textContent=plan[at].label;
           }
@@ -1103,6 +1129,34 @@
       }
       loop=requestAnimationFrame(tick);
     }
+
+    /* Waits for a face square to the camera, then takes it. Given up on
+       after a few seconds rather than left running -- a picture slightly
+       off centre is still worth more than a check that never ends. */
+    function front(){
+      var tries=0;
+      (function look(){
+        loop=requestAnimationFrame(async function(){
+          tries++;
+          var r=await faceapi.detectSingleFace(vid, opts).withFaceLandmarks(!fineMarks);
+          var square = r && Math.abs(yaw(r.landmarks)) < 0.10;
+
+          if(square || tries>150){
+            var full=await faceapi.detectSingleFace(vid, opts)
+              .withFaceLandmarks(!fineMarks).withFaceDescriptor();
+            if(full){
+              face.vec=Array.from(full.descriptor);
+              face.blob=await grab(vid);
+              stopCam();
+              $('rvFace').src=URL.createObjectURL(face.blob);
+              return show('s4');
+            }
+          }
+          look();
+        });
+      })();
+    }
+
     tick();
   }
 
