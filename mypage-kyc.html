@@ -749,14 +749,11 @@
   var modelsReady=null;
   function models(){
     if(!modelsReady){
-      /* The full landmark model is preferred: blinks are read off six
-         points around each eye, and the tiny one places them coarsely
-         enough that a real blink can pass unnoticed.
-
-         It is not required, though. If that file will not come down, the
-         tiny model still detects faces -- losing the blink is better than
-         losing detection altogether, which leaves the screen asking for a
-         face that is already in front of it. */
+      /* The full landmark model is preferred, and not required. If that
+         file will not come down the tiny one still places the eyes and
+         nose well enough to read a turn, and losing some precision beats
+         losing detection altogether -- which leaves the screen asking for
+         a face that is already in front of it. */
       modelsReady=(async function(){
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODELS);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODELS);
@@ -1001,15 +998,7 @@
 
   /* ── step 3: face ────────────────────────────────────────── */
 
-  /* Eye aspect ratio. Six points around the eye: when the lid drops the
-     two vertical spans collapse while the horizontal one holds, so the
-     ratio falls. */
-  function ear(p){
-    function d(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
-    return (d(p[1],p[5]) + d(p[2],p[4])) / (2*d(p[0],p[3]));
-  }
-
-  /* Where the nose sits between the eyes. A photograph held up to the
+  /* Where the nose sits between the eyes. Something flat held up to the
      camera cannot change this; a head can. */
   function yaw(lm){
     var le=lm.getLeftEye(), re=lm.getRightEye(), n=lm.getNose();
@@ -1019,20 +1008,20 @@
     return (n[3].x-mid)/span;
   }
 
+  /* Two turns, in a fresh order each run.
+
+     Blinking was a third and has been dropped. It never settled: eyes
+     differ enough between people and devices that the line between shut
+     and open kept moving, and the detector loses the face for the very
+     frames where the judgement has to be made. Against that it bought
+     nothing -- a photograph is turned away by the turns, and a deepfake
+     blinks on cue. What it did reliably was strand people in front of a
+     camera.
+
+     None of this stops a live deepfake, which follows a head as readily
+     as it follows a blink. Withdrawals are released by hand, and that
+     review is what stands behind this. */
   var ACTIONS=[
-    /* Read against how open this face's eyes usually are, not against a
-       number, since eye shape and camera distance both move the reading.
-       The bar is set low on purpose: a turn of the head is what actually
-       rules out a photograph, and a blink that refuses to register just
-       leaves someone stuck in front of a camera. */
-    {k:'blink', label:'Blink slowly', test:function(st,lm){
-      var v=(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
-      st.n=(st.n||0)+1;
-      if(!st.open || v>st.open) st.open=v;
-      if(st.n<6) return false;
-      if(v < st.open*0.85) st.closed=true;
-      return st.closed && v > st.open*0.90;
-    }},
     {k:'left',  label:'Turn your head left',  test:function(st,lm){ return yaw(lm) >  0.22; }},
     {k:'right', label:'Turn your head right', test:function(st,lm){ return yaw(lm) < -0.22; }}
   ];
@@ -1083,11 +1072,10 @@
       ctx.clearRect(0,0,ovl.width,ovl.height);
 
       if(!r){
-        /* A closed eye can cost the detector the face for a frame or two,
-           which is exactly when a blink is being judged. Reporting that as
-           "no face" tells someone mid-blink they are out of frame; worse,
-           the prompt used to reset the reading and the blink could never
-           complete. A few empty frames are allowed to pass in silence. */
+        /* A head turned far enough can cost the detector the face for a
+           frame or two, which is exactly when the turn is being judged.
+           Saying "no face" then tells someone mid-turn they are out of
+           frame. A few empty frames pass in silence. */
         miss++;
         if(miss>12){
           cap.className='facecap';
@@ -1328,7 +1316,14 @@
       $('statusBadge').className='vbadge no';
       $('statusText').textContent='NOT ACCEPTED';
       $('statusNote').hidden=false;
-      $('statusNote').textContent='The last submission was not accepted. You can try again.';
+
+      /* The reviewer's words where they were meant to be passed on. Sent
+         back with nothing, someone photographs the same document the same
+         way and is turned down for the same reason. */
+      $('statusNote').innerHTML = st && st.note
+        ? '<b style="color:var(--text)">'+esc(st.note)+'</b><br>'+
+          'Please try again with that corrected.'
+        : 'The last submission was not accepted. You can try again.';
     }
     show('s0');
   }
