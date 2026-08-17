@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MEMONS — KYC</title>
+<title>MEMONS — Verification</title>
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
 <style>
@@ -141,6 +141,204 @@
   </div>
 </header>
 
+<style>
+  /* Verification, in three steps with a review at the end.
+     Document before face on purpose: a document with no readable face is
+     the common failure, and finding that out before someone has stood in
+     front of a camera saves the part that takes effort. */
+  /* A class that sets display wins over the hidden attribute, and the
+     buttons here are flex. Without this the shoot button never appears
+     however the attribute is set. */
+  [hidden]{display:none !important}
+
+  .vcard{max-width:720px;margin:0 auto;border:1px solid rgba(233,184,74,.3);border-radius:16px;
+    background:linear-gradient(180deg,#0f0f12,#0a0a0c);padding:26px 28px 24px}
+  .vcard.wide{max-width:860px}
+  .vhead{text-align:center;margin-bottom:22px}
+  .shield{width:120px;margin:6px auto 0}
+  .shield svg{width:100%;height:auto;display:block}
+  .vlabel{font-size:10px;letter-spacing:2.4px;color:var(--gold);margin-bottom:13px}
+
+  /* Folded by default. The notice has to be readable before consent is
+     given, and a page of it in front of someone who has not started reads
+     as a warning rather than a step. */
+  .deta{background:none;border:0;padding:0;margin-left:6px;font:inherit;font-size:12px;
+    color:var(--gold);text-decoration:underline;cursor:pointer}
+  .terms{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.02);
+    padding:18px 20px;margin:0 0 18px}
+  .terms h3{font-size:12.5px;letter-spacing:.4px;margin-bottom:14px;color:var(--text)}
+  .terms ol{margin:0;padding-left:18px}
+  .terms li{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:12px}
+  .terms li:last-child{margin-bottom:0}
+  .terms li b{color:var(--text);font-weight:600}
+  .qrplate{display:flex;justify-content:center;padding:18px;background:#fff;
+    border-radius:12px;margin:6px 0 14px}
+  .qrplate img{display:block;width:210px;height:210px}
+
+  /* The turn is shown rather than done quietly. A picture that arrives
+     already straightened looks like it was uploaded that way, and the one
+     thing worth seeing here is that something was corrected. */
+  #docPrev{transition:transform .45s cubic-bezier(.4,0,.2,1)}
+  .frame .align{position:absolute;left:0;right:0;bottom:0;z-index:3;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    padding:9px 12px;font-size:11.5px;letter-spacing:1.2px;
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.86));color:var(--muted)}
+  .frame .align i{font-size:14px}
+  .frame .align.ok{color:var(--good)}
+  .frame .align.turning i{animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .vbrand{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-head);
+    font-size:12.5px;letter-spacing:2px;color:var(--gold)}
+  .vbrand .sh{width:26px;height:26px;border-radius:50%;background:rgba(233,184,74,.12);
+    border:1px solid rgba(233,184,74,.4);display:grid;place-items:center;font-size:13px}
+  .vtitle{font-family:var(--font-head);font-size:22px;margin-top:12px}
+  .vstepline{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;
+    font-size:10.5px;letter-spacing:2.4px;color:var(--gold)}
+  .vstepline::before,.vstepline::after{content:'';width:44px;height:1px;background:rgba(233,184,74,.35)}
+  .vsub{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.7}
+
+  .vbadge{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;
+    border:1px solid var(--line2);background:rgba(255,255,255,.03);font-size:12.5px;letter-spacing:1px}
+  .vbadge .d{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+  .vbadge.ok .d{background:var(--good)} .vbadge.ok{color:var(--good)}
+  .vbadge.wait .d{background:var(--gold)}
+  .vbadge.no .d{background:var(--bad)} .vbadge.no{color:var(--bad)}
+
+  .gbtn{width:100%;font-family:var(--font-head);font-size:13px;letter-spacing:1.4px;color:#1c1500;
+    cursor:pointer;background:linear-gradient(150deg,var(--gold2),var(--gold) 62%);border:0;
+    border-radius:11px;padding:16px 22px;display:flex;align-items:center;justify-content:center;gap:10px}
+  .gbtn[disabled]{opacity:.35;cursor:default}
+  .gbtn .ar{width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.22);display:grid;
+    place-items:center;font-size:12px}
+  .obtn{font-family:var(--font-head);font-size:12px;letter-spacing:1.2px;color:var(--muted);
+    cursor:pointer;background:rgba(255,255,255,.02);border:1px solid var(--line2);border-radius:10px;
+    padding:15px 18px;display:flex;align-items:center;justify-content:center;gap:9px;flex:1}
+  .obtn:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
+
+  .vfoot{display:flex;align-items:center;gap:13px;justify-content:center;margin-top:22px;
+    padding-top:18px;border-top:1px solid var(--line)}
+  .vfoot .ic{width:38px;height:38px;border-radius:50%;background:rgba(233,184,74,.1);
+    border:1px solid rgba(233,184,74,.25);display:grid;place-items:center;color:var(--gold);font-size:16px}
+  .vfoot b{display:block;font-size:13px;font-weight:600}
+  .vfoot span{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.6}
+
+  .flab{display:block;font-size:12.5px;color:var(--text);margin:0 0 8px}
+  .fsel{width:100%;padding:14px 15px;border-radius:10px;background:rgba(255,255,255,.02);
+    border:1px solid rgba(233,184,74,.35);color:var(--text);font:inherit;font-size:13.5px;
+    margin-bottom:22px;appearance:none;cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);
+    background-position:calc(100% - 20px) 21px, calc(100% - 15px) 21px;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  .fsel option{background:#111}
+
+  .doc{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;
+    margin-bottom:10px;border-radius:11px;background:rgba(255,255,255,.02);border:1px solid var(--line);
+    color:var(--text);font:inherit;cursor:pointer;transition:.15s}
+  .doc:hover{border-color:rgba(233,184,74,.4)}
+  .doc.on{border-color:var(--gold);background:rgba(233,184,74,.07)}
+  .doc .ic{width:38px;height:38px;flex:none;border-radius:9px;background:rgba(233,184,74,.12);
+    border:1px solid rgba(233,184,74,.3);display:grid;place-items:center;color:var(--gold);font-size:18px}
+  .doc .t{flex:1}
+  .doc .t b{display:block;font-size:13px;letter-spacing:.6px}
+  .doc .t span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+  .doc .ch{color:var(--dim);font-size:15px}
+  .doc.on .ch{color:var(--gold)}
+
+  .vgrid{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:start}
+  .vgrid.three{grid-template-columns:190px 1fr 175px}
+  .vaside{border:1px solid var(--line);border-radius:12px;padding:15px 16px;background:rgba(255,255,255,.02)}
+  .vaside h4{font-size:10.5px;letter-spacing:1.4px;color:var(--muted);font-weight:600;margin-bottom:11px}
+  .vaside .sel{display:flex;flex-direction:column;gap:9px}
+  .vaside .sel .ic{width:40px;height:40px;border-radius:9px;background:rgba(233,184,74,.12);
+    border:1px solid rgba(233,184,74,.3);display:grid;place-items:center;color:var(--gold);font-size:19px}
+  .vaside .sel b{font-size:13px}
+  .vaside .sel span{font-size:11.5px;color:var(--muted)}
+  .vaside hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+  .vaside p{font-size:11.5px;color:var(--muted);line-height:1.7}
+  .vaside .meta{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.7}
+
+  .frame{position:relative;border-radius:12px;background:#08080a;border:1px solid var(--line);
+    aspect-ratio:16/10;display:grid;place-items:center;overflow:hidden}
+  .frame video,.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .frame .ph{text-align:center;color:var(--dim);font-size:11px;letter-spacing:1.4px;line-height:1.9;
+    position:relative;z-index:1}
+  .frame .ph .bx{width:88px;height:56px;margin:0 auto 14px;border-radius:7px;border:1px solid var(--line2);
+    display:grid;place-items:center;color:var(--dim);font-size:22px}
+  .corner{position:absolute;width:26px;height:26px;border:2px solid var(--gold);z-index:2}
+  .corner.tl{top:14px;left:14px;border-right:0;border-bottom:0;border-radius:4px 0 0 0}
+  .corner.tr{top:14px;right:14px;border-left:0;border-bottom:0;border-radius:0 4px 0 0}
+  .corner.bl{bottom:14px;left:14px;border-right:0;border-top:0;border-radius:0 0 0 4px}
+  .corner.br{bottom:14px;right:14px;border-left:0;border-top:0;border-radius:0 0 4px 0}
+
+  .facewrap{border:1px solid var(--line);border-radius:12px;background:#08080a;padding:20px}
+  .facebox{position:relative;aspect-ratio:1/1;max-width:290px;margin:0 auto;border-radius:12px;
+    overflow:hidden;background:#000}
+  .facebox video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .facebox canvas{position:absolute;inset:0;width:100%;height:100%}
+  .facebox .oval{position:absolute;inset:8%;border:1px solid rgba(255,255,255,.22);border-radius:50%;
+    pointer-events:none;z-index:2}
+  .facebox .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:46px}
+  .facecap{text-align:center;color:var(--muted);font-size:12.5px;margin-top:14px;min-height:20px}
+  .facecap.act{color:var(--gold);font-size:14px}
+
+  .vsteps{display:flex;flex-direction:column;gap:0}
+  .vstep{display:flex;align-items:center;gap:11px;padding:11px 0}
+  .vstep .n{width:26px;height:26px;flex:none;border-radius:50%;border:1px solid var(--line2);
+    display:grid;place-items:center;font-size:11px;color:var(--dim)}
+  .vstep .t b{display:block;font-size:12.5px;color:var(--muted)}
+  .vstep.on .n{border-color:var(--gold);background:var(--gold);color:#1c1500;font-weight:700}
+  .vstep.on .t b{color:var(--text)}
+  .vstep.ok .n{border-color:var(--good);color:var(--good)}
+  .vstep.ok .t b{color:var(--text)}
+  .vrule{width:1px;height:16px;background:var(--line);margin-left:13px}
+
+  .tips{display:flex;flex-direction:column;gap:14px}
+  .tips .tp{display:flex;gap:10px}
+  .tips .tp i{color:var(--gold);font-size:15px;margin-top:1px}
+  .tips .tp b{display:block;font-size:12px}
+  .tips .tp span{display:block;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.65}
+
+  .qual{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:20px;padding-top:18px;
+    border-top:1px solid var(--line)}
+  .qual .q{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted)}
+  .qual .q i{color:var(--gold);font-size:15px}
+  .qualtitle{text-align:center;font-size:10px;letter-spacing:2px;color:var(--gold);margin-top:20px}
+
+  .rlist{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);
+    padding:6px 18px;margin:20px 0}
+  .rrow{display:flex;align-items:center;gap:11px;padding:13px 0;border-bottom:1px solid var(--line);
+    font-size:13px}
+  .rrow:last-child{border-bottom:0}
+  .rrow i{font-size:16px;color:var(--good)}
+  .rrow i.wait{color:var(--gold)}
+  .rrow .k{flex:1;color:var(--text)}
+  .rrow .v{color:var(--muted);font-size:12.5px}
+  .rrow .v.ok{color:var(--good)}
+
+  .agree{display:flex;align-items:center;gap:10px;margin:22px 0 16px;font-size:12.5px;
+    line-height:1.7;cursor:pointer;color:var(--text)}
+  .agree input{width:17px;height:17px;flex:none;margin-top:2px;accent-color:var(--gold);cursor:pointer}
+  .agree b{color:var(--text);font-weight:600}
+  .verr{color:var(--bad);font-size:12.5px;line-height:1.7;margin-top:12px;min-height:18px;text-align:center}
+  .row{display:flex;gap:10px;margin-top:16px}
+  .center{text-align:center}
+  @media(max-width:820px){
+    .vgrid,.vgrid.three{grid-template-columns:1fr}
+  }
+
+  /* Embedded in the withdrawal dialog: no chrome of its own. */
+  html.kyc-embed body{background:transparent}
+  html.kyc-embed .sidebar,
+  html.kyc-embed .head,
+  html.kyc-embed .eyebrow,
+  html.kyc-embed h1,
+  html.kyc-embed .sub,
+  html.kyc-embed .vfoot{display:none}
+  html.kyc-embed .shell,
+  html.kyc-embed .main,
+  html.kyc-embed .wrap{padding:0;margin:0;max-width:none}
+  html.kyc-embed .vcard{border:0;background:none;padding:4px 2px;max-width:none}
+</style>
 <div class="shell">
   <aside class="sidebar">
     <div class="mylabel">My Page</div>
@@ -158,244 +356,907 @@
       <div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div>
     </div>
   </aside>
-
   <main class="main"><div class="wrap">
-    <div class="eyebrow">MY PAGE</div>
-    <h1>Identity Verification (KYC)</h1>
-    <p class="sub">KYC is required only for reward winners. Once winners are announced, eligible wallets can complete a quick identity check here before receiving their APEPE rewards.</p>
+    <div class="eyebrow" id="crumb">MY PAGE</div>
+    <h1>Identity Verification</h1>
+    <p class="sub">Verified once, before your first withdrawal. A photo of an ID document and a short camera check — both handled on your device.</p>
 
-    <!-- status card: default = locked -->
-    <div class="kcard locked" id="kcard">
-      <div class="top">
-        <div class="kico" id="kico">🔒</div>
+    <!-- ── landing ────────────────────────────────────────────── -->
+    <section class="vcard" id="s0" hidden>
+      <div class="vhead">
+        <div class="shield">
+          <svg viewBox="0 0 104 122" aria-hidden="true">
+            <defs>
+              <linearGradient id="shg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#F7DFA0"/>
+                <stop offset=".5" stop-color="#E9B84A"/>
+                <stop offset="1" stop-color="#A9761F"/>
+              </linearGradient>
+              <radialGradient id="shglow" cx="50%" cy="44%" r="60%">
+                <stop offset="0" stop-color="#E9B84A" stop-opacity=".3"/>
+                <stop offset="1" stop-color="#E9B84A" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <circle cx="52" cy="54" r="52" fill="url(#shglow)"/>
+            <!-- Outline and tick, nothing else. A mascot traced by hand in
+                 vectors comes out worse than no mascot, and this is the
+                 screen where looking unfinished costs the most. -->
+            <path d="M52 6 94 22v40c0 26-17 45-42 54-25-9-42-28-42-54V22z"
+                  fill="rgba(233,184,74,.05)" stroke="url(#shg)" stroke-width="3.5"
+                  stroke-linejoin="round"/>
+            <path d="M34 60l13 13 24-26" fill="none" stroke="url(#shg)"
+                  stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="vbrand" style="margin-top:14px">MEMONS VERIFICATION</div>
+        <div class="vtitle">Verify your identity<br>to unlock withdrawals</div>
+      </div>
+
+      <div class="center" style="margin:20px 0 4px">
+        <div class="vlabel">IDENTITY STATUS</div>
+        <span class="vbadge" id="statusBadge"><span class="d"></span><b id="statusText">NOT VERIFIED</b></span>
+      </div>
+      <p class="vsub center" id="statusNote" hidden></p>
+
+      <label class="agree">
+        <input type="checkbox" id="agree">
+        <span>I consent to the collection and use of my personal data.
+          <button type="button" class="deta" id="showTerms">Details</button></span>
+      </label>
+
+      <!-- The full notice, folded away. Biometric data needs consent given
+           knowingly, which means the terms have to be here to read -- but
+           a page of them in front of someone who has not started yet reads
+           as a warning rather than a step. -->
+      <div class="terms" id="terms" hidden>
+        <h3>Consent to the collection and use of personal data</h3>
+        <ol>
+          <li><b>Data collected</b><br>
+            Facial image, identity document image, and facial feature data
+            (biometric data).</li>
+          <li><b>Purpose</b><br>
+            Confirming the identity of the person requesting a withdrawal, and
+            preventing one person from holding multiple accounts.</li>
+          <li><b>Retention period</b><br>
+            Held until the account is closed and destroyed on closure. Where
+            law requires a longer period, that period applies.</li>
+          <li><b>Right to decline</b><br>
+            Consent may be declined. Accounts without a completed identity
+            check cannot use the withdrawal service.</li>
+          <li><b>Processing</b><br>
+            Carried out in-house without third-party delegation. Image analysis
+            is performed on your own device.</li>
+        </ol>
+      </div>
+
+      <button class="gbtn" id="start" disabled>START VERIFICATION <span class="ar"><i class="ti ti-arrow-right"></i></span></button>
+    </section>
+
+    <!-- ── step 1: document type ──────────────────────────────── -->
+    <section class="vcard" id="s1" hidden>
+      <div class="vhead">
+        <div class="vbrand"><span class="sh"><i class="ti ti-shield-check"></i></span>MEMONS VERIFICATION</div>
+        <div class="vtitle">Verify your identity</div>
+        <div class="vstepline">STEP 1 OF 3</div>
+      </div>
+
+      <label class="flab">Country of issue</label>
+      <select class="fsel" id="country"><option value="">Select your country</option></select>
+
+      <label class="flab">Identity document</label>
+      <button class="doc" data-d="passport">
+        <span class="ic"><i class="ti ti-id-badge-2"></i></span>
+        <span class="t"><b>PASSPORT</b><span>Government-issued passport</span></span>
+        <span class="ch"><i class="ti ti-chevron-right"></i></span></button>
+      <button class="doc" data-d="national_id">
+        <span class="ic"><i class="ti ti-id"></i></span>
+        <span class="t"><b>NATIONAL ID</b><span>Government-issued identity card</span></span>
+        <span class="ch"><i class="ti ti-chevron-right"></i></span></button>
+      <button class="doc" data-d="drivers_license">
+        <span class="ic"><i class="ti ti-steering-wheel"></i></span>
+        <span class="t"><b>DRIVER'S LICENCE</b><span>Government-issued driving licence</span></span>
+        <span class="ch"><i class="ti ti-chevron-right"></i></span></button>
+
+      <button class="gbtn" id="go1" disabled style="margin-top:18px">CONTINUE <span class="ar"><i class="ti ti-arrow-right"></i></span></button>
+
+      <div class="vfoot">
+        <span class="ic"><i class="ti ti-lock"></i></span>
+        <div><b>Handled on your device</b>
+          <span>Photos are read in your browser. Nothing is stored until you submit.</span></div>
+      </div>
+    </section>
+
+    <!-- ── step 2: document ───────────────────────────────────── -->
+    <section class="vcard wide" id="s2" hidden>
+      <div class="vhead">
+        <div class="vbrand"><span class="sh"><i class="ti ti-shield-check"></i></span>MEMONS VERIFICATION</div>
+        <div class="vtitle">Document</div>
+        <div class="vstepline">STEP 2 OF 3</div>
+        <p class="vsub">Photograph the side carrying your picture.</p>
+      </div>
+
+      <div class="vgrid">
+        <div class="vaside">
+          <h4>SELECTED</h4>
+          <div class="sel">
+            <span class="ic" id="docIcon"><i class="ti ti-id-badge-2"></i></span>
+            <b id="docName">Passport</b>
+            <span id="docCountry">&mdash;</span>
+          </div>
+          <hr>
+          <h4>REQUIREMENT</h4>
+          <p id="docReq">The information page only.</p>
+          <div class="meta">JPG or PNG<br>Up to 10MB</div>
+        </div>
+
         <div>
-          <div class="st-title" id="stTitle">Not required yet</div>
-          <div class="st-desc" id="stDesc">Verification opens after the reward draw. If your wallet is selected as a winner, this page will unlock automatically.</div>
+          <div class="frame" id="docFrame">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+            <video id="docVid" autoplay muted playsinline hidden></video>
+            <img id="docPrev" hidden alt="">
+            <div class="ph" id="docPh">
+              <div class="bx"><i class="ti ti-id-badge-2"></i></div>
+              PLACE THE DOCUMENT<br>WITHIN THE FRAME
+            </div>
+          </div>
+          <div class="row">
+            <button class="obtn" id="docCam"><i class="ti ti-camera"></i>USE CAMERA</button>
+            <button class="obtn" id="docUp"><i class="ti ti-upload"></i>UPLOAD</button>
+            <button class="obtn" id="docAgain" hidden><i class="ti ti-refresh"></i>RETAKE</button>
+            <input type="file" id="docFile" accept="image/*" hidden>
+          </div>
+          <button class="gbtn" id="docShoot" hidden style="margin-top:10px">TAKE PHOTO</button>
+          <button class="gbtn" id="docNext" hidden style="margin-top:10px">CONTINUE
+            <span class="ar"><i class="ti ti-arrow-right"></i></span></button>
+          <p class="verr" id="docErr"></p>
         </div>
-        <div style="margin-left:auto"><span class="badge" id="badge"><span class="dot"></span><span id="badgeText">LOCKED</span></span></div>
       </div>
-      <div class="body">
-        <div class="steps">
-          <div class="step"><div class="num">1</div><div><div class="stx">Reward draw</div><div class="sd">Winners are selected after the event snapshot and bot review.</div></div></div>
-          <div class="step"><div class="num">2</div><div><div class="stx">Verify identity</div><div class="sd">Winners complete a short KYC check (ID + selfie) via our verification partner.</div></div></div>
-          <div class="step"><div class="num">3</div><div><div class="stx">Receive rewards</div><div class="sd">APEPE is sent to your wallet after verification is approved.</div></div></div>
+
+      <div class="qualtitle">FOR A CLEAN READ</div>
+      <div class="qual">
+        <span class="q"><i class="ti ti-sun"></i>No glare</span>
+        <span class="q"><i class="ti ti-frame"></i>All corners visible</span>
+        <span class="q"><i class="ti ti-text-size"></i>Details readable</span>
+      </div>
+    </section>
+
+    <!-- ── step 3: face ───────────────────────────────────────── -->
+    <section class="vcard wide" id="s3" hidden>
+      <div class="vhead">
+        <div class="vbrand"><span class="sh"><i class="ti ti-shield-check"></i></span>MEMONS VERIFICATION</div>
+        <div class="vtitle">Face check</div>
+        <div class="vstepline">STEP 3 OF 3</div>
+        <p class="vsub">Follow each instruction as it appears. This is what tells a live face from a photograph.</p>
+      </div>
+
+      <div class="vgrid three">
+        <div class="vaside">
+          <div class="vsteps">
+            <div class="vstep ok"><span class="n"><i class="ti ti-check"></i></span>
+              <span class="t"><b>Document</b></span></div>
+            <div class="vrule"></div>
+            <div class="vstep on"><span class="n">2</span>
+              <span class="t"><b>Face check</b></span></div>
+            <div class="vrule"></div>
+            <div class="vstep"><span class="n">3</span>
+              <span class="t"><b>Review</b></span></div>
+          </div>
         </div>
-        <button class="kbtn" id="startBtn" disabled>VERIFICATION NOT OPEN</button>
-        <div class="note">Your documents are processed by a third-party verification provider and are not stored on MEMONS servers. KYC is only requested from winners, and only to prevent fraudulent reward claims.</div>
+
+        <div class="facewrap">
+          <div class="facebox">
+            <video id="faceVid" autoplay muted playsinline></video>
+            <canvas id="faceOvl"></canvas>
+            <span class="oval"></span>
+            <div class="ph" id="facePh"><i class="ti ti-user"></i></div>
+          </div>
+          <div class="facecap" id="faceCap">Position your face inside the oval</div>
+          <div class="ticks" id="ticks" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px"></div>
+          <button class="gbtn" id="faceStart" style="margin-top:16px"><i class="ti ti-camera"></i> START CAMERA</button>
+          <p class="verr" id="faceErr"></p>
+        </div>
+
+        <div class="vaside">
+          <h4>TIPS</h4>
+          <div class="tips">
+            <div class="tp"><i class="ti ti-sun"></i><div><b>Even light</b>
+              <span>Face a window or a lamp, not away from one.</span></div></div>
+            <div class="tp"><i class="ti ti-mask-off"></i><div><b>Nothing covering</b>
+              <span>Take off a mask, hat or sunglasses.</span></div></div>
+            <div class="tp"><i class="ti ti-eye"></i><div><b>Look at the camera</b>
+              <span>Keep both eyes open and visible.</span></div></div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
+
+    <!-- ── review ─────────────────────────────────────────────── -->
+    <section class="vcard" id="s4" hidden>
+      <div class="vhead">
+        <div class="vbrand"><span class="sh"><i class="ti ti-shield-check"></i></span>MEMONS VERIFICATION</div>
+        <div class="vtitle">Check before sending</div>
+      </div>
+      <div class="vgrid" style="grid-template-columns:1fr 1fr">
+        <div><div class="frame" style="aspect-ratio:4/3"><img id="rvDoc" alt=""></div>
+          <div class="center" style="font-size:11.5px;color:var(--dim);margin-top:8px">DOCUMENT</div></div>
+        <div><div class="frame" style="aspect-ratio:4/3"><img id="rvFace" alt=""></div>
+          <div class="center" style="font-size:11.5px;color:var(--dim);margin-top:8px">FACE</div></div>
+      </div>
+      <p class="verr" id="sendErr"></p>
+      <button class="gbtn" id="send" style="margin-top:18px">SUBMIT <span class="ar"><i class="ti ti-arrow-right"></i></span></button>
+      <div class="row"><button class="obtn" id="redo"><i class="ti ti-refresh"></i>START OVER</button></div>
+    </section>
+
+    <!-- ── result ─────────────────────────────────────────────── -->
+    <section class="vcard" id="s5" hidden>
+      <div class="vhead">
+        <div class="vbrand"><span class="sh"><i class="ti ti-shield-check"></i></span>MEMONS VERIFICATION</div>
+        <div style="margin:18px 0 4px"><i class="ti" id="resIcon" style="font-size:44px"></i></div>
+        <div class="vtitle" id="resTitle"></div>
+        <p class="vsub" id="resNote"></p>
+      </div>
+      <div class="rlist" id="resList"></div>
+      <button class="gbtn" id="resGo">CONTINUE <span class="ar"><i class="ti ti-arrow-right"></i></span></button>
+      <div class="vfoot">
+        <span class="ic"><i class="ti ti-lock"></i></span>
+        <div><b>Stored privately</b>
+          <span>Only a reviewer can open these photos, through a link that expires.</span></div>
+      </div>
+    </section>
+
+    <!-- ── phone handoff ──────────────────────────────────────── -->
+    <section class="vcard" id="sqr" hidden>
+      <div class="vhead">
+        <div class="vbrand"><span class="sh"><i class="ti ti-device-mobile"></i></span>MEMONS VERIFICATION</div>
+        <div class="vtitle">Continue on your phone</div>
+        <p class="vsub">No camera on this machine. Scan this to finish there &mdash;
+          the link lasts five minutes and opens the same check.</p>
+      </div>
+      <div class="qrplate" id="qrPlate">
+        <img id="qr" alt="" width="210" height="210">
+      </div>
+      <p class="vsub center" id="qrNote">Waiting for the phone&hellip;</p>
+      <div class="row"><button class="obtn" id="qrBack"><i class="ti ti-arrow-left"></i>BACK</button></div>
+    </section>
+
+    <p class="vsub center" id="boot">Checking your status&hellip;</p>
   </div></main>
-</div>
 
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
+<!-- unpkg rather than jsdelivr: the latter does not resolve from every
+     network the site is reached on, and a blocked script here means the
+     camera step simply never starts. The rest of the site already loads
+     its libraries from unpkg. -->
+<script src="https://unpkg.com/@vladmandic/face-api@1.7.13/dist/face-api.js"></script>
 <script>
 (function(){
-  function $(id){return document.getElementById(id);}
-  var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
-  var polling=null;
+  var MODELS='https://unpkg.com/@vladmandic/face-api@1.7.13/model';
+  var API='https://neixdrtamznrooougcda.supabase.co/functions/v1';
+  var $=function(id){return document.getElementById(id);};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
 
-  /* Server states, straight from kyc_status:
-       locked    review not passed yet, or withdrawn
-       invited   reviewer passed this wallet; verification can start
-       pending   a session exists and Didit has not decided
-       approved  done
-       rejected  declined, or a duplicate identity
-       expired   the session lapsed before it was finished           */
-  var VIEW={
-    locked:  {cls:'locked',  icon:'\uD83D\uDD12', badge:'LOCKED',
-              title:'Not required yet',
-              desc:'Verification opens after the reward draw. If your wallet is selected as a winner, this page will unlock automatically.',
-              btn:'VERIFICATION NOT OPEN', disabled:true},
-    invited: {cls:'eligible', icon:'\uD83E\uDEAA', badge:'ELIGIBLE',
-              title:'Verification required',
-              desc:'Your wallet was selected as a reward winner. Complete identity verification to receive your rewards.',
-              btn:'START VERIFICATION', disabled:false},
-    pending: {cls:'pending',  icon:'\u23F3', badge:'IN PROGRESS',
-              title:'Verification in progress',
-              desc:'Finish the check in the verification window, then come back. This page updates on its own once a decision arrives.',
-              btn:'CONTINUE VERIFICATION', disabled:false},
-    approved:{cls:'done',     icon:'\u2713', badge:'VERIFIED',
-              title:'Verified',
-              desc:'Your identity has been verified. Rewards will be sent to your wallet.',
-              btn:'VERIFICATION COMPLETE', disabled:true},
-    rejected:{cls:'rejected', icon:'\u2715', badge:'DECLINED',
-              title:'Verification not approved',
-              desc:'The check did not pass. Contact the team if you believe this is a mistake; a new attempt can be granted.',
-              btn:'VERIFICATION CLOSED', disabled:true},
-    expired: {cls:'rejected', icon:'\u23F1', badge:'EXPIRED',
-              title:'Verification expired',
-              desc:'The verification window closed before the check was finished. Contact the team to be given another attempt.',
-              btn:'VERIFICATION CLOSED', disabled:true}
+  var doc={type:null, blob:null, vec:null};
+  var face={blob:null, vec:null};
+  var country='', stream=null, loop=null, poll=null, handoff=null;
+
+  var DOCS={
+    passport:{name:'Passport', icon:'ti-id-badge-2', req:'The information page only.'},
+    national_id:{name:'National ID', icon:'ti-id', req:'The side carrying your photo.'},
+    drivers_license:{name:"Driver's licence", icon:'ti-steering-wheel', req:'The side carrying your photo.'}
   };
 
-  function render(state, info){
-    info = info || {};
-    var v = VIEW[state] || VIEW.locked;
-    $('kcard').className = 'kcard ' + v.cls;
-    $('kico').textContent = v.icon;
-    $('stTitle').textContent = v.title;
-    $('stDesc').textContent = v.desc;
-    $('badgeText').textContent = v.badge;
+  var COUNTRIES=['South Korea','United States','Japan','China','Taiwan','Hong Kong','Singapore',
+    'Vietnam','Thailand','Philippines','Indonesia','Malaysia','India','Australia','New Zealand',
+    'United Kingdom','Germany','France','Italy','Spain','Netherlands','Poland','Turkey','Russia',
+    'Ukraine','Brazil','Mexico','Argentina','Canada','Nigeria','South Africa','United Arab Emirates'];
 
-    var b = $('startBtn');
-    b.textContent = v.btn;
-    b.disabled = !!v.disabled;
-    b.onclick = v.disabled ? null : start;
+  /* Opened inside the withdrawal dialog. The page frame around it -- side
+     navigation, heading, breadcrumb -- is the marketplace's job there, and
+     repeating it inside a panel reads as a page within a page. */
+  var embed = location.hash.indexOf('embed') >= 0;
+  if(embed) document.documentElement.classList.add('kyc-embed');
 
-    var host = $('kcard').querySelector('.body');
-    var old = host.querySelector('.knote');
-    if(old) old.remove();
-    if(info.note){
-      var n = document.createElement('div');
-      n.className = 'knote' + (state==='rejected' ? ' bad' : '');
-      n.textContent = info.note;
-      host.appendChild(n);
+  function show(id){
+    ['s0','s1','s2','s3','s4','s5','sqr'].forEach(function(x){ $(x).hidden = (x!==id); });
+    $('boot').hidden=true;
+    var c=$('crumb');
+    if(c) c.textContent = id==='s0' ? 'MY PAGE' : 'MY PAGE  \u203a  VERIFICATION';
+  }
+
+  function stopCam(){
+    if(loop){ cancelAnimationFrame(loop); loop=null; }
+    if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; }
+  }
+
+  /* Routing every call through here keeps the phone case from needing a
+     second copy of each request: on a handoff the wallet is not connected
+     on this device, and the token stands in for it. */
+  async function send(path, payload){
+    if(handoff){
+      var r=await fetch(API+path,{method:'POST',
+        headers:{'content-type':'application/json','Authorization':'Bearer '+handoff},
+        body:JSON.stringify(payload||{})});
+      var j=await r.json();
+      if(!r.ok) throw new Error(j.error||'failed');
+      return j;
     }
+    return MEMONS.authFetch(path, payload);
   }
 
-  async function load(){
-    if(!(window.MEMONS && MEMONS.connected)){ render('locked'); return; }
-    try{
-      var r = await MEMONS.authFetch('/kyc/status');
-      render(r.state || 'locked', { note: r.note });
-      /* Didit reports through a webhook, so the page has no way of knowing a
-         decision landed except by asking again. Only while it can change. */
-      if(r.state === 'pending'){ startPolling(); } else { stopPolling(); }
-    }catch(e){ render('locked'); }
+  function grab(video){
+    var c=document.createElement('canvas');
+    c.width=video.videoWidth; c.height=video.videoHeight;
+    c.getContext('2d').drawImage(video,0,0);
+    return new Promise(function(res){ c.toBlob(res,'image/jpeg',0.92); });
+  }
+  function b64(blob){
+    return new Promise(function(res){
+      var fr=new FileReader();
+      fr.onload=function(){ res(String(fr.result).split(',')[1]); };
+      fr.readAsDataURL(blob);
+    });
   }
 
-  function startPolling(){ if(!polling) polling = setInterval(load, 8000); }
-  function stopPolling(){ if(polling){ clearInterval(polling); polling = null; } }
+  /* Fetched here rather than in a tag, so a blocked or missing file can be
+     answered with a second source instead of an empty square.
 
-  async function start(){
-    var b = $('startBtn'), old = b.textContent;
-    b.disabled = true; b.textContent = 'OPENING\u2026';
-    try{
-      var r = await MEMONS.authFetch('/kyc/start', {});
-      if(r && r.url){
-        /* Same tab: the flow needs the camera, and a popup asking for it is
-           the first thing a browser blocks. */
-        location.href = r.url;
-        return;
-      }
-      throw new Error('no url');
-    }catch(e){
-      var m = (e && e.message) || '';
-      if(m.indexOf('NOT_INVITED') >= 0)        alert('Verification is not open for this wallet yet.');
-      else if(m.indexOf('ALREADY_APPROVED') >= 0) alert('This wallet is already verified.');
-      else if(m.indexOf('REJECTED') >= 0)      alert('This wallet cannot start a new verification.');
-      else                                     alert('Could not open verification. Please try again shortly.');
-      b.disabled = false; b.textContent = old;
-      load();
+     qrcode-generator rather than qrcode: the latter keeps its browser
+     bundle in a build folder that is not published to npm, so every CDN
+     path to it returns 404. This one ships a single file at the package
+     root and draws to SVG, which needs no canvas to be sized first. */
+  var qrReady=null;
+  function qrlib(){
+    if(typeof qrcode!=='undefined') return Promise.resolve();
+    if(qrReady) return qrReady;
+    var SRC=['https://unpkg.com/qrcode-generator@1.4.4/qrcode.js',
+             'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'];
+    qrReady=new Promise(function(res,rej){
+      (function next(i){
+        if(i>=SRC.length) return rej(new Error('no library'));
+        var t=document.createElement('script');
+        t.src=SRC[i];
+        t.onload=function(){ typeof qrcode!=='undefined' ? res() : next(i+1); };
+        t.onerror=function(){ next(i+1); };
+        document.head.appendChild(t);
+      })(0);
+    });
+    return qrReady;
+  }
+
+  var modelsReady=null;
+  function models(){
+    if(!modelsReady){
+      modelsReady=Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
+        faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODELS)
+      ]);
     }
+    return modelsReady;
   }
 
-  /* Coming back from Didit: the callback carries the outcome, but the webhook
-     is what we trust, so this only prompts an immediate re-read. */
-  (function(){
-    var q = new URLSearchParams(location.search);
-    if(q.get('status') || q.get('verificationSessionId')){
-      history.replaceState({}, '', location.pathname);
-    }
-  })();
-
-  render('locked');
-  load();
-  document.addEventListener('memons:connected', load);
-  document.addEventListener('memons:disconnected', function(){ stopPolling(); render('locked'); });
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
-})();
-</script>
-<style>
-  .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
-  .m-burger svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
-  .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1040}
-  .m-overlay.open{opacity:1;pointer-events:auto}
-  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:264px;max-width:82vw;background:linear-gradient(180deg,#0a0a0d,#050505);border-right:1px solid rgba(255,255,255,.1);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:1041;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
-  .m-drawer.open{transform:translateX(0)}
-  .m-drawer .m-close{align-self:flex-end;background:transparent;border:0;color:#8d8a82;cursor:pointer;padding:4px;margin-bottom:2px}
-  .m-drawer .m-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
-  .m-drawer .m-sec{font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;color:#E9B84A;font-weight:700;padding:12px 12px 6px}
-  .m-drawer a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;color:#8d8a82;font-family:var(--font-head,inherit);text-decoration:none}
-  .m-drawer a:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
-  .m-drawer a.on{color:#E9B84A;background:rgba(233,184,74,.08)}
-  .m-drawer a i{font-size:18px;width:20px;text-align:center}
-  html,body{overflow-x:hidden;max-width:100vw}
-  @media(max-width:1040px){
-    .head nav{display:none !important}
-    .m-burger{display:flex}
-    .sidebar{display:none !important}
-    .main{margin-left:0 !important}
-    .shell .wrap,.main .wrap{padding-left:16px !important;padding-right:16px !important}
-    .head .soc{display:none !important}
-    .head{padding-left:14px !important;padding-right:14px !important;gap:10px !important;justify-content:flex-start !important}
-    .head .hr{gap:8px !important;margin-left:auto !important}
-    .head .brand img{height:32px !important}
-    .mypage-entry,.mpbtn{display:none !important}
-    .wrap{margin-left:auto !important;margin-right:auto !important}
-    .wbtn,.mpbtn,.wicon{padding:8px 10px !important;font-size:11px !important;white-space:nowrap}
-    .wbtn svg,.wicon svg{width:14px !important;height:14px !important}
-    .head .brand{font-size:15px !important}
-  }
-</style>
-<button class="m-burger" id="mBurger" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-<div class="m-overlay" id="mOverlay"></div>
-<nav class="m-drawer" id="mDrawer"></nav>
-<script>
-(function(){
-  var drawer=document.getElementById('mDrawer'), overlay=document.getElementById('mOverlay'), burger=document.getElementById('mBurger');
-  if(!drawer) return;
-  var close=document.createElement('button'); close.className='m-close'; close.setAttribute('aria-label','Close menu');
-  close.innerHTML='<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
-  drawer.appendChild(close);
-  var snav=document.querySelector('.snav');
-  var myBox=null;
-  if(snav){ var s1=document.createElement('div'); s1.className='m-sec'; s1.textContent='MY PAGE'; drawer.appendChild(s1);
-    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
-  else {
-    myBox=document.createElement('div');
-    var ms=document.createElement('div'); ms.className='m-sec'; ms.textContent='MY PAGE'; myBox.appendChild(ms);
-    var ml=document.createElement('a'); ml.href='mypage-dashboard.html'; ml.textContent='Go to My Page'; ml.style.color='#E9B84A'; ml.style.fontWeight='700'; myBox.appendChild(ml);
-    myBox.style.display='none'; drawer.appendChild(myBox);
-  }
-  var topnav=document.querySelector('.head nav');
-  if(topnav){ var s2=document.createElement('div'); s2.className='m-sec'; s2.textContent='MENU'; drawer.appendChild(s2);
-    Array.prototype.forEach.call(topnav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
-  var head=document.querySelector('.head');
-  if(head && burger){ head.insertBefore(burger, head.firstChild); } else if(burger){ burger.style.display='none'; }
-  function syncMy(){ if(myBox){ myBox.style.display = document.body.classList.contains('wallet-connected') ? 'block' : 'none'; } }
-  function openD(){ syncMy(); drawer.classList.add('open'); overlay.classList.add('open'); }
-  function closeD(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
-  if(burger) burger.addEventListener('click',openD);
-  close.addEventListener('click',closeD); overlay.addEventListener('click',closeD);
-  drawer.addEventListener('click',function(e){
-    var a = e.target && e.target.closest ? e.target.closest('a') : null;
-    if(!a) return;
-    var href = a.getAttribute('href') || '';
-    closeD();
-    if(href.charAt(0) === '#' && href.length > 1){
-      var t = null;
-      try{ t = document.querySelector(href); }catch(err){}
-      if(t){
-        e.preventDefault();
-        setTimeout(function(){
-          var sc = document.body;
-          if(!(sc && sc.scrollWidth > sc.clientWidth + 4)){
-            sc = document.scrollingElement || document.documentElement;
-          }
-          if(sc && sc.scrollWidth > sc.clientWidth + 4){
-            sc.scrollTo({ left: t.offsetLeft, top: 0, behavior:'smooth' });
-          } else {
-            t.scrollIntoView({ behavior:'smooth', block:'start' });
-          }
-        }, 220);
-      }
-    }
+  /* ── step 1 ──────────────────────────────────────────────── */
+  COUNTRIES.forEach(function(c){
+    var o=document.createElement('option'); o.value=c; o.textContent=c; $('country').appendChild(o);
   });
+  $('country').onchange=function(){ country=this.value; check1(); };
+  document.querySelectorAll('.doc').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('.doc').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); doc.type=b.dataset.d; check1();
+    };
+  });
+  function check1(){ $('go1').disabled = !(country && doc.type); }
+
+  $('go1').onclick=function(){
+    var d=DOCS[doc.type];
+    $('docName').textContent=d.name;
+    $('docIcon').innerHTML='<i class="ti '+d.icon+'"></i>';
+    $('docReq').textContent=d.req;
+    $('docCountry').textContent=country;
+    show('s2');
+  };
+
+  /* ── step 2: document ────────────────────────────────────── */
+  $('docUp').onclick=function(){ $('docFile').click(); };
+  $('docFile').onchange=function(){ if(this.files[0]) readDoc(this.files[0]); };
+
+  $('docCam').onclick=async function(){
+    $('docErr').textContent='';
+    try{
+      /* The rear camera is preferred and not required. A laptop has only a
+         front one, and asking for the back as a condition fails outright
+         on the machines most likely to be uploading a scan anyway. */
+      try{
+        stream=await navigator.mediaDevices.getUserMedia(
+          {video:{facingMode:{ideal:'environment'}, width:{ideal:1280}}});
+      }catch(_){
+        stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280}}});
+      }
+      $('docVid').srcObject=stream; await $('docVid').play();
+      $('docVid').hidden=false; $('docPh').hidden=true; $('docShoot').hidden=false;
+    }catch(e){
+      /* The shoot button belongs to a running camera. Left on screen after
+         a failure it invites a press that can only do nothing. */
+      $('docShoot').hidden=true; $('docVid').hidden=true; $('docPh').hidden=false;
+      $('docErr').textContent='No camera here. Upload a photo of the document instead.';
+    }
+  };
+  $('docShoot').onclick=async function(){
+    if(!stream) return;
+    var b=await grab($('docVid'));
+    stopCam(); $('docVid').hidden=true; $('docShoot').hidden=true;
+    readDoc(b);
+  };
+
+  /* Redraws the image at a quarter turn. The detector only finds faces
+     that stand upright, and a card photographed sideways puts its portrait
+     on its ear -- so the picture is turned rather than the person asked to
+     take it again. */
+  function turn(img, deg){
+    var swap = deg % 180 !== 0;
+    var c = document.createElement('canvas');
+    c.width  = swap ? img.height : img.width;
+    c.height = swap ? img.width  : img.height;
+    var x = c.getContext('2d');
+    x.translate(c.width/2, c.height/2);
+    x.rotate(deg * Math.PI / 180);
+    x.drawImage(img, -img.width/2, -img.height/2);
+    return c;
+  }
+
+  async function readDoc(blob){
+    $('docErr').textContent='Reading the document\u2026';
+    await models();
+    var img=await faceapi.bufferToImage(blob);
+
+    /* A photo of a photo: smaller, flatter, often behind a laminate. The
+       detector gets a larger input and a lower bar than the live pass, or
+       it finds nothing on a perfectly good document. */
+    var opts=new faceapi.TinyFaceDetectorOptions({inputSize:512, scoreThreshold:0.3});
+
+    /* Upright first, since most photographs are, then the three turns. The
+       one that finds a face is also the one everything after this is
+       measured against -- reading the shape off the original while the
+       face came from a rotated copy would compare two different pictures. */
+    /* A photograph taken upright holds a card lying across it, with empty
+       space above and below. The card is what matters, so the picture is
+       turned to lie the same way -- the face comes out on its side, which
+       is what the second pass below is for. */
+    var upright = img.height > img.width;
+    var base = upright ? turn(img, 90) : img;
+    var baseTurn = upright ? 90 : 0;
+
+    /* All four turns, and the best score wins.
+       Stopping at the first hit let an upside-down card through: the
+       detector finds an inverted face too, just less confidently, and
+       whichever turn happened to be tried first was the one kept. Scoring
+       them against each other puts the upright one ahead, which is the
+       reading a person would give as well. */
+    var r=null, src=base, used=baseTurn, best=0;
+    for (var i=0, degs=[0,90,180,270]; i<degs.length; i++){
+      var cand = degs[i] === 0 ? base : turn(base, degs[i]);
+      var hit = await faceapi.detectSingleFace(cand, opts)
+            .withFaceLandmarks(true).withFaceDescriptor();
+      if (!hit) continue;
+      var score = hit.detection.score;
+      if (score > best){
+        best = score; r = hit; src = cand; used = (baseTurn + degs[i]) % 360;
+      }
+    }
+
+    if(!r){
+      $('docErr').textContent='No face found on the document. Fill the frame, avoid glare, and try again.';
+      return;
+    }
+
+    /* A face alone is not a document -- a selfie has one too, and until now
+       one would pass. What separates them is the shape of the picture and
+       where the face sits in it: an ID card is a wide rectangle with a
+       small portrait pushed to one side, while a photo of a person is
+       squarer with the face large and central.
+
+       Read off proportions rather than content, so nothing has to be
+       recognised and nothing else has to be downloaded. It will not catch
+       a photograph of someone else's card, which is the manual review's
+       job, but it turns away the picture that was never a document. */
+    var W=src.naturalWidth||src.width, H=src.naturalHeight||src.height;
+    var ratio = W/H;
+    var box = r.detection.box;
+    var faceArea = (box.width*box.height)/(W*H);
+
+    /* Judged on how much of the frame the face takes, not on the shape of
+       the picture.
+
+       Shape cannot separate the two cases that matter. A phone held
+       upright gives the same proportions whether it is pointed at a card
+       on a table or at a person, so a rule written on proportions either
+       lets selfies through or turns away good documents.
+
+       Size does separate them. The portrait printed on a card is small --
+       a few percent of a photograph that includes the whole card -- while
+       a person photographed directly fills a good part of the frame. The
+       gap between the two is wide enough to sit a line in.
+
+       Shape is still worth one check, for pictures so stretched that no
+       document is in them. */
+    var elong = Math.max(ratio, 1/ratio);
+    var wide  = doc.type === 'passport' ? 3.4 : 2.8;
+
+    var why =
+      (elong > wide)     ? 'The picture is stretched. Frame just the document.'
+    : (faceArea > 0.12)  ? 'That looks like a photo of a person. Photograph your ID document instead.'
+    : (faceArea < 0.002) ? 'The document is too small in the frame. Move closer so it fills the guides.'
+    : null;
+
+    if(why){ $('docErr').textContent=why; return; }
+    /* Kept the way round the face was found. The reviewer compares this
+       against a selfie, and a card lying on its side makes that harder for
+       no reason -- the turn has already been worked out here. */
+    var blob2 = used
+      ? await new Promise(function(res){ src.toBlob(res,'image/jpeg',0.92); })
+      : blob;
+    doc.blob=blob2; doc.vec=Array.from(r.descriptor);
+    $('docErr').textContent='';
+    $('docCam').hidden=true; $('docUp').hidden=true; $('docShoot').hidden=true;
+
+    /* Shown as it was taken, then turned on screen to where the face was
+       found. Presenting the corrected version straight away hides the only
+       part of this worth watching. */
+    var shown=URL.createObjectURL(blob);
+    $('docPrev').src=shown;
+    $('docPrev').style.transform='';
+    $('docPrev').hidden=false; $('docPh').hidden=true;
+
+    var note=document.createElement('div');
+    note.className='align';
+    $('docFrame').appendChild(note);
+
+    function done(saved){
+      /* Stops here rather than moving on by itself. A screen that advances
+         before it can be looked at leaves no way to tell a good capture
+         from one that happened to pass. */
+      $('rvDoc').src=saved;
+      $('docAgain').hidden=false; $('docNext').hidden=false;
+    }
+
+    if(!used){
+      note.className='align ok';
+      note.innerHTML='<i class="ti ti-circle-check"></i>ALIGNED';
+      done(shown);
+      return;
+    }
+
+    note.className='align turning';
+    note.innerHTML='<i class="ti ti-rotate-clockwise"></i>STRAIGHTENING';
+
+    /* The picture turns the way the detector had to turn it. A frame's
+       delay first, or the browser folds the two states into one and
+       nothing appears to move. */
+    requestAnimationFrame(function(){
+      $('docPrev').style.transform='rotate('+(-used)+'deg)';
+    });
+
+    setTimeout(function(){
+      /* Swapped for the corrected file once the turn has played, so the
+         element can drop its rotation without the picture jumping back. */
+      var straight=URL.createObjectURL(blob2);
+      $('docPrev').style.transition='none';
+      $('docPrev').src=straight;
+      $('docPrev').style.transform='';
+      requestAnimationFrame(function(){ $('docPrev').style.transition=''; });
+      note.className='align ok';
+      note.innerHTML='<i class="ti ti-circle-check"></i>ALIGNED';
+      done(straight);
+    }, 700);
+  }
+
+  function docReset(){
+    doc.blob=null; doc.vec=null;
+    var n=$('docFrame').querySelector('.align'); if(n) n.remove();
+    $('docPrev').style.transform=''; $('docPrev').style.transition='';
+    $('docPrev').hidden=true; $('docPh').hidden=false; $('docErr').textContent='';
+    $('docAgain').hidden=true; $('docNext').hidden=true;
+    $('docCam').hidden=false; $('docUp').hidden=false;
+  }
+  $('docAgain').onclick=docReset;
+  $('docNext').onclick=function(){ show('s3'); };
+
+  /* ── step 3: face ────────────────────────────────────────── */
+
+  /* Eye aspect ratio. Six points around the eye; when the lid drops, the
+     two vertical spans collapse while the horizontal one holds, so the
+     ratio falls far enough to read a blink without tuning per face. */
+  function ear(p){
+    function d(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+    return (d(p[1],p[5]) + d(p[2],p[4])) / (2*d(p[0],p[3]));
+  }
+
+  /* Where the nose sits between the eyes. A photograph held to the camera
+     cannot change this; a head can. */
+  function yaw(lm){
+    var le=lm.getLeftEye(), re=lm.getRightEye(), n=lm.getNose();
+    var lc=le.reduce(function(a,p){return a+p.x;},0)/le.length;
+    var rc=re.reduce(function(a,p){return a+p.x;},0)/re.length;
+    var mid=(lc+rc)/2, span=Math.abs(rc-lc)||1;
+    return (n[3].x-mid)/span;
+  }
+
+  var ACTIONS=[
+    {k:'blink', label:'Blink slowly', test:function(st,lm){
+      var v=(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
+      if(v<0.19) st.closed=true;
+      return st.closed && v>0.26;
+    }},
+    {k:'left', label:'Turn your head left', test:function(st,lm){ return yaw(lm) > 0.22; }},
+    {k:'right', label:'Turn your head right', test:function(st,lm){ return yaw(lm) < -0.22; }}
+  ];
+  function shuffle(a){
+    a=a.slice();
+    for(var i=a.length-1;i>0;i--){var j=(Math.random()*(i+1))|0,t=a[i];a[i]=a[j];a[j]=t;}
+    return a;
+  }
+
+  $('faceStart').onclick=runFace;
+
+  async function runFace(){
+    var vid=$('faceVid'), ovl=$('faceOvl'), cap=$('faceCap');
+    $('faceErr').textContent=''; $('faceStart').hidden=true;
+    cap.textContent='Starting the camera\u2026';
+
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640}});
+      vid.srcObject=stream; await vid.play();
+      $('facePh').hidden=true;
+    }catch(e){
+      /* Offering an upload here would undo the check: a still photograph
+         is the thing it exists to reject. The way through is the same
+         check on a device that has a camera. */
+      cap.textContent='No camera here.';
+      return toPhone();
+    }
+
+    await models();
+
+    /* Drawn fresh each run. A fixed order can be met with a clip recorded
+       once. */
+    var plan=shuffle(ACTIONS), at=0, st={};
+    $('ticks').innerHTML=plan.map(function(a){
+      return '<span class="tick" data-k="'+a.k+'" style="font-size:11px;letter-spacing:.5px;'+
+        'color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:6px 11px">'+
+        esc(a.label)+'</span>';
+    }).join('');
+
+    ovl.width=vid.videoWidth; ovl.height=vid.videoHeight;
+    var ctx=ovl.getContext('2d');
+    var opts=new faceapi.TinyFaceDetectorOptions({inputSize:320, scoreThreshold:0.5});
+    cap.className='facecap act'; cap.textContent=plan[0].label;
+
+    async function tick(){
+      var r=await faceapi.detectSingleFace(vid, opts).withFaceLandmarks(true);
+      ctx.clearRect(0,0,ovl.width,ovl.height);
+
+      if(!r){
+        cap.className='facecap'; cap.textContent='Move so your face fills the oval';
+      }else{
+        var b=r.detection.box;
+        ctx.strokeStyle='rgba(233,184,74,.85)'; ctx.lineWidth=2;
+        ctx.strokeRect(ovl.width-b.x-b.width, b.y, b.width, b.height);
+        cap.className='facecap act';
+
+        if(plan[at].test(st, r.landmarks)){
+          var el=$('ticks').querySelector('[data-k="'+plan[at].k+'"]');
+          if(el){ el.style.color='var(--good)'; el.style.borderColor='rgba(92,207,146,.35)'; }
+          at++; st={};
+
+          if(at>=plan.length){
+            /* Taken after the actions, from the same session that just
+               moved -- not from a frame grabbed before any of it. */
+            var full=await faceapi.detectSingleFace(vid, opts)
+              .withFaceLandmarks(true).withFaceDescriptor();
+            if(full){
+              face.vec=Array.from(full.descriptor);
+              face.blob=await grab(vid);
+              stopCam();
+              $('rvFace').src=URL.createObjectURL(face.blob);
+              return show('s4');
+            }
+          }else{
+            cap.textContent=plan[at].label;
+          }
+        }
+      }
+      loop=requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  /* ── phone handoff ───────────────────────────────────────── */
+  async function toPhone(){
+    stopCam(); show('sqr');
+    var r;
+    try{ r=await send('/identity/handoff'); }
+    catch(e){ $('qrNote').textContent='Could not start the handoff. Try again.'; return; }
+
+    var url=location.origin+'/mypage-kyc.html#h='+encodeURIComponent(r.token);
+
+    /* The code is the whole point of this screen, so a failure to draw it
+       needs its own answer. Printing the address instead put a working
+       session token on screen in plain text -- long enough that nobody
+       would type it, and readable by anyone standing behind. */
+    try{
+      await qrlib();
+      /* Type 0 lets the library pick a size for the length of the link,
+         and level M leaves enough correction for a phone camera at an
+         angle without making the squares too fine to read. */
+      var q=qrcode(0,'M');
+      q.addData(url);
+      q.make();
+      $('qr').outerHTML=q.createSvgTag({cellSize:6, margin:2, scalable:true});
+      var svg=$('qrPlate').querySelector('svg');
+      if(svg){ svg.setAttribute('width','210'); svg.setAttribute('height','210'); }
+      $('qrNote').textContent='Waiting for the phone\u2026';
+    }catch(e){
+      /* The white plate exists to sit behind a code. With no code it is a
+         blank panel in the middle of the screen, so it goes too. */
+      $('qrPlate').remove();
+      $('qrNote').innerHTML='The code could not be drawn. '+
+        '<button type="button" class="deta" id="qrCopy">Copy the link</button>'+
+        ' and open it on your phone.';
+      var cp=$('qrCopy');
+      if(cp) cp.onclick=function(){
+        navigator.clipboard.writeText(url).then(function(){
+          cp.textContent='Copied';
+          setTimeout(function(){ cp.textContent='Copy the link'; },1500);
+        });
+      };
+    }
+
+    /* Polled rather than pushed: the phone finishes on its own connection
+       and this page has no other way to hear about it. */
+    if(poll) clearInterval(poll);
+    poll=setInterval(async function(){
+      try{
+        var st=await send('/identity/state');
+        if(st && st.state && st.state!=='none' && st.state!=='rejected'){
+          clearInterval(poll); poll=null; result(st.state);
+        }
+      }catch(e){}
+    }, 4000);
+  }
+  $('qrBack').onclick=function(){
+    if(poll){ clearInterval(poll); poll=null; }
+    show('s3'); $('faceStart').hidden=false;
+    $('faceCap').className='facecap';
+    $('faceCap').textContent='Position your face inside the oval';
+  };
+
+  /* ── submit ──────────────────────────────────────────────── */
+  $('redo').onclick=function(){
+    face.blob=null; face.vec=null;
+    docReset();
+    show('s2');
+  };
+
+  $('send').onclick=async function(){
+    var b=this; b.disabled=true; b.textContent='SUBMITTING\u2026'; $('sendErr').textContent='';
+    try{
+      await send('/identity/submit', {
+        selfie_vec: face.vec, id_vec: doc.vec,
+        selfie: await b64(face.blob), id: await b64(doc.blob)
+      });
+      result('pending');
+    }catch(e){
+      $('sendErr').textContent='That did not go through. Please try again.';
+      b.disabled=false; b.innerHTML='SUBMIT <span class="ar"><i class="ti ti-arrow-right"></i></span>';
+    }
+  };
+
+  /* ── result ──────────────────────────────────────────────── */
+
+  /* A submission is not a pass. The photographs go to a person, and
+     showing "Verified" the moment they are sent would leave anyone turned
+     down later wondering what changed. */
+  function result(state){
+    var ok = state==='approved';
+    $('resIcon').className='ti '+(ok?'ti-circle-check':'ti-clock-hour-4');
+    $('resIcon').style.color = ok ? 'var(--good)' : 'var(--gold)';
+    $('resTitle').textContent = ok ? 'Verified' : 'With a reviewer';
+    $('resNote').textContent = ok
+      ? 'Withdrawals are open on this account.'
+      : 'A person checks this, usually within a day. Nothing else is needed from you.';
+
+    var rows=[
+      ['Document', doc.type ? (DOCS[doc.type]||{}).name : 'Received', true],
+      ['Face check', 'Received', true],
+      ['Review', ok ? 'Approved' : 'In progress', ok]
+    ];
+    $('resList').innerHTML=rows.map(function(r){
+      return '<div class="rrow"><i class="ti '+(r[2]?'ti-circle-check':'ti-clock-hour-4')+
+        (r[2]?'':' wait')+'"></i><span class="k">'+esc(r[0])+
+        '</span><span class="v'+(r[2]?' ok':'')+'">'+esc(r[1])+'</span></div>';
+    }).join('');
+
+    $('resGo').onclick=function(){ location.href = ok ? 'marketplace.html' : 'mypage-dashboard.html'; };
+    show('s5');
+  }
+
+  /* ── boot ────────────────────────────────────────────────── */
+  $('agree').onchange=function(){ $('start').disabled=!this.checked; };
+  $('showTerms').onclick=function(e){
+    e.preventDefault();
+    var t=$('terms');
+    t.hidden=!t.hidden;
+    this.textContent=t.hidden?'Details':'Hide';
+  };
+  $('start').onclick=function(){ show('s1'); };
+
+  async function boot(){
+    /* Arrived from a QR code. The token stands in for the wallet long
+       enough to finish, so nothing is signed on the phone. */
+    var h=(location.hash.match(/[#&]h=([^&]+)/)||[])[1];
+    if(h){
+      history.replaceState(null,'',location.pathname);
+      try{
+        var res=await fetch(API+'/identity/claim',{method:'POST',
+          headers:{'content-type':'application/json'},
+          body:JSON.stringify({token:decodeURIComponent(h)})});
+        var j=await res.json();
+        if(j && j.token){ handoff=j.token; show('s1'); return; }
+      }catch(e){}
+      $('boot').textContent='That link has expired. Start again on the other device.';
+      return;
+    }
+
+    if(!(window.MEMONS && MEMONS.connected)){
+      try{ await MEMONS.connect(); }
+      catch(e){ $('boot').textContent='Connect your wallet to continue.'; return; }
+    }
+    chip(MEMONS.address);
+
+    var st=null;
+    try{ st=await send('/identity/state'); }catch(e){}
+    var s=(st && st.state) || 'none';
+
+    if(s==='approved' || s==='pending'){ result(s); return; }
+
+    if(s==='rejected'){
+      $('statusBadge').className='vbadge no';
+      $('statusText').textContent='NOT ACCEPTED';
+      $('statusNote').hidden=false;
+      $('statusNote').textContent='The last submission was not accepted. You can try again.';
+    }
+    show('s0');
+  }
+
+  /* The chip in the sidebar corner is markup on every page and filled by
+     each of them; a page that does not fill it reads as signed out while
+     the header above shows the address. */
+  function chip(addr){
+    var w=$('waddr'), st=$('wstat');
+    if(w)  w.textContent  = addr ? (addr.slice(0,6)+'\u2026'+addr.slice(-4)) : 'Not connected';
+    if(st) st.textContent = addr ? 'Connected' : 'Connect wallet';
+    document.body.classList.toggle('connected', !!addr);
+  }
+  chip(window.MEMONS && MEMONS.connected ? MEMONS.address : null);
+  document.addEventListener('memons:connected', function(){
+    chip(window.MEMONS && MEMONS.connected ? MEMONS.address : null);
+  });
+  var wd=$('wdisc');
+  if(wd) wd.onclick=function(){
+    if(window.MEMONS && MEMONS.disconnect) MEMONS.disconnect();
+    chip(null);
+  };
+
+  window.addEventListener('beforeunload', stopCam);
+  if(document.readyState!=='loading') boot();
+  else document.addEventListener('DOMContentLoaded', boot);
 })();
 </script>
 
-</body>
-</html>
+</div>
+</body></html>

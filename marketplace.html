@@ -3297,6 +3297,19 @@
         return;
       }
 
+      /* Asked before an amount is typed. Finding out afterwards means
+         doing that part twice, and the answer does not depend on the
+         amount unless it is the amount that crosses the line -- which the
+         request itself still catches. */
+      try{
+        var g=await MEMONS.authFetch('/identity/needed', {amount:0});
+        if(g && g.reason){
+          wdClose();
+          MEMONS.verify(g.reason, wdOpen);
+          return;
+        }
+      }catch(e){}
+
       var picks=[25,50,100].filter(function(v){return v<=wdAvail;});
       if(wdAvail>0) picks.push('ALL');
       $m('wdQuick').innerHTML=picks.map(function(v){
@@ -3354,11 +3367,15 @@
       var note=$m('wdNote');
       note.className='mkm-note bad';
       var min=(m2.match(/BELOW_MIN_WITHDRAWAL:([\d.]+)/)||[])[1];
-      note.textContent =
+      note.innerHTML =
           m2.indexOf('WITHDRAWAL_PENDING')>=0   ? 'You already have a withdrawal waiting.'
         : m2.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.'
         : m2.indexOf('BAD_CHAIN')>=0            ? 'That network is not available.'
         : min                                   ? 'The minimum withdrawal is '+num(min)+' USDT.'
+        : m2.indexOf('IDENTITY_REQUIRED')>=0     ? (MEMONS.verify(
+            (m2.match(/pending|first_withdrawal|over_free_limit|over_deposit/)||[])[0],
+            function(){ wdClose(); }
+          ), '')
         : m2.indexOf('KYC_REQUIRED')>=0          ? 'Identity verification is required before withdrawing.'
         : m2.indexOf('WITHDRAWALS_CLOSED')>=0   ? 'Withdrawals are not open yet.'
         : m2.indexOf('SESSION_EXPIRED')>=0      ? 'Your session expired. Reconnect your wallet and try again.'
@@ -3368,6 +3385,8 @@
       b.disabled=false;
     }finally{ wdBusy=false; b.textContent=lbl; }
   }
+
+
 
   $m('wdBtn').onclick=wdOpen;
   $m('wdClose').onclick=wdClose;

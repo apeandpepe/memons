@@ -361,7 +361,132 @@
   bindWalletEvents();
   armExpiryTimer();
 
+  /* ── verification popup ───────────────────────────────────────────
+     Withdrawal and buyback both reach the point where a check is needed,
+     and both are already inside a dialog of their own. Sending someone to
+     a page from there loses whatever they had typed, and inside the embed
+     there is no dependable way back.
+
+     So it opens over everything, from wherever it was called, and closes
+     back onto the screen it covered. It climbs to the outermost frame it
+     can reach: opened inside the marketplace, which is itself inside the
+     front page, a panel confined to the middle frame would sit in a box
+     rather than over the site.
+
+     One copy serves every caller. A second would drift from the first the
+     first time either changed. */
+  function verify(reason, onPass) {
+    const top = (function () {
+      try {
+        let w = window;
+        while (w.parent !== w && w.parent.document) w = w.parent;
+        return w;
+      } catch (e) { return window; }   // cross-origin: stay where we are
+    })();
+
+    if (top.__memonsVerify) { top.__memonsVerify(reason, onPass); return; }
+    if (top !== window) {
+      /* The outer frame has not loaded this script. Falling back to the
+         current frame still works -- it just does not cover as much. */
+      return openHere(window, reason, onPass);
+    }
+    return openHere(window, reason, onPass);
+  }
+
+  const WHY = {
+    first_withdrawal: "The first withdrawal is checked once. It takes about a minute.",
+    over_free_limit:  "This account has taken out more than it put in, so we check again.",
+    over_deposit:     "This takes you past what you have put in, so we check again.",
+    pending:          "Your last submission is with a reviewer.",
+    buyback:          "Selling airdrop cards needs a one-off identity check.",
+  };
+
+  function openHere(w, reason, onPass) {
+    const d = w.document;
+    let wrap = d.getElementById("memonsVerify");
+    if (wrap) wrap.remove();
+
+    const waiting = reason === "pending";
+
+    wrap = d.createElement("div");
+    wrap.id = "memonsVerify";
+    wrap.innerHTML =
+      '<div class="mv-bg"></div>' +
+      '<div class="mv-box" role="dialog" aria-modal="true">' +
+        '<header class="mv-head">' +
+          '<b>Identity check</b>' +
+          '<button class="mv-x" aria-label="Close">&times;</button>' +
+        '</header>' +
+        '<p class="mv-why"></p>' +
+        (waiting ? "" : '<iframe class="mv-frame" allow="camera; microphone"></iframe>') +
+      "</div>";
+
+    const style = d.createElement("style");
+    style.textContent = `
+      #memonsVerify{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;
+        justify-content:center;padding:20px;font-family:inherit}
+      #memonsVerify .mv-bg{position:absolute;inset:0;background:rgba(0,0,0,.82);
+        backdrop-filter:blur(3px)}
+      #memonsVerify .mv-box{position:relative;width:100%;max-width:760px;
+        max-height:calc(100vh - 40px);display:flex;flex-direction:column;
+        background:linear-gradient(180deg,#0f0f12,#0a0a0c);
+        border:1px solid rgba(233,184,74,.3);border-radius:16px;padding:18px 20px 20px}
+      #memonsVerify .mv-head{display:flex;align-items:center;justify-content:space-between;
+        margin-bottom:10px}
+      #memonsVerify .mv-head b{font-size:15px;letter-spacing:.6px;color:#E9B84A}
+      #memonsVerify .mv-x{background:none;border:0;color:#8d8a82;font-size:24px;
+        line-height:1;cursor:pointer;padding:0 4px}
+      #memonsVerify .mv-x:hover{color:#e8e6e0}
+      #memonsVerify .mv-why{color:#8d8a82;font-size:12.5px;line-height:1.7;margin-bottom:14px}
+      #memonsVerify .mv-frame{flex:1 1 auto;width:100%;min-height:min(560px,62vh);
+        border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#08080a;display:block}
+      @media(max-width:620px){ #memonsVerify{padding:0}
+        #memonsVerify .mv-box{max-width:none;height:100%;max-height:none;border-radius:0;border:0} }
+    `;
+    d.head.appendChild(style);
+    d.body.appendChild(wrap);
+
+    wrap.querySelector(".mv-why").textContent = WHY[reason] || WHY.first_withdrawal;
+    const frame = wrap.querySelector(".mv-frame");
+    if (frame) frame.src = "mypage-kyc.html#embed";
+
+    let poll = null;
+    function close(passed) {
+      if (poll) { clearInterval(poll); poll = null; }
+      wrap.remove(); style.remove();
+      w.__memonsVerifyOpen = false;
+      if (passed && typeof onPass === "function") onPass();
+    }
+    wrap.querySelector(".mv-x").onclick = () => close(false);
+    wrap.querySelector(".mv-bg").onclick = () => close(false);
+
+    /* The frame finishes on its own connection, so this side asks rather
+       than waits to be told. Approval closes it; a submission still in
+       review leaves the message and drops the camera. */
+    if (!waiting) {
+      poll = setInterval(async () => {
+        try {
+          const st = await authFetch("/identity/state");
+          if (!st) return;
+          if (st.state === "approved") close(true);
+          else if (st.state === "pending") {
+            clearInterval(poll); poll = null;
+            frame.remove();
+            wrap.querySelector(".mv-why").textContent = WHY.pending;
+          }
+        } catch (e) {}
+      }, 4000);
+    }
+
+    w.__memonsVerifyOpen = true;
+    return close;
+  }
+
+  /* Published on the window so an inner frame can reach it. */
+  window.__memonsVerify = function (reason, onPass) { return openHere(window, reason, onPass); };
+
   const M = (window.MEMONS = window.MEMONS || {});
+  M.verify = verify;
   M.connect = connect;
   M.state = state;
   M.pull = pull;
