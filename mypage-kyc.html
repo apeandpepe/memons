@@ -1001,16 +1001,16 @@
 
   /* ── step 3: face ────────────────────────────────────────── */
 
-  /* Eye aspect ratio. Six points around the eye; when the lid drops, the
+  /* Eye aspect ratio. Six points around the eye: when the lid drops the
      two vertical spans collapse while the horizontal one holds, so the
-     ratio falls far enough to read a blink without tuning per face. */
+     ratio falls. */
   function ear(p){
     function d(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
     return (d(p[1],p[5]) + d(p[2],p[4])) / (2*d(p[0],p[3]));
   }
 
-  /* Where the nose sits between the eyes. A photograph held to the camera
-     cannot change this; a head can. */
+  /* Where the nose sits between the eyes. A photograph held up to the
+     camera cannot change this; a head can. */
   function yaw(lm){
     var le=lm.getLeftEye(), re=lm.getRightEye(), n=lm.getNose();
     var lc=le.reduce(function(a,p){return a+p.x;},0)/le.length;
@@ -1020,31 +1020,23 @@
   }
 
   var ACTIONS=[
-    /* Measured against how open this face's eyes usually are, not against
-       a number. Eye shape varies, and a phone held close reads differently
-       from a laptop across a desk -- a fixed threshold passes some people
-       on the first try and never passes others.
-   
-       The widest reading seen so far stands in for open. A drop to two
-       thirds of it counts as shut, and a return past four fifths as open
-       again; both have to happen for a blink to count, or a face that
-       merely looks down would do. */
+    /* Read against how open this face's eyes usually are, not against a
+       number, since eye shape and camera distance both move the reading.
+       The bar is set low on purpose: a turn of the head is what actually
+       rules out a photograph, and a blink that refuses to register just
+       leaves someone stuck in front of a camera. */
     {k:'blink', label:'Blink slowly', test:function(st,lm){
       var v=(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
-
-      /* A few frames of watching before judging anything. The first
-         reading is whatever the face happened to be doing, and taking it
-         as "open" leaves nothing to fall from. */
       st.n=(st.n||0)+1;
       if(!st.open || v>st.open) st.open=v;
-      if(st.n<8) return false;
-
-      if(v < st.open*0.72) st.closed=true;
-      return st.closed && v > st.open*0.80;
+      if(st.n<6) return false;
+      if(v < st.open*0.85) st.closed=true;
+      return st.closed && v > st.open*0.90;
     }},
-    {k:'left', label:'Turn your head left', test:function(st,lm){ return yaw(lm) > 0.22; }},
+    {k:'left',  label:'Turn your head left',  test:function(st,lm){ return yaw(lm) >  0.22; }},
     {k:'right', label:'Turn your head right', test:function(st,lm){ return yaw(lm) < -0.22; }}
   ];
+
   function shuffle(a){
     a=a.slice();
     for(var i=a.length-1;i>0;i--){var j=(Math.random()*(i+1))|0,t=a[i];a[i]=a[j];a[j]=t;}
