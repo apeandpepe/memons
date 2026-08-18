@@ -507,11 +507,41 @@
     <div class="capwin">
       <img class="capposter" src="images/open-capsule/capsule.webp" alt="">
       <video class="capvid" id="capVid" autoplay muted loop playsinline preload="metadata"
+             poster="images/open-capsule/capsule-poster.webp"
              data-src="images/open-capsule/capsule.mp4"
              data-src-mobile="images/open-capsule/capsule-mobile.mp4"></video>
 <script>
 (function(){
   /* pick the light video on phones/tablets, the full-quality one on desktop */
+  /* Autoplay is a request, not a guarantee. Low Power Mode, a per-site
+     setting, and the browsers built into wallet apps all refuse it, and the
+     refusal arrives as a rejected promise with the poster left on screen.
+     The next thing the visitor does -- a touch, a scroll, a key -- is taken
+     as the gesture and the video is started then. Listeners remove
+     themselves on the first success. */
+  function tryPlay(el){
+    if(!el) return;
+    var done = false;
+    function attempt(){
+      if(done || !el) return;
+      var p = el.play();
+      if(p && p.then) p.then(function(){ done = true; drop(); }).catch(function(){});
+      else { done = true; drop(); }
+    }
+    function drop(){
+      ['touchstart','pointerdown','click','keydown','scroll'].forEach(function(ev){
+        window.removeEventListener(ev, attempt, true);
+      });
+      document.removeEventListener('visibilitychange', onVis);
+    }
+    function onVis(){ if(!document.hidden) attempt(); }
+    attempt();
+    ['touchstart','pointerdown','click','keydown','scroll'].forEach(function(ev){
+      window.addEventListener(ev, attempt, true);
+    });
+    document.addEventListener('visibilitychange', onVis);
+  }
+
   function pick(el){
     if(!el) return;
     var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
@@ -520,8 +550,15 @@
     var s = document.createElement('source');
     s.src = src; s.type = 'video/mp4';
     el.appendChild(s);
+    /* Set as properties, not left to the attributes alone. WebKit reads the
+       muted attribute when the element is parsed, and the source is attached
+       afterwards -- at which point iOS has already decided the video has
+       audio and refuses to start it without a gesture. */
+    el.muted = true;
+    el.setAttribute('muted','');
+    el.playsInline = true;
     el.load();
-    var p = el.play(); if(p && p.catch) p.catch(function(){});
+    tryPlay(el);
   }
   pick(document.getElementById('capVid'));
 })();
@@ -539,7 +576,10 @@
     <div class="ql">YOUR PULLS</div>
     <div class="pullsleft none" id="pullsLeft"><b>&mdash;</b><span>REMAINING</span></div>
     <button class="obtn gold" id="openOne">OPEN CAPSULE</button>
-    <button class="obtn ghost" id="openTen"><span class="lbl">OPEN 10 CAPSULES</span><span class="off">10%<br>OFF</span></button>
+    <!-- Ten-pull button retired. Kept hidden rather than deleted: the click
+         handler and the pull accounting behind it are unchanged, so putting
+         it back is a matter of removing the style attribute. -->
+    <button class="obtn ghost" id="openTen" style="display:none"><span class="lbl">OPEN 10 CAPSULES</span><span class="off">10%<br>OFF</span></button>
     <div class="bnote" id="gateNote" style="display:none;border-color:rgba(233,184,74,.4)">
       <span class="ic">!</span>
       <p>Complete missions 1–3 to open capsules.</p>

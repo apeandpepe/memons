@@ -561,6 +561,7 @@
 <!-- swap video: images/home/intro.mp4 -->
 <section class="vhero" id="home">
   <video id="introVid" class="vbg" autoplay muted loop playsinline preload="none"
+         poster="images/home/intro-poster.webp"
          data-src="images/home/intro.mp4"
          data-src-mobile="images/home/intro-mobile.mp4"
          data-src-low="images/home/intro-low.mp4"
@@ -587,6 +588,35 @@
     return /[?&]tier=low/.test(location.search);
   }
 
+  /* Autoplay is a request, not a guarantee. Low Power Mode, a per-site
+     setting, and the browsers built into wallet apps all refuse it, and the
+     refusal arrives as a rejected promise with the poster left on screen.
+     Rather than leave it there, the next thing the visitor does -- a touch,
+     a scroll, a key -- is taken as the gesture and the video is started
+     then. Listeners remove themselves on the first success. */
+  function tryPlay(el){
+    if(!el) return;
+    var done = false;
+    function attempt(){
+      if(done || !el) return;
+      var p = el.play();
+      if(p && p.then) p.then(function(){ done = true; drop(); }).catch(function(){});
+      else { done = true; drop(); }
+    }
+    function drop(){
+      ['touchstart','pointerdown','click','keydown','scroll'].forEach(function(ev){
+        window.removeEventListener(ev, attempt, true);
+      });
+      document.removeEventListener('visibilitychange', onVis);
+    }
+    function onVis(){ if(!document.hidden) attempt(); }
+    attempt();
+    ['touchstart','pointerdown','click','keydown','scroll'].forEach(function(ev){
+      window.addEventListener(ev, attempt, true);
+    });
+    document.addEventListener('visibilitychange', onVis);
+  }
+
   function pick(el){
     if(!el) return;
     var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
@@ -601,8 +631,16 @@
        auto in the tag the browser began fetching on src assignment and
        autoplay then started its own read, so the file came down twice. */
     el.preload = slow ? 'metadata' : 'auto';
+    /* Set as a property, not left to the attribute alone. WebKit reads the
+       muted attribute when the element is parsed, and this element gets its
+       source afterwards -- at which point iOS has already decided the video
+       has audio and refuses to start it without a gesture. Assigning the
+       property puts that decision back the right way round. */
+    el.muted = true;
+    el.setAttribute('muted', '');
+    el.playsInline = true;
     el.src = src;
-    var p = el.play(); if(p && p.catch) p.catch(function(){});
+    tryPlay(el);
 
     // Leaves a trace for anyone checking why they got the file they got.
     try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
@@ -690,7 +728,7 @@
 
 <!-- OPEN CAPSULE (embed) -->
 <section id="capsule" class="embedsec">
-  <iframe class="embed" data-src="open-capsule.html#embed" title="OPEN CAPSULE" loading="lazy"></iframe>
+  <iframe class="embed" data-src="open-capsule.html#embed" title="OPEN CAPSULE" loading="lazy" allow="autoplay"></iframe>
 </section>
 
 <!-- MARKETPLACE -->
