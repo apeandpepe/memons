@@ -45,11 +45,10 @@
      from before the handoff was gone with the DOM. Which is precisely the
      half of the connect worth reading.
 
-     The flag is remembered once set, and the lines are appended to storage
-     as they are written, so a reload replays everything that came before.
-     CLEAR empties both. */
+     Kept in the file but switched off outright: the box is a development
+     aid, and a visitor should never meet it by following a link someone
+     else pasted. Flip this to true locally when a phone needs reading. */
   var DBG = false;
-  try { DBG = /[?&]wcdebug=1/.test(location.search); } catch (e) {}
 
   var dbgBox = null;
   function dbgLine(body, text, kind) {
