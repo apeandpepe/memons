@@ -224,11 +224,13 @@
     .pricebar.art{
       --aw:min(var(--awRaw, 470px), 88vw) !important;
       --fsNum:.045 !important;
-      top:calc(7vh + min(54vh, 100vh - 250px) + 14px);
+      top:calc(7vh + min(54vh, 100vh - 250px) + var(--gap,14px));
+      transform:translateX(var(--xOff,0px));
       bottom:auto}
     .pricebar{
       width:min(var(--cw,336px),88vw);
-      top:calc(7vh + min(54vh, 100vh - 250px) + 14px);
+      top:calc(7vh + min(54vh, 100vh - 250px) + var(--gap,14px));
+      transform:translateX(var(--xOff,0px));
       bottom:auto}
     .stage.single ~ .history{visibility:hidden}
   }
@@ -934,6 +936,10 @@ function paintPrice(it){
     st.setProperty('--arW', B.art[0]);
     st.setProperty('--arH', B.art[1]);
     st.setProperty('--bottom', B.bottom+'px');
+    /* Phone placement, measured from the card's bottom edge. Read by the
+       mobile rules only; on a desktop --bottom above still decides. */
+    if(B.gap  != null) st.setProperty('--gap',  B.gap+'px');
+    if(B.xOff != null) st.setProperty('--xOff', B.xOff+'px');
   }
 
   if(info.kind==='buyback'){

@@ -36,7 +36,8 @@
   /* --- bar: same rules as capsule-reveal.html --------------------------- */
   .pricebar{position:absolute;left:0;right:0;z-index:5;margin:0 auto;
     padding:0;min-height:0;display:flex;align-items:stretch;
-    top:calc(7vh + min(54vh, 100vh - 250px) + var(--bottom,14px));
+    top:calc(7vh + min(54vh, 100vh - 250px) + var(--gap,14px));
+    transform:translateX(var(--xOff,0px));
     --aw:var(--awRaw,470px);
     width:var(--aw);
     height:calc(var(--aw) * var(--arH,140) / var(--arW,871));
@@ -123,20 +124,21 @@
 
 <script>
 const BASE = {
-  common:   {buy:1, art:[871,140], aw:2.40, bottom:14,
+  common:   {buy:1, art:[871,140], aw:2.40, gap:14, xOff:0,
              cellL:26.5, usdtR:34.2, numPad:2.5, fsNum:2.0, numY:3},
-  rare:     {buy:1, art:[861,140], aw:2.30, bottom:14,
+  rare:     {buy:1, art:[861,140], aw:2.30, gap:14, xOff:0,
              cellL:61.6, usdtR:15.8, numPad:19.7, fsNum:2.0, numY:2},
-  epic:     {art:[979,140], aw:2.81, bottom:14,
+  epic:     {art:[979,140], aw:2.81, gap:14, xOff:0,
              split:54.3, padL:34.8, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:3, textY:-1},
-  legendary:{art:[976,140], aw:2.78, bottom:14,
+  legendary:{art:[976,140], aw:2.78, gap:14, xOff:0,
              split:51.7, padL:35.5, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:2},
-  mythic:   {art:[935,140], aw:2.56, bottom:14,
+  mythic:   {art:[935,140], aw:2.56, gap:14, xOff:0,
              split:50.0, padL:34.6, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:0}
 };
 const FIELDS = {
   aw:      {min:1.0, max:4.5,  step:0.01, label:'width'},
-  bottom:  {min:0,   max:120,  step:1,    label:'gap'},
+  gap:     {min:-320,max:320,  step:1,    label:'up / down'},
+  xOff:    {min:-160,max:160,  step:1,    label:'left / right'},
   cellL:   {min:0,   max:95,   step:0.1,  label:'num left'},
   usdtR:   {min:0,   max:95,   step:0.1,  label:'num right'},
   numPad:  {min:0,   max:40,   step:0.1,  label:'num pad'},
@@ -150,8 +152,8 @@ const FIELDS = {
   lineGap: {min:-6,  max:20,   step:1,    label:'line gap'},
   textY:   {min:-30, max:30,   step:1,    label:'cell y'}
 };
-const BUY_KEYS    = ['aw','bottom','cellL','usdtR','numPad','fsNum','numY'];
-const MARKET_KEYS = ['aw','bottom','split','padL','fsLabel','fsVal','fsUnit','lineGap','textY'];
+const BUY_KEYS    = ['aw','gap','xOff','cellL','usdtR','numPad','fsNum','numY'];
+const MARKET_KEYS = ['aw','gap','xOff','split','padL','fsLabel','fsVal','fsUnit','lineGap','textY'];
 
 const STORE='memons_bar_tuner';
 let V=load(), cur='common';
@@ -193,7 +195,8 @@ function apply(){
   st.setProperty('--arW', b.art[0]);
   st.setProperty('--arH', b.art[1]);
   st.setProperty('--awRaw', Math.round(cardWidth()*b.aw)+'px');
-  st.setProperty('--bottom', b.bottom+'px');
+  st.setProperty('--gap', b.gap+'px');
+  st.setProperty('--xOff', b.xOff+'px');
   if(b.buy){
     st.setProperty('--cellL', b.cellL+'%');
     st.setProperty('--usdtR', b.usdtR+'%');
@@ -243,7 +246,7 @@ function writeOut(){
     const b=V[k];
     let head='    '+pad(k+':',10)+'{';
     if(b.buy) head+='buy:1, ';
-    head+='art:['+b.art[0]+','+b.art[1]+'], aw:'+(+b.aw).toFixed(2)+', bottom:'+Math.round(b.bottom)+',\n';
+    head+='art:['+b.art[0]+','+b.art[1]+'], aw:'+(+b.aw).toFixed(2)+', gap:'+Math.round(b.gap)+', xOff:'+Math.round(b.xOff)+',\n';
     let tail='               ';
     tail += b.buy
       ? 'cellL:'+b.cellL+', usdtR:'+b.usdtR+', numPad:'+b.numPad+', fsNum:'+b.fsNum+', numY:'+b.numY
