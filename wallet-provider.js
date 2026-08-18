@@ -38,11 +38,63 @@
      connect got to, which is the one thing a spinner on the wallet's
      side cannot tell you.
      ------------------------------------------------------------------ */
+  /* The flag and the lines both outlive the page.
+
+     Returning from the wallet app is a fresh load, and the address it comes
+     back to does not carry ?wcdebug=1 -- so the switch was off and the log
+     from before the handoff was gone with the DOM. Which is precisely the
+     half of the connect worth reading.
+
+     The flag is remembered once set, and the lines are appended to storage
+     as they are written, so a reload replays everything that came before.
+     CLEAR empties both. */
+  var DBG_KEY = 'memons_wcdebug';
+  var LOG_KEY = 'memons_wclog';
+  var LOG_MAX = 300;
+
   var DBG = false;
-  try { DBG = /[?&]wcdebug=1/.test(location.search); } catch (e) {}
+  try {
+    if (/[?&]wcdebug=1/.test(location.search)) {
+      DBG = true;
+      try { localStorage.setItem(DBG_KEY, '1'); } catch (e) {}
+    } else if (/[?&]wcdebug=0/.test(location.search)) {
+      DBG = false;
+      try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(LOG_KEY); } catch (e) {}
+    } else {
+      try { DBG = localStorage.getItem(DBG_KEY) === '1'; } catch (e) {}
+    }
+  } catch (e) {}
+
+  function dbgLoad() {
+    try { return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function dbgSave(list) {
+    try { localStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-LOG_MAX))); } catch (e) {}
+  }
+  function dbgClear() {
+    try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+  }
+
   var dbgBox = null;
+  function dbgLine(body, text, kind) {
+    var line = document.createElement('div');
+    line.className = 'l';
+    line.style.color = kind === 'err' ? '#ff8a8a' : (kind === 'ok' ? '#7ee0a0' : '#cfcfcf');
+    line.textContent = text;
+    body.appendChild(line);
+  }
   function dbg(msg, kind) {
     if (!DBG) return;
+    // Stored first: if drawing throws, the line still survives the reload.
+    var t = new Date();
+    var stamp = t.toTimeString().slice(3, 8) + '.' +
+      String(t.getMilliseconds()).padStart(3, '0');
+    var text = stamp + '  ' + msg;
+    try {
+      var store = dbgLoad();
+      store.push({ t: text, k: kind || '' });
+      dbgSave(store);
+    } catch (e) {}
     try {
       if (!dbgBox) {
         /* Folded into a corner tab, not a panel across the bottom.
@@ -84,12 +136,29 @@
           var t=[].slice.call(body.querySelectorAll('.l')).map(function(e){return e.textContent;}).join('\n');
           try{ navigator.clipboard.writeText(t); copy.textContent='COPIED'; }catch(e){}
         };
+        var clear = document.createElement('button');
+        clear.textContent='CLEAR';
+        clear.style.cssText=copy.style.cssText;
+        clear.onclick=function(ev){
+          ev.stopPropagation();
+          dbgClear();
+          [].slice.call(body.querySelectorAll('.l')).forEach(function(e){ e.remove(); });
+          var c0 = dbgBox.querySelector('.c'); if (c0) c0.textContent = '0';
+        };
         var close = document.createElement('button');
         close.textContent='X';
         close.style.cssText=copy.style.cssText;
         close.onclick=function(ev){ ev.stopPropagation(); dbgBox.remove(); dbgBox=null; };
-        bar.appendChild(copy); bar.appendChild(close);
+        bar.appendChild(copy); bar.appendChild(clear); bar.appendChild(close);
         body.appendChild(bar);
+
+        /* Everything written before this load, including the lines from
+           before the wallet handoff. Marked off so the boundary is clear. */
+        var prev = dbgLoad();
+        if (prev.length) {
+          prev.forEach(function(r){ dbgLine(body, r.t, r.k); });
+          dbgLine(body, '──── reload ────', 'ok');
+        }
 
         head.onclick=function(){
           body.style.display = body.style.display==='none' ? 'block' : 'none';
@@ -100,13 +169,7 @@
         (document.body || document.documentElement).appendChild(dbgBox);
       }
       var body = dbgBox.querySelector('.b');
-      var line = document.createElement('div');
-      line.className='l';
-      line.style.color = kind==='err' ? '#ff8a8a' : (kind==='ok' ? '#7ee0a0' : '#cfcfcf');
-      var t = new Date();
-      line.textContent = t.toTimeString().slice(3,8) + '.' +
-        String(t.getMilliseconds()).padStart(3,'0') + '  ' + msg;
-      body.appendChild(line);
+      dbgLine(body, text, kind);
       body.scrollTop = body.scrollHeight;
       var c = dbgBox.querySelector('.c');
       if (c) c.textContent = body.querySelectorAll('.l').length;
@@ -122,6 +185,21 @@
       dbg('unhandled: ' + ((r && (r.message || r)) || '?'), 'err');
     });
     dbg('debug on / ' + navigator.userAgent.slice(0, 90));
+    /* Which address this load actually happened at. A return from the wallet
+       that lands somewhere other than where it left is its own answer. */
+    dbg('page load @ ' + location.href.slice(0, 120));
+    try {
+      dbg('visible=' + document.visibilityState +
+          ' referrer=' + (document.referrer || '-').slice(0, 60));
+    } catch (e) {}
+    /* Coming back from the wallet app usually wakes the page rather than
+       reloading it. Logged so a resume is distinguishable from a fresh load. */
+    document.addEventListener('visibilitychange', function () {
+      dbg('visibility -> ' + document.visibilityState);
+    });
+    window.addEventListener('pageshow', function (e) {
+      dbg('pageshow persisted=' + !!(e && e.persisted));
+    });
   }
 
   /* Above anything this site puts on screen, with room to spare. */
