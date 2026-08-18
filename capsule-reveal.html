@@ -527,6 +527,20 @@
   .capvideo{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain;z-index:2;display:none;border-radius:10px}
   .stage.vid .capvideo{display:block}
   .stage.vid .whole,.stage.vid .half,.stage.vid .inside,.stage.vid .bowl,.stage.vid .lid,.stage.vid .hinge-rig{display:none}
+  /* Video mode, before the video has a frame on screen.
+
+     The element is transparent until playback has actually begun -- on iOS
+     that is not until the first tap -- and video mode had already taken the
+     still capsule away, so the stage was empty and the swap at the moment of
+     the tap read as a flicker. The still stays in place and the video is
+     held at zero opacity until it is genuinely playing; the handover then
+     happens between two pictures of the same capsule rather than from
+     nothing to something. */
+  .stage.vid:not(.vidready) .whole{display:block}
+  .stage.vid:not(.vidready) .capvideo{opacity:0}
+  .stage.vid.vidready .capvideo{opacity:1}
+  .capvideo{transition:opacity .12s linear}
+  .stage.vid.vidready .whole{display:none}
   .stage.vid .core,.stage.vid .rays{display:none}
 
   /* ===== TRANSITION IMPACT FLASH ===== */
@@ -677,7 +691,6 @@
   <!-- src attached on first use rather than in the markup. fireImpact only
        runs from the test panel, so with the file named here every reveal
        fetched 6.7MB that nothing played. Same treatment as fx-leak. -->
-  <video class="fxvid" id="fxvid" data-src="images/reveal/fx-fire.mp4" muted playsinline preload="none"></video>
 
   <!-- Rise: plays between the capsule opening and the card landing, for
        epic and above only. preload="none" here because the file is
@@ -1056,7 +1069,7 @@ function fireFx(){
 }
 let FLASH_AT = 2.5;      // sec into video when flash fires
 let CARD_DELAY = 380;    // ms after flash start -> card emerges (within the flash)
-const IMPACT = { type:'fire', fadeIn:380, hold:120, fadeOut:450, intensity:1, colorMode:'gold', color:'#ffcf5a', fireStart:0.7, fireDur:2200, capFade:300 };
+const IMPACT = { type:'flash', fadeIn:380, hold:120, fadeOut:450, intensity:1, colorMode:'gold', color:'#ffcf5a', fireStart:0.7, fireDur:2200, capFade:300 };
 /* inner light leak (strong light from inside): video overlay — before the full-screen flash */
 /* Off because images/reveal/fx-leak.mp4 was never added. The element and
    the controls stay, so dropping the file in and setting this back to true
@@ -1123,7 +1136,13 @@ function playOpen(onEnd, rkey){
     const LEAD = riseHas(rkey) ? REVEAL.openCut : REVEAL.openCutPlain;
     v.ontimeupdate=()=>{ if(v.duration && v.currentTime >= v.duration - LEAD) go(); };
     v.onended = go;                                       // safety: always reveal on end
-    const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{ setTimeout(go,300); }); // if autoplay is blocked, reveal immediately
+    /* The tap that got here is the gesture iOS was waiting for, so this is
+       where the video usually starts for the first time. 'playing' adds
+       .vidready and the still capsule steps aside underneath it. If it is
+       refused even now, the reveal goes ahead without the film rather than
+       leaving the capsule sitting there. */
+    const pr=v.play();
+    if(pr&&pr.catch) pr.catch(()=>{ st.classList.remove('vid'); setTimeout(go,300); });
     setTimeout(go, 15000);                                // fallback in case the video never ends
     return;
   }
@@ -1913,51 +1932,46 @@ document.querySelectorAll('[data-mode]').forEach(b=>{ b.onclick=()=>{ LAB.openMo
   st.classList.toggle('vid', LAB.openMode==='vid');
   if(LAB.openMode==='vid'){ const v=$('capvideo'); try{v.pause(); v.currentTime=0;}catch(e){} } }; });
 // idle: video mode shows first frame
-/* Video mode shows the opening film in place of the capsule image, and to
-   have something on screen before the first click it seeks a hair past the
-   start so the poster frame is drawn.
+/* Video mode shows the opening film in place of the capsule image.
 
-   That works on a desktop and does not on a phone. iOS paints nothing from a
-   video until playback has actually begun -- a seek alone leaves the element
-   transparent -- so the stage came up empty, and because video mode hides
-   the still image the only thing there was to click had been taken away.
-
-   The seek is nudged into place by a muted play-and-pause, which is enough
-   to make WebKit render the frame. If that is refused, as it is under Low
-   Power Mode and inside wallet browsers, video mode is dropped and the
-   capsule image comes back: a still capsule that opens is worth more than a
-   film that never appears. */
+   The element paints nothing until playback has actually begun, and on iOS
+   that cannot happen before the visitor touches the screen. The still
+   capsule therefore keeps the stage until the video has a frame to show --
+   see .vidready in the stylesheet -- and this only tries to bring that
+   moment forward where the browser allows it. Failing is fine: the still is
+   already there, and the open itself supplies the gesture. */
 (function(){
   const st=$('stage');
   if(LAB.openMode!=='vid') return;
   st.classList.add('vid');
   const v=$('capvideo');
-  let settled=false;
+  try{ v.muted=true; v.playsInline=true; v.setAttribute('muted',''); }catch(e){}
 
-  function fallback(){
-    if(settled) return; settled=true;
-    st.classList.remove('vid');
-  }
-  function paintFirstFrame(){
-    if(settled) return;
-    try{ v.muted=true; v.playsInline=true; v.setAttribute('muted',''); }catch(e){}
+  function ready(){ st.classList.add('vidready'); }
+
+  function warm(){
     const p = v.play();
     if(p && p.then){
       p.then(function(){
-        settled=true;
-        try{ v.pause(); v.currentTime=0.01; }catch(e){}
-      }).catch(fallback);
+        /* Parked on the first frame. Paused rather than left running so the
+           open starts from the beginning, as it does on a desktop. */
+        try{ v.pause(); v.currentTime=0; }catch(e){}
+        ready();
+      }).catch(function(){ /* waits for the tap instead */ });
     }else{
-      settled=true;
-      try{ v.pause(); v.currentTime=0.01; }catch(e){}
+      try{ v.pause(); v.currentTime=0; }catch(e){}
+      ready();
     }
   }
 
-  v.addEventListener('loadeddata', paintFirstFrame);
-  if(v.readyState>=2) paintFirstFrame();
-  /* A source that never arrives should not leave a blank stage either. */
-  v.addEventListener('error', fallback);
-  setTimeout(function(){ if(!settled) fallback(); }, 4000);
+  v.addEventListener('loadeddata', warm);
+  if(v.readyState>=2) warm();
+  /* However the video comes to be playing -- warmed here or started by the
+     open -- that is the point at which it can be shown. */
+  v.addEventListener('playing', ready);
+  /* A source that never arrives leaves the still capsule in charge and the
+     plain opening animation to run in its place. */
+  v.addEventListener('error', function(){ LAB.openMode='plain'; st.classList.remove('vid'); });
 })();
 document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
   LAB.fxSource=b.dataset.fxsrc; setActive('#fxsrc [data-fxsrc]',b);
