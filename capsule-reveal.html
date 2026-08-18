@@ -192,7 +192,12 @@
     body{justify-content:flex-start;gap:12px;padding:16px 12px 32px;height:auto;min-height:100%}
     .backlink{position:static;align-self:flex-start;margin-bottom:2px}
     .title{font-size:22px;letter-spacing:2px}
-    .stage{width:min(300px,68vw,42vh)}
+    /* Held at its square. As an ordinary flex item the stage was free to be
+       compressed by everything below it, and the video inside keeps its own
+       height, so what it lost in the layout it took back on top of the
+       session line underneath. */
+    .stage{width:min(300px,68vw,42vh);flex:0 0 auto}
+    .history{position:relative;z-index:6}
     .info{height:auto;min-height:48px}
     .acts{width:100%;gap:10px}
     .history{width:100%}
@@ -605,7 +610,8 @@
   .pm-status{font-size:12px;color:#978b62;margin-top:12px;text-align:center;min-height:16px;line-height:1.5}
   .pm-bal{font-size:12px;color:#a99d85;margin-top:14px;text-align:center;border-top:1px solid var(--hair);padding-top:12px}
 
-</style></head>
+</style>  <script src="maintenance.js" defer></script>
+</head>
 <body>
   <a class="backlink" href="index.html#capsule">&lsaquo; MAIN</a>
   <div class="title">OPEN CAPSULE</div>
