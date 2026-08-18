@@ -10,22 +10,28 @@
     overflow:hidden;-webkit-text-size-adjust:100%}
 
   /* --- preview -----------------------------------------------------------
-     The bar is fixed to the bottom of the real page, and the controls here
-     are fixed to the bottom of this one -- so the first version buried the
-     bar under its own panel and there was nothing to look at. The preview
-     is its own box now and the bar is pinned to the bottom of that, which
-     stands in for the bottom of the screen. ------------------------------ */
-  .stagebox{position:relative;height:calc(100% - var(--panelH));
-    display:flex;flex-direction:column;align-items:center;
-    padding:10px 10px 0;overflow:hidden}
-  .head{font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px}
-  .card{width:74vw;max-width:300px;aspect-ratio:952/1272;
+     A full-size copy of the reveal screen -- same card geometry, same
+     buttons, same viewport units -- shrunk to fit above the controls. The
+     first version drew its own layout and the card ran under the bar, which
+     made the thing being tuned unrepresentative of the thing on screen.
+
+     Scaled rather than re-laid-out: every measurement inside is the real
+     one, so what lines up here lines up there. HIDE collapses the controls
+     and the copy returns to full size. --------------------------------- */
+  .fit{position:fixed;left:0;top:0;width:100%;
+    height:calc(100% - var(--panelH));overflow:hidden;z-index:1}
+  .mock{position:absolute;left:0;top:0;width:100vw;height:100vh;
+    transform-origin:top center;background:#050505}
+  .card{position:absolute;left:0;right:0;margin:0 auto;top:7vh;
+    width:auto;max-width:min(78vw,540px);height:min(54vh,calc(100vh - 250px));
+    aspect-ratio:952/1272;
     background:url(images/reveal/sample-card.png) center/contain no-repeat;
     filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
-  .acts{position:absolute;left:0;right:0;bottom:26px;display:flex;gap:8px;
-    justify-content:center;pointer-events:none;opacity:.75}
+  .acts{position:absolute;left:0;right:0;bottom:34px;display:flex;gap:8px;
+    justify-content:center;opacity:.8}
   .acts span{border:1px solid var(--gold);color:var(--gold);border-radius:9px;
-    padding:10px 14px;font-size:11px;letter-spacing:1.2px;font-weight:600}
+    padding:11px 14px;font-size:12px;letter-spacing:1px;font-weight:600}
+  .edge{position:absolute;left:0;right:0;bottom:0;height:1px;background:rgba(255,255,255,.14)}
 
   /* --- bar: same rules as capsule-reveal.html --------------------------- */
   .pricebar{position:absolute;left:0;right:0;z-index:5;margin:0 auto;
@@ -86,8 +92,8 @@
 </head>
 <body>
 
-<div class="stagebox">
-  <div class="head">BAR TUNER</div>
+<div class="fit">
+ <div class="mock" id="mock">
   <div class="card"></div>
 
   <div class="pricebar" id="bar">
@@ -99,12 +105,15 @@
   </div>
 
   <div class="acts"><span>SHARE</span><span>SAVE</span><span>CONTINUE</span></div>
+  <div class="edge"></div>
+ </div>
 </div>
 
 <div class="panel">
   <div class="tabs" id="tabs"></div>
   <div class="ctrls" id="ctrls"></div>
   <div class="bar2">
+    <button id="hide">HIDE</button>
     <button id="guides">GUIDES</button>
     <button id="reset">RESET</button>
     <button class="pri" id="copy">COPY</button>
@@ -158,10 +167,24 @@ function load(){
 }
 function save(){ try{ localStorage.setItem(STORE,JSON.stringify(V)); }catch(e){} }
 
+/* The card's width at full size. getBoundingClientRect reports it after the
+   preview has been scaled down, so the scale is divided back out -- the
+   multiplier has to be applied to the real figure, not the shrunk one. */
 function cardWidth(){
   const c=document.querySelector('.card');
-  return c ? c.getBoundingClientRect().width : 300;
+  if(!c) return 300;
+  return c.getBoundingClientRect().width / (SCALE || 1);
 }
+
+let SCALE=1;
+function fitMock(){
+  const avail=window.innerHeight - PANEL;
+  SCALE=Math.min(1, avail/window.innerHeight);
+  const m=document.getElementById('mock');
+  m.style.transform='scale('+SCALE+')';
+  document.documentElement.style.setProperty('--panelH', PANEL+'px');
+}
+let PANEL=250;
 
 function apply(){
   const b=V[cur], bar=document.getElementById('bar'), st=bar.style;
@@ -249,7 +272,14 @@ document.getElementById('reset').onclick=function(){
   if(!confirm('Reset this rarity?')) return;
   V[cur]=JSON.parse(JSON.stringify(BASE[cur])); buildCtrls(); apply(); save();
 };
-window.addEventListener('resize', apply);
-buildTabs(); buildCtrls(); apply();
+document.getElementById('hide').onclick=function(){
+  PANEL = (PANEL===250 ? 46 : 250);
+  document.getElementById('ctrls').style.display = (PANEL===46 ? 'none' : '');
+  document.getElementById('tabs').style.display  = (PANEL===46 ? 'none' : '');
+  this.textContent = (PANEL===46 ? 'SHOW' : 'HIDE');
+  fitMock(); apply();
+};
+window.addEventListener('resize', function(){ fitMock(); apply(); });
+fitMock(); buildTabs(); buildCtrls(); apply();
 </script>
 </body></html>
