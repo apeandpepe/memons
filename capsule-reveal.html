@@ -183,19 +183,10 @@
   /* session history */
   .history{width:min(540px,90vw);font-size:12px;color:var(--muted)}
 
-  /* Phones.
-
-     The page centres itself vertically, which is right on a desktop and
-     wrong on a handset: once the content is taller than the viewport, a
-     centred flex column overflows in both directions and the top half
-     cannot be scrolled back to. The capsule then eats what is left --
-     80vw square on a narrow screen is most of the display -- so the
-     buttons and the session tally end up crowding each other at the
-     bottom edge.
-
-     Stacked from the top instead, with the stage sized against the
-     viewport height rather than its width, everything sits in order and
-     scrolls normally. */
+  /* Phones. A centred flex column overflows in both directions once the
+     content is taller than the viewport, and the top cannot be scrolled
+     back to. Stacked from the top instead, with the stage sized against
+     the viewport height. */
   @media(max-width:560px){
     body{justify-content:flex-start;gap:12px;padding:16px 12px 32px;height:auto;min-height:100%}
     .backlink{position:static;align-self:flex-start;margin-bottom:2px}
@@ -204,28 +195,12 @@
     .info{height:auto;min-height:48px}
     .acts{width:100%;gap:10px}
     .history{width:100%}
-  }
-  /* The reveal itself, on a phone.
-
-     Once a card is showing, the result, the caption and the buttons are
-     lifted out of the flow and pinned to the viewport. Those positions were
-     set against a desktop window: 46vw leaves the card about a thumb wide on
-     a handset, and buttons pinned 26px from the bottom sit on top of the
-     session tally still sitting in the flow behind them.
-
-     Widened against the viewport instead, given room between the caption and
-     the buttons, and the tally taken out while a card is up -- it belongs to
-     the browsing state, not to the reveal, and it is unreadable through the
-     dimming layer regardless. */
-  @media(max-width:560px){
     .stage.single .result{top:7vh;max-width:78vw;height:min(54vh,calc(100vh - 250px))}
     .stage.single ~ .info{bottom:154px}
     .stage.single ~ .acts{bottom:34px;flex-wrap:nowrap;gap:8px;padding:0 12px}
     .stage.single ~ .acts .b{padding:11px 14px;font-size:12px;letter-spacing:1px}
     .stage.single ~ .history{visibility:hidden}
   }
-
-  /* Short screens in landscape, where height is the binding constraint. */
   @media(max-height:620px){
     .stage{width:min(260px,60vw,46vh)}
     body{justify-content:flex-start}
@@ -527,20 +502,25 @@
   .capvideo{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain;z-index:2;display:none;border-radius:10px}
   .stage.vid .capvideo{display:block}
   .stage.vid .whole,.stage.vid .half,.stage.vid .inside,.stage.vid .bowl,.stage.vid .lid,.stage.vid .hinge-rig{display:none}
-  /* Video mode, before the video has a frame on screen.
+  /* Video mode, before the video has a frame on screen. The element is
+     transparent until playback has begun -- on iOS not until the first
+     tap -- and video mode had already taken the still capsule away, so the
+     stage stood empty and the swap at the tap read as a flicker.
 
-     The element is transparent until playback has actually begun -- on iOS
-     that is not until the first tap -- and video mode had already taken the
-     still capsule away, so the stage was empty and the swap at the moment of
-     the tap read as a flicker. The still stays in place and the video is
-     held at zero opacity until it is genuinely playing; the handover then
-     happens between two pictures of the same capsule rather than from
-     nothing to something. */
-  .stage.vid:not(.vidready) .whole{display:block}
+     The still keeps the stage until the video is genuinely playing. The two
+     are not drawn the same size: the still is 1086x999 with the capsule
+     across 86% of it, the film is square with the capsule across 89%, so
+     laid over each other the capsule jumps. The still is scaled and lifted
+     to sit exactly where the film's capsule sits, float included. */
+  .stage.vid:not(.vidready) .whole{display:block;animation:floatv 4.5s ease-in-out infinite}
+  @keyframes floatv{
+    0%,100%{transform:translateY(-2.45%) scale(1.038)}
+    50%    {transform:translateY(-5.45%) scale(1.038)}
+  }
   .stage.vid:not(.vidready) .capvideo{opacity:0}
   .stage.vid.vidready .capvideo{opacity:1}
-  .capvideo{transition:opacity .12s linear}
   .stage.vid.vidready .whole{display:none}
+  .capvideo{transition:opacity .12s linear}
   .stage.vid .core,.stage.vid .rays{display:none}
 
   /* ===== TRANSITION IMPACT FLASH ===== */
@@ -1137,10 +1117,9 @@ function playOpen(onEnd, rkey){
     v.ontimeupdate=()=>{ if(v.duration && v.currentTime >= v.duration - LEAD) go(); };
     v.onended = go;                                       // safety: always reveal on end
     /* The tap that got here is the gesture iOS was waiting for, so this is
-       where the video usually starts for the first time. 'playing' adds
-       .vidready and the still capsule steps aside underneath it. If it is
-       refused even now, the reveal goes ahead without the film rather than
-       leaving the capsule sitting there. */
+       usually where the film starts for the first time; 'playing' reveals it
+       and the still steps aside underneath. Refused even now, the reveal goes
+       ahead without it rather than leaving the capsule sitting there. */
     const pr=v.play();
     if(pr&&pr.catch) pr.catch(()=>{ st.classList.remove('vid'); setTimeout(go,300); });
     setTimeout(go, 15000);                                // fallback in case the video never ends
@@ -1932,45 +1911,30 @@ document.querySelectorAll('[data-mode]').forEach(b=>{ b.onclick=()=>{ LAB.openMo
   st.classList.toggle('vid', LAB.openMode==='vid');
   if(LAB.openMode==='vid'){ const v=$('capvideo'); try{v.pause(); v.currentTime=0;}catch(e){} } }; });
 // idle: video mode shows first frame
-/* Video mode shows the opening film in place of the capsule image.
-
-   The element paints nothing until playback has actually begun, and on iOS
-   that cannot happen before the visitor touches the screen. The still
-   capsule therefore keeps the stage until the video has a frame to show --
-   see .vidready in the stylesheet -- and this only tries to bring that
-   moment forward where the browser allows it. Failing is fine: the still is
-   already there, and the open itself supplies the gesture. */
+/* The film paints nothing until playback has actually begun, and on iOS that
+   cannot happen before the visitor touches the screen. The still capsule
+   holds the stage until then -- see .vidready in the stylesheet -- and this
+   only brings that moment forward where the browser allows it. Failing is
+   fine: the still is already there and the open supplies the gesture. */
 (function(){
   const st=$('stage');
   if(LAB.openMode!=='vid') return;
   st.classList.add('vid');
   const v=$('capvideo');
   try{ v.muted=true; v.playsInline=true; v.setAttribute('muted',''); }catch(e){}
-
   function ready(){ st.classList.add('vidready'); }
-
   function warm(){
-    const p = v.play();
-    if(p && p.then){
-      p.then(function(){
-        /* Parked on the first frame. Paused rather than left running so the
-           open starts from the beginning, as it does on a desktop. */
-        try{ v.pause(); v.currentTime=0; }catch(e){}
-        ready();
-      }).catch(function(){ /* waits for the tap instead */ });
-    }else{
-      try{ v.pause(); v.currentTime=0; }catch(e){}
-      ready();
-    }
+    const p=v.play();
+    if(p&&p.then){
+      p.then(function(){ try{ v.pause(); v.currentTime=0; }catch(e){} ready(); })
+       .catch(function(){});
+    }else{ try{ v.pause(); v.currentTime=0; }catch(e){} ready(); }
   }
-
   v.addEventListener('loadeddata', warm);
   if(v.readyState>=2) warm();
-  /* However the video comes to be playing -- warmed here or started by the
-     open -- that is the point at which it can be shown. */
   v.addEventListener('playing', ready);
-  /* A source that never arrives leaves the still capsule in charge and the
-     plain opening animation to run in its place. */
+  /* A source that never arrives leaves the still in charge and the plain
+     opening animation to run in its place. */
   v.addEventListener('error', function(){ LAB.openMode='plain'; st.classList.remove('vid'); });
 })();
 document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
