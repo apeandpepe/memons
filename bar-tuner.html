@@ -19,7 +19,7 @@
      one, so what lines up here lines up there. HIDE collapses the controls
      and the copy returns to full size. --------------------------------- */
   .fit{position:fixed;left:0;top:0;width:100%;
-    height:calc(100% - var(--panelH));overflow:hidden;z-index:1}
+    height:calc(100% - var(--panelH));overflow:visible;z-index:1}
   .mock{position:absolute;left:0;top:0;width:100vw;height:100vh;
     transform-origin:top center;background:#050505}
   .card{position:absolute;left:0;right:0;margin:0 auto;top:7vh;
@@ -136,21 +136,21 @@ const BASE = {
              split:50.0, padL:34.6, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:0}
 };
 const FIELDS = {
-  aw:      {min:1.0, max:4.5,  step:0.01, label:'width'},
-  gap:     {min:-320,max:320,  step:1,    label:'up / down'},
-  xOff:    {min:-160,max:160,  step:1,    label:'left / right'},
-  cellL:   {min:0,   max:95,   step:0.1,  label:'num left'},
-  usdtR:   {min:0,   max:95,   step:0.1,  label:'num right'},
-  numPad:  {min:0,   max:40,   step:0.1,  label:'num pad'},
+  aw:      {min:0.3, max:8.0,  step:0.01, label:'width'},
+  gap:     {min:-600,max:600,  step:1,    label:'up / down'},
+  xOff:    {min:-400,max:400,  step:1,    label:'left / right'},
+  cellL:   {min:-60, max:120,  step:0.1,  label:'num left'},
+  usdtR:   {min:-60, max:120,  step:0.1,  label:'num right'},
+  numPad:  {min:-40, max:60,   step:0.1,  label:'num pad'},
   fsNum:   {min:0.5, max:9,    step:0.05, label:'num size'},
-  numY:    {min:-30, max:30,   step:1,    label:'num y'},
+  numY:    {min:-120,max:120,  step:1,    label:'num y'},
   split:   {min:10,  max:95,   step:0.1,  label:'cell w'},
-  padL:    {min:0,   max:70,   step:0.1,  label:'cell pad'},
+  padL:    {min:-60, max:120,  step:0.1,  label:'cell pad'},
   fsLabel: {min:0.3, max:4,    step:0.05, label:'label size'},
   fsVal:   {min:0.5, max:6,    step:0.05, label:'value size'},
   fsUnit:  {min:0.3, max:4,    step:0.05, label:'unit size'},
   lineGap: {min:-6,  max:20,   step:1,    label:'line gap'},
-  textY:   {min:-30, max:30,   step:1,    label:'cell y'}
+  textY:   {min:-120,max:120,  step:1,    label:'cell y'}
 };
 const BUY_KEYS    = ['aw','gap','xOff','cellL','usdtR','numPad','fsNum','numY'];
 const MARKET_KEYS = ['aw','gap','xOff','split','padL','fsLabel','fsVal','fsUnit','lineGap','textY'];
