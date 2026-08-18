@@ -36,7 +36,7 @@
   /* --- bar: same rules as capsule-reveal.html --------------------------- */
   .pricebar{position:absolute;left:0;right:0;z-index:5;margin:0 auto;
     padding:0;min-height:0;display:flex;align-items:stretch;
-    bottom:var(--bottom,118px);
+    top:calc(7vh + min(54vh, 100vh - 250px) + var(--bottom,14px));
     --aw:var(--awRaw,470px);
     width:var(--aw);
     height:calc(var(--aw) * var(--arH,140) / var(--arW,871));
@@ -123,20 +123,20 @@
 
 <script>
 const BASE = {
-  common:   {buy:1, art:[871,140], aw:2.40, bottom:37,
+  common:   {buy:1, art:[871,140], aw:2.40, bottom:14,
              cellL:26.5, usdtR:34.2, numPad:2.5, fsNum:2.0, numY:3},
-  rare:     {buy:1, art:[861,140], aw:2.30, bottom:39,
+  rare:     {buy:1, art:[861,140], aw:2.30, bottom:14,
              cellL:61.6, usdtR:15.8, numPad:19.7, fsNum:2.0, numY:2},
-  epic:     {art:[979,140], aw:2.81, bottom:23,
+  epic:     {art:[979,140], aw:2.81, bottom:14,
              split:54.3, padL:34.8, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:3, textY:-1},
-  legendary:{art:[976,140], aw:2.78, bottom:18,
+  legendary:{art:[976,140], aw:2.78, bottom:14,
              split:51.7, padL:35.5, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:2},
-  mythic:   {art:[935,140], aw:2.56, bottom:31,
+  mythic:   {art:[935,140], aw:2.56, bottom:14,
              split:50.0, padL:34.6, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:0}
 };
 const FIELDS = {
   aw:      {min:1.0, max:4.5,  step:0.01, label:'width'},
-  bottom:  {min:0,   max:240,  step:1,    label:'height'},
+  bottom:  {min:0,   max:120,  step:1,    label:'gap'},
   cellL:   {min:0,   max:95,   step:0.1,  label:'num left'},
   usdtR:   {min:0,   max:95,   step:0.1,  label:'num right'},
   numPad:  {min:0,   max:40,   step:0.1,  label:'num pad'},

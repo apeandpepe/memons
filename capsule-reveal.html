@@ -69,10 +69,9 @@
   .pricebar.art{position:fixed;left:0;right:var(--panel);
     bottom:var(--bottom,118px);z-index:41;margin:0 auto;padding:0;min-height:0;
     background:none;border:0;box-shadow:none;clip-path:none;
-    /* Capped against the viewport: the tuned width is a desktop figure and
-       ran off the side of a phone, taking the buyback figure with it. */
-    width:min(var(--aw,470px), 92vw);
-    height:calc(min(var(--aw,470px), 92vw) * var(--arH,140) / var(--arW,871));
+    --aw:var(--awRaw,470px);
+    width:var(--aw);
+    height:calc(var(--aw) * var(--arH,140) / var(--arW,871));
     /* Keep the source ratio. Stretching width and height apart distorts it. */
     background-image:var(--art);background-size:contain;
     background-position:center;background-repeat:no-repeat;
@@ -201,6 +200,36 @@
     .stage.single ~ .info{bottom:154px}
     .stage.single ~ .acts{bottom:34px;flex-wrap:nowrap;gap:8px;padding:0 12px}
     .stage.single ~ .acts .b{padding:11px 14px;font-size:12px;letter-spacing:1px}
+    /* The bar is drawn from artwork tuned on a desktop, and every figure on
+       it is sized from --aw: the cell offsets are percentages of that width
+       and the number is calc(--aw * --fsNum). Overriding `width` alone
+       therefore resized the bar and left the number scaled to the old
+       measurement, which is how it came out several times too large.
+
+       --aw is what has to change. Capped against the screen, the artwork,
+       the cells and the number all come down together and the proportions
+       hold. Lifted clear of the buttons at the same time. */
+    /* Anchored under the card rather than to the foot of the screen.
+
+       Every tuned `bottom` is a distance from the bottom edge, which holds
+       on the window it was measured on and nowhere else: the card is sized
+       from the viewport, so on a phone it ends far above a bar that is still
+       sitting where a desktop put it, and the two drift apart. Measured down
+       from the card's own bottom edge instead -- 7vh top plus its height --
+       the gap is the same on every screen and there is nothing left to tune.
+
+       --aw is capped here too. The cell offsets are percentages of it and
+       the number is calc(--aw * --fsNum), so overriding `width` alone left
+       the figure scaled to a measurement the bar no longer had. */
+    .pricebar.art{
+      --aw:min(var(--awRaw, 470px), 88vw) !important;
+      --fsNum:.045 !important;
+      top:calc(7vh + min(54vh, 100vh - 250px) + 14px);
+      bottom:auto}
+    .pricebar{
+      width:min(var(--cw,336px),88vw);
+      top:calc(7vh + min(54vh, 100vh - 250px) + 14px);
+      bottom:auto}
     .stage.single ~ .history{visibility:hidden}
   }
   @media(max-height:620px){
@@ -501,7 +530,15 @@
   .stage.hinge.opening .core{opacity:1;transform:scale(1.3) translateY(8%)}
 
   /* ===== VIDEO REVEAL ===== */
-  .capvideo{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain;z-index:2;display:none;border-radius:10px}
+  /* The same first frame sits behind the element as well as in front of it.
+     The poster is dropped the instant play() is called, and the first
+     decoded frame arrives a beat later; between the two the element is
+     transparent, which showed as a blink. Painted underneath, there is
+     nothing to blink through -- the video simply covers it. Sized to match
+     object-fit:contain so the two register exactly. */
+  .capvideo{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain;z-index:2;display:none;border-radius:10px;
+    background-image:url(images/reveal/capsule-still.jpg);background-size:contain;
+    background-position:center;background-repeat:no-repeat}
   .stage.vid .capvideo{display:block}
   .stage.vid .whole,.stage.vid .half,.stage.vid .inside,.stage.vid .bowl,.stage.vid .lid,.stage.vid .hinge-rig{display:none}
   /* The still that stands in before playback starts is the video's own first
@@ -957,7 +994,11 @@ function paintPrice(it){
     if(w>120){
       bar.style.setProperty('--cw', Math.round(w)+'px');
       var mul=(B && B.aw) || 1.42;
-      bar.style.setProperty('--aw', Math.round(w*mul)+'px');
+      /* The tuned figure, kept raw. Everything on the bar is sized from
+         --aw, so the phone stylesheet caps that one value and the artwork,
+         the cells and the number come down together. On a desktop the cap
+         never binds. */
+      bar.style.setProperty('--awRaw', Math.round(w*mul)+'px');
     }
   }
   fit();
