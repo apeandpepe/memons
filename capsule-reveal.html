@@ -1913,7 +1913,52 @@ document.querySelectorAll('[data-mode]').forEach(b=>{ b.onclick=()=>{ LAB.openMo
   st.classList.toggle('vid', LAB.openMode==='vid');
   if(LAB.openMode==='vid'){ const v=$('capvideo'); try{v.pause(); v.currentTime=0;}catch(e){} } }; });
 // idle: video mode shows first frame
-(function(){ const st=$('stage'); if(LAB.openMode==='vid'){ st.classList.add('vid'); const v=$('capvideo'); v.addEventListener('loadeddata',()=>{ try{v.currentTime=0.01;}catch(e){} }); } })();
+/* Video mode shows the opening film in place of the capsule image, and to
+   have something on screen before the first click it seeks a hair past the
+   start so the poster frame is drawn.
+
+   That works on a desktop and does not on a phone. iOS paints nothing from a
+   video until playback has actually begun -- a seek alone leaves the element
+   transparent -- so the stage came up empty, and because video mode hides
+   the still image the only thing there was to click had been taken away.
+
+   The seek is nudged into place by a muted play-and-pause, which is enough
+   to make WebKit render the frame. If that is refused, as it is under Low
+   Power Mode and inside wallet browsers, video mode is dropped and the
+   capsule image comes back: a still capsule that opens is worth more than a
+   film that never appears. */
+(function(){
+  const st=$('stage');
+  if(LAB.openMode!=='vid') return;
+  st.classList.add('vid');
+  const v=$('capvideo');
+  let settled=false;
+
+  function fallback(){
+    if(settled) return; settled=true;
+    st.classList.remove('vid');
+  }
+  function paintFirstFrame(){
+    if(settled) return;
+    try{ v.muted=true; v.playsInline=true; v.setAttribute('muted',''); }catch(e){}
+    const p = v.play();
+    if(p && p.then){
+      p.then(function(){
+        settled=true;
+        try{ v.pause(); v.currentTime=0.01; }catch(e){}
+      }).catch(fallback);
+    }else{
+      settled=true;
+      try{ v.pause(); v.currentTime=0.01; }catch(e){}
+    }
+  }
+
+  v.addEventListener('loadeddata', paintFirstFrame);
+  if(v.readyState>=2) paintFirstFrame();
+  /* A source that never arrives should not leave a blank stage either. */
+  v.addEventListener('error', fallback);
+  setTimeout(function(){ if(!settled) fallback(); }, 4000);
+})();
 document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
   LAB.fxSource=b.dataset.fxsrc; setActive('#fxsrc [data-fxsrc]',b);
   if(b.dataset.fxsrc==='png' && !FXAVAIL){ const el=document.getElementById('assetNote');
