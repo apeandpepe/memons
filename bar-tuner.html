@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MEMONS — bar tuner</title>
+<style>
+  :root{--gold:#E9B84A;--panel:0px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#08080a;color:#e8e6e0;font:13px/1.5 system-ui,-apple-system,sans-serif;
+    padding:12px 12px calc(340px + env(safe-area-inset-bottom));-webkit-text-size-adjust:100%}
+  h1{font-size:14px;letter-spacing:2px;color:var(--gold);margin-bottom:2px}
+  .sub{font-size:11px;color:#8d8a82;margin-bottom:12px}
+
+  /* --- the stage the bar is judged against ------------------------------
+     A stand-in card at the same size the reveal gives it, so the bar is
+     tuned against the thing it actually sits under rather than an empty
+     screen. --------------------------------------------------------- */
+  .card{width:78vw;max-width:360px;aspect-ratio:958/1280;margin:0 auto;
+    border-radius:14px;background:linear-gradient(160deg,#1a1a1f,#0b0b0d);
+    border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;
+    color:#4a4a52;font-size:11px;letter-spacing:2px}
+
+  .tabs{display:flex;gap:6px;margin:14px 0 10px;flex-wrap:wrap}
+  .tabs button{flex:1 1 auto;padding:9px 6px;font-size:11px;font-weight:700;letter-spacing:1px;
+    background:#141418;color:#9a968d;border:1px solid #26262c;border-radius:8px;cursor:pointer}
+  .tabs button.on{background:var(--gold);color:#12100a;border-color:var(--gold)}
+
+  /* --- bar: same rules as capsule-reveal.html -------------------------- */
+  .pricebar{position:fixed;left:0;right:var(--panel);z-index:41;margin:0 auto;
+    padding:0;min-height:0;display:flex;align-items:stretch;
+    bottom:var(--bottom,118px);
+    --aw:var(--awRaw,470px);
+    width:var(--aw);
+    height:calc(var(--aw) * var(--arH,140) / var(--arW,871));
+    background-image:var(--art);background-size:contain;
+    background-position:center;background-repeat:no-repeat}
+
+  .pricebar .pcell{border:0;clip-path:none;margin:0;
+    display:flex;align-items:center;flex:0 0 auto;
+    width:var(--split,54%);padding:0 0 0 var(--padL,6%);
+    transform:translateY(var(--textY,0px))}
+  .pricebar .ptxt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+    gap:var(--lineGap,1px);text-align:left;overflow:hidden}
+  .pricebar .pl{font-size:calc(var(--aw) * var(--fsLabel,.021));
+    letter-spacing:.14em;color:rgba(255,255,255,.72);white-space:nowrap}
+  .pricebar .pvi{font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff;
+    font-weight:800;white-space:nowrap}
+  .pricebar .pvi u{text-decoration:none;font-size:calc(var(--aw) * var(--fsUnit,.019));opacity:.6;margin-left:5px}
+
+  .pricebar.buy .pcell{display:none}
+  .pricebar.buy .pv{display:flex;align-items:center;justify-content:flex-end;
+    position:absolute;left:var(--cellL,61.5%);right:var(--usdtR,16%);
+    top:var(--numY,0px);bottom:calc(var(--numY,0px) * -1);
+    margin:0;padding:0 var(--numPad,2.5%) 0 0;
+    background:none;border:0;clip-path:none;
+    font-size:calc(var(--aw) * var(--fsNum,.05));color:#fff;font-weight:800;line-height:1}
+  .pricebar:not(.buy) .pv{display:none}
+
+  /* Cell outlines, so an edge that is a hair off is visible rather than
+     guessed at. Off by default: they change what is being judged. */
+  body.guides .pricebar .pcell{outline:1px dashed rgba(0,255,180,.55)}
+  body.guides .pricebar.buy .pv{outline:1px dashed rgba(255,120,120,.7)}
+  body.guides .pricebar{outline:1px dashed rgba(255,255,255,.25)}
+
+  /* --- controls -------------------------------------------------------- */
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:rgba(10,10,12,.97);border-top:1px solid #26262c;
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom));
+    max-height:46vh;overflow:auto;-webkit-overflow-scrolling:touch}
+  .row{display:flex;align-items:center;gap:8px;margin:5px 0}
+  .row label{flex:0 0 74px;font-size:10.5px;color:#9a968d;letter-spacing:.4px}
+  .row input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--gold)}
+  .row output{flex:0 0 56px;text-align:right;font-size:11px;color:#e8e6e0;
+    font-variant-numeric:tabular-nums}
+  .bar2{display:flex;gap:6px;margin:8px 0 2px}
+  .bar2 button{flex:1 1 0;padding:10px;font-size:11px;font-weight:700;letter-spacing:.6px;
+    border-radius:8px;border:1px solid #33333a;background:#17171c;color:#e8e6e0;cursor:pointer}
+  .bar2 button.pri{background:var(--gold);color:#12100a;border-color:var(--gold)}
+  textarea{width:100%;height:88px;margin-top:8px;background:#0d0d10;color:#cfe8c9;
+    border:1px solid #26262c;border-radius:8px;padding:8px;font:11px/1.45 ui-monospace,monospace;
+    -webkit-text-size-adjust:100%}
+  .hint{font-size:10.5px;color:#6f6c66;margin-top:6px}
+</style>
+</head>
+<body>
+
+<h1>BAR TUNER</h1>
+<div class="sub">Tune on the device you are tuning for. Copy the block at the bottom and paste it into capsule-reveal.html.</div>
+
+<div class="card">CARD</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="pricebar" id="bar">
+  <span class="pcell"><span class="ptxt">
+    <span class="pl" id="pbLabel">MARKET PRICE (USDT)</span>
+    <span class="pvi" id="pbValueIn">20.00<u>USDT</u></span>
+  </span></span>
+  <span class="pv" id="pbValue">0.60</span>
+</div>
+
+<div class="panel">
+  <div id="ctrls"></div>
+  <div class="bar2">
+    <button id="guides">GUIDES</button>
+    <button id="reset">RESET</button>
+    <button class="pri" id="copy">COPY</button>
+  </div>
+  <textarea id="out" readonly></textarea>
+  <div class="hint">COPY puts the whole BARS block on the clipboard. Send it over and it goes straight into the file.</div>
+</div>
+
+<script>
+/* The values as they stand in capsule-reveal.html. Buyback rarities use the
+   number cell (cellL/usdtR/numPad/fsNum/numY); market rarities use the text
+   cell (split/padL/fsLabel/fsVal/fsUnit/lineGap/textY). Both share art, aw
+   and bottom. */
+const BASE = {
+  common:   {buy:1, art:[871,140], aw:2.40, bottom:37,
+             cellL:26.5, usdtR:34.2, numPad:2.5, fsNum:2.0, numY:3},
+  rare:     {buy:1, art:[861,140], aw:2.30, bottom:39,
+             cellL:61.6, usdtR:15.8, numPad:19.7, fsNum:2.0, numY:2},
+  epic:     {art:[979,140], aw:2.81, bottom:23,
+             split:54.3, padL:34.8, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:3, textY:-1},
+  legendary:{art:[976,140], aw:2.78, bottom:18,
+             split:51.7, padL:35.5, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:2},
+  mythic:   {art:[935,140], aw:2.56, bottom:31,
+             split:50.0, padL:34.6, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:0}
+};
+
+/* min, max, step, and how the value reaches CSS. */
+const FIELDS = {
+  aw:      {min:1.0, max:4.5,  step:0.01, label:'width'},
+  bottom:  {min:0,   max:260,  step:1,    label:'bottom'},
+  cellL:   {min:0,   max:95,   step:0.1,  label:'num left'},
+  usdtR:   {min:0,   max:95,   step:0.1,  label:'num right'},
+  numPad:  {min:0,   max:40,   step:0.1,  label:'num pad'},
+  fsNum:   {min:0.5, max:9,    step:0.05, label:'num size'},
+  numY:    {min:-30, max:30,   step:1,    label:'num y'},
+  split:   {min:10,  max:95,   step:0.1,  label:'cell w'},
+  padL:    {min:0,   max:70,   step:0.1,  label:'cell pad'},
+  fsLabel: {min:0.3, max:4,    step:0.05, label:'label size'},
+  fsVal:   {min:0.5, max:6,    step:0.05, label:'value size'},
+  fsUnit:  {min:0.3, max:4,    step:0.05, label:'unit size'},
+  lineGap: {min:-6,  max:20,   step:1,    label:'line gap'},
+  textY:   {min:-30, max:30,   step:1,    label:'cell y'}
+};
+
+const BUY_KEYS    = ['aw','bottom','cellL','usdtR','numPad','fsNum','numY'];
+const MARKET_KEYS = ['aw','bottom','split','padL','fsLabel','fsVal','fsUnit','lineGap','textY'];
+
+const STORE = 'memons_bar_tuner';
+let V = load();
+let cur = 'common';
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE);
+    if(raw){
+      const saved = JSON.parse(raw);
+      const out = {};
+      for(const k in BASE) out[k] = Object.assign({}, BASE[k], saved[k] || {});
+      return out;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(BASE));
+}
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(V)); }catch(e){} }
+
+/* The card is the reference the multiplier is applied to, exactly as the
+   reveal does it: --aw is the card's rendered width times B.aw. */
+function cardWidth(){
+  const c = document.querySelector('.card');
+  return c ? c.getBoundingClientRect().width : 300;
+}
+
+function apply(){
+  const b = V[cur], bar = document.getElementById('bar'), st = bar.style;
+  bar.classList.toggle('buy', !!b.buy);
+
+  st.setProperty('--art', 'url(images/reveal/bar-' + cur + '.png)');
+  st.setProperty('--arW', b.art[0]);
+  st.setProperty('--arH', b.art[1]);
+  st.setProperty('--awRaw', Math.round(cardWidth() * b.aw) + 'px');
+  st.setProperty('--bottom', b.bottom + 'px');
+
+  if(b.buy){
+    st.setProperty('--cellL',  b.cellL + '%');
+    st.setProperty('--usdtR',  b.usdtR + '%');
+    st.setProperty('--numPad', b.numPad + '%');
+    st.setProperty('--fsNum',  b.fsNum / 100);
+    st.setProperty('--numY',   b.numY + 'px');
+    document.getElementById('pbValue').textContent =
+      (cur === 'common' ? '0.60' : '0.90');
+  }else{
+    st.setProperty('--split',   b.split + '%');
+    st.setProperty('--padL',    b.padL + '%');
+    st.setProperty('--fsLabel', b.fsLabel / 100);
+    st.setProperty('--fsVal',   b.fsVal / 100);
+    st.setProperty('--fsUnit',  b.fsUnit / 100);
+    st.setProperty('--lineGap', b.lineGap + 'px');
+    st.setProperty('--textY',   b.textY + 'px');
+  }
+  writeOut();
+}
+
+function buildTabs(){
+  const t = document.getElementById('tabs');
+  t.innerHTML = '';
+  Object.keys(BASE).forEach(function(k){
+    const btn = document.createElement('button');
+    btn.textContent = k.toUpperCase();
+    btn.className = (k === cur ? 'on' : '');
+    btn.onclick = function(){ cur = k; buildTabs(); buildCtrls(); apply(); };
+    t.appendChild(btn);
+  });
+}
+
+function buildCtrls(){
+  const wrap = document.getElementById('ctrls');
+  wrap.innerHTML = '';
+  const keys = V[cur].buy ? BUY_KEYS : MARKET_KEYS;
+  keys.forEach(function(k){
+    const f = FIELDS[k];
+    const row = document.createElement('div'); row.className = 'row';
+    const lab = document.createElement('label'); lab.textContent = f.label;
+    const inp = document.createElement('input');
+    inp.type = 'range'; inp.min = f.min; inp.max = f.max; inp.step = f.step;
+    inp.value = V[cur][k];
+    const out = document.createElement('output'); out.textContent = V[cur][k];
+    inp.oninput = function(){
+      V[cur][k] = parseFloat(inp.value);
+      out.textContent = inp.value;
+      apply(); save();
+    };
+    row.appendChild(lab); row.appendChild(inp); row.appendChild(out);
+    wrap.appendChild(row);
+  });
+}
+
+/* Printed in the same shape as the block in capsule-reveal.html, so it can
+   be pasted over the old one without editing. */
+function writeOut(){
+  const order = ['common','rare','epic','legendary','mythic'];
+  const pad = function(s,n){ while(s.length < n) s += ' '; return s; };
+  let s = '  var BARS={\n';
+  order.forEach(function(k, i){
+    const b = V[k];
+    let head = '    ' + pad(k + ':', 10) + '{';
+    if(b.buy) head += 'buy:1, ';
+    head += 'art:[' + b.art[0] + ',' + b.art[1] + '], aw:' + (+b.aw).toFixed(2) +
+            ', bottom:' + Math.round(b.bottom) + ',\n';
+    let tail = '               ';
+    if(b.buy){
+      tail += 'cellL:' + b.cellL + ', usdtR:' + b.usdtR + ', numPad:' + b.numPad +
+              ', fsNum:' + b.fsNum + ', numY:' + b.numY;
+    }else{
+      tail += 'split:' + b.split + ', padL:' + b.padL + ', fsLabel:' + b.fsLabel +
+              ', fsVal:' + b.fsVal + ', fsUnit:' + b.fsUnit +
+              ', lineGap:' + b.lineGap + ', textY:' + b.textY;
+    }
+    s += head + tail + '}' + (i < order.length - 1 ? ',' : '') + '\n';
+  });
+  s += '  };';
+  document.getElementById('out').value = s;
+}
+
+document.getElementById('copy').onclick = function(){
+  const t = document.getElementById('out');
+  t.select(); t.setSelectionRange(0, 99999);
+  let ok = false;
+  try{ ok = document.execCommand('copy'); }catch(e){}
+  if(!ok && navigator.clipboard){
+    navigator.clipboard.writeText(t.value).then(function(){ flash('COPIED'); });
+    return;
+  }
+  flash(ok ? 'COPIED' : 'SELECT & COPY');
+};
+function flash(msg){
+  const b = document.getElementById('copy'), old = b.textContent;
+  b.textContent = msg; setTimeout(function(){ b.textContent = old; }, 1200);
+}
+document.getElementById('guides').onclick = function(){
+  document.body.classList.toggle('guides');
+};
+document.getElementById('reset').onclick = function(){
+  if(!confirm('Reset this rarity to the values in the file?')) return;
+  V[cur] = JSON.parse(JSON.stringify(BASE[cur]));
+  buildCtrls(); apply(); save();
+};
+
+window.addEventListener('resize', apply);
+buildTabs(); buildCtrls(); apply();
+</script>
+</body></html>
