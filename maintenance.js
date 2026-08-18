@@ -97,8 +97,17 @@
     document.documentElement.style.overflow = '';
   }
 
+  /* Two requests, deliberately.
+
+     The artwork is held in the row itself, so asking for the whole row is
+     asking for a few hundred kilobytes -- every twenty seconds, from every
+     open tab, for as long as the site is up. The poll therefore reads one
+     boolean, and the row with the pictures in it is fetched once, at the
+     moment the site actually closes. */
+  var content = null;
+
   function check() {
-    fetch(SB_URL + '/rest/v1/event_public?id=eq.1&select=maintenance,maintenance_msg,maintenance_title,maintenance_img,maintenance_img_wide',
+    fetch(SB_URL + '/rest/v1/event_public?id=eq.1&select=maintenance',
           { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON },
             cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -107,8 +116,18 @@
         /* Only an explicit true closes the site. A request that fails, or a
            column that is not there yet, leaves the page as it was -- a
            network blip should not lock people out. */
-        if (rows[0].maintenance === true) show(rows[0]);
-        else hide();
+        if (rows[0].maintenance !== true) { content = null; hide(); return; }
+        if (content) { show(content); return; }
+        fetch(SB_URL + '/rest/v1/event_public?id=eq.1&select=' +
+              'maintenance_msg,maintenance_title,maintenance_img,maintenance_img_wide',
+              { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON },
+                cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (rs) {
+            content = (rs && rs[0]) ? rs[0] : {};
+            show(content);
+          })
+          .catch(function () { show({}); });
       })
       .catch(function () {});
   }
