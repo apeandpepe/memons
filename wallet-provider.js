@@ -48,32 +48,8 @@
      The flag is remembered once set, and the lines are appended to storage
      as they are written, so a reload replays everything that came before.
      CLEAR empties both. */
-  var DBG_KEY = 'memons_wcdebug';
-  var LOG_KEY = 'memons_wclog';
-  var LOG_MAX = 300;
-
   var DBG = false;
-  try {
-    if (/[?&]wcdebug=1/.test(location.search)) {
-      DBG = true;
-      try { localStorage.setItem(DBG_KEY, '1'); } catch (e) {}
-    } else if (/[?&]wcdebug=0/.test(location.search)) {
-      DBG = false;
-      try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(LOG_KEY); } catch (e) {}
-    } else {
-      try { DBG = localStorage.getItem(DBG_KEY) === '1'; } catch (e) {}
-    }
-  } catch (e) {}
-
-  function dbgLoad() {
-    try { return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { return []; }
-  }
-  function dbgSave(list) {
-    try { localStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-LOG_MAX))); } catch (e) {}
-  }
-  function dbgClear() {
-    try { localStorage.removeItem(LOG_KEY); } catch (e) {}
-  }
+  try { DBG = /[?&]wcdebug=1/.test(location.search); } catch (e) {}
 
   var dbgBox = null;
   function dbgLine(body, text, kind) {
@@ -85,16 +61,9 @@
   }
   function dbg(msg, kind) {
     if (!DBG) return;
-    // Stored first: if drawing throws, the line still survives the reload.
     var t = new Date();
-    var stamp = t.toTimeString().slice(3, 8) + '.' +
-      String(t.getMilliseconds()).padStart(3, '0');
-    var text = stamp + '  ' + msg;
-    try {
-      var store = dbgLoad();
-      store.push({ t: text, k: kind || '' });
-      dbgSave(store);
-    } catch (e) {}
+    var text = t.toTimeString().slice(3, 8) + '.' +
+      String(t.getMilliseconds()).padStart(3, '0') + '  ' + msg;
     try {
       if (!dbgBox) {
         /* Folded into a corner tab, not a panel across the bottom.
@@ -136,29 +105,12 @@
           var t=[].slice.call(body.querySelectorAll('.l')).map(function(e){return e.textContent;}).join('\n');
           try{ navigator.clipboard.writeText(t); copy.textContent='COPIED'; }catch(e){}
         };
-        var clear = document.createElement('button');
-        clear.textContent='CLEAR';
-        clear.style.cssText=copy.style.cssText;
-        clear.onclick=function(ev){
-          ev.stopPropagation();
-          dbgClear();
-          [].slice.call(body.querySelectorAll('.l')).forEach(function(e){ e.remove(); });
-          var c0 = dbgBox.querySelector('.c'); if (c0) c0.textContent = '0';
-        };
         var close = document.createElement('button');
         close.textContent='X';
         close.style.cssText=copy.style.cssText;
         close.onclick=function(ev){ ev.stopPropagation(); dbgBox.remove(); dbgBox=null; };
-        bar.appendChild(copy); bar.appendChild(clear); bar.appendChild(close);
+        bar.appendChild(copy); bar.appendChild(close);
         body.appendChild(bar);
-
-        /* Everything written before this load, including the lines from
-           before the wallet handoff. Marked off so the boundary is clear. */
-        var prev = dbgLoad();
-        if (prev.length) {
-          prev.forEach(function(r){ dbgLine(body, r.t, r.k); });
-          dbgLine(body, '──── reload ────', 'ok');
-        }
 
         head.onclick=function(){
           body.style.display = body.style.display==='none' ? 'block' : 'none';
@@ -185,22 +137,14 @@
       dbg('unhandled: ' + ((r && (r.message || r)) || '?'), 'err');
     });
     dbg('debug on / ' + navigator.userAgent.slice(0, 90));
-    /* Which address this load actually happened at. A return from the wallet
-       that lands somewhere other than where it left is its own answer. */
-    dbg('page load @ ' + location.href.slice(0, 120));
-    try {
-      dbg('visible=' + document.visibilityState +
-          ' referrer=' + (document.referrer || '-').slice(0, 60));
-    } catch (e) {}
-    /* Coming back from the wallet app usually wakes the page rather than
-       reloading it. Logged so a resume is distinguishable from a fresh load. */
-    document.addEventListener('visibilitychange', function () {
-      dbg('visibility -> ' + document.visibilityState);
-    });
-    window.addEventListener('pageshow', function (e) {
-      dbg('pageshow persisted=' + !!(e && e.persisted));
-    });
   }
+
+  /* Anything this build wrote to storage while diagnosing, removed on sight.
+     A visitor who once opened a debug link should not carry it forever. */
+  try {
+    localStorage.removeItem('memons_wcdebug');
+    localStorage.removeItem('memons_wclog');
+  } catch (e) {}
 
   /* Above anything this site puts on screen, with room to spare. */
   var WC_Z = 2147483000;
@@ -501,12 +445,9 @@
      localStorage alone is not the answer. WalletConnect stores its session
      through its own keyvaluestorage layer, which on iOS Safari can land in
      IndexedDB rather than localStorage -- so the scan below found nothing
-     while a live session sat there, restore() bailed out, and every load
-     looked signed out even though the wallet was still paired.
-
-     Answering "maybe" costs one init that finds no session and returns null,
-     which is what already happens on the line after the call. Answering "no"
-     wrongly costs the user the connection. */
+     while a live session sat there, and every load looked signed out even
+     though the wallet was still paired. The marker settles it without
+     having to know which backend was chosen. */
   function hasStoredSession() {
     try {
       for (var i = 0; i < localStorage.length; i++) {
@@ -514,14 +455,7 @@
         if (k && k.indexOf("wc@2:") === 0) return true;
       }
     } catch (e) {}
-    // Our own marker, written whenever a session is adopted. Survives the
-    // storage backend question entirely.
     try { if (localStorage.getItem("memons_wc_paired") === "1") return true; } catch (e) {}
-    // IndexedDB is asynchronous, so it cannot be read here. On a browser that
-    // keeps WalletConnect's store there, let init decide instead of guessing.
-    try {
-      if (window.indexedDB && /iPad|iPhone|iPod/.test(navigator.userAgent)) return true;
-    } catch (e) {}
     return false;
   }
 

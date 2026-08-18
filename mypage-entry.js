@@ -576,22 +576,28 @@
          no way to say so. */
       if (!isMobileDevice() && !hasAnyInjected()) { showInstallWallet(); return; }
 
-      /* Android sees the sheet first, WalletConnect second.
+      /* The sheet first on every phone, WalletConnect second.
 
          The handshake reaches the wallet on Android and stops there: the
          log shows display_uri sent and nothing after it, on three phones,
          with MetaMask and with Bitget, on wifi and on mobile data. Some
          people get through after several attempts; some do not get through
-         at all. iOS is unaffected.
+         at all.
 
-         Whatever the cause, the way that does work on Android is opening
-         the site inside the wallet's own browser, where the provider is
-         injected and no handshake is needed. That path is already built --
-         it was just behind a 45-second timeout, which nobody waits out.
-         Putting it first costs Android users one tap and takes the failure
-         out of the road. WalletConnect stays on the sheet for anyone who
-         prefers it. */
-      if (isAndroid() && !hasAnyInjected()) { showWalletSheet(); return; }
+         iOS fails differently and just as reliably. The pairing itself
+         succeeds -- accounts come back in about a second -- but the signing
+         request that follows is delivered to an app that is not on screen,
+         and the deep link that should bring it forward opens MetaMask on
+         whatever it was last showing. When that is its own browser holding
+         this same site, the visitor gets a second copy of the page instead
+         of the prompt, and the login never completes.
+
+         Whatever the cause on either platform, the way that does work is
+         opening the site inside the wallet's own browser, where the provider
+         is injected and neither a handshake nor an app switch is needed.
+         That path is already built. WalletConnect stays on the sheet for
+         anyone who prefers it. */
+      if (isMobileDevice() && !hasAnyInjected()) { showWalletSheet(); return; }
 
       if (window.MEMONS_WC) { connectViaWalletConnect(); return; }
       if (isMobileDevice()) { showWalletSheet(); return; }
