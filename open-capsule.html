@@ -404,6 +404,21 @@
     .title{font-size:42px}.s1{margin-top:12px}
     .aboutbox{max-width:none;margin:16px auto 0;text-align:left}
     .aboutbox p br{display:none}}
+  /* Two rows on a phone: common and rare across the top, the three higher
+     grades below. Five across leaves each card about seventy pixels wide,
+     at which size the rarity name and the buyback figure under it are no
+     longer readable -- and the row runs past the edge on the narrowest
+     handsets. Split, the cards are wide enough to read and the strip fits.
+
+     The span rules address .rarity's children rather than .rc, because a
+     wrapper is inserted around each card once buyback prices arrive and
+     the card is no longer the grid item at that point. */
+  @media(max-width:560px){
+    .rarity{grid-template-columns:repeat(6,1fr) !important;max-width:320px;gap:8px;justify-items:stretch}
+    .rarity > *:nth-child(-n+2){grid-column:span 3}
+    .rarity > *:nth-child(n+3){grid-column:span 2}
+    .rc .rm{font-size:30px}.rc .rl{font-size:8.5px}
+  }
   @media(max-width:560px){
     .ocwrap{padding-top:72px;gap:14px}
     .capframe{margin-top:0 !important}
@@ -507,7 +522,6 @@
     <div class="capwin">
       <img class="capposter" src="images/open-capsule/capsule.webp" alt="">
       <video class="capvid" id="capVid" autoplay muted loop playsinline preload="metadata"
-             poster="images/open-capsule/capsule-poster.webp"
              data-src="images/open-capsule/capsule.mp4"
              data-src-mobile="images/open-capsule/capsule-mobile.mp4"></video>
 <script>

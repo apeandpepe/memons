@@ -182,6 +182,54 @@
 
   /* session history */
   .history{width:min(540px,90vw);font-size:12px;color:var(--muted)}
+
+  /* Phones.
+
+     The page centres itself vertically, which is right on a desktop and
+     wrong on a handset: once the content is taller than the viewport, a
+     centred flex column overflows in both directions and the top half
+     cannot be scrolled back to. The capsule then eats what is left --
+     80vw square on a narrow screen is most of the display -- so the
+     buttons and the session tally end up crowding each other at the
+     bottom edge.
+
+     Stacked from the top instead, with the stage sized against the
+     viewport height rather than its width, everything sits in order and
+     scrolls normally. */
+  @media(max-width:560px){
+    body{justify-content:flex-start;gap:12px;padding:16px 12px 32px;height:auto;min-height:100%}
+    .backlink{position:static;align-self:flex-start;margin-bottom:2px}
+    .title{font-size:22px;letter-spacing:2px}
+    .stage{width:min(300px,68vw,42vh)}
+    .info{height:auto;min-height:48px}
+    .acts{width:100%;gap:10px}
+    .history{width:100%}
+  }
+  /* The reveal itself, on a phone.
+
+     Once a card is showing, the result, the caption and the buttons are
+     lifted out of the flow and pinned to the viewport. Those positions were
+     set against a desktop window: 46vw leaves the card about a thumb wide on
+     a handset, and buttons pinned 26px from the bottom sit on top of the
+     session tally still sitting in the flow behind them.
+
+     Widened against the viewport instead, given room between the caption and
+     the buttons, and the tally taken out while a card is up -- it belongs to
+     the browsing state, not to the reveal, and it is unreadable through the
+     dimming layer regardless. */
+  @media(max-width:560px){
+    .stage.single .result{top:7vh;max-width:78vw;height:min(54vh,calc(100vh - 250px))}
+    .stage.single ~ .info{bottom:154px}
+    .stage.single ~ .acts{bottom:34px;flex-wrap:nowrap;gap:8px;padding:0 12px}
+    .stage.single ~ .acts .b{padding:11px 14px;font-size:12px;letter-spacing:1px}
+    .stage.single ~ .history{visibility:hidden}
+  }
+
+  /* Short screens in landscape, where height is the binding constraint. */
+  @media(max-height:620px){
+    .stage{width:min(260px,60vw,46vh)}
+    body{justify-content:flex-start}
+  }
   .history .ht{letter-spacing:2px;color:#cfccc4;margin-bottom:8px;display:flex;justify-content:space-between}
   .tally{display:flex;gap:10px;flex-wrap:wrap}
   .tally .t{padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.1)}
@@ -575,7 +623,7 @@
   </div>
 
   <div class="info">
-    <div class="hint" id="hint">CLICK THE CAPSULE · OR OPEN ×10</div>
+    <div class="hint" id="hint">CLICK THE CAPSULE</div>
     <div class="you" id="you">OPENED</div>
     <div class="got" id="got"><span id="cName">APEPE</span> <b id="rr">LEGENDARY</b></div>
   </div>
@@ -597,7 +645,9 @@
 
   <div class="acts">
     <button class="b solid" id="open1">OPEN ×1</button>
-    <button class="b" id="open10">OPEN ×10</button>
+    <!-- Ten-pull button retired; hidden rather than removed so the handler
+         and pull accounting stay intact. -->
+    <button class="b" id="open10" style="display:none">OPEN ×10</button>
     <div class="pullsbox" id="pullsbox">
       <span class="pl">PULLS</span>
       <span class="pv" id="pullsLeft">–</span>
