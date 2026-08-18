@@ -53,11 +53,31 @@
      browser has opened, which is worth paying for a link that actually opens. */
   /* Set by the wallet deep link, read once, then taken out of the address
      bar -- so a refresh, a bookmark or a shared link does not reopen the
-     wallet prompt weeks later. */
+     wallet prompt weeks later.
+
+     The address is not a reliable carrier on its own. MetaMask on iOS opens
+     the dapp link without the query string, so ?wconnect=1 never arrives and
+     the page sits disconnected inside the wallet's own browser -- the one
+     place where connecting is a single silent step. A short-lived flag in
+     storage says the same thing and survives a stripped address.
+
+     Sixty seconds: long enough to cross into the wallet and have the page
+     open, short enough that it cannot fire on some unrelated visit later. */
+  var AUTO_KEY = 'memons_wconnect_at';
+  var AUTO_TTL = 60000;
+
+  function markAutoConnect() {
+    try { localStorage.setItem(AUTO_KEY, String(Date.now())); } catch (e) {}
+  }
   function wantsAutoConnect() {
-    try { return /[?&]wconnect=1/.test(location.search); } catch (e) { return false; }
+    try { if (/[?&]wconnect=1/.test(location.search)) return true; } catch (e) {}
+    try {
+      var t = Number(localStorage.getItem(AUTO_KEY) || 0);
+      return t > 0 && (Date.now() - t) < AUTO_TTL;
+    } catch (e) { return false; }
   }
   function consumeAutoConnect() {
+    try { localStorage.removeItem(AUTO_KEY); } catch (e) {}
     try {
       var u = new URL(location.href);
       u.searchParams.delete('wconnect');
@@ -266,6 +286,13 @@
 
       var wc = wrap.querySelector('#mmWc');
       if (wc) wc.onclick = function () { close(); connectViaWalletConnect(); };
+
+      /* The flag rides along with the tap, not with the address, because the
+         address may not survive the handoff. Both wallet buttons set it. */
+      var mmGo = wrap.querySelector('#mmGo');
+      if (mmGo) mmGo.addEventListener('click', markAutoConnect);
+      var twGo = wrap.querySelector('#twGo');
+      if (twGo) twGo.addEventListener('click', markAutoConnect);
 
       wrap.querySelector('#mmCopy').onclick = function () {
         var btn = this;

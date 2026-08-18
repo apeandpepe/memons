@@ -414,6 +414,11 @@
   function adopt(p) {
     try { p.__memonsWC = true; } catch (e) {}
     api.provider = p;
+    /* A marker of our own, so the next load knows a pairing exists without
+       having to guess which storage backend WalletConnect chose. */
+    try {
+      if (p.session) localStorage.setItem("memons_wc_paired", "1");
+    } catch (e) {}
     // Only fill the legacy global when nothing else claims it. Detection may
     // still be running, so window.ethereum is checked directly rather than
     // relying on the wallet list being final.
@@ -486,14 +491,36 @@
       }
       kill.forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
+    // Our own marker goes with them, or the next load claims a pairing that
+    // was just thrown away.
+    try { localStorage.removeItem("memons_wc_paired"); } catch (e) {}
   }
 
+  /* Has WalletConnect kept a session from a previous visit?
+
+     localStorage alone is not the answer. WalletConnect stores its session
+     through its own keyvaluestorage layer, which on iOS Safari can land in
+     IndexedDB rather than localStorage -- so the scan below found nothing
+     while a live session sat there, restore() bailed out, and every load
+     looked signed out even though the wallet was still paired.
+
+     Answering "maybe" costs one init that finds no session and returns null,
+     which is what already happens on the line after the call. Answering "no"
+     wrongly costs the user the connection. */
   function hasStoredSession() {
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
         if (k && k.indexOf("wc@2:") === 0) return true;
       }
+    } catch (e) {}
+    // Our own marker, written whenever a session is adopted. Survives the
+    // storage backend question entirely.
+    try { if (localStorage.getItem("memons_wc_paired") === "1") return true; } catch (e) {}
+    // IndexedDB is asynchronous, so it cannot be read here. On a browser that
+    // keeps WalletConnect's store there, let init decide instead of guessing.
+    try {
+      if (window.indexedDB && /iPad|iPhone|iPod/.test(navigator.userAgent)) return true;
     } catch (e) {}
     return false;
   }
@@ -562,6 +589,7 @@
 
     disconnect: async function () {
       try { if (api.provider && api.provider.disconnect) await api.provider.disconnect(); } catch (e) {}
+      try { localStorage.removeItem("memons_wc_paired"); } catch (e) {}
       if (!wallets.length && window.ethereum && window.ethereum.__memonsWC) {
         try { delete window.ethereum; } catch (e) { window.ethereum = undefined; }
       }
@@ -582,7 +610,12 @@
 
       var p = null;
       try { p = await ensureInit(); } catch (e) { return null; }
-      if (!(p.session && p.accounts && p.accounts.length)) { await detectPromise; return null; }
+      if (!(p.session && p.accounts && p.accounts.length)) {
+        // The guess was wrong, or the pairing is gone. Clearing the marker
+        // stops every later load from paying for the same init.
+        try { localStorage.removeItem("memons_wc_paired"); } catch (e) {}
+        await detectPromise; return null;
+      }
 
       // Adopted straight away. A live session is what the user chose last
       // time, and active() reads api.provider before anything an extension
