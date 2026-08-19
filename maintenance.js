@@ -22,6 +22,44 @@
      switch can only ever be flipped one way. */
   if (/admin/i.test(location.pathname)) return;
 
+  /* Ways past the gate, for the people who have to look at the site while
+     it is shut.
+
+     Neither is a security measure and neither is meant to be: this file is
+     public, so the key is readable by anyone who opens it. The gate is a
+     notice, not a lock -- the data behind it is served by the API either
+     way. What these do is spare the team from having to switch maintenance
+     off to check their own work.
+
+     PREVIEW_HOSTS  anything not served from the live domain: localhost,
+                    Vercel preview builds, a staging address.
+     PASS_KEY       add ?mtnpass=<key> once and this browser is let through
+                    from then on. ?mtnpass=0 clears it. */
+  var PREVIEW_HOSTS = /^(localhost|127\.|0\.0\.0\.0|192\.168\.|10\.)|\.vercel\.app$/i;
+  var PASS_KEY   = 'memons-team';
+  var PASS_STORE = 'memons_mtn_pass';
+
+  try {
+    if (PREVIEW_HOSTS.test(location.hostname)) return;
+  } catch (e) {}
+
+  try {
+    var q = /[?&]mtnpass=([^&#]*)/.exec(location.search);
+    if (q) {
+      var v = decodeURIComponent(q[1]);
+      if (v === PASS_KEY) localStorage.setItem(PASS_STORE, '1');
+      else localStorage.removeItem(PASS_STORE);
+      /* Taken out of the address so it is not carried into a screenshot or
+         a shared link. */
+      try {
+        var u = new URL(location.href);
+        u.searchParams.delete('mtnpass');
+        history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+      } catch (e2) {}
+    }
+    if (localStorage.getItem(PASS_STORE) === '1') return;
+  } catch (e) {}
+
   var el = null;
 
   function fill(row) {
