@@ -413,7 +413,13 @@
     var el=$('evKyc'); if(!el) return;
     try{
       var r=await MEMONS.authFetch('/kyc/status');
-      var v=KYC_LABEL[r.state]||KYC_LABEL.locked;
+      var st=r.state;
+      /* A winner still sitting at locked is a winner the invitation has not
+         reached yet. Reading "Not required yet" next to a banner asking for
+         verification is the kind of contradiction that produces a support
+         message, so the win decides the label. */
+      if(st==='locked' && Object.keys(drawState.wins||{}).length) st='invited';
+      var v=KYC_LABEL[st]||KYC_LABEL.locked;
       el.innerHTML = v[1] ? '<span class="'+v[1]+'">'+v[0]+'</span>' : v[0];
     }catch(e){ el.textContent='—'; }
   }
@@ -422,7 +428,7 @@
     $('evEligible').innerHTML = (d.common+d.rare+d.epic+d.legendary+d.mythic>0)
       ? '<span class="good">Yes</span>' : '<span>—</span>';
     loadKycStatus();
-    loadDraw(d);
+    loadDraw(d).then(loadKycStatus);
   }
 
   /* Draw results.
@@ -540,7 +546,12 @@
     var n = Object.keys(drawState.wins).length;
     var box = $('drawNote');
     if(box){
-      if(n)                   box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+'. Complete identity verification to receive your rewards.';
+      /* A winner is told to verify and then left to find the KYC page from
+         the sidebar. The link belongs in the sentence that asks for it. */
+      if(n)                   box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+'. Complete identity verification to receive your rewards.'+
+                                '<a href="mypage-kyc.html" style="margin-left:auto;flex:none;background:var(--gold);color:#12100a;'+
+                                'font-weight:800;font-size:12px;letter-spacing:.6px;padding:9px 16px;border-radius:9px;'+
+                                'text-decoration:none;white-space:nowrap">VERIFY NOW</a>';
       else if(drawState.taken) box.innerHTML = '<i class="ti ti-info-circle"></i> The draw has been held. Your wallet was not selected this time.';
       else                     box.innerHTML = '';
       box.style.display = box.innerHTML ? 'flex' : 'none';
