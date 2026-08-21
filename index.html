@@ -866,16 +866,15 @@
 <div class="evpop" id="evPop" hidden>
   <div class="evpop-bg" id="evPopBg"></div>
 
-  <div class="evpop-box" id="evBoxEvent" role="dialog" aria-modal="true" aria-label="Open beta event">
+  <div class="evpop-box" id="evBoxEvent" role="dialog" aria-modal="true" aria-label="Open beta rewards">
     <button class="evpop-x" data-close="event" aria-label="Close">&times;</button>
-    <a class="evpop-img" id="evPopLink" href="notice.html">
-      <img src="images/notice/event-popup.png" alt="Open Beta Event"
+    <a class="evpop-img" id="evPopLink" href="mypage-rewards.html">
+      <img src="images/notice/reward-popup.png" alt="Open Beta Rewards"
            onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
     </a>
     <div class="evpop-foot">
       <div class="evpop-acts">
-        <a class="evpop-btn sub" id="evPopNotice" href="notice.html">NOTICE</a>
-        <a class="evpop-btn" id="evPopMission" href="mypage-missions.html">JOIN EVENT</a>
+        <a class="evpop-btn" id="evPopMission" href="mypage-rewards.html">CHECK REWARDS</a>
       </div>
       <label class="evpop-chk">
         <input type="checkbox" data-hide="event">
@@ -964,11 +963,15 @@
   /* Where the panels lead. NOTICE_ID is the event post; left empty it falls
      back to the notice list, so a wrong id is never a dead link. */
   var NOTICE_ID   = '6';
-  var MISSION_URL = 'mypage-missions';
+  /* 이벤트가 끝나 미션 페이지로 보낼 이유가 없다. 남은 할 일은 당첨 확인과
+     본인확인뿐이라 두 버튼과 배너가 모두 보상 페이지를 가리킨다. */
+  var MISSION_URL = 'mypage-rewards';
 
   /* Bump this when a new event goes up. The tick box is remembered against
      it, so a visitor who hid the last one still sees the next. */
-  var EVENT_KEY = 'ev1';
+  /* 새 안내로 바뀌었으므로 키도 바꾼다. 예전 팝업에 '다시 보지 않기'를
+     체크해 둔 방문자에게도 이번 것은 한 번 보여야 한다. */
+  var EVENT_KEY = 'reward1';
 
   var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
