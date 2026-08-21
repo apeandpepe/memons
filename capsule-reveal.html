@@ -1054,11 +1054,19 @@ function paintPrice(it){
     if(window.matchMedia && window.matchMedia('(max-width:560px)').matches){
       var box=document.querySelector('.stage.single .result');
       var bw=box && box.getBoundingClientRect().width;
-      if(bw>120) bar.style.setProperty('--aw', Math.round(bw)+'px', 'important');
+      if(bw>120){
+        bar.style.setProperty('--aw', Math.round(bw)+'px', 'important');
+        /* width as well as --aw. --aw feeds `width:var(--aw)` in the
+           stylesheet, and if any rule anywhere is winning that property
+           the variable alone would never show. Setting both leaves
+           nothing to lose. */
+        bar.style.setProperty('width', Math.round(bw)+'px', 'important');
+      }
     } else {
       /* Back to the stylesheet when the phone rules no longer apply --
          a desktop bar is wider than the card by design. */
       bar.style.removeProperty('--aw');
+      bar.style.removeProperty('width');
     }
   }
   fit();
