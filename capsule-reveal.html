@@ -1049,30 +1049,27 @@ function paintPrice(it){
        Measured from .result, the card's own frame, so the two edges line
        up exactly instead of both being guesses at the same viewport. */
     if(window.matchMedia && window.matchMedia('(max-width:560px)').matches){
+      /* Straight off the viewport, no measurement anywhere in it.
+
+         Three attempts to size this from the card have all come out too
+         small -- first the CSS against --cw, then against 78vw, then the
+         measured rect of .result. Whatever is being read, it is not the
+         card the user sees, so nothing here reads anything: 84% of the
+         window is the same figure the card's max-width uses, and a
+         number that cannot be measured wrong cannot come out wrong. */
+      var bw=Math.round(window.innerWidth * 0.84);
+      bar.style.setProperty('--aw', bw+'px', 'important');
+      bar.style.setProperty('width', bw+'px', 'important');
+
+      /* Vertical placement stays measured -- it has been landing
+         correctly, and the buttons are a real element with a real top. */
       var box=document.querySelector('.stage.single .result');
-      var bw=box && box.getBoundingClientRect().width;
-      if(bw>120){
-        bar.style.setProperty('--aw', Math.round(bw)+'px', 'important');
-        /* width as well as --aw. --aw feeds `width:var(--aw)` in the
-           stylesheet, and if any rule anywhere is winning that property
-           the variable alone would never show. Setting both leaves
-           nothing to lose. */
-        bar.style.setProperty('width', Math.round(bw)+'px', 'important');
-
-        /* Vertical placement, measured rather than calculated.
-
-           Two stylesheet blocks both set the card's position and both
-           match on a phone, so working out where the card is from the
-           CSS means knowing which one wins -- and the first attempt read
-           the losing one. The elements themselves cannot be misread:
-           halfway between the bottom of the card and the top of the
-           buttons, whatever the stylesheet ended up doing. */
-        var r=box.getBoundingClientRect();
-        var acts=document.querySelector('.acts');
-        var aTop=acts ? acts.getBoundingClientRect().top : window.innerHeight-66;
-        var bh=bw * ((B && B.art && B.art[1]) || 140) / ((B && B.art && B.art[0]) || 871);
-        var top=Math.round((r.bottom + aTop - bh) / 2);
-        bar.style.setProperty('top', top+'px', 'important');
+      var acts=document.querySelector('.acts');
+      var bh=bw * ((B && B.art && B.art[1]) || 140) / ((B && B.art && B.art[0]) || 871);
+      var cardBottom=box ? box.getBoundingClientRect().bottom : window.innerHeight*0.67;
+      var aTop=acts ? acts.getBoundingClientRect().top : window.innerHeight-66;
+      if(aTop>cardBottom){
+        bar.style.setProperty('top', Math.round((cardBottom + aTop - bh)/2)+'px', 'important');
         bar.style.setProperty('bottom', 'auto', 'important');
       }
     } else {
