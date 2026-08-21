@@ -974,7 +974,12 @@ function paintPrice(it){
 
   if(B){
     bar.classList.add('art');
-    st.setProperty('--art', 'url(images/reveal/bar-'+it.rkey+'.png)');
+    /* ?v2 — the files were cropped in place, keeping their names, and a
+       phone that had already seen the old ones kept serving them from
+       cache. The element is sized to the cropped shape, so an old copy
+       renders at a fraction of the width. Bump this if they change
+       again. */
+    st.setProperty('--art', 'url(images/reveal/bar-'+it.rkey+'.png?v2)');
     st.setProperty('--arW', B.art[0]);
     st.setProperty('--arH', B.art[1]);
     st.setProperty('--bottom', B.bottom+'px');
