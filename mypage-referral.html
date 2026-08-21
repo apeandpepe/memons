@@ -202,6 +202,10 @@
       <img class="rbanner" src="images/mypage/referral/banner.webp" alt="" onerror="this.style.display='none'">
     </div>
 
+    <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
+         empty while the admin's show_season0 flag is off. -->
+    <div id="seasonTabs"></div>
+
     <!-- OVERVIEW -->
     <div class="panel">
       <div class="lbl">REFERRAL OVERVIEW</div>
@@ -255,6 +259,7 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
+<script src="season-tabs.js"></script>
 <script>
 (function(){
   var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
@@ -265,24 +270,36 @@
   // Reading storage directly here missed token expiry and broke when the
   // session moved off sessionStorage to survive mobile tab eviction.
   function token(){ return (window.MEMONS && window.MEMONS.token) || null; }
-  var stats=null, link='';
+  var stats=null, link='', seasonStats=null, seasonMounted=false;
 
   function toast(msg){
     var t=document.createElement('div'); t.textContent=msg;
     t.style.cssText='position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#161616;border:1px solid var(--line2);color:var(--text);font-size:13px;padding:12px 18px;border-radius:11px;z-index:90';
     document.body.appendChild(t); setTimeout(function(){t.remove();},2600);
   }
-  async function get(){ var r=await fetch(API+'/referral',{headers:{Authorization:'Bearer '+token()}}); return await r.json(); }
+  async function get(season){
+    var u=API+'/referral'+(season?('?season='+encodeURIComponent(season)):'');
+    var r=await fetch(u,{headers:{Authorization:'Bearer '+token()}}); return await r.json();
+  }
   async function post(b){ var r=await fetch(API+'/referral',{method:'POST',headers:{Authorization:'Bearer '+token(),'content-type':'application/json'},body:JSON.stringify(b)}); return await r.json(); }
   function shareText(){ return 'Join MEMONS and open capsules with me! '+link; }
 
   function render(){
+    /* Two sources on purpose.
+
+       The three figures at the top answer "how am I doing in the season
+       I am looking at", so they follow the tab. The reward milestones
+       below do not: those capsules were claimed during the open beta,
+       against a lifetime count, and redrawing them from a season 1
+       figure of zero would show four locked rewards to someone who
+       already claimed them. */
+    var view = seasonStats || stats;
     var claimed=stats.referral_claims||0, valid=stats.valid_ref||0;
-    $('stTotal').textContent=stats.total_referees||0;
-    $('stValid').textContent=valid;
+    $('stTotal').textContent=view.total_referees||0;
+    $('stValid').textContent=view.valid_ref||0;
     $('stEarned').textContent=(claimed*REWARD_EACH);
-    $('stRank').textContent=stats.rank?('#'+stats.rank):'—';
-    $('stRankSub').innerHTML=stats.rank?('Top Referrer'):'&nbsp;';
+    $('stRank').textContent=view.rank?('#'+view.rank):'—';
+    $('stRankSub').innerHTML=view.rank?('Top Referrer'):'&nbsp;';
 
     if(stats.eligible && stats.code){
       link=location.origin+'/r/'+stats.code;
@@ -314,11 +331,30 @@
   }
   function copy(){ if(!link) return; navigator.clipboard.writeText(link).then(function(){toast('Link copied');}); }
 
+  /* The figures for whichever tab is open. Fetched rather than filtered
+     in the browser: the count comes from wallets, which the page never
+     sees. A failed request leaves the all-season figures on screen,
+     which is the closest true answer available. */
+  async function loadSeason(){
+    if(!window.SeasonTabs){ seasonStats=null; return; }
+    try{ seasonStats = await get(SeasonTabs.current()); }
+    catch(e){ seasonStats = null; }
+    if(stats) render();
+  }
+
   async function load(){
     if(!(window.MEMONS && MEMONS.connected)){ $('linkArea').style.display='none'; $('lockArea').style.display='block';
       $('lockArea').textContent='Connect your wallet to see your referral link.'; return; }
     stats=await get();
     if(stats.eligible && !stats.code){ var r=await post({action:'issue'}); if(r.code) stats.code=r.code; }
+    if(window.SeasonTabs){
+      await SeasonTabs.ready();
+      if(!seasonMounted){
+        seasonMounted=true;
+        SeasonTabs.mount({ el:$('seasonTabs'), onChange:loadSeason });
+      }
+      await loadSeason();
+    }
     render();
     $('copyBtn').onclick=copy; $('shCp').onclick=copy;
     $('shX').onclick=function(){ if(link) window.open('https://x.com/intent/tweet?text='+encodeURIComponent(shareText()),'_blank'); };
