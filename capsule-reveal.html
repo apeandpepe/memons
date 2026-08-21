@@ -954,17 +954,28 @@ function paintPrice(it){
   /* Measured with bar-tuner.html. Each image puts its cells in a slightly
      different place, so each rarity carries its own. A rarity with no
      artwork falls through to the CSS bar below. */
+  /* Measured against the artwork with a percentage ruler laid over it.
+
+     The previous figures pointed at 26-66% for the price on common and
+     rare, which is where the number sat in an older drawing of the bar.
+     In the current one that region is the middle of the INSTANT BUYBACK
+     cell; the empty slot before USDT runs 62-96%. The epic and above
+     type sizes were left at well under one percent of the bar width,
+     which is around three pixels on a phone.
+
+     Every figure below is a percentage of the bar's own width, so one
+     set holds on every screen. */
   var BARS={
     common:   {buy:1, art:[871,140], aw:2.40, bottom:37,
-               cellL:26.5, usdtR:34.2, numPad:2.5, fsNum:2.0, numY:3},
+               cellL:63, usdtR:20, numPad:1.5, fsNum:4.5, numY:0},
     rare:     {buy:1, art:[861,140], aw:2.30, bottom:39,
-               cellL:61.6, usdtR:15.8, numPad:19.7, fsNum:2.0, numY:2},
+               cellL:63, usdtR:20, numPad:1.5, fsNum:4.5, numY:0},
     epic:     {art:[979,140], aw:2.81, bottom:23,
-               split:54.3, padL:34.8, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:3, textY:-1},
+               split:52, padL:8, fsLabel:2.6, fsVal:4.4, fsUnit:2.4, lineGap:2, textY:0},
     legendary:{art:[976,140], aw:2.78, bottom:18,
-               split:51.7, padL:35.5, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:2},
+               split:52, padL:8, fsLabel:2.6, fsVal:4.4, fsUnit:2.4, lineGap:2, textY:0},
     mythic:   {art:[935,140], aw:2.56, bottom:31,
-               split:50.0, padL:34.6, fsLabel:0.95, fsVal:1.5, fsUnit:1.2, lineGap:1, textY:0}
+               split:52, padL:8, fsLabel:2.6, fsVal:4.4, fsUnit:2.4, lineGap:2, textY:0}
   };
   var B=BARS[it.rkey];
   var st=bar.style;
