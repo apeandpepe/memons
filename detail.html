@@ -302,8 +302,12 @@
   if(pb) pb.setAttribute('href','detail.html?id='+prev.num);
   if(nb) nb.onclick=()=>location.href='detail.html?id='+next.num;
   // MEMORIA card image/label also driven by data
+  /* .webp, not .png. The markup already names the webp files and those
+     are the only ones in the folder -- this line was overwriting five
+     working images with paths that do not exist, which is why the row
+     rendered as five broken icons. */
   const marts=document.querySelectorAll('.mart');
-  MEMONS_DATA.rarities.forEach((r,i)=>{ if(marts[i]) marts[i].src='images/open-capsule/card-'+r.key+'.png'; });
+  MEMONS_DATA.rarities.forEach((r,i)=>{ if(marts[i]) marts[i].src='images/open-capsule/card-'+r.key+'.webp'; });
   document.querySelectorAll('.mfoot .nm').forEach(el=>el.textContent=c.name);
 })();
 </script>
