@@ -1721,6 +1721,17 @@
   var H={apikey:SB_ANON,Authorization:'Bearer '+SB_ANON};
 
   var RARITY=['common','rare','epic','legendary','mythic','special'];
+  /* What the market actually deals in.
+
+     Season 1 allows epic and above, so a COMMON or RARE filter is a
+     button that can only ever return an empty grid. RARITY itself is
+     left whole: it still orders cards for sorting, and a card of any
+     rarity can appear elsewhere on the page.
+
+     When a season opens the lower grades for trade, add them back here
+     -- and to market_list_card and the offers guard, which is where the
+     rule is actually enforced. */
+  var TRADABLE=['epic','legendary','mythic'];
   var LABEL={common:'COMMON',rare:'RARE',epic:'EPIC',legendary:'LEGENDARY',mythic:'MYTHIC',special:'SPECIAL'};
   var $=function(id){return document.getElementById(id);};
   var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){
@@ -1755,7 +1766,7 @@
 
   function pills(){
     var host=$('pills'); if(!host) return;
-    var all=[['','ALL']].concat(RARITY.map(function(r){return [r,LABEL[r]];}));
+    var all=[['','ALL']].concat(TRADABLE.map(function(r){return [r,LABEL[r]];}));
     host.innerHTML=all.map(function(p){
       return '<button class="mkpill'+(filter===p[0]?' on':'')+'"'+
              (p[0]?' data-r="'+p[0]+'"':'')+' data-v="'+p[0]+'">'+p[1]+'</button>';
@@ -1875,6 +1886,10 @@
   function apply(){
     var t=q.trim().toLowerCase();
     shown=rows.filter(function(c){
+      /* Rarities the market does not deal in are dropped from both tabs.
+         On sell that matters most: an open beta common sitting in the
+         grid invites a listing the database will refuse. */
+      if(TRADABLE.indexOf(c.rarity)<0) return false;
       if(tab==='sell'){
         if(!myCards) return false;
         if(!myCards[c.card_id]) return false;
