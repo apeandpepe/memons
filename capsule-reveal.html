@@ -227,17 +227,11 @@
        the number is calc(--aw * --fsNum), so overriding `width` alone left
        the figure scaled to a measurement the bar no longer had. */
     .pricebar.art{
-      /* 78vw — the card's own max-width, so the two always agree.
-
-         This used to read min(--awRaw, --cw), meaning "the card, as
-         measured". The measurement is unreliable: fit() reads the card
-         image before it has settled, and --awRaw is derived from that
-         same figure, so when it came out short the bar came out at about
-         half the card and stayed there. Both terms depended on the same
-         bad number, so the min could not save it.
-
-         The viewport is not a measurement and cannot be wrong. */
-      --aw:78vw !important;
+      /* 84vw — the card's max-width, as a fallback for the moment before
+         the measurement below lands. The real figure is written onto the
+         element by fit(), because the card is not always 84vw: on a short
+         screen its height binds first and it comes out narrower. */
+      --aw:84vw !important;
       /* --fsNum is deliberately not set here.
 
          Capping --aw is the whole mechanism: the number is
@@ -248,13 +242,16 @@
          sets. The result was a price more than twice its cell, spilling
          over the divider on every phone. */
 
-      /* Centred in the gap between the card and the buttons, rather than
-         hung a fixed distance under the card. The gap is what changes
-         from phone to phone -- the card is sized in vh and the buttons
-         are pinned to the bottom -- so a fixed offset leaves the bar
-         against the card on a short screen and stranded on a tall one. */
-      --cardBottom:calc(7vh + min(54vh, 100vh - 250px));
-      --actsTop:calc(100vh - 72px);
+      /* Centred between the card and the buttons.
+
+         These figures come from the @media(max-width:900px) block further
+         down the stylesheet, not from this one. Both blocks set
+         .stage.single .result and both match on a phone, so the later one
+         wins -- 5vh and 62vh, not the 7vh and 54vh written here. The
+         first version of this calculation read the losing rule, which is
+         why the bar was measured against a card that was never there. */
+      --cardBottom:calc(5vh + min(62vh, 100vh - 190px));
+      --actsTop:calc(100vh - 66px);
       --barH:calc(var(--aw) * var(--arH,140) / var(--arW,871));
       top:calc((var(--cardBottom) + var(--actsTop) - var(--barH)) / 2);
       transform:translateX(var(--xOff,0px));
@@ -1061,12 +1058,30 @@ function paintPrice(it){
            the variable alone would never show. Setting both leaves
            nothing to lose. */
         bar.style.setProperty('width', Math.round(bw)+'px', 'important');
+
+        /* Vertical placement, measured rather than calculated.
+
+           Two stylesheet blocks both set the card's position and both
+           match on a phone, so working out where the card is from the
+           CSS means knowing which one wins -- and the first attempt read
+           the losing one. The elements themselves cannot be misread:
+           halfway between the bottom of the card and the top of the
+           buttons, whatever the stylesheet ended up doing. */
+        var r=box.getBoundingClientRect();
+        var acts=document.querySelector('.acts');
+        var aTop=acts ? acts.getBoundingClientRect().top : window.innerHeight-66;
+        var bh=bw * ((B && B.art && B.art[1]) || 140) / ((B && B.art && B.art[0]) || 871);
+        var top=Math.round((r.bottom + aTop - bh) / 2);
+        bar.style.setProperty('top', top+'px', 'important');
+        bar.style.setProperty('bottom', 'auto', 'important');
       }
     } else {
       /* Back to the stylesheet when the phone rules no longer apply --
          a desktop bar is wider than the card by design. */
       bar.style.removeProperty('--aw');
       bar.style.removeProperty('width');
+      bar.style.removeProperty('top');
+      bar.style.removeProperty('bottom');
     }
   }
   fit();
