@@ -353,6 +353,15 @@
   }
   window.MEMONS_LB_ONLOAD=function(){ renderLeaderboard(); };
 
+  /* Top Referrers follows the tab. leaderboard.js loads once on its own
+     for every season, which is right for the pages that have no tab;
+     here it is asked again for the season on screen. */
+  function loadBoard(){
+    if(typeof window.MEMONS_LB_LOAD !== 'function') return;
+    var season=(window.SeasonTabs && SeasonTabs.showsPast()) ? SeasonTabs.current() : '';
+    window.MEMONS_LB_LOAD(season || null);
+  }
+
   function renderCollection(){
     /* Every figure below counts from the season on screen, not from the
        whole history: the collection bars, the prize entry table and the
@@ -478,11 +487,12 @@
       if(!seasonMounted){
         seasonMounted=true;
         SeasonTabs.mount({ el:$('seasonTabs'), owned:owned, onChange:function(){
-          renderCollection(); loadReferral();
+          renderCollection(); loadReferral(); loadBoard();
         }});
       } else {
         SeasonTabs.refresh(owned);
       }
+      loadBoard();
     }
     renderCollection();
     renderLeaderboard();

@@ -170,6 +170,10 @@
       <a href="mypage-inventory.html">INVENTORY</a>
     </div>
 
+    <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
+         empty while the admin's show_season0 flag is off. -->
+    <div id="seasonTabs"></div>
+
     <div class="section-label">COLLECTION OVERVIEW</div>
     <div class="cgrid" id="cgrid"></div>
 
@@ -189,23 +193,62 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
+<script src="season-tabs.js"></script>
 <script>
 (function(){
-  // distinct card TYPES per rarity (denominators; hardcoded, special excluded)
-  var TOTAL={common:40, rare:25, epic:15, legendary:10, mythic:5};
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+  /* Denominators per season, read from card_totals (step79).
+
+     They used to be typed in here, which was right for one season and
+     wrong for every other: season 0 runs 40/25/15/10/5 and season 1
+     runs 100/100/50/20/10. The values below are only a fallback for the
+     case where the view has not been created yet -- the database is the
+     source, so season 2 needs no edit to this file. */
+  var FALLBACK={
+    s0:{common:40, rare:25, epic:15, legendary:10, mythic:5},
+    s1:{common:100, rare:100, epic:50, legendary:20, mythic:10}
+  };
+  var TOTALS=null;
   var ORDER=['common','rare','epic','legendary','mythic'];
-  var owned=[];
+  var owned=[], seasonMounted=false;
   function $(id){return document.getElementById(id);}
 
+  function totalsFor(season){
+    return (TOTALS && TOTALS[season]) || FALLBACK[season] || FALLBACK.s1;
+  }
+
+  function loadTotals(){
+    return fetch(SB_URL+'/rest/v1/card_totals?select=season_key,rarity,total',
+                 { headers:{ apikey:SB_ANON, Authorization:'Bearer '+SB_ANON } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(rows){
+        if(!Array.isArray(rows) || !rows.length) return;
+        var by={};
+        rows.forEach(function(x){
+          var s=String(x.season_key||'').toLowerCase();
+          if(!by[s]) by[s]={};
+          by[s][String(x.rarity||'').toLowerCase()]=Number(x.total)||0;
+        });
+        TOTALS=by;
+      })
+      .catch(function(){ /* fallback stands */ });
+  }
+
   function render(){
-    // distinct owned TYPES per rarity
+    var season=(window.SeasonTabs ? SeasonTabs.current() : 's1');
+    var rows=(window.SeasonTabs ? SeasonTabs.filter(owned) : owned);
+    var TOTAL=totalsFor(season);
+
+    // distinct owned TYPES per rarity, within the season on screen
     var seen={}, distinct={common:0,rare:0,epic:0,legendary:0,mythic:0};
-    owned.forEach(function(o){
+    rows.forEach(function(o){
       var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(distinct[r]==null) return;
       if(!seen[o.card_id]){ seen[o.card_id]=1; distinct[r]++; }
     });
     $('cgrid').innerHTML=ORDER.map(function(r){
-      var have=distinct[r], tot=TOTAL[r], pct=tot?Math.min(100, have/tot*100):0;
+      var have=distinct[r], tot=TOTAL[r]||0, pct=tot?Math.min(100, have/tot*100):0;
       var pctTxt=(Math.round(pct*100)/100).toFixed(2);
       return '<div class="col"><div class="ccard" style="--cc:var(--c-'+r+')">'+
         '<img class="cimg" src="images/mypage/collection/'+r+'.webp" alt="'+r.toUpperCase()+'" '+
@@ -224,6 +267,18 @@
     if(!(window.MEMONS && MEMONS.connected)){ owned=[]; render(); return; }
     try{ var s=await MEMONS.state(); owned=s.owned||[]; }
     catch(e){ owned=[]; }
+    /* Denominators and the tab row both have to be settled before the
+       first paint, or the cards show one figure and then another. */
+    await loadTotals();
+    if(window.SeasonTabs){
+      await SeasonTabs.ready();
+      if(!seasonMounted){
+        seasonMounted=true;
+        SeasonTabs.mount({ el:$('seasonTabs'), owned:owned, onChange:render });
+      } else {
+        SeasonTabs.refresh(owned);
+      }
+    }
     render();
   }
   load();
