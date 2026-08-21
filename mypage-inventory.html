@@ -204,6 +204,10 @@
       <a href="mypage-inventory.html" class="on">INVENTORY</a>
     </div>
 
+    <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
+         empty while the admin's show_season0 flag is off. -->
+    <div id="seasonTabs"></div>
+
     <div class="fbar">
       <div class="search"><i class="ti ti-search"></i><input id="q" type="text" placeholder="Search cards…"></div>
       <select class="sel" id="fRarity">
@@ -238,12 +242,13 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
+<script src="season-tabs.js"></script>
 <script>
 (function(){
   var PER_PAGE=10;
   var RORDER={common:1,rare:2,epic:3,legendary:4,mythic:5};
   var RCOL={common:'var(--c-common)',rare:'var(--c-rare)',epic:'var(--c-epic)',legendary:'var(--c-legendary)',mythic:'var(--c-mythic)'};
-  var owned=[], cards=[], page=1, gridView=true, renderSeq=0;
+  var owned=[], cards=[], page=1, gridView=true, renderSeq=0, seasonMounted=false;
 
   // preload a set of image URLs, then call cb (with a safety timeout)
   function preload(urls, cb){
@@ -257,8 +262,12 @@
   function $(id){return document.getElementById(id);}
 
   function build(){
+    /* Everything below counts from this list, not from `owned`: the
+       rarity chips, the category filter and the grid all have to agree
+       with the tab that is open. */
+    var rows = (window.SeasonTabs ? SeasonTabs.filter(owned) : owned);
     var by={};
-    owned.forEach(function(o){
+    rows.forEach(function(o){
       var k=o.card_id; if(!k) return;
       if(!by[k]){ by[k]={id:k, name:(o.cards&&o.cards.name)||k, rarity:((o.cards&&o.cards.rarity)||'common').toLowerCase(),
         category:((o.cards&&o.cards.category)||''), image:(o.cards&&o.cards.image_url)||'', count:0, newest:o.pulled_at||''}; }
@@ -270,12 +279,12 @@
     var cats={}; cards.forEach(function(c){ if(c.category) cats[c.category]=1; });
     var sel=$('fCat'); sel.innerHTML='<option value="">All Categories</option>'+
       Object.keys(cats).sort().map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
-    renderChips();
+    renderChips(rows);
   }
 
-  function renderChips(){
+  function renderChips(rows){
     var rc={common:0,rare:0,epic:0,legendary:0,mythic:0};
-    owned.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(rc[r]!=null) rc[r]++; });
+    rows.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(rc[r]!=null) rc[r]++; });
     var order=['common','rare','epic','legendary','mythic'];
     $('chips').innerHTML=order.map(function(r){
       return '<div class="chip" data-r="'+r+'" style="--cc:'+RCOL[r]+';cursor:pointer">'+
@@ -382,6 +391,22 @@
     }
     try{ var s=await MEMONS.state(); owned=s.owned||[]; }
     catch(e){ owned=[]; }
+    /* The flag decides whether a tab row is drawn at all, so the first
+       paint waits for it. Without the wait the grid would appear
+       unfiltered and then rearrange itself a moment later. */
+    if(window.SeasonTabs){
+      await SeasonTabs.ready();
+      if(!seasonMounted){
+        seasonMounted=true;
+        SeasonTabs.mount({
+          el: $('seasonTabs'),
+          owned: owned,
+          onChange: function(){ page=1; build(); render(); }
+        });
+      } else {
+        SeasonTabs.refresh(owned);
+      }
+    }
     build(); render();
   }
 
