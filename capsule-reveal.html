@@ -227,9 +227,31 @@
        the number is calc(--aw * --fsNum), so overriding `width` alone left
        the figure scaled to a measurement the bar no longer had. */
     .pricebar.art{
-      --aw:min(var(--awRaw, 470px), 88vw) !important;
-      --fsNum:.045 !important;
-      top:calc(7vh + min(54vh, 100vh - 250px) + var(--gap,14px));
+      /* Card width, measured. --cw is set by fit() from the card image
+         itself, so the bar tracks whatever the card turns out to be on
+         this screen instead of guessing at a share of the viewport.
+         --awRaw stays the ceiling: on a wide screen the artwork should
+         not be stretched past the size it was drawn at. */
+      --aw:min(var(--awRaw, 470px), var(--cw, 88vw)) !important;
+      /* --fsNum is deliberately not set here.
+
+         Capping --aw is the whole mechanism: the number is
+         calc(--aw * --fsNum), so it comes down with the artwork on its
+         own. Forcing .045 on top of that fought the per-rarity figures
+         measured in bar-tuner -- common and rare are tuned to .02 -- and
+         because it carried !important it beat the inline value the script
+         sets. The result was a price more than twice its cell, spilling
+         over the divider on every phone. */
+
+      /* Centred in the gap between the card and the buttons, rather than
+         hung a fixed distance under the card. The gap is what changes
+         from phone to phone -- the card is sized in vh and the buttons
+         are pinned to the bottom -- so a fixed offset leaves the bar
+         against the card on a short screen and stranded on a tall one. */
+      --cardBottom:calc(7vh + min(54vh, 100vh - 250px));
+      --actsTop:calc(100vh - 72px);
+      --barH:calc(var(--aw) * var(--arH,140) / var(--arW,871));
+      top:calc((var(--cardBottom) + var(--actsTop) - var(--barH)) / 2);
       transform:translateX(var(--xOff,0px));
       bottom:auto}
     .pricebar{
