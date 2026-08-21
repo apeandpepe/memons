@@ -883,16 +883,16 @@
     </div>
   </div>
 
-  <div class="evpop-box rank" id="evBoxRank" role="dialog" aria-modal="true" aria-label="Referral leaderboard">
+  <div class="evpop-box" id="evBoxRank" role="dialog" aria-modal="true" aria-label="Referral rewards">
     <button class="evpop-x" data-close="rank" aria-label="Close">&times;</button>
-    <div class="rk">
-      <div class="rk-badge"><i></i>REFERRAL LEADERBOARD<i></i></div>
-      <div class="rk-title">TOP REFERRERS</div>
-      <div class="rk-sub" id="rkSub">INVITE FRIENDS &middot; CLIMB THE BOARD</div>
-      <div class="rk-list" id="rkList"><div class="rk-note">Loading&hellip;</div></div>
-      <div class="rk-me" id="rkMe" hidden></div>
-    </div>
+    <a class="evpop-img" id="rkPopLink" href="mypage-referral.html">
+      <img src="images/notice/referral-popup.png" alt="Referral Rewards"
+           onerror="document.documentElement.dispatchEvent(new Event('rankpop:missing'))">
+    </a>
     <div class="evpop-foot">
+      <div class="evpop-acts">
+        <a class="evpop-btn" id="rkPopBtn" href="mypage-referral.html">CHECK REFERRAL</a>
+      </div>
       <label class="evpop-chk">
         <input type="checkbox" data-hide="rank">
         <span>Don&rsquo;t show today</span>
@@ -990,7 +990,9 @@
     // The visitor's own day, because "today" is theirs and not the server's.
     return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
   }
-  var KEY = { event:'memons_evpop_hidden_'+EVENT_KEY, rank:'memons_rankpop_hidden_day' };
+  /* 안내 내용이 바뀌었으므로 키도 바꾼다. 어제 '오늘 하루 안 보기'를 눌러둔
+     방문자에게도 이번 것은 한 번 보여야 한다. */
+  var KEY = { event:'memons_evpop_hidden_'+EVENT_KEY, rank:'memons_refpop_hidden_day' };
   function hidden(name){
     try {
       var v = localStorage.getItem(KEY[name]);
@@ -1209,6 +1211,19 @@
     box.event.hidden = true;
     open.event = false;
     if (!open.rank){
+      pop.hidden = true;
+      document.body.style.overflow = '';
+    } else {
+      fitBox();
+    }
+  });
+
+  /* Same for the referral panel, which is now a banner too. */
+  document.documentElement.addEventListener('rankpop:missing', function(){
+    if (!open.rank) return;
+    box.rank.hidden = true;
+    open.rank = false;
+    if (!open.event){
       pop.hidden = true;
       document.body.style.overflow = '';
     } else {
