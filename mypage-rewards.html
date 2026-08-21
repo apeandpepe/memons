@@ -409,11 +409,16 @@
     rejected: ['Not approved',     'bad'],
     expired:  ['Expired',          'bad']
   };
+  /* Shared, because the banner needs it too and the two used to be read
+     independently -- which is how they ended up disagreeing on screen. */
+  var kycState = null;
+
   async function loadKycStatus(){
     var el=$('evKyc'); if(!el) return;
     try{
       var r=await MEMONS.authFetch('/kyc/status');
       var st=r.state;
+      kycState = st;
       /* A winner still sitting at locked is a winner the invitation has not
          reached yet. Reading "Not required yet" next to a banner asking for
          verification is the kind of contradiction that produces a support
@@ -427,8 +432,10 @@
     $('evEntries').textContent = totalCards;
     $('evEligible').innerHTML = (d.common+d.rare+d.epic+d.legendary+d.mythic>0)
       ? '<span class="good">Yes</span>' : '<span>—</span>';
-    loadKycStatus();
-    loadDraw(d).then(loadKycStatus);
+    /* KYC first, then the draw. The banner reads both, and drawing it
+       before the verification state is known is what left an approved
+       winner still being asked to verify. */
+    loadKycStatus().then(function(){ return loadDraw(d); });
   }
 
   /* Draw results.
@@ -546,12 +553,20 @@
     var n = Object.keys(drawState.wins).length;
     var box = $('drawNote');
     if(box){
-      /* A winner is told to verify and then left to find the KYC page from
-         the sidebar. The link belongs in the sentence that asks for it. */
-      if(n)                   box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+'. Complete identity verification to receive your rewards.'+
-                                '<a href="mypage-kyc.html" style="margin-left:auto;flex:none;background:var(--gold);color:#12100a;'+
-                                'font-weight:800;font-size:12px;letter-spacing:.6px;padding:9px 16px;border-radius:9px;'+
-                                'text-decoration:none;white-space:nowrap">VERIFY NOW</a>';
+      /* Two things decide this line: whether they won, and whether they have
+         verified. Reading only the first left an approved winner being asked
+         to verify next to a panel already saying Verified. */
+      if(n && kycState === 'approved'){
+        box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+
+          '. Identity verification is complete — rewards are on the way.';
+      }
+      else if(n){
+        box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+
+          '. Complete identity verification to receive your rewards.'+
+          '<a href="mypage-kyc.html" style="margin-left:auto;flex:none;background:var(--gold);color:#12100a;'+
+          'font-weight:800;font-size:12px;letter-spacing:.6px;padding:9px 16px;border-radius:9px;'+
+          'text-decoration:none;white-space:nowrap">VERIFY NOW</a>';
+      }
       else if(drawState.taken) box.innerHTML = '<i class="ti ti-info-circle"></i> The draw has been held. Your wallet was not selected this time.';
       else                     box.innerHTML = '';
       box.style.display = box.innerHTML ? 'flex' : 'none';
