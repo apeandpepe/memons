@@ -227,12 +227,17 @@
        the number is calc(--aw * --fsNum), so overriding `width` alone left
        the figure scaled to a measurement the bar no longer had. */
     .pricebar.art{
-      /* Card width, measured. --cw is set by fit() from the card image
-         itself, so the bar tracks whatever the card turns out to be on
-         this screen instead of guessing at a share of the viewport.
-         --awRaw stays the ceiling: on a wide screen the artwork should
-         not be stretched past the size it was drawn at. */
-      --aw:min(var(--awRaw, 470px), var(--cw, 88vw)) !important;
+      /* 78vw — the card's own max-width, so the two always agree.
+
+         This used to read min(--awRaw, --cw), meaning "the card, as
+         measured". The measurement is unreliable: fit() reads the card
+         image before it has settled, and --awRaw is derived from that
+         same figure, so when it came out short the bar came out at about
+         half the card and stayed there. Both terms depended on the same
+         bad number, so the min could not save it.
+
+         The viewport is not a measurement and cannot be wrong. */
+      --aw:78vw !important;
       /* --fsNum is deliberately not set here.
 
          Capping --aw is the whole mechanism: the number is
