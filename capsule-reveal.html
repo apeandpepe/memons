@@ -1039,6 +1039,27 @@ function paintPrice(it){
          never binds. */
       bar.style.setProperty('--awRaw', Math.round(w*mul)+'px');
     }
+
+    /* On a phone the width is set here rather than in the stylesheet.
+
+       Two attempts to do it in CSS did not take -- first against the
+       measured card, then against 78vw -- and the bar kept rendering at
+       roughly a third of the card. Rather than add a third rule to a
+       cascade that is evidently losing somewhere, the figure is written
+       onto the element: an inline !important outranks every stylesheet
+       rule, whatever it turns out to be.
+
+       Measured from .result, the card's own frame, so the two edges line
+       up exactly instead of both being guesses at the same viewport. */
+    if(window.matchMedia && window.matchMedia('(max-width:560px)').matches){
+      var box=document.querySelector('.stage.single .result');
+      var bw=box && box.getBoundingClientRect().width;
+      if(bw>120) bar.style.setProperty('--aw', Math.round(bw)+'px', 'important');
+    } else {
+      /* Back to the stylesheet when the phone rules no longer apply --
+         a desktop bar is wider than the card by design. */
+      bar.style.removeProperty('--aw');
+    }
   }
   fit();
   setTimeout(fit, 300); setTimeout(fit, 900);
