@@ -138,6 +138,10 @@
     <h1>Top Referrers</h1>
     <p class="sub">The community members bringing the most friends to MEMONS.</p>
 
+    <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
+         empty while the admin's show_season0 flag is off. -->
+    <div id="seasonTabs"></div>
+
     <div class="panel" id="lb"></div>
     <div class="pager" id="pager"></div>
     <div class="note" id="note"></div>
@@ -148,6 +152,7 @@
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
 <script src="leaderboard.js"></script>
+<script src="season-tabs.js"></script>
 <script>
 (function(){
   var PER=10, page=1;
@@ -187,6 +192,21 @@
   window.MEMONS_LB_ONLOAD=function(rows){ data=rows||[]; page=1; render(); };
   render();
   if(window.MEMONS_LB_READY) window.MEMONS_LB_ONLOAD(window.MEMONS_LEADERBOARD);
+
+  /* leaderboard.js has already asked for every season by the time this
+     runs, which is the right answer for a page with no tab. With one,
+     it is asked again for the season on screen. */
+  function loadBoard(){
+    if(typeof window.MEMONS_LB_LOAD !== 'function') return;
+    var season=(window.SeasonTabs && SeasonTabs.showsPast()) ? SeasonTabs.current() : '';
+    window.MEMONS_LB_LOAD(season || null);
+  }
+  if(window.SeasonTabs){
+    SeasonTabs.ready(function(){
+      SeasonTabs.mount({ el:$('seasonTabs'), onChange:loadBoard });
+      loadBoard();
+    });
+  }
 })();
 </script>
 <style>
