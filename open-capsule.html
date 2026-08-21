@@ -1177,6 +1177,13 @@
           '<div class="as-stat"><span>BUYBACKS</span><b>'+buyCount+'</b></div>'+
         '</div>'+
       '</div>'+
+      /* Above ACTIVITY, not below it.
+
+         The list runs to ten rows and pushed the button off the bottom of
+         the panel, so the one action on this screen was the hardest thing
+         on it to reach -- and the more a wallet is used, the further down
+         it went. */
+      '<button class="as-dep" id="asDep">DEPOSIT</button>'+
       '<div class="as-h">ACTIVITY</div>'+
       (acts.length
         ? acts.slice(0,10).map(function(a){
@@ -1187,8 +1194,7 @@
               '<span>'+esc(day(a.t))+'</span></span>'+
               '<span class="a">'+sign+fmt(Math.abs(a.amt))+'</span></div>';
           }).join('')
-        : '<div class="as-empty">No activity yet.</div>')+
-      '<button class="as-dep" id="asDep">DEPOSIT</button>';
+        : '<div class="as-empty">No activity yet.</div>');
 
     var bx=box('<div class="pick-h"><b>ASSETS</b>'+
         '<span>Your balance and capsule activity.</span></div>'+
