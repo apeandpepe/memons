@@ -227,6 +227,9 @@
     border:1px solid rgba(233,184,74,.35);border-radius:11px;background:rgba(233,184,74,.06);
     color:var(--gold);font-size:12.5px;line-height:1.55}
   .drawnote i{font-size:17px;flex-shrink:0}
+  /* Verified and waiting on the payout: nothing left for the visitor to do,
+     so the box stops using the colour that means "act on this". */
+  .drawnote.done{border-color:rgba(92,207,146,.4);background:rgba(92,207,146,.07);color:#5ccf92}
 </style>
   <script src="maintenance.js" defer></script>
 </head>
@@ -556,8 +559,10 @@
       /* Two things decide this line: whether they won, and whether they have
          verified. Reading only the first left an approved winner being asked
          to verify next to a panel already saying Verified. */
+      box.classList.remove('done');
       if(n && kycState === 'approved'){
-        box.innerHTML = '<i class="ti ti-trophy"></i> You won in '+n+' draw'+(n>1?'s':'')+
+        box.classList.add('done');
+        box.innerHTML = '<i class="ti ti-circle-check"></i> You won in '+n+' draw'+(n>1?'s':'')+
           '. Identity verification is complete — rewards are on the way.';
       }
       else if(n){
