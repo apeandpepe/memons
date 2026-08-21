@@ -930,6 +930,18 @@ var PRICE = (function(){
 function paintPrice(it){
   var bar=$('priceBar'); if(!bar) return;
   var found = it && PRICE.of(it.cap, it.rkey);
+  /* No buyback price and no floor.
+
+     For a rarity the market trades, that means nobody has listed one
+     yet -- true on the first day of a season and for a while after.
+     Hiding the bar then tells the reader their card has no value at
+     all; showing it with a dash says the market is where the number
+     will come from, and the bar is still the way through to it. Only
+     rarities with no market at all stay hidden. */
+  var TRADED={epic:1, legendary:1, mythic:1};
+  if(!found && it && TRADED[it.rkey]){
+    found={kind:'market', price:null, src:'ask'};
+  }
   if(!found){
     bar.classList.add('hidden');
     return;
@@ -937,7 +949,7 @@ function paintPrice(it){
   var info = found;
 
   bar.style.setProperty('--rc', it.color);
-  var val = Number(info.price).toFixed(2)+'<u>USDT</u>';
+  var val = (info.price==null ? '&mdash;' : Number(info.price).toFixed(2))+'<u>USDT</u>';
 
   /* Measured with bar-tuner.html. Each image puts its cells in a slightly
      different place, so each rarity carries its own. A rarity with no
@@ -1068,29 +1080,14 @@ function paintPrice(it){
       var bw=Math.round(window.innerWidth * 0.84);
       bar.style.setProperty('--aw', bw+'px', 'important');
       bar.style.setProperty('width', bw+'px', 'important');
+      /* Height from the tuned figures again.
 
-      /* Height from the file's own proportions, not from B.art.
-
-         B.art carries the tuned crop -- 861x140 for rare -- but the PNG
-         on disk is 2172x724, which is 3:1 rather than 6:1. The element
-         was the full 84% of the screen; background-size:contain then fit
-         the wider-than-it-should-be artwork to the short side and drew it
-         at a third of that. The element was never the problem, which is
-         why forcing the width four times over changed nothing.
-
-         Read from the image itself, so a redrawn bar cannot reintroduce
-         this. The tuned figure stays the fallback for the moment before
-         the file has loaded. */
-      /* 724/2172 — the shape every bar PNG on disk actually is. B.art is
-         the tuned cell region inside the picture, not the picture. */
-      var natural=724/2172;
-      var im=new Image();
-      im.onload=function(){
-        if(!im.naturalWidth) return;
-        bar.style.setProperty('height',
-          Math.round(bw * im.naturalHeight / im.naturalWidth)+'px', 'important');
-      };
-      im.src='images/reveal/bar-'+(it.rkey||'common')+'.png';
+         Those numbers describe the frame drawn in the picture, and the
+         picture now IS the frame -- the PNGs carried a wide transparent
+         border and have been cropped to it. Before that the element was
+         6:1 while the file was 3:1, so background-size:contain fit the
+         artwork to the short side and drew it at a third of the width. */
+      var natural=((B && B.art && B.art[1]) || 140) / ((B && B.art && B.art[0]) || 871);
       bar.style.setProperty('height', Math.round(bw * natural)+'px', 'important');
 
       /* Vertical placement stays measured -- it has been landing
