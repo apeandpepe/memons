@@ -189,6 +189,33 @@
   @media(max-width:560px){
     .panel{padding:16px 13px}
   }
+
+  /* ---------------------------------------------------------------
+     SEASON 1 - ENHANCEMENT CLOSED
+     Enhancement is switched off for the whole of season 1, so the forge
+     below is dressed but inert: picking cards and pressing ENHANCE only
+     produces a server error. The veil covers it and blocks the clicks.
+
+     TO REOPEN IN SEASON 2: delete this block, the .lockveil markup in
+     the body, and the small script at the bottom marked with the same
+     heading. Nothing else was changed.
+     --------------------------------------------------------------- */
+  .lockveil{position:absolute;inset:0;z-index:40;border-radius:18px;
+    background:rgba(6,6,8,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:28px 20px;cursor:not-allowed}
+  .lockveil i{font-size:40px;color:var(--gold);margin-bottom:14px}
+  .lockveil .lv-t{font-family:var(--font-head);font-weight:800;font-size:22px;
+    letter-spacing:5px;background:linear-gradient(180deg,var(--gold2),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lockveil .lv-s{font-size:13px;color:var(--muted);margin-top:12px;max-width:420px;line-height:1.7}
+  .locked-stage{position:relative}
+  /* The card list underneath has nothing to do while the forge is shut. */
+  .locked-hide{display:none !important}
+  @media(max-width:560px){
+    .lockveil .lv-t{font-size:17px;letter-spacing:3px}
+    .lockveil i{font-size:32px}
+  }
 </style>
   <script src="maintenance.js" defer></script>
 </head>
@@ -238,7 +265,14 @@
 
     <div class="grades" id="grades"></div>
 
-    <div class="stage">
+    <div class="stage locked-stage">
+      <!-- SEASON 1 - ENHANCEMENT CLOSED (see the style block above) -->
+      <div class="lockveil" id="lockVeil">
+        <i class="ti ti-lock"></i>
+        <div class="lv-t">COMING SOON</div>
+        <div class="lv-s">Card Enhancement opens in a later season.<br>
+          Your cards stay where they are until then.</div>
+      </div>
       <div class="stage-glow" id="stageGlow"></div>
       <div class="forge">
         <div class="slots" id="slots"></div>
@@ -598,6 +632,39 @@
       }
     }
   });
+})();
+</script>
+
+<!-- =====================================================================
+     SEASON 1 - ENHANCEMENT CLOSED
+     The veil sits over the forge; this hides the parts outside it and
+     makes sure nothing underneath can still be pressed. Kept apart from
+     the page's own script so reopening is a delete, not an edit.
+
+     TO REOPEN IN SEASON 2: delete this block, the .lockveil markup in
+     the body, and the matching style block in the head.
+     ================================================================== -->
+<script>
+(function(){
+  var ids = ['grades','invTitle','invCnt','inv','invEmpty'];
+  function lock(){
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.classList.add('locked-hide');
+    });
+    /* The heading row holds the title and the count, so it goes with them. */
+    var head = document.querySelector('.invhead');
+    if(head) head.classList.add('locked-hide');
+    /* Disabled as well as covered: the veil stops a mouse, not a script
+       or a keyboard reaching the button through the tab order. */
+    var btn = document.getElementById('enhBtn');
+    if(btn){ btn.disabled = true; btn.setAttribute('aria-disabled','true'); }
+  }
+  lock();
+  /* The page rebuilds the grade tabs and the card list once the wallet
+     connects, which puts them back on screen. Re-applied after each of
+     those passes rather than once at load. */
+  setInterval(lock, 600);
 })();
 </script>
 
