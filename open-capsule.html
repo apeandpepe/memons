@@ -465,6 +465,19 @@
   .pm-status{font-size:12px;color:#978b62;margin-top:12px;text-align:center;min-height:16px;line-height:1.5}
   .pm-bal{font-size:12px;color:#a99d85;margin-top:14px;text-align:center;border-top:1px solid var(--hair);padding-top:12px}
   .pm-bal b{color:var(--gold)}
+
+  /* CHARGE PULLS button, taken off the panel.
+     Topping up now happens in one place: ASSETS -> Deposit.
+
+     Hidden rather than deleted, and deliberately so. The Deposit row
+     inside ASSETS opens the charge dialog by clicking this very button,
+     so removing the element would break the only remaining way to add
+     credit. A hidden button still takes a click from script.
+
+     !important because applyLock() below sets style.display on it when
+     the purchases flag changes, and an inline style would otherwise put
+     it back on screen the moment purchases opened. */
+  #chargeBtn{display:none !important}
 </style>
 <script>/*embed-mode*/if(location.hash.indexOf("embed")>=0)document.documentElement.classList.add("embed");</script>
   <script src="maintenance.js" defer></script>
@@ -613,7 +626,7 @@
     <button class="obtn gold payhist" id="payHist" type="button" hidden>ASSETS</button>
     <div class="bnote">
       <span class="ic">i</span>
-      <p>Charge pull credits with USDT, then open capsules anytime.</p>
+      <p>Add USDT credit in Assets, then open capsules anytime.</p>
     </div>
   </div>
 </section>
