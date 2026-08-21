@@ -1048,7 +1048,15 @@ function paintPrice(it){
 
        Measured from .result, the card's own frame, so the two edges line
        up exactly instead of both being guesses at the same viewport. */
-    if(window.matchMedia && window.matchMedia('(max-width:560px)').matches){
+    /* 900, not 560.
+
+       The card's own rule lives in @media(max-width:900px) -- it is what
+       sets the 84vw the card renders at. This block was written against
+       560, so on any phone reporting a viewport between the two it never
+       ran at all, which is why four attempts at the width changed
+       nothing: none of them were executing. Same breakpoint as the card
+       now, so the two cannot disagree again. */
+    if(window.matchMedia && window.matchMedia('(max-width:900px)').matches){
       /* Straight off the viewport, no measurement anywhere in it.
 
          Three attempts to size this from the card have all come out too
