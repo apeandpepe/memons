@@ -1048,15 +1048,15 @@ function paintPrice(it){
 
        Measured from .result, the card's own frame, so the two edges line
        up exactly instead of both being guesses at the same viewport. */
-    /* 900, not 560.
+    /* 1040 — everything that is not the desktop layout.
 
-       The card's own rule lives in @media(max-width:900px) -- it is what
-       sets the 84vw the card renders at. This block was written against
-       560, so on any phone reporting a viewport between the two it never
-       ran at all, which is why four attempts at the width changed
-       nothing: none of them were executing. Same breakpoint as the card
-       now, so the two cannot disagree again. */
-    if(window.matchMedia && window.matchMedia('(max-width:900px)').matches){
+       The desktop rules start at @media(min-width:1041px); below that the
+       page is in its stacked form no matter what the number says. Earlier
+       versions guessed at 560 and then 900 and simply did not run on a
+       phone reporting a wider viewport than expected, which cost four
+       rounds of changing code that was never executing. Tied to the one
+       breakpoint that actually divides the two layouts. */
+    if(window.matchMedia && window.matchMedia('(max-width:1040px)').matches){
       /* Straight off the viewport, no measurement anywhere in it.
 
          Three attempts to size this from the card have all come out too
@@ -1069,11 +1069,35 @@ function paintPrice(it){
       bar.style.setProperty('--aw', bw+'px', 'important');
       bar.style.setProperty('width', bw+'px', 'important');
 
+      /* Height from the file's own proportions, not from B.art.
+
+         B.art carries the tuned crop -- 861x140 for rare -- but the PNG
+         on disk is 2172x724, which is 3:1 rather than 6:1. The element
+         was the full 84% of the screen; background-size:contain then fit
+         the wider-than-it-should-be artwork to the short side and drew it
+         at a third of that. The element was never the problem, which is
+         why forcing the width four times over changed nothing.
+
+         Read from the image itself, so a redrawn bar cannot reintroduce
+         this. The tuned figure stays the fallback for the moment before
+         the file has loaded. */
+      /* 724/2172 — the shape every bar PNG on disk actually is. B.art is
+         the tuned cell region inside the picture, not the picture. */
+      var natural=724/2172;
+      var im=new Image();
+      im.onload=function(){
+        if(!im.naturalWidth) return;
+        bar.style.setProperty('height',
+          Math.round(bw * im.naturalHeight / im.naturalWidth)+'px', 'important');
+      };
+      im.src='images/reveal/bar-'+(it.rkey||'common')+'.png';
+      bar.style.setProperty('height', Math.round(bw * natural)+'px', 'important');
+
       /* Vertical placement stays measured -- it has been landing
          correctly, and the buttons are a real element with a real top. */
       var box=document.querySelector('.stage.single .result');
       var acts=document.querySelector('.acts');
-      var bh=bw * ((B && B.art && B.art[1]) || 140) / ((B && B.art && B.art[0]) || 871);
+      var bh=bw * natural;
       var cardBottom=box ? box.getBoundingClientRect().bottom : window.innerHeight*0.67;
       var aTop=acts ? acts.getBoundingClientRect().top : window.innerHeight-66;
       if(aTop>cardBottom){
