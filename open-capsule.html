@@ -376,6 +376,13 @@
     /* The three columns are different heights; align them on their tops so
        none of them stretches the row. */
     .left,.buybox{align-self:start}
+    /* The columns are aligned on their tops so none of them stretches the
+       row, which leaves this panel level with the very top of the frame
+       and higher than anything beside it. Pushed down to sit against the
+       capsule instead. Margin rather than align-self:center, which would
+       centre it against the tallest column and move it again whenever
+       that column changes height. */
+    .buybox{margin-top:64px}
     .capframe{width:min(520px, 54vh)}
     .rarity{flex:0 0 auto;margin:0 auto;padding:0 28px 6px;gap:min(16px, 1.4vh)}
     .rc{height:min(300px, 26vh);width:auto;aspect-ratio:192/300}
@@ -400,7 +407,7 @@
   @media(max-width:980px){.ocwrap{grid-template-columns:1fr;gap:18px;max-width:600px;text-align:center;padding-top:76px}
     .capframe{order:1;max-width:520px;width:100%;margin:0 auto}
     .capframe .capwin .capvid,.capframe .capwin .capposter{object-fit:contain !important}
-    .left{order:2;text-align:center}.buybox{order:3;text-align:left}
+    .left{order:2;text-align:center}.buybox{order:3;text-align:left;margin-top:0}
     .title{font-size:42px}.s1{margin-top:12px}
     .aboutbox{max-width:none;margin:16px auto 0;text-align:left}
     .aboutbox p br{display:none}}
@@ -595,7 +602,7 @@
     <img class="capframeimg" src="images/open-capsule/frame.webp" alt="">
   </div>
   <div class="buybox">
-    <div class="bt">MEMONS CAPSULE 001</div>
+    <div class="bt">MEMONS SEASON 1</div>
     <!-- The stepper that was here counted to 99 and was read by nothing:
          the two buttons below open one and ten, and the number never
          reached them. Replaced by the figure it was standing in front of --
