@@ -216,6 +216,10 @@
     <h1>Dashboard</h1>
     <p class="welcome" id="welcome">Welcome back!</p>
 
+    <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
+         empty while the admin's show_season0 flag is off. -->
+    <div id="seasonTabs"></div>
+
     <!-- ROW 1: stat cards -->
     <div class="row1">
       <div class="bigcard capcolor" id="capCard">
@@ -246,7 +250,7 @@
       <div class="panel">
         <div class="phead"><div class="ptitle">COLLECTION OVERVIEW</div><a class="link" href="mypage-collection.html">View Collection <i class="ti ti-arrow-right"></i></a></div>
         <div class="co" id="coGrid"></div>
-        <div class="res">
+        <div class="res" id="resBlock">
           <div class="rhd">REWARD ENTRY STATUS <small id="snapNote">(Snapshot TBA)</small></div>
           <table class="rtab"><thead><tr><th>GRADE</th><th>YOUR CARDS</th><th>ENTRIES</th><th>STATUS</th></tr></thead>
             <tbody id="resBody"></tbody></table>
@@ -284,12 +288,41 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
+<script src="season-tabs.js"></script>
 <script src="leaderboard.js"></script>
 <script>
 (function(){
   var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
   var SS_TOKEN="memons_jwt_v1";
-  var TOTAL={common:40, rare:25, epic:15, legendary:10, mythic:5};
+  /* Denominators per season, read from card_totals (step79b). The values
+     here are only a fallback for the case where the view is missing --
+     the database is the source, so a new season needs no edit. */
+  var FALLBACK={
+    s0:{common:40, rare:25, epic:15, legendary:10, mythic:5},
+    s1:{common:100, rare:100, epic:50, legendary:20, mythic:10}
+  };
+  var TOTALS=null;
+  function totalsFor(season){
+    return (TOTALS && TOTALS[season]) || FALLBACK[season] || FALLBACK.s1;
+  }
+  function loadTotals(){
+    return fetch(SB_URL_CT+'/rest/v1/card_totals?select=season_key,rarity,total',
+                 { headers:{ apikey:SB_ANON_CT, Authorization:'Bearer '+SB_ANON_CT } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(rows){
+        if(!Array.isArray(rows) || !rows.length) return;
+        var by={};
+        rows.forEach(function(x){
+          var s=String(x.season_key||'').toLowerCase();
+          if(!by[s]) by[s]={};
+          by[s][String(x.rarity||'').toLowerCase()]=Number(x.total)||0;
+        });
+        TOTALS=by;
+      })
+      .catch(function(){ /* fallback stands */ });
+  }
+  var SB_URL_CT="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON_CT="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
   var ORDER=['common','rare','epic','legendary','mythic'];
   var CAP=80;
   function $(id){return document.getElementById(id);}
@@ -298,7 +331,7 @@
   // session moved off sessionStorage to survive mobile tab eviction.
   function token(){ return (window.MEMONS && window.MEMONS.token) || null; }
   function shortAddr(a){ return a? (a.slice(0,6)+'...'+a.slice(-4)) : ''; }
-  var owned=[], link='';
+  var owned=[], link='', seasonMounted=false;
 
   function toast(m){ var t=document.createElement('div'); t.textContent=m;
     t.style.cssText='position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#161616;border:1px solid var(--line2);color:var(--text);font-size:13px;padding:12px 18px;border-radius:11px;z-index:90';
@@ -321,11 +354,20 @@
   window.MEMONS_LB_ONLOAD=function(){ renderLeaderboard(); };
 
   function renderCollection(){
+    /* Every figure below counts from the season on screen, not from the
+       whole history: the collection bars, the prize entry table and the
+       CARDS OWNED card all have to agree with the tab that is open. */
+    var season=(window.SeasonTabs ? SeasonTabs.current() : 's1');
+    var rows=(window.SeasonTabs ? SeasonTabs.filter(owned) : owned);
+    var TOTAL=totalsFor(season);
+
+    $('cardNum').innerHTML=rows.length+'<span class="u">Cards</span>';
+
     var seen={}, d={common:0,rare:0,epic:0,legendary:0,mythic:0};
-    owned.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(d[r]==null) return;
+    rows.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(d[r]==null) return;
       if(!seen[o.card_id]){ seen[o.card_id]=1; d[r]++; } });
     $('coGrid').innerHTML=ORDER.map(function(r){
-      var have=d[r], tot=TOTAL[r], pct=tot?Math.min(100,have/tot*100):0;
+      var have=d[r], tot=TOTAL[r]||0, pct=tot?Math.min(100,have/tot*100):0;
       return '<div class="cocard" style="--cc:var(--c-'+r+')">'+
         '<img class="coimg" src="images/mypage/collection/'+r+'.webp" alt="" onerror="this.closest(\'.cocard\').classList.add(\'noimg\');this.remove();">'+
         '<div class="conum">'+have+' <span>/ '+tot+'</span></div>'+
@@ -333,8 +375,16 @@
     }).join('');
 
     // reward entry status: epic/legendary/mythic (total count of that rarity owned)
+    /* The prize draw belongs to the open beta. There is no equivalent in
+       season 1, so on that tab the block is not drawn at all -- an empty
+       table reading "Not Eligible" would look like a draw the reader had
+       missed rather than one that does not exist. */
+    var resBlock=$('resBlock');
+    if(resBlock) resBlock.style.display = (season==='s0') ? '' : 'none';
+    if(season!=='s0') return;
+
     var cnt={epic:0,legendary:0,mythic:0};
-    owned.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(cnt[r]!=null) cnt[r]++; });
+    rows.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(cnt[r]!=null) cnt[r]++; });
     var prizes=[['epic','EPIC PRIZE','100 Winners'],['legendary','LEGENDARY PRIZE','10 Winners'],['mythic','MYTHIC PRIZE','5 Winners']];
     $('resBody').innerHTML=prizes.map(function(p){
       var r=p[0], c=cnt[r], elig=c>0;
@@ -348,7 +398,12 @@
 
   async function loadReferral(){
     try{
-      var r=await fetch(API+'/referral',{headers:{Authorization:'Bearer '+token()}});
+      /* Follows the tab, like the card figures above it. Without the
+         season the endpoint answers for every season, which is what it
+         did before and what it still does when no tab is shown. */
+      var season=(window.SeasonTabs && SeasonTabs.showsPast()) ? SeasonTabs.current() : '';
+      var url=API+'/referral'+(season?('?season='+encodeURIComponent(season)):'');
+      var r=await fetch(url,{headers:{Authorization:'Bearer '+token()}});
       var j=await r.json();
       $('roTotal').innerHTML=(j.total_referees||0)+'<span class="u">Users</span>';
       $('roValid').innerHTML=(j.valid_ref||0)+'<span class="u">Users</span>';
@@ -413,8 +468,22 @@
     try{ var s=await MEMONS.state(); owned=s.owned||[];
       var caps = (s.pulls_remaining!=null? s.pulls_remaining : (s.event_pulls||0));
       $('capNum').innerHTML=caps+'<small> / '+CAP+'</small>';
-      $('cardNum').innerHTML=owned.length+'<span class="u">Cards</span>';
+      /* CARDS OWNED is set in renderCollection, where the season filter
+         is applied. Setting it here as well would show the all-seasons
+         figure for a moment and then change it. */
     }catch(e){}
+    await loadTotals();
+    if(window.SeasonTabs){
+      await SeasonTabs.ready();
+      if(!seasonMounted){
+        seasonMounted=true;
+        SeasonTabs.mount({ el:$('seasonTabs'), owned:owned, onChange:function(){
+          renderCollection(); loadReferral();
+        }});
+      } else {
+        SeasonTabs.refresh(owned);
+      }
+    }
     renderCollection();
     renderLeaderboard();
     await loadMissions();
