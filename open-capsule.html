@@ -1354,7 +1354,9 @@ if(document.documentElement.classList.contains('embed')){
   <div class="pm">
     <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
     <h3>CHARGE PULLS</h3>
-    <div class="psub">Buy pull credits with USDT. 1 pull = 2 USDT · 10-pack = 18 USDT (10% off)</div>
+    <!-- Rewritten by describe() from the server prices. The text here is
+         only what shows for the instant before they arrive. -->
+    <div class="psub">Buy pull credits with USDT.</div>
     <div class="pm-label">Network</div>
     <div class="pm-chains" id="pmChains"></div>
     <div class="pm-label">Quantity</div>
@@ -1368,9 +1370,9 @@ if(document.documentElement.classList.contains('embed')){
       <span class="qn" id="pmQn">10</span>
       <button id="pmPlus" aria-label="Increase">+</button>
     </div>
-    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">18 USDT</b></div>
+    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">&mdash;</b></div>
     <div class="pm-save" id="pmSave"></div>
-    <button class="pm-pay" id="pmPay">PAY 18 USDT</button>
+    <button class="pm-pay" id="pmPay">PAY</button>
     <div class="pm-status" id="pmStatus"></div>
     <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
   </div>
@@ -1406,14 +1408,41 @@ if(document.documentElement.classList.contains('embed')){
       chainsBox.appendChild(b);
     });
   }
-  function price(n){ return (window.MEMONS&&MEMONS.priceUsdt)?MEMONS.priceUsdt(n):(Math.floor(n/10)*18+(n%10)*2); }
+  /* Every figure in this dialog comes from the server.
+
+     The fallbacks are only for the instant before site_flags answers.
+     They used to be 2 and 18 written into the markup and the arithmetic
+     alike, which stopped being true the moment the prices changed in the
+     admin -- the heading advertised a discount that no longer existed
+     and the saving line invented one. */
+  function cfg(){
+    var p = (window.MEMONS && MEMONS.prices) ? MEMONS.prices() : null;
+    return { single:(p && p.single) || 1, bundle:(p && p.bundle) || 10, size:(p && p.size) || 10 };
+  }
+  function price(n){
+    if(window.MEMONS && MEMONS.priceUsdt) return MEMONS.priceUsdt(n);
+    var c=cfg(); return Math.floor(n/c.size)*c.bundle + (n%c.size)*c.single;
+  }
+  function describe(){
+    var c=cfg(), sub=document.querySelector('#pmModal .psub');
+    if(!sub) return;
+    var full = c.size * c.single,
+        off  = full > c.bundle ? Math.round((full - c.bundle) / full * 100) : 0;
+    sub.textContent = 'Buy pull credits with USDT. 1 pull = ' + c.single +
+      ' USDT \u00b7 ' + c.size + '-pack = ' + c.bundle + ' USDT' +
+      (off > 0 ? ' (' + off + '% off)' : '');
+  }
   function render(){
+    var c=cfg();
     qn.textContent=q;
-    var p=price(q), full=q*2;
+    var p=price(q), full=q*c.single;
     total.textContent=p+' USDT';
     pullsLbl.textContent=q+(q>1?' pulls':' pull');
     payBtn.textContent='PAY '+p+' USDT';
-    save.textContent = full>p ? ('Save '+(full-p)+' USDT with 10-pack pricing') : '';
+    /* Only when there is one. At equal prices the bundle is a convenience,
+       not a saving, and saying otherwise is a claim about money. */
+    save.textContent = full>p ? ('Save '+(full-p)+' USDT with '+c.size+'-pack pricing') : '';
+    describe();
     Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
   }
   function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }

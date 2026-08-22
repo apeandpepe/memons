@@ -219,6 +219,16 @@
   const priceUsdt = priceUnits;
   M.priceUsdt = priceUsdt;
 
+  /* The figures themselves, for anything that has to describe the
+     pricing rather than just total it up. The charge dialog wrote "1
+     pull = 2 USDT, 10-pack = 18 USDT (10% off)" into the page as fixed
+     text and worked out its discount against a hard-coded 2, so when the
+     prices moved to 1 and 10 the sentence was wrong and the saving it
+     claimed did not exist. */
+  M.prices = function () {
+    return { single: SINGLE_USDT, bundle: BUNDLE10_USDT, size: BUNDLE_SIZE };
+  };
+
   // --- helpers ---------------------------------------------------------
   function pad32(h) { return h.padStart(64, "0"); }
   function encodeTransfer(to, amount) {
