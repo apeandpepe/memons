@@ -473,6 +473,15 @@
   .pm-bal{font-size:12px;color:#a99d85;margin-top:14px;text-align:center;border-top:1px solid var(--hair);padding-top:12px}
   .pm-bal b{color:var(--gold)}
 
+  /* Second pay button, quieter than the first. Both are real choices,
+     but sending USDT from the wallet is the one most people arrive
+     wanting; spending an on-site balance is for those who already have
+     one, usually from a buyback. */
+  .pm-alt{margin-top:9px;background:transparent;color:var(--gold);
+    border:1px solid rgba(233,184,74,.45)}
+  .pm-alt:hover{background:rgba(233,184,74,.10);box-shadow:none;filter:none}
+  .pm-alt:disabled{opacity:.45;cursor:default}
+
   /* CHARGE PULLS button, taken off the panel.
      Topping up now happens in one place: ASSETS -> Deposit.
 
@@ -1373,6 +1382,9 @@ if(document.documentElement.classList.contains('embed')){
     <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">&mdash;</b></div>
     <div class="pm-save" id="pmSave"></div>
     <button class="pm-pay" id="pmPay">PAY</button>
+    <!-- Site balance route. Hidden until we know there is a balance to
+         spend, so the dialog stays as it was for anyone without one. -->
+    <button class="pm-pay pm-alt" id="pmPayBal" hidden>PAY WITH BALANCE</button>
     <div class="pm-status" id="pmStatus"></div>
     <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
   </div>
@@ -1390,6 +1402,7 @@ if(document.documentElement.classList.contains('embed')){
       qn=document.getElementById('pmQn'), total=document.getElementById('pmTotal'),
       pullsLbl=document.getElementById('pmPulls'), save=document.getElementById('pmSave'),
       payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
+      payBal=document.getElementById('pmPayBal'),
       bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets'),
       chainsBox=document.getElementById('pmChains');
   var q=10;
@@ -1446,6 +1459,7 @@ if(document.documentElement.classList.contains('embed')){
        not a saving, and saying otherwise is a claim about money. */
     save.textContent = full>p ? ('Save '+(full-p)+' USDT with '+c.size+'-pack pricing') : '';
     describe();
+    renderAlt();
     Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
   }
   function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }
@@ -1456,11 +1470,38 @@ if(document.documentElement.classList.contains('embed')){
   document.getElementById('pmPlus').onclick=function(){ set(q+1); };
   Array.prototype.forEach.call(presets.children,function(b){ b.onclick=function(){ set(+b.dataset.n); }; });
 
+  var siteBal = 0;
+
   async function refreshBal(){
     try{
-      if(window.MEMONS&&MEMONS.connected){ var s=await MEMONS.state(); bal.innerHTML='Remaining pulls: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>'; }
-      else { bal.textContent='Connect wallet to see balance'; }
+      if(window.MEMONS&&MEMONS.connected){
+        var s=await MEMONS.state();
+        /* The on-site balance as well as the pull count. It decides
+           whether the second button appears at all, so it is fetched
+           here rather than only when someone presses something. */
+        try{
+          var m=await MEMONS.authFetch('/market/me');
+          siteBal = Number((m && m.balance && m.balance.available) || 0);
+        }catch(e){ siteBal = 0; }
+        bal.innerHTML='Remaining pulls: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>'+
+          (siteBal>0 ? ' &nbsp;·&nbsp; Balance: <b>'+siteBal.toFixed(2)+' USDT</b>' : '');
+      }
+      else { bal.textContent='Connect wallet to see balance'; siteBal=0; }
     }catch(e){}
+    renderAlt();
+  }
+
+  /* Shown only when the balance covers the order. A button that is
+     visible but always refuses reads as a fault; one that appears when
+     it can be used reads as an option. */
+  function renderAlt(){
+    if(!payBal) return;
+    var p=price(q);
+    payBal.hidden = !(siteBal > 0);
+    payBal.disabled = siteBal < p;
+    payBal.textContent = siteBal < p
+      ? ('BALANCE ' + siteBal.toFixed(2) + ' / ' + p + ' USDT')
+      : ('PAY ' + p + ' USDT WITH BALANCE');
   }
   function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; renderChains(); refreshBal(); }
   function closeModal(){ overlay.classList.remove('on'); }
@@ -1484,6 +1525,25 @@ if(document.documentElement.classList.contains('embed')){
       statusEl.style.color='#e0776a';
       statusEl.textContent=(e&&e.message)?e.message:'Payment failed.';
     }finally{ payBtn.disabled=false; }
+  });
+  if(payBal) payBal.addEventListener('click', async function(){
+    payBal.disabled=true; statusEl.style.color='#978b62';
+    statusEl.textContent='Charging from balance…';
+    try{
+      if(!(window.MEMONS&&MEMONS.connected)){ await MEMONS.connect(); }
+      var r=await MEMONS.authFetch('/buy-pulls', { qty:q });
+      if(r && r.error) throw new Error(r.error);
+      statusEl.style.color='#6fbf73';
+      statusEl.textContent='Charged +'+(r.qty||q)+' pulls!';
+      await refreshBal();
+    }catch(e){
+      var m=(e&&e.message)?String(e.message):'Purchase failed.';
+      statusEl.style.color='#e0776a';
+      statusEl.textContent =
+        m.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.' :
+        m.indexOf('PURCHASES_CLOSED')>=0     ? 'Purchases are closed.' : m;
+      renderAlt();
+    }
   });
   render();
 
