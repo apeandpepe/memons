@@ -142,6 +142,14 @@
   .ambc .al{margin-top:14px;font-family:var(--font-head);font-size:11px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px}
   .ambc .al i{font-size:14px}
 
+  /* Claim button. Only ever drawn for a top-5 referrer, so it is defined
+     here rather than pulled from a shared sheet this page does not use. */
+  .btn.gold{font-family:var(--font-head);font-weight:800;font-size:13px;letter-spacing:1.4px;
+    padding:15px 18px;border-radius:11px;border:0;cursor:pointer;
+    background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1206;
+    text-decoration:none;transition:.15s}
+  .btn.gold:hover{filter:brightness(1.06);box-shadow:0 0 28px -10px var(--gold)}
+
   .note{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.02);padding:14px 16px;margin-top:18px;color:var(--muted);font-size:12.5px}
   .note i{color:var(--dim);font-size:17px}
   @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:24px 16px 70px}.rbanner{display:none}.titlerow2{display:block}}
@@ -244,13 +252,16 @@
       </div>
 
       <div class="panel">
-        <div class="ptitle">AMBASSADOR REWARDS <span class="cs">COMING SOON</span></div>
-        <div class="pdesc">Become an Ambassador (top 5 referrers) and unlock exclusive rewards.</div>
+        <div class="ptitle">AMBASSADOR REWARDS <span class="cs" id="ambTag">COMING SOON</span></div>
+        <div class="pdesc" id="ambDesc">Become an Ambassador (top 5 referrers) and unlock exclusive rewards.</div>
         <div class="amb">
           <div class="ambc"><img src="images/mypage/referral/special-card.webp" alt="" onerror="this.closest('.ambc').classList.add('noimg')"><span class="aimg-fb"></span><div class="at">SPECIAL CARD</div><div class="ad">Exclusive Ambassador Card</div><div class="al"><i class="ti ti-lock"></i>Locked</div></div>
           <div class="ambc"><img src="images/mypage/referral/ambassador.webp" alt="" onerror="this.closest('.ambc').classList.add('noimg')"><span class="aimg-fb"></span><div class="at">AMBASSADOR BENEFITS</div><div class="ad">Exclusive Access &amp; Privileges</div><div class="al"><i class="ti ti-lock"></i>Locked</div></div>
           <div class="ambc"><img src="images/mypage/referral/apepe-token.webp" alt="" onerror="this.closest('.ambc').classList.add('noimg')"><span class="aimg-fb"></span><div class="at">APEPE TOKEN</div><div class="ad">$APEPE Rewards</div><div class="al"><i class="ti ti-lock"></i>Locked</div></div>
         </div>
+        <!-- Filled in for a top-5 referrer. Empty for everyone else, so the
+             panel reads exactly as it did before. -->
+        <div id="ambAction" hidden></div>
       </div>
     </div>
   </div></main>
@@ -283,6 +294,63 @@
   }
   async function post(b){ var r=await fetch(API+'/referral',{method:'POST',headers:{Authorization:'Bearer '+token(),'content-type':'application/json'},body:JSON.stringify(b)}); return await r.json(); }
   function shareText(){ return 'Join MEMONS and open capsules with me! '+link; }
+
+  /* Ambassador panel.
+
+     Top five referrers are the ambassadors. For everyone else the panel
+     stays exactly as it was -- three locked cards and COMING SOON -- so
+     it still reads as something to aim at. For the five it has to say
+     the opposite: you qualified, here is what to do next.
+
+     The reward itself is handed out by hand; the button's job is to get
+     identity verified, which is the one thing that has to happen before
+     anything can be sent. */
+  var AMB_TOP = 5;
+
+  async function renderAmbassador(){
+    var tag=$('ambTag'), desc=$('ambDesc'), box=$('ambAction');
+    if(!tag || !box) return;
+
+    /* Lifetime rank, not the season tab's. The ambassador standing was
+       earned over the open beta and does not change when someone flips
+       to a season with no referrals in it yet. */
+    var rank = stats && stats.rank;
+    if(!(rank && rank <= AMB_TOP)){ box.hidden=true; return; }
+
+    tag.textContent = 'AMBASSADOR #' + rank;
+    tag.style.color = 'var(--good)';
+    desc.textContent = 'You are one of the top ' + AMB_TOP +
+      ' referrers. Verify your identity to receive your rewards.';
+    document.querySelectorAll('.ambc .al').forEach(function(el){
+      el.innerHTML = '<i class="ti ti-circle-check"></i>Unlocked';
+      el.style.color = 'var(--good)';
+    });
+
+    var state='none';
+    try{ var st=await MEMONS.authFetch('/identity/state'); state=(st&&st.state)||'none'; }
+    catch(e){}
+
+    box.hidden=false;
+    if(state==='approved'){
+      box.innerHTML='<div class="note" style="margin-top:18px;color:var(--good)">'+
+        '<i class="ti ti-circle-check"></i>Verified. Your ambassador rewards are being prepared '+
+        'and will be sent to this wallet.</div>';
+    } else if(state==='pending'){
+      box.innerHTML='<div class="note" style="margin-top:18px">'+
+        '<i class="ti ti-clock"></i>Verification in review. Nothing more to do for now.</div>';
+    } else if(state==='locked' || state==='suspended'){
+      /* A dead end, and saying so is kinder than a button that cannot
+         work. Support is the only way out of these two. */
+      box.innerHTML='<div class="note" style="margin-top:18px;color:var(--bad)">'+
+        '<i class="ti ti-alert-triangle"></i>Verification is unavailable on this account. '+
+        'Please contact support.</div>';
+    } else {
+      box.innerHTML='<a class="btn gold" href="mypage-kyc.html" '+
+        'style="display:block;margin-top:18px;text-align:center">CLAIM &mdash; VERIFY IDENTITY</a>'+
+        '<div class="note" style="margin-top:10px"><i class="ti ti-info-circle"></i>'+
+        'Rewards are sent to the verified wallet after the event closes.</div>';
+    }
+  }
 
   function render(){
     /* Two sources on purpose.
@@ -356,6 +424,10 @@
       await loadSeason();
     }
     render();
+    /* After render, and not awaited by it: the panel needs one more
+       request for the identity state, and the rest of the page should
+       not sit blank waiting for it. */
+    renderAmbassador();
     $('copyBtn').onclick=copy; $('shCp').onclick=copy;
     $('shX').onclick=function(){ if(link) window.open('https://x.com/intent/tweet?text='+encodeURIComponent(shareText()),'_blank'); };
     $('shTg').onclick=function(){ if(link) window.open('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent('Join MEMONS and open capsules with me!'),'_blank'); };
