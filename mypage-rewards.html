@@ -227,6 +227,14 @@
   /* Won is a separate state from eligible: before a draw a card is a chance,
      after one it is either a result or it is not. */
   .pot .pstv.won{color:#f0b429}
+
+  /* Claim is the only status that is a link. Given the weight to match:
+     the others report, this one asks. */
+  .pot .pstv.claim{color:#1a1206;text-decoration:none;justify-content:center;
+    background:linear-gradient(180deg,#f4d27a,#E9B84A);
+    border-radius:8px;padding:7px 10px;font-weight:800;letter-spacing:.6px;
+    transition:.15s}
+  .pot .pstv.claim:hover{filter:brightness(1.06)}
   .pot.hi .pstv.won{color:#f0b429}
   .drawnote{display:flex;align-items:center;gap:10px;margin:16px 0 4px;padding:13px 16px;
     border:1px solid rgba(233,184,74,.35);border-radius:11px;background:rgba(233,184,74,.06);
@@ -460,7 +468,7 @@
      to know: entries was simply the card count, and every rarity the user
      held read "Eligible" whether or not a draw had been run. Once a draw
      exists the answer is a fact, and the page has to say which it is. */
-  var drawState = { taken: false, snapshotAt: null, wins: {} };
+  var drawState = { taken: false, snapshotAt: null, wins: {}, payout: {} };
 
   /* Holdings as of the snapshot.
      Eligibility is judged at the moment the snapshot was taken, not by
@@ -487,6 +495,25 @@
         rows.forEach(function(w){ drawState.wins[w.rarity] = w; });
       }
     }catch(e){ /* keep the pre-draw view */ }
+
+    /* Where each prize actually is: verified yet, paid yet.
+
+       lottery_check answers whether they won and nothing else, so the
+       page said "Won" and stopped -- leaving the winner to guess whether
+       anything was expected of them. This carries the rest of the
+       chain. */
+    try{
+      var pres = await fetch(SB_URL + '/rest/v1/rpc/my_reward_status', {
+        method: 'POST',
+        headers: Object.assign({ 'content-type': 'application/json' }, H),
+        body: JSON.stringify({ p_address: MEMONS.address })
+      });
+      var prows = await pres.json();
+      if(Array.isArray(prows)){
+        drawState.payout = {};
+        prows.forEach(function(p){ drawState.payout[p.rarity] = p; });
+      }
+    }catch(e){ /* the Won state still shows; only the detail is missing */ }
 
     // Whether a draw has happened at all, which is what separates
     // "not selected" from "no draw yet".
@@ -547,10 +574,28 @@
          after the draw it means nothing on its own. */
       var statusHtml;
       if(win){
-        // The draw position is recorded but not shown: every winner in a
-        // rarity gets the same prize, so a number next to it only invites
-        // the question of whether a lower one would have been better.
-        statusHtml = '<div class="pstv won"><i class="ti ti-trophy"></i>Won</div>';
+        /* The draw position is recorded but not shown: every winner in a
+           rarity gets the same prize, so a number next to it only invites
+           the question of whether a lower one would have been better.
+
+           What is shown is the stage. A prize passes through verify →
+           review → payout, all of it manual, and a winner who is only
+           told "Won" has no way to know whether they are waiting on us
+           or we are waiting on them. */
+        var pay = (drawState.payout || {})[p.r] || {};
+        if(pay.paid){
+          statusHtml = '<div class="pstv eli"><i class="ti ti-circle-check"></i>Sent</div>';
+        } else if(pay.kyc_state === 'approved'){
+          statusHtml = '<div class="pstv pend"><i class="ti ti-clock"></i>Payout pending</div>';
+        } else if(pay.kyc_state === 'pending' || pay.kyc_state === 'invited'){
+          statusHtml = '<div class="pstv pend"><i class="ti ti-clock"></i>In review</div>';
+        } else if(pay.kyc_state === 'locked' || pay.kyc_state === 'suspended'){
+          statusHtml = '<div class="pstv no"><i class="ti ti-alert-triangle"></i>Contact support</div>';
+        } else {
+          /* The one state with something to do. */
+          statusHtml = '<a class="pstv claim" href="mypage-kyc.html">'+
+            '<i class="ti ti-trophy"></i>Claim</a>';
+        }
       } else if(drawState.taken){
         statusHtml = '<div class="pstv no"><i class="ti ti-circle-x"></i>Not Selected</div>';
       } else if(eligible){
