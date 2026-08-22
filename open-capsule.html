@@ -1257,6 +1257,8 @@
   window.addEventListener('focus', refresh);
 })();
 (function(){
+  var SB_URL_EV="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON_EV="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
   var gateOk=false;   // locked until we confirm (pessimistic; closes the load-window gap)
   var GATE_KEYS=['x_connect','follow','retweet'];   // missions sort 1..3
   function showGate(){ var el=document.getElementById('gateNote');
@@ -1280,11 +1282,31 @@
     if(!window.MEMONS) return;                 // client not loaded yet -> stay locked, keep polling
     if(!MEMONS.connected){ gateOk=true; hideGate(); setButtons(true); return; } // allow; reveal + server handle it
     decided=true;                              // connected -> make the real decision once
-    MEMONS.authFetch('/missions').then(function(d){
-      var byKey={}; (d.missions||[]).forEach(function(m){ byKey[m.key]=m; });
-      gateOk=GATE_KEYS.every(function(k){ var m=byKey[k]; return m && (m.done || m.claimed>0); });
-      if(gateOk){ hideGate(); setButtons(true); } else { showGate(); setButtons(false); }
-    }).catch(function(){ gateOk=true; hideGate(); setButtons(true); }); // on error don't hard-block; server enforces
+
+    /* The gate only means something while the event is running.
+
+       Missions 1-3 were the price of a free beta capsule. With the event
+       closed the missions page is closed with it, so there is no way to
+       complete them -- and this check was refusing to open capsules that
+       had just been paid for, with a link to a page that is not there.
+
+       event_public.mission_active is the same flag the missions page and
+       the server read, so all three agree. Read with the publishable key
+       like the maintenance gate does. */
+    fetch(SB_URL_EV+'/rest/v1/event_public?id=eq.1&select=mission_active',
+          { headers:{ apikey:SB_ANON_EV, Authorization:'Bearer '+SB_ANON_EV },
+            cache:'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(rows){
+        var on = !!(rows && rows[0] && rows[0].mission_active === true);
+        if(!on){ gateOk=true; hideGate(); setButtons(true); return null; }
+        return MEMONS.authFetch('/missions').then(function(d){
+          var byKey={}; (d.missions||[]).forEach(function(m){ byKey[m.key]=m; });
+          gateOk=GATE_KEYS.every(function(k){ var m=byKey[k]; return m && (m.done || m.claimed>0); });
+          if(gateOk){ hideGate(); setButtons(true); } else { showGate(); setButtons(false); }
+        });
+      })
+      .catch(function(){ gateOk=true; hideGate(); setButtons(true); }); // on error don't hard-block; server enforces
   }
   var decided=false, tries=0;
   setButtons(false);                           // start locked until confirmed
