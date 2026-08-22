@@ -1481,7 +1481,13 @@ if(document.documentElement.classList.contains('embed')){
            here rather than only when someone presses something. */
         try{
           var m=await MEMONS.authFetch('/market/me');
-          siteBal = Number((m && m.balance && m.balance.available) || 0);
+          /* /market/me answers with balance as a plain number, not an
+             object -- reading .available off it gave undefined every
+             time, so the balance read as zero and the button stayed
+             hidden for everyone. The object form is kept as a fallback
+             in case the endpoint ever grows one. */
+          var b = m && m.balance;
+          siteBal = Number((b && typeof b === 'object') ? b.available : b) || 0;
         }catch(e){ siteBal = 0; }
         bal.innerHTML='Remaining pulls: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>'+
           (siteBal>0 ? ' &nbsp;·&nbsp; Balance: <b>'+siteBal.toFixed(2)+' USDT</b>' : '');
