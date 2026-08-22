@@ -2108,7 +2108,10 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
   </div>
 </div>
 
-<script src="memons-pay.js"></script>
+<!-- ?v2: the file changed but kept its name, and browsers hold on to
+     scripts hard. An old copy still prices capsules at the previous
+     figures while the page around it shows the new ones. -->
+<script src="memons-pay.js?v2"></script>
 <script>
 (function(){
   var overlay=document.getElementById('pmOverlay'),

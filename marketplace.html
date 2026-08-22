@@ -1285,7 +1285,10 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
-<script src="memons-pay.js"></script>
+<!-- ?v2: the file changed but kept its name, and browsers hold on to
+     scripts hard. An old copy still prices capsules at the previous
+     figures while the page around it shows the new ones. -->
+<script src="memons-pay.js?v2"></script>
 <script>/*embed-mode*/if(location.hash.indexOf("embed")>=0){document.documentElement.classList.add("embed");
   function __mkH(){var a=document.querySelector(".app");return a?Math.ceil(a.getBoundingClientRect().height):document.body.offsetHeight;}
   function __mkPostH(){try{parent.postMessage({embedHeight:__mkH()},"*");}catch(e){}}
