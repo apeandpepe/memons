@@ -1537,7 +1537,22 @@ if(document.documentElement.classList.contains('embed')){
     statusEl.textContent='Charging from balance…';
     try{
       if(!(window.MEMONS&&MEMONS.connected)){ await MEMONS.connect(); }
-      var r=await MEMONS.authFetch('/buy-pulls', { qty:q });
+      /* /game, not a route of its own. The purchase was added to the
+         game function because that one already authenticates; a fresh
+         function refused the same token before its code ran. */
+      var r;
+      try{
+        r=await MEMONS.authFetch('/game', { qty:q });
+      }catch(e1){
+        /* The token expires on its own clock while the page still shows
+           a connected wallet, so the first anyone hears of it is a
+           refusal. Re-signing and trying once is what the user would do
+           by hand, minus the guessing. */
+        if(String(e1 && e1.message).indexOf('SESSION_EXPIRED')<0) throw e1;
+        statusEl.textContent='Session expired \u2014 confirm in your wallet…';
+        await MEMONS.connect();
+        r=await MEMONS.authFetch('/game', { qty:q });
+      }
       if(r && r.error) throw new Error(r.error);
       statusEl.style.color='#6fbf73';
       statusEl.textContent='Charged +'+(r.qty||q)+' pulls!';
@@ -1547,7 +1562,8 @@ if(document.documentElement.classList.contains('embed')){
       statusEl.style.color='#e0776a';
       statusEl.textContent =
         m.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.' :
-        m.indexOf('PURCHASES_CLOSED')>=0     ? 'Purchases are closed.' : m;
+        m.indexOf('PURCHASES_CLOSED')>=0     ? 'Purchases are closed.' :
+        m.indexOf('SESSION_EXPIRED')>=0      ? 'Session expired. Reconnect your wallet and try again.' : m;
       renderAlt();
     }
   });
