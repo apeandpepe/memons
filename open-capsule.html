@@ -1356,7 +1356,7 @@ if(document.documentElement.classList.contains('embed')){
     <h3>CHARGE PULLS</h3>
     <!-- Rewritten by describe() from the server prices. The text here is
          only what shows for the instant before they arrive. -->
-    <div class="psub">Buy pull credits with USDT.</div>
+    <div class="psub" id="pmSub">Buy pull credits with USDT.</div>
     <div class="pm-label">Network</div>
     <div class="pm-chains" id="pmChains"></div>
     <div class="pm-label">Quantity</div>
@@ -1424,7 +1424,7 @@ if(document.documentElement.classList.contains('embed')){
     var c=cfg(); return Math.floor(n/c.size)*c.bundle + (n%c.size)*c.single;
   }
   function describe(){
-    var c=cfg(), sub=document.querySelector('#pmModal .psub');
+    var c=cfg(), sub=document.getElementById('pmSub');
     if(!sub) return;
     var full = c.size * c.single,
         off  = full > c.bundle ? Math.round((full - c.bundle) / full * 100) : 0;
@@ -1446,6 +1446,9 @@ if(document.documentElement.classList.contains('embed')){
     Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
   }
   function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }
+  /* Redrawn when the prices arrive, and again whenever they are refetched
+     -- the dialog may already be open and showing the fallbacks. */
+  document.addEventListener('memons:prices', render);
   document.getElementById('pmMinus').onclick=function(){ set(q-1); };
   document.getElementById('pmPlus').onclick=function(){ set(q+1); };
   Array.prototype.forEach.call(presets.children,function(b){ b.onclick=function(){ set(+b.dataset.n); }; });

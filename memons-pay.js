@@ -82,6 +82,13 @@
         if (j.prices.single   > 0) SINGLE_USDT   = Number(j.prices.single);
         if (j.prices.bundle10 > 0) BUNDLE10_USDT = Number(j.prices.bundle10);
         if (j.prices.bundle_size > 0) BUNDLE_SIZE = Number(j.prices.bundle_size);
+        /* Anything showing a price drew it before this answer arrived,
+           from the fallbacks at the top of this file. Without a nudge it
+           keeps them: the charge dialog was quoting the old 2 and 18
+           against a server charging 1 and 10. */
+        try {
+          document.dispatchEvent(new CustomEvent("memons:prices"));
+        } catch (e) {}
       }
     } catch (e) {}
     return DEPOSITS_ENABLED;
