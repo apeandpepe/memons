@@ -1272,6 +1272,26 @@
     .mkm-book .mkm-depth{height:auto}
     .mkm-side{height:calc(6 * 27px)}
   }
+
+  /* ---------------------------------------------------------------
+     MARKET CLOSED
+     거래 스위치를 끄면 이 화면은 아무것도 없는 빈 표만 보였다. 매물이
+     없는 것과 닫혀 있는 것을 구분할 수 없어서, 유저는 고장으로 읽는다.
+
+     다시 열 때는 어드민 스위치만 켜면 된다. 이 덮개는 스위치를 읽어서
+     스스로 사라진다.
+     --------------------------------------------------------------- */
+  .mkveil{position:fixed;inset:0;z-index:200;display:none;
+    align-items:center;justify-content:center;text-align:center;padding:32px;
+    background:rgba(6,6,8,.93);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+  .mkveil.on{display:flex}
+  .mkveil-in{max-width:460px}
+    .mkveil .mv-t{font-family:var(--f-head,inherit);font-weight:800;font-size:24px;
+    letter-spacing:5px;color:var(--gold,#E9B84A)}
+  .mkveil .mv-s{font-size:13.5px;color:#8d8a82;margin-top:14px;line-height:1.8}
+  @media(max-width:560px){
+    .mkveil .mv-t{font-size:18px;letter-spacing:3px}
+  }
 </style>
   <script src="maintenance.js" defer></script>
 </head>
@@ -1302,6 +1322,40 @@
   });
 }</script>
 <div class="app">
+<!-- MARKET CLOSED. 아래 스크립트가 거래 스위치를 읽어 켜고 끈다. -->
+<div class="mkveil" id="mkVeil">
+  <div class="mkveil-in">
+    <div class="mv-t">COMING SOON</div>
+    <div class="mv-s">The marketplace is being prepared.<br>
+      Your cards stay in your collection until it opens.</div>
+  </div>
+</div>
+<script>
+(function(){
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  /* 스위치를 못 읽으면 덮개를 씌우지 않는다. 열려 있는 마켓을 통신 한 번
+     실패했다고 닫아버리는 것보다, 닫힌 마켓이 잠깐 비어 보이는 편이 낫다.
+     서버는 어느 쪽이든 거래를 거절한다. */
+  function apply(open){
+    var v=document.getElementById('mkVeil');
+    if(v) v.classList.toggle('on', open===false);
+  }
+  function check(){
+    fetch(SB_URL+'/rest/v1/rpc/site_flags', {
+      method:'POST',
+      headers:{ 'content-type':'application/json',
+                apikey:SB_ANON, Authorization:'Bearer '+SB_ANON },
+      body:'{}', cache:'no-store'
+    }).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if(j) apply(j.market === true); })
+      .catch(function(){});
+  }
+  check();
+  /* 어드민에서 열면 새로고침 없이 사라지도록. 점검 게이트와 같은 주기다. */
+  setInterval(check, 20000);
+})();
+</script>
 
 <header class="head">
   <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
@@ -3241,7 +3295,7 @@
     }catch(e){
       var msg=String((e&&e.message)||e);
       var human={
-        MARKET_CLOSED:'The market is closed.',
+        MARKET_CLOSED:'Trading requires identity verification. Verify in My Page \u2192 KYC.',
         INSUFFICIENT_BALANCE:'Not enough balance.',
         BELOW_FLOOR:'That price is below the floor.',
         CANNOT_BUY_OWN:'That listing is yours.',
