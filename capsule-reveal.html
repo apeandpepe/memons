@@ -2089,7 +2089,9 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
   <div class="pm">
     <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
     <h3>CHARGE PULLS</h3>
-    <div class="psub">Buy pull credits with USDT (Polygon). 1 pull = 2 USDT · 10-pack = 18 USDT (10% off)</div>
+    <!-- Rewritten by describe() from the server prices. The text here is
+         only what shows for the instant before they arrive. -->
+    <div class="psub" id="pmSub">Buy pull credits with USDT (Polygon).</div>
     <div class="pm-presets" id="pmPresets">
       <button data-n="1">1</button>
       <button data-n="10" class="on">10</button>
@@ -2100,9 +2102,9 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
       <span class="qn" id="pmQn">10</span>
       <button id="pmPlus" aria-label="Increase">+</button>
     </div>
-    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">18 USDT</b></div>
+    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">&mdash;</b></div>
     <div class="pm-save" id="pmSave"></div>
-    <button class="pm-pay" id="pmPay">PAY 18 USDT</button>
+    <button class="pm-pay" id="pmPay">PAY</button>
     <div class="pm-status" id="pmStatus"></div>
     <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
   </div>
@@ -2120,16 +2122,44 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
       payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
       bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets');
   var q=10;
-  function price(n){ return (window.MEMONS&&MEMONS.priceUsdt)?MEMONS.priceUsdt(n):(Math.floor(n/10)*18+(n%10)*2); }
+  /* Every figure here comes from the server.
+
+     This dialog is a copy of the one on the capsule page, and it kept the
+     2 and 18 that were written in when those were the prices. The server
+     has been charging 1 and 10 since the season opened, so a reader was
+     told one number and billed another. */
+  function cfg(){
+    var pr = (window.MEMONS && MEMONS.prices) ? MEMONS.prices() : null;
+    return { single:(pr && pr.single) || 1, bundle:(pr && pr.bundle) || 10, size:(pr && pr.size) || 10 };
+  }
+  function price(n){
+    if(window.MEMONS && MEMONS.priceUsdt) return MEMONS.priceUsdt(n);
+    var c=cfg(); return Math.floor(n/c.size)*c.bundle + (n%c.size)*c.single;
+  }
+  function describe(){
+    var c=cfg(), sub=document.getElementById('pmSub');
+    if(!sub) return;
+    var full = c.size * c.single,
+        off  = full > c.bundle ? Math.round((full - c.bundle) / full * 100) : 0;
+    sub.textContent = 'Buy pull credits with USDT (Polygon). 1 pull = ' + c.single +
+      ' USDT \u00b7 ' + c.size + '-pack = ' + c.bundle + ' USDT' +
+      (off > 0 ? ' (' + off + '% off)' : '');
+  }
   function render(){
+    var c=cfg();
     qn.textContent=q;
-    var p=price(q), full=q*2;
+    var p=price(q), full=q*c.single;
     total.textContent=p+' USDT';
     pullsLbl.textContent=q+(q>1?' pulls':' pull');
     payBtn.textContent='PAY '+p+' USDT';
-    save.textContent = full>p ? ('Save '+(full-p)+' USDT with 10-pack pricing') : '';
+    /* Only when there is one. At equal prices the bundle is a convenience,
+       not a saving, and saying otherwise is a claim about money. */
+    save.textContent = full>p ? ('Save '+(full-p)+' USDT with '+c.size+'-pack pricing') : '';
+    describe();
     Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
   }
+  /* Redrawn when the prices land; the dialog may already be open. */
+  document.addEventListener('memons:prices', render);
   function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }
   document.getElementById('pmMinus').onclick=function(){ set(q-1); };
   document.getElementById('pmPlus').onclick=function(){ set(q+1); };
