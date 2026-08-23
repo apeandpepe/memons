@@ -1283,14 +1283,36 @@
      --------------------------------------------------------------- */
   .mkveil{position:fixed;inset:0;z-index:200;display:none;
     align-items:center;justify-content:center;text-align:center;padding:32px;
-    background:rgba(6,6,8,.93);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+    background:radial-gradient(120% 90% at 50% 45%, rgba(20,17,10,.90), rgba(4,4,6,.97));
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
   .mkveil.on{display:flex}
-  .mkveil-in{max-width:460px}
-    .mkveil .mv-t{font-family:var(--f-head,inherit);font-weight:800;font-size:24px;
-    letter-spacing:5px;color:var(--gold,#E9B84A)}
-  .mkveil .mv-s{font-size:13.5px;color:#8d8a82;margin-top:14px;line-height:1.8}
+  /* 카드 한 장처럼. 문구만 떠 있으면 화면이 덜 그려진 것처럼 보인다. */
+  .mkveil-in{max-width:470px;width:100%;padding:44px 38px;border-radius:18px;
+    border:1px solid rgba(233,184,74,.22);
+    background:linear-gradient(180deg,rgba(233,184,74,.045),rgba(255,255,255,.012));
+    box-shadow:0 0 70px -30px rgba(233,184,74,.55)}
+  .mkveil .mv-kicker{font-family:var(--font-head);font-size:10.5px;font-weight:600;
+    letter-spacing:3.4px;color:#7a6a45;margin-bottom:16px}
+  .mkveil .mv-t{font-family:var(--font-head);font-weight:700;font-size:27px;
+    letter-spacing:4px;line-height:1.25;
+    background:linear-gradient(180deg,#f7dd9d,#E9B84A);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  /* 제목 아래 짧은 금선. 두 덩어리를 갈라 주는 역할만 한다. */
+  .mkveil .mv-rule{width:52px;height:1px;margin:18px auto 0;
+    background:linear-gradient(90deg,transparent,rgba(233,184,74,.75),transparent)}
+  .mkveil .mv-s{font-family:var(--font-body);font-size:13.5px;color:#9a958a;
+    margin-top:18px;line-height:1.85}
+  /* 인증 안내일 때만 나온다. 닫힘 안내에는 갈 곳이 없으므로 숨는다. */
+  .mkveil .mv-go{display:none;margin-top:26px;padding:15px 30px;border-radius:11px;
+    border:0;cursor:pointer;text-decoration:none;
+    font-family:var(--font-head);font-weight:700;font-size:12.5px;letter-spacing:2px;
+    background:linear-gradient(180deg,#f4d27a,#E9B84A);color:#1a1206;transition:.15s}
+  .mkveil .mv-go:hover{filter:brightness(1.07);box-shadow:0 0 32px -8px rgba(233,184,74,.7)}
+  .mkveil.kyc .mv-go{display:inline-block}
   @media(max-width:560px){
-    .mkveil .mv-t{font-size:18px;letter-spacing:3px}
+    .mkveil{padding:20px}
+    .mkveil-in{padding:34px 24px}
+    .mkveil .mv-t{font-size:20px;letter-spacing:2.5px}
   }
 </style>
   <script src="maintenance.js" defer></script>
@@ -1322,25 +1344,50 @@
   });
 }</script>
 <div class="app">
-<!-- MARKET CLOSED. 아래 스크립트가 거래 스위치를 읽어 켜고 끈다. -->
+<!-- 덮개 하나로 두 가지를 말한다. 마켓이 닫혔을 때와, 열려 있지만
+     본인인증을 아직 안 했을 때. 덮개를 둘 두면 서로 겹친다. -->
 <div class="mkveil" id="mkVeil">
   <div class="mkveil-in">
-    <div class="mv-t">COMING SOON</div>
-    <div class="mv-s">The marketplace is being prepared.<br>
+    <div class="mv-kicker" id="mvKicker">MEMONS MARKETPLACE</div>
+    <div class="mv-t" id="mvTitle">COMING SOON</div>
+    <div class="mv-rule"></div>
+    <div class="mv-s" id="mvSub">The marketplace is being prepared.<br>
       Your cards stay in your collection until it opens.</div>
+    <a class="mv-go" href="mypage-kyc.html" target="_top">VERIFY IDENTITY</a>
   </div>
 </div>
 <script>
 (function(){
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
-  /* 스위치를 못 읽으면 덮개를 씌우지 않는다. 열려 있는 마켓을 통신 한 번
-     실패했다고 닫아버리는 것보다, 닫힌 마켓이 잠깐 비어 보이는 편이 낫다.
-     서버는 어느 쪽이든 거래를 거절한다. */
-  function apply(open){
+
+  var TXT = {
+    closed: ['MEMONS MARKETPLACE', 'COMING SOON',
+             'The marketplace is being prepared.<br>'+
+             'Your cards stay in your collection until it opens.'],
+    kyc:    ['VERIFIED MEMBERS ONLY', 'VERIFY TO TRADE',
+             'Trading is open to verified members.<br>'+
+             'It takes a few minutes, and only once.'],
+    /* 인증은 끝났는데 거래가 막힌 경우. 지금은 보상 카드를 지급하기
+       전까지 걸어둔 임시 차단이 그 이유다. 이 사람들에게 "인증하세요"를
+       보여주면 이미 한 일을 또 하라는 말이 된다. */
+    wait:   ['VERIFICATION COMPLETE', 'PREPARING YOUR CARDS',
+             'Your identity is verified.<br>'+
+             'Trading opens once your reward cards are issued.']
+  };
+
+  function show(kind){
     var v=document.getElementById('mkVeil');
-    if(v) v.classList.toggle('on', open===false);
+    if(!v) return;
+    if(!kind){ v.classList.remove('on','kyc'); return; }
+    var t=TXT[kind];
+    document.getElementById('mvKicker').textContent = t[0];
+    document.getElementById('mvTitle').textContent  = t[1];
+    document.getElementById('mvSub').innerHTML      = t[2];
+    v.classList.toggle('kyc', kind==='kyc');
+    v.classList.add('on');
   }
+
   function check(){
     fetch(SB_URL+'/rest/v1/rpc/site_flags', {
       method:'POST',
@@ -1348,12 +1395,32 @@
                 apikey:SB_ANON, Authorization:'Bearer '+SB_ANON },
       body:'{}', cache:'no-store'
     }).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(j){ if(j) apply(j.market === true); })
+      .then(function(j){
+        if(!j) return;
+        if(j.market !== true){ show('closed'); return; }
+
+        /* 지갑을 연결하지 않았으면 덮지 않는다. 처음 온 사람이 시세도
+           매물도 못 보고 벽부터 만나면 인증할 이유를 알 수가 없다.
+           거래를 누르는 순간 서버가 막고, 그때 이유가 나온다. */
+        if(!(window.MEMONS && MEMONS.connected)){ show(null); return; }
+
+        return MEMONS.authFetch('/market/me').then(function(me){
+          if(me && me.enabled === true){ show(null); return; }
+          /* 막혀 있다면 이유가 둘이다. 인증을 안 했거나, 인증은 했는데
+             다른 사정으로 아직 못 하거나. 물어보고 맞는 쪽을 보여준다. */
+          return MEMONS.authFetch('/identity/state').then(function(st){
+            show((st && st.state === 'approved') ? 'wait' : 'kyc');
+          }).catch(function(){ show('kyc'); });
+        }).catch(function(){ show(null); });
+      })
       .catch(function(){});
   }
+
   check();
-  /* 어드민에서 열면 새로고침 없이 사라지도록. 점검 게이트와 같은 주기다. */
+  /* 인증이 끝나거나 어드민이 마켓을 열면 새로고침 없이 사라지도록. */
   setInterval(check, 20000);
+  document.addEventListener('memons:connected', check);
+  document.addEventListener('memons:disconnected', check);
 })();
 </script>
 
@@ -3209,7 +3276,7 @@
 
     var qty=Math.max(1, Math.floor(Number($m('mQty').value)||1));
     var me=String(MEMONS.address).toLowerCase();
-    var done=0, resting=0, lastPrice=null, stopped=null, result=null;
+    var done=0, resting=0, lastPrice=null, stopped=null, result=null, failed=null;
     // Levels this order consumed, so the book can drop them before the
     // server is asked again.
     var taken=[];
@@ -3313,13 +3380,21 @@
         CARD_USED_FOR_REWARD:'That card was used for a reward.'
       };
       var key=Object.keys(human).find(function(k){return msg.indexOf(k)>=0;});
-      note(key?human[key]:'Something went wrong. Please try again.',true);
+      failed=key?human[key]:'Something went wrong. Please try again.';
+      note(failed,true);
     }finally{
       busy=false; go.disabled=false; go.textContent=label;
       // onPrice rewrites the note with the next-action hint, which would
       // erase what just happened before anyone read it.
       onPrice();
       if(result) note(result);
+      /* And the same for a refusal.
+
+         Only the success line was being put back, so a failed order showed
+         its reason for an instant and then had it wiped by onPrice() --
+         which reads, from the outside, as the button doing nothing at all.
+         A refused trade is exactly when the reason matters most. */
+      if(failed) note(failed,true);
     }
   }
 
