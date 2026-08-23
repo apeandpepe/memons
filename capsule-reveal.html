@@ -2148,9 +2148,11 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
     if(!sub) return;
     var full = c.size * c.single,
         off  = full > c.bundle ? Math.round((full - c.bundle) / full * 100) : 0;
-    sub.textContent = 'Buy pull credits with USDT (Polygon). 1 pull = ' + c.single +
-      ' USDT \u00b7 ' + c.size + '-pack = ' + c.bundle + ' USDT' +
-      (off > 0 ? ' (' + off + '% off)' : '');
+    /* The bundle line only when the bundle is cheaper. At equal prices a
+       10-pack is just ten of them, and printing its total reads as an
+       offer that is not being made. */
+    sub.textContent = 'Buy pull credits with USDT (Polygon). 1 pull = ' + c.single + ' USDT' +
+      (off > 0 ? ' \u00b7 ' + c.size + '-pack = ' + c.bundle + ' USDT (' + off + '% off)' : '');
   }
   function render(){
     var c=cfg();
