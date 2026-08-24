@@ -23,9 +23,14 @@
 
      Defaults hold until the first lookup answers, so a slow network shows
      the usual figures rather than zero. */
-  let SINGLE_USDT = 2;       // one capsule
-  let BUNDLE10_USDT = 18;    // one bundle
-  let BUNDLE_SIZE = 10;      // capsules per bundle -- a column, not a constant
+  /* 아래 넷은 모두 예비값이다. site_flags 응답이 오면 덮어쓴다.
+
+     화면에 숫자를 적어 두면 어드민에서 값을 바꿔도 따라오지 않는다.
+     오픈 첫날 1 달러를 받으면서 2 달러라고 안내한 것이 그 때문이었다. */
+  let SINGLE_USDT   = 1;     // 낱개 한 개
+  let BUNDLE10_USDT = 10;    // 묶음 한 벌
+  let BUNDLE_SIZE   = 10;    // 묶음 한 벌에 들어가는 수
+  let MAX_PULLS     = 500;   // 한 번에 살 수 있는 최대 수량
   /* Deposits are governed by the database, not by this file.
 
      It used to be a constant here and another in verify-payment, and both
@@ -82,6 +87,7 @@
         if (j.prices.single   > 0) SINGLE_USDT   = Number(j.prices.single);
         if (j.prices.bundle10 > 0) BUNDLE10_USDT = Number(j.prices.bundle10);
         if (j.prices.bundle_size > 0) BUNDLE_SIZE = Number(j.prices.bundle_size);
+        if (j.prices.max > 0) MAX_PULLS = Number(j.prices.max);
         /* Anything showing a price drew it before this answer arrived,
            from the fallbacks at the top of this file. Without a nudge it
            keeps them: the charge dialog was quoting the old 2 and 18
@@ -233,7 +239,8 @@
      prices moved to 1 and 10 the sentence was wrong and the saving it
      claimed did not exist. */
   M.prices = function () {
-    return { single: SINGLE_USDT, bundle: BUNDLE10_USDT, size: BUNDLE_SIZE };
+    return { single: SINGLE_USDT, bundle: BUNDLE10_USDT, size: BUNDLE_SIZE,
+             max: MAX_PULLS };
   };
 
   // --- helpers ---------------------------------------------------------
