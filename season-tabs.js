@@ -35,9 +35,22 @@
 
   var state = {
     season:   CURRENT,
-    showPast: false,         // stays false until the flag says otherwise
+    showPast: false,        // stays false until the flag says otherwise
+    force:    false,        // a screen that keeps its tabs whatever the flag says
     mounted:  [],
   };
+
+  /* Whether the past season is on screen at all.
+
+     The admin's one switch was built for cards, and turning it off is
+     right for them -- the open beta cards were folded into season 1, so
+     there is no second set to choose between any more.
+
+     Referrals did not merge. Season 0 referrals are still a separate
+     count, split on the date the season opened, and that screen has to
+     keep its tabs after the switch goes off. It asks for them with
+     mount({ always:true }). */
+  function shown() { return state.force || state.showPast; }
 
   /* Which season a row belongs to.
 
@@ -58,7 +71,7 @@
     /* With the past season hidden, its rows are gone from every screen
        -- not merely untabbed. A hidden tab that still counted towards
        the totals would be worse than showing it. */
-    if (!state.showPast) {
+    if (!shown()) {
       return list.filter(function (r) { return seasonOf(r) === CURRENT; });
     }
     return list.filter(function (r) { return seasonOf(r) === state.season; });
@@ -87,7 +100,7 @@
     if (!m.el) return;
     /* One season to show means nothing to choose between, so the row is
        left empty rather than drawn as a single dead tab. */
-    if (!state.showPast) { m.el.innerHTML = ''; return; }
+    if (!shown()) { m.el.innerHTML = ''; return; }
     var on = state.season;
     m.el.className = 'stabs';
     m.el.innerHTML =
@@ -115,7 +128,7 @@
      if there is nothing in the current season and something in the
      past one, that is where the page opens. */
   function pickDefault(owned) {
-    if (!state.showPast || !owned || !owned.length) return;
+    if (!shown() || !owned || !owned.length) return;
     var hasNow = false, hasPast = false;
     for (var i = 0; i < owned.length; i++) {
       if (seasonOf(owned[i]) === CURRENT) hasNow = true; else hasPast = true;
@@ -130,6 +143,7 @@
       el:       opts && opts.el,
       onChange: opts && opts.onChange,
     };
+    if (opts && opts.always) state.force = true;
     state.mounted.push(m);
     if (opts && opts.owned) pickDefault(opts.owned);
     paint(m);
@@ -159,8 +173,8 @@
        up unfiltered and then changing under the reader. */
     ready:     function (cb) { return cb ? ready.then(cb) : ready; },
     mount:     mount,
-    current:   function () { return state.showPast ? state.season : CURRENT; },
-    showsPast: function () { return state.showPast; },
+    current:   function () { return shown() ? state.season : CURRENT; },
+    showsPast: function () { return shown(); },
     seasonOf:  seasonOf,
     filter:    filter,
     refresh:   function (owned) {
