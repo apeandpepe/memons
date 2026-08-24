@@ -1294,18 +1294,20 @@
   .mkgate-box{width:min(400px,100%);padding:34px 30px;border-radius:16px;text-align:center;
     border:1px solid rgba(233,184,74,.24);background:#0e0e10;
     box-shadow:0 24px 70px -24px rgba(0,0,0,.9)}
-  .mkgate-t{font-family:var(--font-head);font-weight:700;font-size:19px;letter-spacing:2.6px;
-    color:#E9B84A}
-  .mkgate-s{font-family:var(--font-body);font-size:13.5px;color:#9a958a;
-    margin-top:14px;line-height:1.8}
-  .mkgate-go{display:block;width:100%;margin-top:24px;padding:15px 18px;border:0;
-    border-radius:11px;cursor:pointer;font-family:var(--font-head);font-weight:700;
-    font-size:12.5px;letter-spacing:1.8px;
-    background:linear-gradient(180deg,#f4d27a,#E9B84A);color:#1a1206;transition:.15s}
-  .mkgate-go:hover{filter:brightness(1.06)}
-  .mkgate-x{display:block;width:100%;margin-top:9px;padding:13px 18px;border:0;
-    border-radius:11px;cursor:pointer;background:transparent;color:#8d8a82;
-    font-family:var(--font-body);font-size:13px}
+  /* 이 화면의 다른 창과 같은 규칙을 따른다. 제목만 헤드 서체를 쓰고,
+     본문과 버튼은 기본 서체에 굵기로 무게를 준다. 팝업 하나만 다른
+     서체를 쓰면 붙여 넣은 것처럼 보인다. */
+  .mkgate-t{font-family:var(--font-head,inherit);font-size:20px;font-weight:800;
+    letter-spacing:-.2px;color:var(--gold)}
+  .mkgate-s{font:inherit;font-size:13.5px;color:#8d8a82;margin-top:12px;line-height:1.75}
+  .mkgate-go{display:block;width:100%;margin-top:22px;font:inherit;font-size:14px;
+    font-weight:800;letter-spacing:1.4px;color:#100d05;
+    background:linear-gradient(140deg,var(--gold-a),var(--gold));
+    border:0;border-radius:11px;padding:15px;cursor:pointer;transition:.15s}
+  .mkgate-go:hover{filter:brightness(1.08)}
+  .mkgate-x{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;
+    color:#8d8a82;background:transparent;border:0;border-radius:11px;
+    padding:13px;cursor:pointer;transition:.15s}
   .mkgate-x:hover{color:#e8e6e0}
 
   /* 1250. 마켓이 닫혔을 때 화면을 덮는다. 카드 상세 창(1200)보다는
@@ -2038,19 +2040,15 @@
       if(tab==='sell'){
         if(!myCards) return false;
         if(!myCards[c.card_id]) return false;
-      }else{
-        /* Cards nobody is trading are left out of the browse tab.
-           market_list returns every active card, so a hundred of them
-           showed as NO LISTING and the handful actually for sale were
-           somewhere down the page.
-
-           A bid with no ask still counts. There is nothing to buy, but it
-           is the market telling a holder where their card can be sold,
-           and in the opening weeks that is most of what is here. The sell
-           tab is unaffected -- it lists what you own, whether or not
-           anyone has quoted it. */
-        if(c.ask==null && c.bid==null) return false;
       }
+      /* 주문이 없는 카드도 남긴다.
+
+         한때는 아무도 사거나 팔지 않는 카드를 BUY 탭에서 빼두었다. 매물이
+         있는 몇 장이 목록 아래로 밀리지 않게 하려는 것이었다.
+
+         그러면 첫 주문을 걸 수가 없다. 사고 싶은 카드가 목록에 없으니
+         매수 제안을 넣을 대상이 없고, 아무도 걸지 않으니 계속 비어 있다.
+         정렬이 매물 있는 것을 위로 올리므로, 목록에 두어도 묻히지 않는다. */
       if(filter && c.rarity!==filter) return false;
       if(t && title(c).toLowerCase().indexOf(t)<0
            && String(c.card_id||'').toLowerCase().indexOf(t)<0) return false;
@@ -2434,11 +2432,13 @@
     drawChart(); drawMini(); syncSel();
   }
 
-  /* Five days with trades in them, anywhere in the series -- not five in
-     the current window. The threshold is a property of the card, so
-     switching to 24H on a card that has months of history should not make
-     the chart disappear. */
-  var CHART_MIN_DAYS = 3;
+  /* 거래가 있었던 날의 수. 이 값 이상이어야 차트를 그린다. 현재 창이
+     아니라 전체 기록 기준이므로, 24H 로 바꿨다고 차트가 사라지지 않는다.
+
+     1 로 둔다. 세 개를 요구하면 첫 거래가 나온 뒤로도 사흘을 기다려야
+     차트가 보이고, 그동안은 거래가 일어나고 있다는 사실 자체가 화면에
+     드러나지 않는다. 점 하나짜리 차트가 빈 화면보다 낫다. */
+  var CHART_MIN_DAYS = 1;
 
   /* The three figures above the plot, from whatever slice is passed in.
      Split out so the not-enough-data state can still show them: an average
