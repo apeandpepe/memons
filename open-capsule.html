@@ -499,6 +499,9 @@
   .pm-qty button{width:46px;height:46px;background:transparent;border:0;color:var(--gold);font-size:20px;cursor:pointer}
   .pm-qty button:hover{background:rgba(233,184,74,.1)}
   .pm-qty .qn{flex:1;text-align:center;font-weight:600;font-size:16px;color:#fff}
+  /* 직접 입력. 화살표 버튼 사이에 그대로 앉으므로 테두리와 배경을 지운다. */
+  .pm-qty .qi{width:100%;min-width:0;background:transparent;border:0;outline:none;
+    font-family:inherit;padding:0}
   .pm-price{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-size:13px;color:#a99d85}
   .pm-price b{font-family:var(--font-head),'Saira';font-size:26px;color:#fff;font-weight:700}
   .pm-save{font-size:11px;color:#6fbf73;margin-bottom:16px;min-height:14px}
@@ -518,8 +521,11 @@
   .pm-alt:hover{background:rgba(233,184,74,.10);box-shadow:none;filter:none}
   .pm-alt:disabled{opacity:.45;cursor:default}
 
-  /* CHARGE PULLS button, taken off the panel.
-     Topping up now happens in one place: ASSETS -> Deposit.
+  /* 화면에서 감춘 버튼.
+
+     충전은 BUY CAPSULE 창의 DEPOSIT 한 곳에서만 한다. 그 버튼이 이
+     버튼을 대신 눌러 입금 창을 여는 구조이므로, 요소를 지우면 잔고를
+     채울 길이 사라진다. 감추기만 한다.
 
      Hidden rather than deleted, and deliberately so. The Deposit row
      inside ASSETS opens the charge dialog by clicking this very button,
@@ -664,7 +670,7 @@
       <span class="ic">!</span>
       <p>Complete missions 1–3 to open capsules.</p>
     </div>
-    <button class="obtn gold" id="chargeBtn" style="margin-top:12px">CHARGE PULLS · USDT</button>
+    <button class="obtn gold" id="chargeBtn" style="margin-top:12px">DEPOSIT · USDT</button>
     <!-- Receipts live in the marketplace, where balance top-ups are already
          listed and capsule payments appear beside them. Someone who has
          just paid looks for the record here, not there, so the way across
@@ -1527,29 +1533,32 @@ if(document.documentElement.classList.contains('embed')){
 <div class="pm-overlay" id="pmOverlay">
   <div class="pm">
     <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
-    <h3>CHARGE PULLS</h3>
-    <!-- Rewritten by describe() from the server prices. The text here is
-         only what shows for the instant before they arrive. -->
-    <div class="psub" id="pmSub">Buy pull credits with USDT.</div>
+    <!-- 충전 전용.
+
+         예전에는 여기서 캡슐도 함께 샀다. 앞 화면에서 이미 사고 나서
+         잔고가 모자라 넘어온 자리인데 또 수량을 고르라고 하니, 무엇을
+         하는 창인지 알 수 없었다.
+
+         여기서는 잔고에 USDT 를 넣는 일만 한다. 캡슐은 앞 화면에서 산다. -->
+    <h3>DEPOSIT</h3>
+    <div class="psub" id="pmSub">Add USDT to your balance.</div>
     <div class="pm-label">Network</div>
     <div class="pm-chains" id="pmChains"></div>
-    <div class="pm-label">Quantity</div>
+    <div class="pm-label">Amount</div>
     <div class="pm-presets" id="pmPresets">
       <button data-n="1">1</button>
       <button data-n="10" class="on">10</button>
-      <button data-n="30">30</button>
+      <button data-n="50">50</button>
     </div>
     <div class="pm-qty">
       <button id="pmMinus" aria-label="Decrease">&minus;</button>
-      <span class="qn" id="pmQn">10</span>
+      <!-- 직접 입력. 정해진 셋 말고 다른 금액을 넣는 일이 더 잦다. -->
+      <input class="qn qi" id="pmQn" type="text" inputmode="numeric" value="10">
       <button id="pmPlus" aria-label="Increase">+</button>
     </div>
-    <div class="pm-price"><span id="pmPulls">10 pulls</span><b id="pmTotal">&mdash;</b></div>
+    <div class="pm-price"><span id="pmPulls">Deposit</span><b id="pmTotal">&mdash;</b></div>
     <div class="pm-save" id="pmSave"></div>
-    <button class="pm-pay" id="pmPay">PAY</button>
-    <!-- Site balance route. Hidden until we know there is a balance to
-         spend, so the dialog stays as it was for anyone without one. -->
-    <button class="pm-pay pm-alt" id="pmPayBal" hidden>PAY WITH BALANCE</button>
+    <button class="pm-pay" id="pmPay">DEPOSIT</button>
     <div class="pm-status" id="pmStatus"></div>
     <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
   </div>
@@ -1567,7 +1576,6 @@ if(document.documentElement.classList.contains('embed')){
       qn=document.getElementById('pmQn'), total=document.getElementById('pmTotal'),
       pullsLbl=document.getElementById('pmPulls'), save=document.getElementById('pmSave'),
       payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
-      payBal=document.getElementById('pmPayBal'),
       bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets'),
       chainsBox=document.getElementById('pmChains');
   var q=10;
@@ -1589,53 +1597,34 @@ if(document.documentElement.classList.contains('embed')){
       chainsBox.appendChild(b);
     });
   }
-  /* Every figure in this dialog comes from the server.
-
-     The fallbacks are only for the instant before site_flags answers.
-     They used to be 2 and 18 written into the markup and the arithmetic
-     alike, which stopped being true the moment the prices changed in the
-     admin -- the heading advertised a discount that no longer existed
-     and the saving line invented one. */
-  function cfg(){
-    var p = (window.MEMONS && MEMONS.prices) ? MEMONS.prices() : null;
-    return { single:(p && p.single) || 1, bundle:(p && p.bundle) || 10, size:(p && p.size) || 10 };
-  }
-  function price(n){
-    if(window.MEMONS && MEMONS.priceUsdt) return MEMONS.priceUsdt(n);
-    var c=cfg(); return Math.floor(n/c.size)*c.bundle + (n%c.size)*c.single;
-  }
-  function describe(){
-    var c=cfg(), sub=document.getElementById('pmSub');
-    if(!sub) return;
-    var full = c.size * c.single,
-        off  = full > c.bundle ? Math.round((full - c.bundle) / full * 100) : 0;
-    /* The bundle line only when the bundle is cheaper. At equal prices a
-       10-pack is just ten of them, and printing its total reads as an
-       offer that is not being made. */
-    sub.textContent = 'Buy pull credits with USDT. 1 pull = ' + c.single + ' USDT' +
-      (off > 0 ? ' \u00b7 ' + c.size + '-pack = ' + c.bundle + ' USDT (' + off + '% off)' : '');
-  }
+  /* 여기서 q 는 캡슐 수가 아니라 넣을 USDT 금액이다. 이 창은 잔고를
+     채우는 일만 하고, 캡슐은 앞 화면에서 그 잔고로 산다. */
   function render(){
-    var c=cfg();
-    qn.textContent=q;
-    var p=price(q), full=q*c.single;
-    total.textContent=p+' USDT';
-    pullsLbl.textContent=q+(q>1?' pulls':' pull');
-    payBtn.textContent='PAY '+p+' USDT';
-    /* Only when there is one. At equal prices the bundle is a convenience,
-       not a saving, and saying otherwise is a claim about money. */
-    save.textContent = full>p ? ('Save '+(full-p)+' USDT with '+c.size+'-pack pricing') : '';
-    describe();
-    renderAlt();
+    qn.value=q;
+    total.textContent=q+' USDT';
+    pullsLbl.textContent='Deposit';
+    payBtn.textContent='DEPOSIT '+q+' USDT';
+    save.textContent = siteBal>0
+      ? ('Balance ' + siteBal.toFixed(2) + ' \u2192 ' + (siteBal+q).toFixed(2) + ' USDT')
+      : '';
     Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
   }
-  function set(v){ q=Math.max(1,Math.min(999, v|0)); render(); }
-  /* Redrawn when the prices arrive, and again whenever they are refetched
-     -- the dialog may already be open and showing the fallbacks. */
-  document.addEventListener('memons:prices', render);
+  function set(v){ q=Math.max(1,Math.min(5000, v|0)); render(); }
   document.getElementById('pmMinus').onclick=function(){ set(q-1); };
   document.getElementById('pmPlus').onclick=function(){ set(q+1); };
   Array.prototype.forEach.call(presets.children,function(b){ b.onclick=function(){ set(+b.dataset.n); }; });
+
+  /* 입력 중에는 고쳐 잡지 않는다. '50' 을 치려고 '5' 를 넣은 순간
+     바로잡으면 다음 글자를 칠 수가 없다. */
+  qn.oninput=function(){
+    var v=qn.value.replace(/[^0-9]/g,''); qn.value=v;
+    var n=parseInt(v,10);
+    if(!isNaN(n) && n>0){ q=n;
+      total.textContent=n+' USDT';
+      payBtn.textContent='DEPOSIT '+n+' USDT'; }
+  };
+  qn.onblur=function(){ var n=parseInt(qn.value,10); set(isNaN(n)?1:n); };
+  qn.onkeydown=function(e){ if(e.key==='Enter') qn.blur(); };
 
   var siteBal = 0;
 
@@ -1656,83 +1645,53 @@ if(document.documentElement.classList.contains('embed')){
           var b = m && m.balance;
           siteBal = Number((b && typeof b === 'object') ? b.available : b) || 0;
         }catch(e){ siteBal = 0; }
-        bal.innerHTML='Remaining pulls: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>'+
-          (siteBal>0 ? ' &nbsp;·&nbsp; Balance: <b>'+siteBal.toFixed(2)+' USDT</b>' : '');
+        bal.innerHTML='Balance: <b>'+siteBal.toFixed(2)+' USDT</b>'+
+          ' &nbsp;·&nbsp; Capsules: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>';
       }
       else { bal.textContent='Connect wallet to see balance'; siteBal=0; }
     }catch(e){}
-    renderAlt();
   }
 
-  /* Shown only when the balance covers the order. A button that is
-     visible but always refuses reads as a fault; one that appears when
-     it can be used reads as an option. */
-  function renderAlt(){
-    if(!payBal) return;
-    var p=price(q);
-    payBal.hidden = !(siteBal > 0);
-    payBal.disabled = siteBal < p;
-    payBal.textContent = siteBal < p
-      ? ('BALANCE ' + siteBal.toFixed(2) + ' / ' + p + ' USDT')
-      : ('PAY ' + p + ' USDT WITH BALANCE');
-  }
   function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; renderChains(); refreshBal(); }
   function closeModal(){ overlay.classList.remove('on'); }
   document.getElementById('chargeBtn').addEventListener('click', openModal);
   document.getElementById('pmClose').addEventListener('click', closeModal);
   overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
 
+  /* 입금은 두 걸음이다. 먼저 주문을 만들어 받을 주소를 받고, 그 주소로
+     보낸다. 서버는 돈이 어느 주소에 닿았는지로 무엇을 위한 송금인지
+     판단하므로, 주소를 여기서 정해 넣을 수는 없다.
+
+     마켓 화면의 입금과 같은 경로를 쓴다. 두 벌로 두면 한쪽만 고쳐져
+     어긋난다. */
   payBtn.addEventListener('click', async function(){
     payBtn.disabled=true; statusEl.style.color='#978b62';
     try{
-      if(!(window.MEMONS&&MEMONS.connected)){ statusEl.textContent='Connecting wallet…'; await MEMONS.connect(); }
-      var r=await MEMONS.pay(q,{ onStatus:function(s,c,n){
-        if(s==='sending') statusEl.textContent='Confirm the payment in your wallet…';
-        else if(s==='confirming') statusEl.textContent='Confirming on-chain… '+(c!=null?(c+'/'+(n||20)):'');
-        else if(s==='credited') statusEl.textContent='Charged!';
+      if(!(window.MEMONS&&MEMONS.connected)){
+        statusEl.textContent='Connecting wallet…'; await MEMONS.connect();
+      }
+      statusEl.textContent='Preparing…';
+      var o=await MEMONS.authFetch('/market/topup',{ kind:'balance', value:q });
+      var to=o && o.receiver;
+      var amt=(o && o.order && o.order.amount_usdt) || q;
+      if(!to) throw new Error('Deposits are not available right now.');
+
+      await MEMONS.payTo(to, amt, { allowClosed:true, onStatus:function(st,c,n){
+        if(st==='sending') statusEl.textContent='Confirm the transfer in your wallet…';
+        else if(st==='confirming') statusEl.textContent='Confirming on-chain… '+(c!=null?(c+'/'+(n||20)):'');
+        else if(st==='credited') statusEl.textContent='Deposited!';
       }});
       statusEl.style.color='#6fbf73';
-      statusEl.textContent='Charged +'+r.granted+' pulls!';
+      statusEl.textContent='Deposited '+amt+' USDT.';
       await refreshBal();
     }catch(e){
-      statusEl.style.color='#e0776a';
-      statusEl.textContent=(e&&e.message)?e.message:'Payment failed.';
-    }finally{ payBtn.disabled=false; }
-  });
-  if(payBal) payBal.addEventListener('click', async function(){
-    payBal.disabled=true; statusEl.style.color='#978b62';
-    statusEl.textContent='Charging from balance…';
-    try{
-      if(!(window.MEMONS&&MEMONS.connected)){ await MEMONS.connect(); }
-      /* /game, not a route of its own. The purchase was added to the
-         game function because that one already authenticates; a fresh
-         function refused the same token before its code ran. */
-      var r;
-      try{
-        r=await MEMONS.authFetch('/game', { qty:q });
-      }catch(e1){
-        /* The token expires on its own clock while the page still shows
-           a connected wallet, so the first anyone hears of it is a
-           refusal. Re-signing and trying once is what the user would do
-           by hand, minus the guessing. */
-        if(String(e1 && e1.message).indexOf('SESSION_EXPIRED')<0) throw e1;
-        statusEl.textContent='Session expired \u2014 confirm in your wallet…';
-        await MEMONS.connect();
-        r=await MEMONS.authFetch('/game', { qty:q });
-      }
-      if(r && r.error) throw new Error(r.error);
-      statusEl.style.color='#6fbf73';
-      statusEl.textContent='Charged +'+(r.qty||q)+' pulls!';
-      await refreshBal();
-    }catch(e){
-      var m=(e&&e.message)?String(e.message):'Purchase failed.';
+      var m=(e&&e.message)?String(e.message):'Deposit failed.';
       statusEl.style.color='#e0776a';
       statusEl.textContent =
-        m.indexOf('INSUFFICIENT_BALANCE')>=0 ? 'Not enough balance.' :
-        m.indexOf('PURCHASES_CLOSED')>=0     ? 'Purchases are closed.' :
-        m.indexOf('SESSION_EXPIRED')>=0      ? 'Session expired. Reconnect your wallet and try again.' : m;
-      renderAlt();
-    }
+        m.indexOf('AMOUNT_OUT_OF_RANGE')>=0 ? 'That amount is outside the allowed range.' :
+        m.indexOf('SESSION_EXPIRED')>=0     ? 'Session expired. Reconnect your wallet and try again.' :
+        m.indexOf('MARKET_CLOSED')>=0       ? 'Deposits are not open yet.' : m;
+    }finally{ payBtn.disabled=false; }
   });
   render();
 
