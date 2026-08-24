@@ -1281,6 +1281,13 @@
      다시 열 때는 어드민 스위치만 켜면 된다. 이 덮개는 스위치를 읽어서
      스스로 사라진다.
      --------------------------------------------------------------- */
+  /* 거래를 막는 이유를 풀 수 있는 버튼. 안내 바로 아래에 붙는다. */
+  .mkm-gate{display:block;width:100%;margin-top:10px;padding:13px 18px;border:0;
+    border-radius:10px;cursor:pointer;font-family:var(--font-head);font-weight:700;
+    font-size:12.5px;letter-spacing:1.6px;
+    background:linear-gradient(180deg,#f4d27a,#E9B84A);color:#1a1206;transition:.15s}
+  .mkm-gate:hover{filter:brightness(1.06)}
+
   .mkveil{position:fixed;inset:0;z-index:200;display:none;
     align-items:center;justify-content:center;text-align:center;padding:32px;
     background:radial-gradient(120% 90% at 50% 45%, rgba(20,17,10,.90), rgba(4,4,6,.97));
@@ -1361,12 +1368,11 @@
      본인인증을 아직 안 했을 때. 덮개를 둘 두면 서로 겹친다. -->
 <div class="mkveil" id="mkVeil">
   <div class="mkveil-in">
-    <div class="mv-kicker" id="mvKicker">MEMONS MARKETPLACE</div>
-    <div class="mv-t" id="mvTitle">COMING SOON</div>
+    <div class="mv-kicker">MEMONS MARKETPLACE</div>
+    <div class="mv-t">COMING SOON</div>
     <div class="mv-rule"></div>
-    <div class="mv-s" id="mvSub">The marketplace is being prepared.<br>
+    <div class="mv-s">The marketplace is being prepared.<br>
       Your cards stay in your collection until it opens.</div>
-    <a class="mv-go" href="mypage-kyc.html" target="_top">VERIFY IDENTITY</a>
   </div>
 </div>
 <script>
@@ -1374,31 +1380,18 @@
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 
-  var TXT = {
-    closed: ['MEMONS MARKETPLACE', 'COMING SOON',
-             'The marketplace is being prepared.<br>'+
-             'Your cards stay in your collection until it opens.'],
-    kyc:    ['VERIFIED MEMBERS ONLY', 'VERIFY TO TRADE',
-             'Trading is open to verified members.<br>'+
-             'It takes a few minutes, and only once.'],
-    /* 인증은 끝났는데 거래가 막힌 경우. 지금은 보상 카드를 지급하기
-       전까지 걸어둔 임시 차단이 그 이유다. 이 사람들에게 "인증하세요"를
-       보여주면 이미 한 일을 또 하라는 말이 된다. */
-    wait:   ['VERIFICATION COMPLETE', 'PREPARING YOUR CARDS',
-             'Your identity is verified.<br>'+
-             'Trading opens once your reward cards are issued.']
-  };
+  /* 덮개는 마켓이 닫혔을 때만.
 
-  function show(kind){
+     인증하지 않은 사람도 시세와 매물은 볼 수 있어야 한다. 들어오자마자
+     벽부터 만나면 인증할 이유를 알 수가 없다. 거래를 누르는 순간 무엇이
+     필요한지 알려주는 편이 낫고, 그것은 submit 의 canProceed 가 한다.
+
+     마켓 자체를 닫은 것은 다르다. 그때는 아직 열지 않은 것이므로 화면을
+     덮는 것이 맞다. */
+  function show(closed){
     var v=document.getElementById('mkVeil');
     if(!v) return;
-    if(!kind){ v.classList.remove('on','kyc'); return; }
-    var t=TXT[kind];
-    document.getElementById('mvKicker').textContent = t[0];
-    document.getElementById('mvTitle').textContent  = t[1];
-    document.getElementById('mvSub').innerHTML      = t[2];
-    v.classList.toggle('kyc', kind==='kyc');
-    v.classList.add('on');
+    v.classList.toggle('on', !!closed);
   }
 
   function check(){
@@ -1408,32 +1401,15 @@
                 apikey:SB_ANON, Authorization:'Bearer '+SB_ANON },
       body:'{}', cache:'no-store'
     }).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(j){
-        if(!j) return;
-        if(j.market !== true){ show('closed'); return; }
-
-        /* 지갑을 연결하지 않았으면 덮지 않는다. 처음 온 사람이 시세도
-           매물도 못 보고 벽부터 만나면 인증할 이유를 알 수가 없다.
-           거래를 누르는 순간 서버가 막고, 그때 이유가 나온다. */
-        if(!(window.MEMONS && MEMONS.connected)){ show(null); return; }
-
-        return MEMONS.authFetch('/market/me').then(function(me){
-          if(me && me.enabled === true){ show(null); return; }
-          /* 막혀 있다면 이유가 둘이다. 인증을 안 했거나, 인증은 했는데
-             다른 사정으로 아직 못 하거나. 물어보고 맞는 쪽을 보여준다. */
-          return MEMONS.authFetch('/identity/state').then(function(st){
-            show((st && st.state === 'approved') ? 'wait' : 'kyc');
-          }).catch(function(){ show('kyc'); });
-        }).catch(function(){ show(null); });
-      })
+      .then(function(j){ if(j) show(j.market !== true); })
+      /* 못 읽었으면 덮지 않는다. 열려 있는 마켓을 통신 한 번 실패로
+         닫아버리는 것보다, 닫힌 마켓이 잠깐 비어 보이는 편이 낫다. */
       .catch(function(){});
   }
 
   check();
-  /* 인증이 끝나거나 어드민이 마켓을 열면 새로고침 없이 사라지도록. */
+  /* 어드민에서 열면 새로고침 없이 사라지도록. */
   setInterval(check, 20000);
-  document.addEventListener('memons:connected', check);
-  document.addEventListener('memons:disconnected', check);
 })();
 </script>
 
@@ -1779,6 +1755,9 @@
 
           <button class="mkm-go" id="mGo">BUY</button>
           <div class="mkm-note" id="mNote"></div>
+          <!-- 안내만으로 끝나지 않게. 지갑 연결과 본인인증은 둘 다
+               여기서 바로 갈 수 있어야 한다. -->
+          <button class="mkm-gate" id="mGate" hidden></button>
 
           <section class="mkm-panel mkm-trades">
             <h3>Trades</h3>
@@ -2076,6 +2055,10 @@
   async function openCard(id){
     cur=rows.find(function(c){return c.card_id===id;});
     if(!cur) return;
+
+    /* 앞 카드에서 뜬 안내를 지운다. 남겨두면 다른 카드를 열었는데도
+       "본인인증이 필요합니다" 가 붙어 있어, 그 카드의 문제로 읽힌다. */
+    gateHide();
 
     $m('mTitle').textContent=title(cur);
     var rr=$m('mRarity');
@@ -3280,10 +3263,70 @@
 
   /* One button, two outcomes. Crossing the book trades at once; anything
      short of it rests as an order. The user sets a price, not a mechanism. */
+  /* 거래를 누를 수 있는 상태인지.
+
+     막는 이유가 둘이고 할 일이 서로 다르다. 지갑을 연결하지 않았으면
+     연결부터, 연결했는데 본인인증이 없으면 인증부터. 눌러 보고 나서
+     "안 됩니다" 한 줄만 받으면 무엇을 해야 하는지 알 수 없다.
+
+     화면은 막지 않는다. 시세와 매물은 누구나 볼 수 있어야 인증할 이유가
+     생긴다. */
+  function gateShow(text, label, act){
+    note(text, true);
+    var g=$m('mGate');
+    if(!g) return;
+    g.hidden=false;
+    g.textContent=label;
+    g.onclick=act;
+  }
+  function gateHide(){
+    var g=$m('mGate');
+    if(g){ g.hidden=true; g.onclick=null; }
+  }
+
+  async function canProceed(){
+    if(!(window.MEMONS && MEMONS.connected)){
+      gateShow('Connect your wallet to trade.', 'CONNECT WALLET', async function(){
+        try{ await MEMONS.connect(); gateHide(); note(''); }catch(e){}
+      });
+      return false;
+    }
+    var ok=false;
+    try{
+      var me=await MEMONS.authFetch('/market/me');
+      ok = !!(me && me.enabled === true);
+    }catch(e){
+      /* 물어보지 못했다면 막지 않는다. 서버가 어차피 거절하고, 그때는
+         이유가 함께 온다. */
+      return true;
+    }
+    if(ok){ gateHide(); return true; }
+
+    var state='none';
+    try{
+      var st=await MEMONS.authFetch('/identity/state');
+      state=(st && st.state) || 'none';
+    }catch(e){}
+
+    if(state==='approved'){
+      gateShow('Verified. Trading opens once your reward cards are issued.',
+               'GO TO MY PAGE', function(){ window.top.location.href='mypage-rewards.html'; });
+    }else if(state==='pending' || state==='invited'){
+      gateShow('Your verification is in review. Trading opens once it is approved.',
+               'CHECK STATUS', function(){ window.top.location.href='mypage-kyc.html'; });
+    }else{
+      gateShow('Trading is open to verified members.',
+               'VERIFY IDENTITY', function(){ window.top.location.href='mypage-kyc.html'; });
+    }
+    return false;
+  }
+
   async function submit(){
     if(busy || !cur) return;
     var v=Number($m('mPrice').value);
     if(!(v>0)) return;
+    if(!(await canProceed())) return;
+    gateHide();
     busy=true;
     var go=$m('mGo'); var label=go.textContent; go.disabled=true; go.textContent='…';
 
@@ -3375,7 +3418,7 @@
     }catch(e){
       var msg=String((e&&e.message)||e);
       var human={
-        MARKET_CLOSED:'Trading requires identity verification. Verify in My Page \u2192 KYC.',
+        MARKET_CLOSED:'Trading is not available right now.',
         INSUFFICIENT_BALANCE:'Not enough balance.',
         BELOW_FLOOR:'That price is below the floor.',
         CANNOT_BUY_OWN:'That listing is yours.',
