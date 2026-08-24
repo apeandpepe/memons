@@ -3271,6 +3271,9 @@
 
      화면은 막지 않는다. 시세와 매물은 누구나 볼 수 있어야 인증할 이유가
      생긴다. */
+  var SB_URL_MK="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON_MK="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
   function gateShow(text, label, act){
     note(text, true);
     var g=$m('mGate');
@@ -3291,10 +3294,20 @@
       });
       return false;
     }
+    /* market_can_trade 에 직접 묻는다.
+
+       처음에는 /market/me 의 enabled 를 봤는데, 배포된 응답에는 그 항목이
+       없어 언제나 undefined 였다. 거래가 되는 지갑에도 인증하라는 안내가
+       뜬 이유다. 거래 여부를 판단하는 함수가 따로 있으니 그것을 본다. */
     var ok=false;
     try{
-      var me=await MEMONS.authFetch('/market/me');
-      ok = !!(me && me.enabled === true);
+      var res=await fetch(SB_URL_MK+'/rest/v1/rpc/market_can_trade', {
+        method:'POST',
+        headers:{ 'content-type':'application/json',
+                  apikey:SB_ANON_MK, Authorization:'Bearer '+SB_ANON_MK },
+        body: JSON.stringify({ p_address: MEMONS.address })
+      });
+      ok = (await res.json()) === true;
     }catch(e){
       /* 물어보지 못했다면 막지 않는다. 서버가 어차피 거절하고, 그때는
          이유가 함께 온다. */
