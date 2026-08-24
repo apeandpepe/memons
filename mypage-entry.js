@@ -191,6 +191,23 @@
       host.appendChild(myBtn);
     }
 
+    /* 마이페이지 사이드바 아래의 지갑 칩.
+
+       화면마다 각자 이 칩을 갱신하는 코드를 갖고 있었고, 여섯 화면에는
+       그것이 없어 연결한 뒤에도 "Not connected" 로 남아 있었다. 칩은
+       모든 마이페이지에 같은 모양으로 들어가므로 여기서 한 번에 다룬다.
+
+       해당 요소가 없는 화면에서는 조용히 넘어간다. */
+    function sideChip(addr) {
+      var w = document.getElementById('waddr'),
+          st = document.getElementById('wstat'),
+          d = document.getElementById('wdisc');
+      if (w)  w.textContent  = addr ? shortAddr(addr) : 'Not connected';
+      if (st) st.textContent = addr ? 'Connected' : 'Connect wallet';
+      if (d)  d.style.display = addr ? '' : 'none';
+      document.body.classList.toggle('connected', !!addr);
+    }
+
     function renderConnected(addr) {
       wbtn.textContent = shortAddr(addr);
       wbtn.title = addr;
@@ -199,6 +216,7 @@
       switchBtn.style.display = 'inline-block';
       myBtn.style.display = 'inline-flex';
       document.body.classList.add('wallet-connected');
+      sideChip(addr);
     }
     function renderDisconnected() {
       wbtn.innerHTML = origHtml;
@@ -208,6 +226,7 @@
       switchBtn.style.display = 'none';
       myBtn.style.display = 'none';
       document.body.classList.remove('wallet-connected');
+      sideChip(null);
     }
     function renderBusy(label) {
       wbtn.textContent = label;
@@ -622,6 +641,15 @@
       doConnect();
     });
     discBtn.addEventListener('click', function (ev) { ev.preventDefault(); doDisconnect(true); });
+
+    /* 사이드바 칩의 Disconnect 도 같은 일을 한다. 헤더의 버튼과 나란히
+       보이면서 하나만 동작하면 고장으로 읽힌다. */
+    var sideDisc = document.getElementById('wdisc');
+    if (sideDisc) {
+      sideDisc.addEventListener('click', function (ev) {
+        ev.preventDefault(); doDisconnect(true);
+      });
+    }
     switchBtn.addEventListener('click', async function (ev) {
       ev.preventDefault();
       if (!window.MEMONS || !window.MEMONS.switchAccount) return;

@@ -218,7 +218,8 @@
 
     <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
          empty while the admin's show_season0 flag is off. -->
-    <div id="seasonTabs"></div>
+    <!-- 카드는 시즌 구분이 사라져 여기에는 탭이 없다. 추천인 탭은
+         REFERRAL OVERVIEW 위로 내려가 있다. -->
 
     <!-- ROW 1: stat cards -->
     <div class="row1">
@@ -260,6 +261,11 @@
     </div>
 
     <!-- ROW 3: referral + leaderboard -->
+    <!-- 추천인만 시즌으로 나뉜다. 탭을 화면 맨 위에 두면 바로 아래
+         카드와 컬렉션은 그대로인 채 여기 숫자만 바뀌어, 무엇이 바뀌는지
+         알기 어렵다. 바뀌는 것 바로 위에 둔다. -->
+    <div id="seasonTabs"></div>
+
     <div class="row3">
       <div class="panel">
         <div class="ptitle" style="margin-bottom:18px">REFERRAL OVERVIEW</div>
@@ -363,11 +369,14 @@
   }
 
   function renderCollection(){
-    /* Every figure below counts from the season on screen, not from the
-       whole history: the collection bars, the prize entry table and the
-       CARDS OWNED card all have to agree with the tab that is open. */
-    var season=(window.SeasonTabs ? SeasonTabs.current() : 's1');
-    var rows=(window.SeasonTabs ? SeasonTabs.filter(owned) : owned);
+    /* 탭을 따르지 않는다.
+
+       한때는 카드도 시즌으로 나뉘어 있었고 이 숫자들이 탭을 따라갔다.
+       베타 카드가 시즌1 카드로 합쳐진 뒤로는 고를 것이 없다. 남은 탭은
+       추천인 전용이므로, 그것을 눌렀다고 보유 카드 수가 달라지면
+       거짓말이 된다. */
+    var season='s1';
+    var rows=owned;
     var TOTAL=totalsFor(season);
 
     $('cardNum').innerHTML=rows.length+'<span class="u">Cards</span>';
@@ -388,9 +397,10 @@
        season 1, so on that tab the block is not drawn at all -- an empty
        table reading "Not Eligible" would look like a draw the reader had
        missed rather than one that does not exist. */
+    /* 오픈베타 추첨 결과다. 시즌이 합쳐졌으니 숨길 기준이 없어졌고,
+       당첨자에게는 아직 지급이 남아 있어 계속 보여야 한다. */
     var resBlock=$('resBlock');
-    if(resBlock) resBlock.style.display = (season==='s0') ? '' : 'none';
-    if(season!=='s0') return;
+    if(resBlock) resBlock.style.display='';
 
     var cnt={epic:0,legendary:0,mythic:0};
     rows.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(cnt[r]!=null) cnt[r]++; });
@@ -486,8 +496,13 @@
       await SeasonTabs.ready();
       if(!seasonMounted){
         seasonMounted=true;
-        SeasonTabs.mount({ el:$('seasonTabs'), owned:owned, onChange:function(){
-          renderCollection(); loadReferral(); loadBoard();
+        /* always: 카드가 합쳐진 뒤에도 추천인은 시즌으로 나뉜다.
+           어드민의 시즌0 스위치를 꺼도 이 탭은 남아야 한다.
+
+           onChange 에서 renderCollection 을 부르지 않는다. 카드 숫자는
+           탭과 무관하고, 다시 그리면 같은 값을 넣느라 화면만 깜빡인다. */
+        SeasonTabs.mount({ el:$('seasonTabs'), always:true, onChange:function(){
+          loadReferral(); loadBoard();
         }});
       } else {
         SeasonTabs.refresh(owned);
