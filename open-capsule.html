@@ -329,7 +329,17 @@
   .capframe .capwin{position:absolute;left:5.0%;top:5.9%;width:92.2%;height:87.6%;overflow:hidden;border-radius:9px;z-index:2}
   .capframe .capwin .capposter{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;z-index:1}
   .capframe .capwin .capvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:2;background:transparent}
-  .buybox{align-self:center;font-family:var(--font-body);border:1px solid var(--line);border-radius:14px;padding:20px 18px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent)}
+  /* 캡슐 그림과 위아래를 맞춘다.
+
+     내용만큼만 차지하고 가운데 정렬되어 있어서, 그림보다 짧은 상자가
+     한가운데 떠 있었다. 나란히 놓인 두 덩어리의 모서리가 어긋나면
+     정렬이 잘못된 것으로 보인다.
+
+     늘리되 안쪽은 가운데에 둔다. 상자만 커지고 글이 위로 몰리면
+     아래가 비어 보인다. */
+  .buybox{align-self:stretch;display:flex;flex-direction:column;justify-content:center;
+    font-family:var(--font-body);border:1px solid var(--line);border-radius:14px;
+    padding:20px 18px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent)}
   .buybox .bt{font-family:var(--font-head),'Saira';font-weight:700;font-size:17px;color:#e6c878;letter-spacing:.5px}
   .buybox .ql{font-size:11px;letter-spacing:2px;color:#a4905a;margin:16px 0 9px;font-weight:600}
   /* The locked button keeps its own label underneath, dimmed, so the cover
@@ -411,6 +421,7 @@
     .ocwrap{flex:0 0 auto;min-height:0;padding-top:0;padding-bottom:0;align-items:start}
     /* The three columns are different heights; align them on their tops so
        none of them stretches the row. */
+    /* 좁은 화면에서는 세로로 쌓이므로 맞출 상대가 없다. */
     .left,.buybox{align-self:start}
     /* The columns are aligned on their tops so none of them stretches the
        row, which leaves this panel level with the very top of the frame
