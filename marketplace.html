@@ -2665,8 +2665,23 @@
        trade that says who was in a hurry, and it is the only thing in the
        plot that distinguishes one sale from another. */
     chartHit=[];
+    /* 체결 점을 그날 캔들 자리에 맞춘다.
+
+       거래 시각 그대로 찍으면 캔들과 가로로 어긋난다. 캔들은 하루를 한
+       칸으로 묶어 그날 0시에 서는데 체결은 실제 시각에 서니, 같은 거래가
+       두 군데에 있는 것처럼 보인다.
+
+       조용한 날이 빠지면 하루 간격도 일정하지 않으므로, 날짜를 계산하지
+       않고 캔들 목록에서 같은 날을 찾아 그 자리를 그대로 쓴다. */
+    var dayAt = {};
+    c.forEach(function(x){
+      dayAt[new Date(x.day).toISOString().slice(0,10)] = new Date(x.day).getTime();
+    });
     var pts=tr.map(function(t){
-      return { x:X(new Date(t.created_at).getTime()), y:Y(Number(t.price)), t:t };
+      var key = new Date(t.created_at).toISOString().slice(0,10);
+      var ms  = dayAt[key];
+      return { x:X(ms==null ? new Date(t.created_at).getTime() : ms),
+               y:Y(Number(t.price)), t:t };
     });
 
     /* One point a day, not one a trade. Threading every sale in order put
@@ -2713,16 +2728,10 @@
     g.lineJoin='round'; g.lineCap='round';
     var run=[];
     var flush=function(){
-      /* 한 점짜리 구간에는 아무것도 찍지 않는다.
-
-         하루 평균을 점으로 남겼더니, 거래가 하루에 한 건인 카드에서 점이
-         둘로 보였다. 하나는 그날 0시에 찍힌 평균이고 다른 하나는 실제
-         거래 시각에 찍힌 체결 점이다. 값은 같은데 가로로 벌어져, 거래가
-         두 번 있었던 것처럼 읽힌다.
-
-         체결 점이 아래에서 따로 그려지고 시각도 색도 정확하므로, 겹치는
-         쪽을 지운다. 선은 두 점 이상일 때만 의미가 있다. */
-      if(run.length>1){
+      if(run.length===1){
+        g.beginPath(); g.arc(run[0].x,run[0].y,1.6,0,Math.PI*2);
+        g.fillStyle='#E9B84A'; g.fill();
+      }else if(run.length>1){
         g.beginPath();
         g.moveTo(run[0].x, run[0].y);
         for(var i=1;i<run.length-1;i++){

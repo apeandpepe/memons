@@ -11,6 +11,9 @@
     --line:rgba(233,184,74,.22); --hair:rgba(255,255,255,.06);
     --text:#e8e6e0; --muted:#8d8a82;
   }
+  /* 헤더 한 줄의 높이. 위아래 여백 13px 에 내용 34px, 아래 선 1px.
+     헤더 안쪽 여백을 바꾸면 이 값도 함께 고쳐야 한다. */
+  :root{--headH:61px}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:var(--font-body);margin:0;
     width:100vw;height:100vh;height:100svh;display:flex;flex-direction:row;flex-wrap:nowrap;
@@ -143,9 +146,18 @@
   body>section.sec{max-width:none;margin:0}
   .sec{position:relative;max-width:1247px;margin:0 auto;padding:34px;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center}
   .sec.divtop{border-top:1px solid var(--hair)}
-  .embedsec{background:var(--bg)}
-  .embedsec iframe.embed{display:block;width:100%;border:0;height:100vh;height:100svh}
-  .embedsec iframe.mkembed,.embedsec iframe.vembed,.embedsec iframe.abembed{height:100vh;height:100svh}
+  /* 헤더 높이만큼 내려서 시작한다.
+
+     헤더는 화면 위에 떠 있고(position:fixed) 끼워 넣은 화면은 화면 전체
+     높이를 차지했다. 그래서 마켓이든 볼트든 위쪽 60여 픽셀이 헤더에
+     가려, 제목과 첫 줄이 잘려 보였다.
+
+     높이도 그만큼 줄인다. 내리기만 하면 아래가 화면 밖으로 밀려난다. */
+  .embedsec{background:var(--bg);padding-top:var(--headH)}
+  .embedsec iframe.embed{display:block;width:100%;border:0;
+    height:calc(100vh - var(--headH));height:calc(100svh - var(--headH))}
+  .embedsec iframe.mkembed,.embedsec iframe.vembed,.embedsec iframe.abembed{
+    height:calc(100vh - var(--headH));height:calc(100svh - var(--headH))}
   .sec-h{text-align:center;margin:0 auto 40px}
   /* The three held sections share one block, so they read as one decision
      rather than three pages that each happen to be unfinished. Each ends in
@@ -971,7 +983,7 @@
      it, so a visitor who hid the last one still sees the next. */
   /* 새 안내로 바뀌었으므로 키도 바꾼다. 예전 팝업에 '다시 보지 않기'를
      체크해 둔 방문자에게도 이번 것은 한 번 보여야 한다. */
-  var EVENT_KEY = 'reward1';
+  var EVENT_KEY = 'season1';
 
   var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
@@ -991,8 +1003,12 @@
     return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
   }
   /* 안내 내용이 바뀌었으므로 키도 바꾼다. 어제 '오늘 하루 안 보기'를 눌러둔
-     방문자에게도 이번 것은 한 번 보여야 한다. */
-  var KEY = { event:'memons_evpop_hidden_'+EVENT_KEY, rank:'memons_refpop_hidden_day' };
+     방문자에게도 이번 것은 한 번 보여야 한다.
+
+     '안 보기'는 방문자 브라우저에 남는 값이라 서버에서 지울 수 없다. 이름을
+     바꾸는 것이 전원에게 다시 보이게 하는 유일한 방법이고, 다음에 내용이
+     또 바뀌면 여기 뒤의 숫자를 올리면 된다. */
+  var KEY = { event:'memons_evpop_hidden_'+EVENT_KEY, rank:'memons_refpop_hidden_day_s1' };
   function hidden(name){
     try {
       var v = localStorage.getItem(KEY[name]);
