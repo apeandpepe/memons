@@ -1285,7 +1285,9 @@
 
      버튼 아래 한 줄로 붙여 두었더니 눈에 들어오지 않았다. 누른 직후에
      가로막고, 무엇을 해야 하는지와 그리로 가는 버튼을 함께 준다. */
-  .mkgate{position:fixed;inset:0;z-index:300;display:none;
+  /* 1300. 카드 상세 창이 1200 이므로 그보다 위여야 한다. 거래를 누른
+     결과로 뜨는 안내가 그 창 뒤에 깔리면 보이지 않는다. */
+  .mkgate{position:fixed;inset:0;z-index:1300;display:none;
     align-items:center;justify-content:center;padding:24px;
     background:rgba(4,4,6,.78);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .mkgate.on{display:flex}
@@ -1306,7 +1308,9 @@
     font-family:var(--font-body);font-size:13px}
   .mkgate-x:hover{color:#e8e6e0}
 
-  .mkveil{position:fixed;inset:0;z-index:200;display:none;
+  /* 1250. 마켓이 닫혔을 때 화면을 덮는다. 카드 상세 창(1200)보다는
+     위, 거래 안내 팝업(1300)보다는 아래. */
+  .mkveil{position:fixed;inset:0;z-index:1250;display:none;
     align-items:center;justify-content:center;text-align:center;padding:32px;
     background:radial-gradient(120% 90% at 50% 45%, rgba(20,17,10,.90), rgba(4,4,6,.97));
     backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
