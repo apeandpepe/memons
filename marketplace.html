@@ -3219,9 +3219,10 @@
         ' '+d.toTimeString().slice(0,5)+'</b>'+
         '<span class="k">TYPE</span><span class="v" style="color:'+
         (side==='Buy'?'#3fd17a':'#E9B84A')+'">'+side+'</span>'+
-        '<span class="k">PRICE</span><span class="v">'+num(t.price)+'</span> USDT'+
-        '<span class="k">BUYER</span><span class="a">'+shortAddr(t.buyer)+'</span>'+
-        '<span class="k">SELLER</span><span class="a">'+shortAddr(t.seller)+'</span>';
+        '<span class="k">PRICE</span><span class="v">'+num(t.price)+'</span> USDT';
+      /* Counterparties left out. A public chart that names both wallets on
+         every print lets anyone follow a particular account's positions
+         around the market, which no exchange puts on the tape. */
       tip.hidden=false;
       // Flips to the other side near the right edge rather than overflowing.
       var tw=tip.offsetWidth, th=tip.offsetHeight;
