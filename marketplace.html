@@ -2406,6 +2406,13 @@
      -------------------------------------------------------------------- */
   var chartRange = 7;
   var chartData = null;
+  /* The bucket the candles are grouped into, chosen by the range on screen.
+     A day of trading in one candle stacks every price at the same x
+     position; an hour of trading across thirty days is 720 candles in 600
+     pixels. Neither reads as a chart. */
+  function candleUnit(r){
+    return r===1 ? 'hour' : r===7 ? '4hour' : 'day';
+  }
   /* The window actually on screen, in milliseconds. The preset buttons set
      it and the slider moves it, so both end up describing the same thing
      rather than each holding a version of the truth. */
@@ -2427,8 +2434,11 @@
     if(window.MK_CHART && MK_CHART._pin){ drawChart(); drawMini(); syncSel(); return; }
     try{
       var [cRes,tRes]=await Promise.all([
-        fetch(SB_URL+'/rest/v1/market_candles?card_id=eq.'+encodeURIComponent(cur.card_id)+
-              '&select=*&order=day.asc',{headers:H}),
+        fetch(SB_URL+'/rest/v1/rpc/market_candles',{
+          method:'POST',
+          headers:Object.assign({'content-type':'application/json'},H),
+          body:JSON.stringify({p_card_id:cur.card_id, p_unit:candleUnit(chartRange)})
+        }),
         fetch(SB_URL+'/rest/v1/trades?card_id=eq.'+encodeURIComponent(cur.card_id)+
               '&select=price,seller,buyer,taker,created_at&order=created_at.asc&limit=500',{headers:H})
       ]);
@@ -2438,8 +2448,13 @@
         trades:  Array.isArray(trades)?trades:[]
       };
     }catch(e){ chartData={candles:[],trades:[]}; }
-    // A new card means a new series; the old window would be meaningless.
+    // A new card, or a new bucket, is a new series; the old window would be
+    // meaningless against it. Reset, then set to the preset in force.
     chartWin=null;
+    var bd=chartBounds();
+    if(bd && chartRange){
+      chartWin={ a: Math.max(bd.a, bd.b-(chartRange-0.5)*864e5), b: bd.b };
+    }
     drawChart(); drawMini(); syncSel();
   }
 
@@ -3074,10 +3089,17 @@
   });
   document.querySelectorAll('#mcRanges button').forEach(function(b){
     b.onclick=function(){
+      var prevUnit=candleUnit(chartRange);
       chartRange=Number(b.dataset.r);
       document.querySelectorAll('#mcRanges button').forEach(function(o){
         o.classList.toggle('on', o===b);
       });
+
+      // A different bucket is a different series, so it is refetched rather
+      // than re-windowed. Same bucket -- 30D and ALL are both daily -- keeps
+      // the candles it already has.
+      if(candleUnit(chartRange)!==prevUnit){ loadChart(); return; }
+
       // Recomputed rather than nudged: a preset is an absolute window.
       var bd=chartBounds();
       chartWin = bd ? {
