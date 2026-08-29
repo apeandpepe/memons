@@ -2414,10 +2414,11 @@
      A day of trading in one candle stacks every price at the same x
      position; an hour of trading across thirty days is 720 candles in 600
      pixels. Neither reads as a chart. */
-  function candleUnit(r){
-    return r===1 ? 'hour' : r===7 ? '4hour' : 'day';
-  }
-  var BUCKET_MS={hour:36e5, '4hour':144e5, day:864e5};
+  /* 24h is read hour by hour; anything wider is read by day. A 4h bucket
+     was tried in between and gave 42 slots for a week, which on a market
+     this quiet is mostly empty space between three bars. */
+  function candleUnit(r){ return r===1 ? 'hour' : 'day'; }
+  var BUCKET_MS={hour:36e5, day:864e5};
 
   /* The span a preset covers, less half a bucket.
 
@@ -2431,8 +2432,7 @@
   /* What market_candles() groups over for this preset. The dots have to be
      cut to the same span or they outnumber the candles they sit on. */
   function rangeSpanMs(r){
-    var u=candleUnit(r);
-    return u==='hour' ? 24*36e5 : u==='4hour' ? 7*864e5 : 30*864e5;
+    return candleUnit(r)==='hour' ? 24*36e5 : 30*864e5;
   }
   /* The window actually on screen, in milliseconds. The preset buttons set
      it and the slider moves it, so both end up describing the same thing
@@ -2849,7 +2849,8 @@
     // Volume, on its own scale, below the date strip.
     var vy0=H+GAP, vy1=H+GAP+VH-2;
     var vmax=Math.max.apply(null, c.map(function(x){ return Number(x.volume||0); }));
-    if(vmax>0){
+    if(c.length){
+      if(!(vmax>0)) vmax=1;
       /* Width from where the bars actually land.
 
          Every earlier attempt computed spacing as plot width over day
@@ -2879,10 +2880,15 @@
         var seam=Math.max(2, Math.min(5, minGap*0.22));
         bw=Math.max(2, Math.min(96, minGap-seam));
       }
+      /* A quiet bucket still gets a mark, one pixel tall.
+
+         Skipping them left three bars floating in a week of blank strip,
+         which reads as a broken chart rather than as a quiet week. The
+         baseline shows the slots exist and nothing traded in them. */
       c.forEach(function(x){
-        var v=Number(x.volume||0); if(!v) return;
-        var h=(vy1-vy0)*(v/vmax);
-        g.fillStyle='rgba(233,184,74,.62)';
+        var v=Number(x.volume||0);
+        var h=v>0 ? Math.max(1,(vy1-vy0)*(v/vmax)) : 1;
+        g.fillStyle = v>0 ? 'rgba(233,184,74,.62)' : 'rgba(233,184,74,.16)';
         g.fillRect(X(new Date(x.day).getTime())-bw/2, vy1-h, bw, h);
       });
     }
