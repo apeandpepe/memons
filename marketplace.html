@@ -2768,20 +2768,23 @@
        drawing. A midpoint curve rounds each turn without inventing a
        value: every original point is still on the line, and the eye
        follows the trend instead of counting the joints. */
+    /* Quiet buckets are left out rather than pushed in as nulls.
+
+       A null ended the run, and on a card that trades in bursts every run
+       was a single point -- drawn as a dot, which put four gold specks on
+       the plot that looked like trades and answered nothing on hover. The
+       average is a trend line; it joins the points it has. */
     var line=[];
     c.forEach(function(x){
       var a=avgOf(x);
-      line.push(a==null ? null : {x:X(new Date(x.day).getTime()), y:Y(a)});
+      if(a!=null) line.push({x:X(new Date(x.day).getTime()), y:Y(a)});
     });
 
     g.strokeStyle='#E9B84A'; g.lineWidth=1.5;
     g.lineJoin='round'; g.lineCap='round';
     var run=[];
     var flush=function(){
-      if(run.length===1){
-        g.beginPath(); g.arc(run[0].x,run[0].y,1.6,0,Math.PI*2);
-        g.fillStyle='#E9B84A'; g.fill();
-      }else if(run.length>1){
+      if(run.length>1){
         g.beginPath();
         g.moveTo(run[0].x, run[0].y);
         for(var i=1;i<run.length-1;i++){
