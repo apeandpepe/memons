@@ -2414,11 +2414,10 @@
      A day of trading in one candle stacks every price at the same x
      position; an hour of trading across thirty days is 720 candles in 600
      pixels. Neither reads as a chart. */
-  /* 24h is read hour by hour; anything wider is read by day. A 4h bucket
-     was tried in between and gave 42 slots for a week, which on a market
-     this quiet is mostly empty space between three bars. */
-  function candleUnit(r){ return r===1 ? 'hour' : 'day'; }
-  var BUCKET_MS={hour:36e5, day:864e5};
+  function candleUnit(r){
+    return r===1 ? 'hour' : r===7 ? '4hour' : 'day';
+  }
+  var BUCKET_MS={hour:36e5, '4hour':144e5, day:864e5};
 
   /* The span a preset covers, less half a bucket.
 
@@ -2432,7 +2431,8 @@
   /* What market_candles() groups over for this preset. The dots have to be
      cut to the same span or they outnumber the candles they sit on. */
   function rangeSpanMs(r){
-    return candleUnit(r)==='hour' ? 24*36e5 : 30*864e5;
+    var u=candleUnit(r);
+    return u==='hour' ? 24*36e5 : u==='4hour' ? 7*864e5 : 30*864e5;
   }
   /* The window actually on screen, in milliseconds. The preset buttons set
      it and the slider moves it, so both end up describing the same thing
@@ -2739,16 +2739,32 @@
        same afternoon is a cliff on a chart this tall -- and the sawtooth
        drowned out both the dots and the average. A day's close is the
        price the day ended at, which is the thing worth joining. */
-    var closes=c.filter(function(x){ return Number(x.trades||0)>0; });
-    if(closes.length>1){
-      g.strokeStyle='rgba(255,255,255,.28)'; g.lineWidth=1.2;
-      g.beginPath();
-      closes.forEach(function(x,i){
-        var px=X(new Date(x.day).getTime()), py=Y(Number(x.close));
-        i ? g.lineTo(px,py) : g.moveTo(px,py);
-      });
-      g.stroke();
-    }
+    /* Broken over quiet buckets, not stepped across them. Filtering the
+       empty ones out and joining what was left drew a straight run from
+       Monday to Thursday as though the price had slid evenly for three
+       days; nothing happened in between, and a line saying otherwise is an
+       invention. */
+    g.strokeStyle='rgba(255,255,255,.28)'; g.lineWidth=1.2;
+    var seg=[];
+    var flushClose=function(){
+      if(seg.length>1){
+        g.beginPath();
+        seg.forEach(function(p,i){ i ? g.lineTo(p.x,p.y) : g.moveTo(p.x,p.y); });
+        g.stroke();
+      }else if(seg.length===1){
+        g.beginPath(); g.arc(seg[0].x,seg[0].y,1.4,0,Math.PI*2);
+        g.fillStyle='rgba(255,255,255,.28)'; g.fill();
+      }
+      seg=[];
+    };
+    c.forEach(function(x){
+      if(Number(x.trades||0)>0){
+        seg.push({x:X(new Date(x.day).getTime()), y:Y(Number(x.close))});
+      }else{
+        flushClose();
+      }
+    });
+    flushClose();
 
     pts.forEach(function(p){
       var buy = p.t.taker !== 'seller';   // unset counts as a buy-side lift
