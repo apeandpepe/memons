@@ -2739,33 +2739,19 @@
        same afternoon is a cliff on a chart this tall -- and the sawtooth
        drowned out both the dots and the average. A day's close is the
        price the day ended at, which is the thing worth joining. */
-    /* Broken over quiet buckets, not stepped across them. Filtering the
-       empty ones out and joining what was left drew a straight run from
-       Monday to Thursday as though the price had slid evenly for three
-       days; nothing happened in between, and a line saying otherwise is an
-       invention. */
-    g.strokeStyle='rgba(255,255,255,.28)'; g.lineWidth=1.2;
-    var seg=[];
-    var flushClose=function(){
-      if(seg.length>1){
-        g.beginPath();
-        seg.forEach(function(p,i){ i ? g.lineTo(p.x,p.y) : g.moveTo(p.x,p.y); });
-        g.stroke();
-      }
-      /* A lone bucket gets no mark of its own. It was drawn as a dot, which
-         put four unexplained specks on a chart already carrying seven
-         trades -- and unlike those, hovering one said nothing, because it
-         is not a trade. The fill dots already show where it traded. */
-      seg=[];
-    };
-    c.forEach(function(x){
-      if(Number(x.trades||0)>0){
-        seg.push({x:X(new Date(x.day).getTime()), y:Y(Number(x.close))});
-      }else{
-        flushClose();
-      }
-    });
-    flushClose();
+    /* Joined across quiet buckets rather than broken at each one. Breaking
+       it left nothing drawn at all on a card that trades in bursts -- every
+       run was a single bucket, and a run of one has no line in it. */
+    var closes=c.filter(function(x){ return Number(x.trades||0)>0; });
+    if(closes.length>1){
+      g.strokeStyle='rgba(255,255,255,.28)'; g.lineWidth=1.2;
+      g.beginPath();
+      closes.forEach(function(x,i){
+        var px=X(new Date(x.day).getTime()), py=Y(Number(x.close));
+        i ? g.lineTo(px,py) : g.moveTo(px,py);
+      });
+      g.stroke();
+    }
 
     pts.forEach(function(p){
       var buy = p.t.taker !== 'seller';   // unset counts as a buy-side lift
