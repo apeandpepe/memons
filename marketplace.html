@@ -2751,10 +2751,11 @@
         g.beginPath();
         seg.forEach(function(p,i){ i ? g.lineTo(p.x,p.y) : g.moveTo(p.x,p.y); });
         g.stroke();
-      }else if(seg.length===1){
-        g.beginPath(); g.arc(seg[0].x,seg[0].y,1.4,0,Math.PI*2);
-        g.fillStyle='rgba(255,255,255,.28)'; g.fill();
       }
+      /* A lone bucket gets no mark of its own. It was drawn as a dot, which
+         put four unexplained specks on a chart already carrying seven
+         trades -- and unlike those, hovering one said nothing, because it
+         is not a trade. The fill dots already show where it traded. */
       seg=[];
     };
     c.forEach(function(x){
