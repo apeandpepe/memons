@@ -2428,6 +2428,12 @@
   function rangeMs(r){
     return r*864e5 - BUCKET_MS[candleUnit(r)]*0.5;
   }
+  /* What market_candles() groups over for this preset. The dots have to be
+     cut to the same span or they outnumber the candles they sit on. */
+  function rangeSpanMs(r){
+    var u=candleUnit(r);
+    return u==='hour' ? 24*36e5 : u==='4hour' ? 7*864e5 : 30*864e5;
+  }
   /* The window actually on screen, in milliseconds. The preset buttons set
      it and the slider moves it, so both end up describing the same thing
      rather than each holding a version of the truth. */
@@ -2470,7 +2476,12 @@
           headers:Object.assign({'content-type':'application/json'},H),
           body:JSON.stringify({p_card_id:cur.card_id, p_unit:candleUnit(chartRange)})
         }),
+        /* Cut to the same window as the candles. Without the filter this
+           returned every trade the card ever had, and the ones outside the
+           range piled up against the left edge -- a dozen dots on a chart
+           whose own counter said seven. */
         fetch(SB_URL+'/rest/v1/trades?card_id=eq.'+encodeURIComponent(cur.card_id)+
+              '&created_at=gte.'+new Date(Date.now()-rangeSpanMs(chartRange)).toISOString()+
               '&select=price,seller,buyer,taker,created_at&order=created_at.asc&limit=500',{headers:H})
       ]);
       var candles=await cRes.json(), trades=await tRes.json();
