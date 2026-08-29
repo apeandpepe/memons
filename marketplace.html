@@ -430,6 +430,10 @@
   /* Dead centre of the space the chart would occupy, and faint. It is a
      note about what is missing, not a thing to read -- at full contrast it
      draws more attention than the figures above it, which are real. */
+  /* display:flex on the class outranks the hidden attribute, which is only
+     display:none from the user agent sheet -- so the placeholder stayed on
+     screen underneath a chart that had rendered fine. */
+  .mkc-empty[hidden]{display:none}
   .mkc-empty{display:flex;align-items:center;justify-content:center;
     min-height:200px;padding:26px 18px;text-align:center;
     border:1px dashed rgba(255,255,255,.07);border-radius:11px;
@@ -2423,6 +2427,19 @@
   function fmtDay(d){
     return d.toLocaleDateString('en-US',{month:'short',day:'2-digit'});
   }
+  /* The axis has to say what the candle covers. Hourly buckets all landed
+     on the same date, so a day of trading came out as "Aug 29" repeated
+     across the whole strip -- true, and useless for reading when anything
+     happened. */
+  function fmtTick(d){
+    var u=candleUnit(chartRange);
+    if(u==='day') return fmtDay(d);
+    var hm=d.toLocaleTimeString('en-US',
+      {hour:'2-digit',minute:'2-digit',hour12:false});
+    // A 4h bucket spans days, so it needs the date; an hourly one is read
+    // inside a single day and the date would just crowd the label.
+    return u==='4hour' ? fmtDay(d)+' '+hm : hm;
+  }
   function shortAddr(a){
     a=String(a||''); return a ? a.slice(0,6)+'…'+a.slice(-4) : '—';
   }
@@ -2680,22 +2697,15 @@
        trade that says who was in a hurry, and it is the only thing in the
        plot that distinguishes one sale from another. */
     chartHit=[];
-    /* 체결 점을 그날 캔들 자리에 맞춘다.
+    /* Every fill, at the time it happened.
 
-       거래 시각 그대로 찍으면 캔들과 가로로 어긋난다. 캔들은 하루를 한
-       칸으로 묶어 그날 0시에 서는데 체결은 실제 시각에 서니, 같은 거래가
-       두 군데에 있는 것처럼 보인다.
-
-       조용한 날이 빠지면 하루 간격도 일정하지 않으므로, 날짜를 계산하지
-       않고 캔들 목록에서 같은 날을 찾아 그 자리를 그대로 쓴다. */
-    var dayAt = {};
-    c.forEach(function(x){
-      dayAt[new Date(x.day).toISOString().slice(0,10)] = new Date(x.day).getTime();
-    });
+       These used to be snapped to the candle they fell in, which put an
+       afternoon's trades at one x position and drew them as a vertical
+       stack -- a column of dots that reads as a broken chart rather than as
+       a busy hour. The candle is a summary; the dots are the trades, and
+       they spread out along the axis the way they did in time. */
     var pts=tr.map(function(t){
-      var key = new Date(t.created_at).toISOString().slice(0,10);
-      var ms  = dayAt[key];
-      return { x:X(ms==null ? new Date(t.created_at).getTime() : ms),
+      return { x:X(new Date(t.created_at).getTime()),
                y:Y(Number(t.price)), t:t };
     });
 
@@ -2719,9 +2729,6 @@
       var buy = p.t.taker !== 'seller';   // unset counts as a buy-side lift
       g.fillStyle = buy ? '#3fd17a' : '#E9B84A';
       g.beginPath(); g.arc(p.x,p.y,narrow?2.6:3.2,0,Math.PI*2); g.fill();
-      /* A dark ring, so overlapping dots stay countable. Ten trades in an
-         hour land within a few pixels of each other and without it they
-         merge into one smear. */
       g.strokeStyle='rgba(10,10,12,.85)'; g.lineWidth=1.2; g.stroke();
       chartHit.push(p);
     });
@@ -2784,7 +2791,7 @@
     marks.forEach(function(i){
       var px=X(new Date(c[i].day).getTime());
       g.textAlign = px<x0+22 ? 'left' : (px>x1-22 ? 'right' : 'center');
-      g.fillText(fmtDay(new Date(c[i].day)), px, y1+8);
+      g.fillText(fmtTick(new Date(c[i].day)), px, y1+8);
     });
     g.textAlign='center';
 
@@ -2802,7 +2809,7 @@
       g.fillStyle='#a8a49c'; g.font='10px system-ui'; g.textBaseline='top';
       // Same inward alignment as the axis labels, for the same reason.
       g.textAlign = chartCursor<x0+22 ? 'left' : (chartCursor>x1-22 ? 'right' : 'center');
-      g.fillText(fmtDay(new Date(ms)), chartCursor, y1+8);
+      g.fillText(fmtTick(new Date(ms)), chartCursor, y1+8);
       g.textAlign='center';
     }
 
