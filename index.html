@@ -554,12 +554,10 @@
   <div class="brand"><img src="images/logo.png" alt="MEMONS" style="height:44px;width:auto;display:block"></div>
   <nav class="nav">
     <a href="#home" class="on">HOME</a>
-    <a href="#about">ABOUT</a>
-    <a href="#vault">MEMONS VAULT</a>
-    <a href="#capsule">OPEN CAPSULE</a>
     <a href="#marketplace">MARKETPLACE</a>
+    <a href="#capsule">OPEN CAPSULE</a>
+    <a href="#vault">MEMONS VAULT</a>
     <a href="notice.html">NOTICE</a>
-    <a href="#contact">CONTACT</a>
   </nav>
   <div class="hr">
     <div class="soc">
@@ -698,49 +696,10 @@
 
   <button class="vmute" id="vMute" aria-label="Toggle sound"></button>
 
-  <a class="vscroll" href="#about" aria-label="Scroll down">
+  <a class="vscroll" href="#marketplace" aria-label="Scroll down">
     <span class="mouse"></span>
     SCROLL
   </a>
-</section>
-
-<!-- ABOUT (embed, below home) -->
-<!-- Held until 1 September, but not emptied.
-     The page underneath stays where it was, blurred and dimmed, with the
-     notice over it. An empty panel says the section does not exist yet; a
-     shape behind glass says it is built and waiting, which is the true
-     state and the more persuasive one.
-
-     The iframes keep data-src, so they still only load when the visitor
-     scrolls near them -- a section nobody reaches costs nothing. -->
-<section id="about" class="embedsec veiled" data-section="about">
-  <iframe class="embed abembed" data-src="about.html" title="ABOUT MEMONS" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
-  <div class="veil">
-    <div class="soon">
-      <div class="sec-eyebrow">ABOUT MEMONS</div>
-      <div class="sec-title">COMING SOON</div>
-      <p class="sec-sub">Opening 1 September 2026.<br>The open beta event is running now.</p>
-      <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
-    </div>
-  </div>
-</section>
-
-<!-- MEMONS VAULT -->
-<section id="vault" class="embedsec veiled" data-section="vault">
-  <iframe class="embed vembed" data-src="vault.html#embed" title="MEMONS VAULT" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
-  <div class="veil">
-    <div class="soon">
-      <div class="sec-eyebrow">MEMONS VAULT</div>
-      <div class="sec-title">COMING SOON</div>
-      <p class="sec-sub">Opening 1 September 2026.<br>Your cards are being kept safe until then.</p>
-      <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
-    </div>
-  </div>
-</section>
-
-<!-- OPEN CAPSULE (embed) -->
-<section id="capsule" class="embedsec">
-  <iframe class="embed" data-src="open-capsule.html#embed" title="OPEN CAPSULE" loading="lazy" allow="autoplay"></iframe>
 </section>
 
 <!-- MARKETPLACE -->
@@ -751,6 +710,24 @@
       <div class="sec-eyebrow">MARKETPLACE</div>
       <div class="sec-title">COMING SOON</div>
       <p class="sec-sub">Opening 1 September 2026.<br>Trade, collect, and flex your memes.</p>
+      <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- OPEN CAPSULE (embed) -->
+<section id="capsule" class="embedsec">
+  <iframe class="embed" data-src="open-capsule.html#embed" title="OPEN CAPSULE" loading="lazy" allow="autoplay"></iframe>
+</section>
+
+<!-- MEMONS VAULT -->
+<section id="vault" class="embedsec veiled" data-section="vault">
+  <iframe class="embed vembed" data-src="vault.html#embed" title="MEMONS VAULT" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+  <div class="veil">
+    <div class="soon">
+      <div class="sec-eyebrow">MEMONS VAULT</div>
+      <div class="sec-title">COMING SOON</div>
+      <p class="sec-sub">Opening 1 September 2026.<br>Your cards are being kept safe until then.</p>
       <div class="sec-cta"><a class="gbtn" href="mypage-missions">JOIN THE EVENT</a></div>
     </div>
   </div>
@@ -775,7 +752,7 @@
 /* video intro + menu-order scrollspy + mute toggle */
 (function(){
   const head=document.querySelector('header.head');
-  const ids=['home','about','vault','capsule','marketplace','contact'];
+  const ids=['home','marketplace','capsule','vault','contact'];
   const links={}; ids.forEach(id=>{ const a=document.querySelector('.nav a[href="#'+id+'"]'); if(a) links[id]=a; });
   const scroller=document.body;
   const onScroll=()=>{
@@ -801,7 +778,7 @@
 /* ===== wheel = horizontal slide nav (iframe slides forward via postMessage) ===== */
 (function(){
   const scroller=document.body;
-  const sections=['home','about','vault','capsule','marketplace','contact'].map(id=>document.getElementById(id)).filter(Boolean);
+  const sections=['home','marketplace','capsule','vault','contact'].map(id=>document.getElementById(id)).filter(Boolean);
   let lock=false;
   function curIdx(){ return Math.round(scroller.scrollLeft/window.innerWidth); }
   function goSlide(dir){
@@ -923,19 +900,23 @@
   var close=document.createElement('button'); close.className='m-close'; close.setAttribute('aria-label','Close menu');
   close.innerHTML='<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
   drawer.appendChild(close);
-  var snav=document.querySelector('.snav');
-  var myBox=null;
-  if(snav){ var s1=document.createElement('div'); s1.className='m-sec'; s1.textContent='MY PAGE'; drawer.appendChild(s1);
-    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
-  else {
-    myBox=document.createElement('div');
-    var ms=document.createElement('div'); ms.className='m-sec'; ms.textContent='MY PAGE'; myBox.appendChild(ms);
-    var ml=document.createElement('a'); ml.href='mypage-dashboard.html'; ml.textContent='Go to My Page'; ml.style.color='#E9B84A'; ml.style.fontWeight='700'; myBox.appendChild(ml);
-    myBox.style.display='none'; drawer.appendChild(myBox);
-  }
+  /* The site's own menu first, then My Page as a single line under it.
+
+     My Page used to open the drawer with its own eleven entries above the
+     five that get someone around the site, which put the least-used items
+     where the eye lands and buried the rest. Its sub-pages have a sidebar
+     of their own once you are inside, so one line is enough here. */
   var topnav=document.querySelector('.head nav');
   if(topnav){ var s2=document.createElement('div'); s2.className='m-sec'; s2.textContent='MENU'; drawer.appendChild(s2);
     Array.prototype.forEach.call(topnav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+
+  var myBox=document.createElement('div');
+  var ml=document.createElement('a');
+  ml.href='mypage-dashboard.html'; ml.textContent='MY PAGE';
+  ml.style.color='#E9B84A'; ml.style.fontWeight='700';
+  myBox.appendChild(ml);
+  // Only for a connected wallet: there is nothing behind it otherwise.
+  myBox.style.display='none'; drawer.appendChild(myBox);
   var head=document.querySelector('.head');
   if(head && burger){ head.insertBefore(burger, head.firstChild); } else if(burger){ burger.style.display='none'; }
   function syncMy(){ if(myBox){ myBox.style.display = document.body.classList.contains('wallet-connected') ? 'block' : 'none'; } }
@@ -1366,5 +1347,9 @@
   });
 })();
 </script>
+<!-- Vercel Web Analytics. Every page carries it: the sections are
+     iframes, so a tag on the shell alone would count one visit for a
+     session that moved through five of them. -->
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

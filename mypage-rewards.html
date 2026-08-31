@@ -243,6 +243,16 @@
   /* Verified and waiting on the payout: nothing left for the visitor to do,
      so the box stops using the colour that means "act on this". */
   .drawnote.done{border-color:rgba(92,207,146,.4);background:rgba(92,207,146,.07);color:#5ccf92}
+
+  .m-drawer .m-fold{display:flex;align-items:center;justify-content:space-between;
+    width:100%;background:transparent;border:0;cursor:pointer;text-align:left;
+    font-family:var(--font-head,inherit);font-size:10px;letter-spacing:2px;
+    color:#E9B84A;font-weight:700;padding:12px 12px 6px}
+  .m-drawer .m-caret{font-size:15px;letter-spacing:0;transition:transform .2s;
+    transform:rotate(0deg);line-height:1}
+  .m-drawer .m-fold.open .m-caret{transform:rotate(90deg)}
+  .m-drawer .m-sub{display:none}
+  .m-drawer .m-sub.open{display:block}
 </style>
   <script src="maintenance.js" defer></script>
 </head>
@@ -251,8 +261,8 @@
 <header class="head">
   <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
   <nav class="nav">
-    <a href="index.html#home">HOME</a><a href="index.html#about">ABOUT</a><a href="index.html#vault">MEMONS VAULT</a>
-    <a href="index.html#capsule">OPEN CAPSULE</a><a href="index.html#marketplace">MARKETPLACE</a><a href="notice.html">NOTICE</a><a href="index.html#contact">CONTACT</a>
+    <a href="index.html#home">HOME</a><a href="index.html#marketplace">MARKETPLACE</a><a href="index.html#capsule">OPEN CAPSULE</a>
+    <a href="index.html#vault">MEMONS VAULT</a><a href="notice.html">NOTICE</a>
   </nav>
   <div class="hr">
     <div class="soc">
@@ -707,19 +717,48 @@
   var close=document.createElement('button'); close.className='m-close'; close.setAttribute('aria-label','Close menu');
   close.innerHTML='<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
   drawer.appendChild(close);
+  /* The site's own menu first, then the My Page list under it.
+
+     My Page used to open the drawer with its own eight entries above the
+     five that get someone around the site, which put the way out of this
+     section below the fold. */
+  var topnav0=document.querySelector('.head nav');
+  if(topnav0){ var s0=document.createElement('div'); s0.className='m-sec'; s0.textContent='MENU'; drawer.appendChild(s0);
+    Array.prototype.forEach.call(topnav0.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+
+  /* My Page folds away until it is asked for.
+
+     Eight sub-pages listed flat pushed the five links that get someone out
+     of this section past the fold, and only one of the eight is ever the
+     next thing wanted. Open on the page you are already on, so the fold
+     never hides where you are. */
   var snav=document.querySelector('.snav');
   var myBox=null;
-  if(snav){ var s1=document.createElement('div'); s1.className='m-sec'; s1.textContent='MY PAGE'; drawer.appendChild(s1);
-    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+  if(snav){
+    var s1=document.createElement('button');
+    s1.className='m-sec m-fold'; s1.type='button';
+    s1.innerHTML='MY PAGE<span class="m-caret">\u203a</span>';
+
+    var sub=document.createElement('div'); sub.className='m-sub';
+    var here=false;
+    Array.prototype.forEach.call(snav.querySelectorAll('a'),function(a){
+      var c=a.cloneNode(true);
+      if(c.classList.contains('on')) here=true;
+      sub.appendChild(c);
+    });
+    if(here){ s1.classList.add('open'); sub.classList.add('open'); }
+    s1.addEventListener('click',function(){
+      s1.classList.toggle('open'); sub.classList.toggle('open');
+    });
+    drawer.appendChild(s1); drawer.appendChild(sub);
+  }
   else {
     myBox=document.createElement('div');
     var ms=document.createElement('div'); ms.className='m-sec'; ms.textContent='MY PAGE'; myBox.appendChild(ms);
     var ml=document.createElement('a'); ml.href='mypage-dashboard.html'; ml.textContent='Go to My Page'; ml.style.color='#E9B84A'; ml.style.fontWeight='700'; myBox.appendChild(ml);
     myBox.style.display='none'; drawer.appendChild(myBox);
   }
-  var topnav=document.querySelector('.head nav');
-  if(topnav){ var s2=document.createElement('div'); s2.className='m-sec'; s2.textContent='MENU'; drawer.appendChild(s2);
-    Array.prototype.forEach.call(topnav.querySelectorAll('a'),function(a){ drawer.appendChild(a.cloneNode(true)); }); }
+
   var head=document.querySelector('.head');
   if(head && burger){ head.insertBefore(burger, head.firstChild); } else if(burger){ burger.style.display='none'; }
   function syncMy(){ if(myBox){ myBox.style.display = document.body.classList.contains('wallet-connected') ? 'block' : 'none'; } }
@@ -754,5 +793,9 @@
 })();
 </script>
 
+<!-- Vercel Web Analytics. Every page carries it: the sections are
+     iframes, so a tag on the shell alone would count one visit for a
+     session that moved through five of them. -->
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
