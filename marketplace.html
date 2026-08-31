@@ -801,6 +801,111 @@
   .mkm-line.hit:hover{background:rgba(255,255,255,.05)}
   .mkm-line.own.hit:hover{background:rgba(241,193,76,.1)}
 
+
+  /* ===== sale share modal =====
+     One backdrop per rarity with four values laid over it, the same shape
+     index_kpi.html uses for the hero. The buttons are painted into the
+     picture, so they are not elements: transparent hit areas sit where
+     they were drawn. */
+  .sale-ov{position:fixed;inset:0;z-index:9000;display:none;
+           align-items:center;justify-content:center;padding:2vmin;
+           background:rgba(0,0,0,.86)}
+  .sale-ov.on{display:flex}
+
+  /* inline-size, not size: container-type:size would stop this taking its
+     height from the aspect ratio, and it would collapse to nothing. */
+  .sale-art{position:relative;
+    width:min(96vw, calc(96vh * 1402 / 1122));
+    aspect-ratio:1402 / 1122;
+    container-type:inline-size;
+    background:#050505 center/contain no-repeat;
+    border-radius:10px;
+    box-shadow:0 0 0 1px rgba(196,104,216,.25), 0 30px 90px rgba(0,0,0,.7)}
+
+  .sale-art{
+    --card-x: 1.63%;   --card-y: 11.91%;
+    --card-w: 45%;     --card-h: 70%;
+    --pcard-x: 73.7%;  --pcard-y: 58.95%;
+    --pcard-w: 7.06%;  --pcard-h: 14.26%;
+
+    --price-x: 78.13%;  --price-y: 34.75%;  --price-s: 7.25cqw;
+    --price-c: #ffffff; --price-b: 800;     --price-l: 0em;
+
+    --name-x: 50.21%;   --name-y: 49.91%;   --name-s: 1.85cqw;
+    --name-c: #ffffff;  --name-b: 700;      --name-l: 0em;
+
+    --pprice-x: 87.73%; --pprice-y: 71.12%; --pprice-s: 1.85cqw;
+    --pprice-c: #ffffff;--pprice-b: 800;    --pprice-l: 0em;
+
+    --pname-x: 82.25%;  --pname-y: 62.53%;  --pname-s: 1.07cqw;
+    --pname-c: #ffffff; --pname-b: 700;     --pname-l: 0em;
+
+    --balance-x: 36.02%;--balance-y: 92.07%;--balance-s: 1.21cqw;
+    --balance-c: rgba(232,230,224,.92);
+    --balance-b: 400;   --balance-l: 0.02em}
+
+  /* legendary moves six values, mythic seventeen. Only the differences
+     are listed: a shared number has one place to change. */
+  .sale-art[data-rarity="legendary"]{
+    --price-y: 34.06%;  --name-y: 48.76%;
+    --pprice-x: 87.09%; --pprice-y: 69.40%;
+    --pname-x: 81.61%;  --pname-y: 61.38%}
+
+  .sale-art[data-rarity="mythic"]{
+    --card-x: 5.85%;    --card-y: 8.58%;
+    --card-w: 37.87%;   --card-h: 81.82%;
+    --pcard-x: 74.07%;  --pcard-y: 61.14%;
+    --price-x: 76.47%;  --price-y: 33.83%;  --price-s: 4.28cqw;
+    --name-x: 51.40%;   --name-y: 48.07%;
+    --pprice-x: 86.63%; --pprice-y: 70.78%;
+    --pname-x: 79.31%;  --pname-y: 59.32%;
+    --balance-x: 37.58%;--balance-y: 92.53%}
+
+  .sale-art .v{position:absolute;line-height:1;white-space:nowrap;
+    transform:translateY(-50%);pointer-events:none;font-family:var(--font-head,inherit)}
+  .sale-art .a{position:absolute;pointer-events:none}
+  .sale-art .a img{width:100%;height:100%;display:block}
+
+  #sCard{left:var(--card-x);top:var(--card-y);width:var(--card-w);height:var(--card-h)}
+  #sCard img{object-fit:contain}
+  #sPcard{left:var(--pcard-x);top:var(--pcard-y);width:var(--pcard-w);
+    height:var(--pcard-h);overflow:hidden}
+  #sPcard img{object-fit:cover}
+
+  /* Right-anchored: USDT is printed on the backdrop, so the figure has to
+     end short of it. Anchored left, 9.50 and 1250.00 would start in the
+     same place and the wider one would run into the word. */
+  #sPrice{right:calc(100% - var(--price-x));top:var(--price-y);
+    font-size:var(--price-s);color:var(--price-c);
+    font-weight:var(--price-b);letter-spacing:var(--price-l)}
+  #sPprice{right:calc(100% - var(--pprice-x));top:var(--pprice-y);
+    font-size:var(--pprice-s);color:var(--pprice-c);
+    font-weight:var(--pprice-b);letter-spacing:var(--pprice-l)}
+  #sName{left:var(--name-x);top:var(--name-y);
+    font-size:var(--name-s);color:var(--name-c);
+    font-weight:var(--name-b);letter-spacing:var(--name-l)}
+  #sPname{left:var(--pname-x);top:var(--pname-y);
+    font-size:var(--pname-s);color:var(--pname-c);
+    font-weight:var(--pname-b);letter-spacing:var(--pname-l)}
+  #sBal{left:var(--balance-x);top:var(--balance-y);
+    font-size:var(--balance-s);color:var(--balance-c);
+    font-weight:var(--balance-b);letter-spacing:var(--balance-l)}
+
+  .sale-art .hit{position:absolute;cursor:pointer;background:transparent;
+    border:0;padding:0;border-radius:8px}
+  .sale-art .hit:focus-visible{outline:2px solid #E9B84A;outline-offset:2px}
+  #hClose {left:95.36%;top:2.80%; width:2.57%; height:2.96%}
+  #hShare {left:50.07%;top:68.81%;width:20.76%;height:5.26%}
+  #hMarket{left:48.50%;top:75.76%;width:22.33%;height:5.08%}
+  #hCloseB{left:37.59%;top:84.40%;width:24.25%;height:4.81%}
+  #hBal   {left:42.15%;top:94.60%;width:14.55%;height:2.52%}
+
+  /* SHARE in the filled list */
+  .his-share{font:inherit;font-size:10px;font-weight:700;letter-spacing:1px;
+    color:#E9B84A;background:transparent;border:1px solid rgba(233,184,74,.45);
+    border-radius:7px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+  .his-share:hover{background:rgba(233,184,74,.12);border-color:#E9B84A}
+
   /* ===== my orders ===== */
   /* Grid, not flex. Flex sized each button to its label, so MY ORDERS
      wrapped to two lines and stood taller than the two beside it while
@@ -3583,6 +3688,33 @@
       renderOwnOrders();
       setMode(mode);
       loadBalance();
+
+      /* A sale that filled while the seller was standing here. The window
+         is the same one the SHARE button in the filled list opens; only
+         the balance line differs, and it differs because here the money
+         really did just arrive.
+
+         The row is read out of the order history rather than assembled
+         from what was sent, because the share link is the trade id and
+         the id only exists on the server side of the fill. The history is
+         loaded first: it holds whatever was there when MY ORDERS was last
+         opened, which for most sellers is nothing at all.
+
+         Guarded on mode -- a buy fills the same way and there is nothing
+         to share about one. */
+      if(mode === 'sell' && taken.length && !stopped &&
+         typeof openSaleShare === 'function'){
+        try{
+          await hisLoad();
+          var justSold = (hisData && hisData.trades || []).filter(function(t){
+            return t.side === 'sell' && t.card_id === cur.card_id;
+          })[0];
+          if(justSold){
+            justSold.justNow = true;
+            openSaleShare(justSold);
+          }
+        }catch(_){ /* the trade went through; the window is a courtesy */ }
+      }
     }catch(e){
       var msg=String((e&&e.message)||e);
       var human={
@@ -3936,9 +4068,18 @@
       }).join('')+'</div>'+pager;
   }
 
+  /* Only a sale, and only a rarity that has share artwork. A buy has
+     nothing to boast about, and the three backdrops that exist are the
+     three rarities that can be traded at all. */
+  var SHARE_RARITY = { epic:1, legendary:1, mythic:1 };
+  function canShare(t){
+    return t && t.side === 'sell' && t.id != null &&
+           SHARE_RARITY[String(t.rarity || '').toLowerCase()] === 1;
+  }
+
   function hisTrades(){
     return htbl(
-      [['DATE','1fr'],['CARD','1.5fr'],['SIDE','.7fr'],['WITH','.9fr'],['PRICE','.8fr'],['NET','.9fr']],
+      [['DATE','1fr'],['CARD','1.5fr'],['SIDE','.7fr'],['WITH','.9fr'],['PRICE','.8fr'],['NET','.9fr'],['','.6fr']],
       hisData.trades,
       function(t){
         var sell=t.side==='sell';
@@ -3951,7 +4092,10 @@
           '<span data-l="WITH" class="his-mono">'+esc(hshort(t.counterparty))+'</span>'+
           '<span data-l="PRICE" class="his-n">'+hnum(t.price)+'</span>'+
           '<span data-l="NET" class="his-n '+(t.net>=0?'his-up':'his-dn')+'">'+hsign(t.net)+
-            (sell && t.fee ? '<span class="his-fee">fee '+hnum(t.fee)+'</span>' : '')+'</span>';
+            (sell && t.fee ? '<span class="his-fee">fee '+hnum(t.fee)+'</span>' : '')+'</span>'+
+          '<span data-l="">'+(canShare(t)
+            ? '<button class="his-share" data-share="'+esc(String(t.id))+'">SHARE</button>'
+            : '')+'</span>';
       },
       'Nothing filled yet.', 'Orders that complete will be listed here with what you paid or received.');
   }
@@ -4034,6 +4178,19 @@
       b.onclick=function(){
         hisPage[ordTab] = (hisPage[ordTab]||1) + Number(b.dataset.hd);
         hisRenderPane();
+      };
+    });
+    /* Bound here rather than once on the container: this pane is redrawn
+       whenever a tab or a page changes, and a handler attached to rows
+       that no longer exist is a handler on nothing. */
+    host.querySelectorAll('.his-share[data-share]').forEach(function(b){
+      b.onclick=function(){
+        var id=b.getAttribute('data-share');
+        var row=null, list=hisData && hisData.trades || [];
+        for(var i=0;i<list.length;i++){
+          if(String(list[i].id)===id){ row=list[i]; break; }
+        }
+        if(row) openSaleShare(row);
       };
     });
     /* The server caps each list, separately from the paging above. The
@@ -4786,5 +4943,172 @@
      iframes, so a tag on the shell alone would count one visit for a
      session that moved through five of them. -->
 <script defer src="/_vercel/insights/script.js"></script>
+
+<!-- ===== sale share modal =====
+     Two ways in and one window: the SHARE button in the filled list, and
+     a sale that completes while the seller is looking. Built as a share
+     screen rather than a notification, so nothing has to remember which
+     sales the seller has already seen. -->
+<div class="sale-ov" id="saleOv">
+  <div class="sale-art" id="saleArt">
+    <div class="a" id="sCard"><img alt=""></div>
+    <div class="v" id="sPrice"></div>
+    <div class="v" id="sName"></div>
+    <div class="a" id="sPcard"><img alt=""></div>
+    <div class="v" id="sPname"></div>
+    <div class="v" id="sPprice"></div>
+    <div class="v" id="sBal"></div>
+
+    <button class="hit" id="hClose"  aria-label="Close"></button>
+    <button class="hit" id="hShare"  aria-label="Share on X"></button>
+    <button class="hit" id="hMarket" aria-label="View on marketplace"></button>
+    <button class="hit" id="hCloseB" aria-label="Close"></button>
+    <button class="hit" id="hBal"    aria-label="View balance"></button>
+  </div>
+</div>
+
+
+<script>
+/* ===== sale share =====
+   Opened from the SHARE button in the filled list, and from a sale that
+   completes while the seller is on the page. The same window either way,
+   so nothing has to track which sales have already been seen.
+
+   Every figure shown is the row's own. Nothing is read back out of the
+   window, so opening it twice for two sales cannot leave a value from
+   the first one behind. */
+(function(){
+  "use strict";
+  var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
+  /* apepe.io redirects to www, and a crawler handed the bare host reads
+     og:url naming an address that then moves it elsewhere. The share
+     endpoint pins the same host for the same reason. */
+  var SHARE_HOST = 'https://www.apepe.io';
+
+  var BG_BASE = 'images/sale/';
+  var RARITY  = { epic:1, legendary:1, mythic:1 };
+
+  function $s(id){ return document.getElementById(id); }
+  var ov = $s('saleOv'), art = $s('saleArt');
+  if(!ov || !art) return;
+
+  var current = null;
+
+  /* Fetched once and kept. The wording is set in the admin and changes
+     rarely; asking for it on every open would put a round trip in front
+     of a window that is otherwise instant. */
+  var textCache = null;
+  function shareText(){
+    if(textCache !== null) return Promise.resolve(textCache);
+    return fetch(SB_URL + '/rest/v1/rpc/share_sale_text', {
+      method:'POST',
+      headers:{ 'content-type':'application/json',
+                apikey:SB_ANON, Authorization:'Bearer '+SB_ANON },
+      body:'{}'
+    }).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(t){
+        textCache = (typeof t === 'string' && t) ? t :
+          'Pulled. Collected. SOLD. \u26A1\n' +
+          'See what this MEMON turned into on the Marketplace.\n#MEMONS';
+        return textCache;
+      })
+      .catch(function(){
+        textCache = 'Pulled. Collected. SOLD. \u26A1\n' +
+          'See what this MEMON turned into on the Marketplace.\n#MEMONS';
+        return textCache;
+      });
+  }
+
+  /* cards.name holds only the number within its rarity, the same as in
+     the grid above. */
+  function nameOf(t){
+    var n = String(t.card_name == null ? '' : t.card_name).trim();
+    return /^\d+$/.test(n) ? 'APEPE #' + n : (n || t.card_id || '');
+  }
+
+  window.openSaleShare = function(t){
+    if(!t) return;
+    var rarity = String(t.rarity || '').toLowerCase();
+    if(RARITY[rarity] !== 1) return;
+
+    current = t;
+    var price = Number(t.price || 0).toFixed(2);
+    var name  = nameOf(t);
+    var img   = t.image_url || '';
+
+    art.setAttribute('data-rarity', rarity);
+    art.style.backgroundImage = 'url("' + BG_BASE + rarity + '.png")';
+
+    $s('sCard').firstElementChild.src  = img;
+    $s('sPcard').firstElementChild.src = img;
+
+    $s('sPrice').textContent  = price;
+    $s('sPprice').textContent = price;
+    $s('sName').textContent   = name;
+    $s('sPname').textContent  = name;
+
+    /* Only said when the sale just happened. Opened from the history a
+       month later, "has been added to your balance" is describing
+       something that finished long ago. */
+    $s('sBal').textContent = t.justNow
+      ? price + ' USDT has been added to your balance.' : '';
+
+    ov.classList.add('on');
+    document.body.style.overflow = 'hidden';
+    var c = $s('hClose'); if(c) c.focus();
+
+    shareText();   // warm it while the window is being looked at
+  };
+
+  function close(){
+    ov.classList.remove('on');
+    document.body.style.overflow = '';
+    current = null;
+  }
+
+  /* Clicking the dark area closes; clicking the artwork does not. Without
+     the second half, a drag that starts on the picture and ends outside
+     counts as a click on the overlay and the window shuts mid-gesture. */
+  ov.addEventListener('mousedown', function(e){ ov._from = e.target; });
+  ov.addEventListener('click', function(e){
+    if(e.target === ov && ov._from === ov) close();
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && ov.classList.contains('on')) close();
+  });
+
+  $s('hClose').onclick  = close;
+  $s('hCloseB').onclick = close;
+
+  $s('hShare').onclick = function(){
+    if(!current) return;
+    var url = SHARE_HOST + '/s/' + encodeURIComponent(String(current.id));
+    shareText().then(function(text){
+      window.open('https://x.com/intent/tweet' +
+        '?text=' + encodeURIComponent(
+            text.replace(/\{rarity\}/g, String(current.rarity||'').toUpperCase())
+                .replace(/\{name\}/g, nameOf(current))) +
+        '&url=' + encodeURIComponent(url),
+        '_blank', 'noopener,noreferrer,width=600,height=560');
+    });
+  };
+
+  $s('hMarket').onclick = function(){
+    if(!current || !current.card_id) { close(); return; }
+    close();
+    location.hash = '#card=' + encodeURIComponent(current.card_id);
+    location.reload();
+  };
+
+  $s('hBal').onclick = function(){
+    close();
+    var b = document.querySelector('#ordTabs .ord-tab[data-t="ledger"]');
+    if(b) b.click();
+  };
+})();
+</script>
+
 </body>
 </html>
