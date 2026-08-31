@@ -19,6 +19,10 @@
       "destination": "/api/r/:code"
     },
     {
+      "source": "/s/:id",
+      "destination": "/api/s/:id"
+    },
+    {
       "source": "/communityflow",
       "destination": "https://apepe-communityflow.vercel.app/"
     },

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>MEMONS — 판매 모달 좌표 튜너</title>
+<!--
+  Local only. Never linked from the site and never committed.
+
+  The sale modal is one background image per rarity with a handful of
+  values laid over it, the same shape index_kpi.html uses for the hero.
+  That shape is only workable if the coordinates can be found by eye, so
+  this page exists to find them: load a background, drag the values onto
+  their slots, copy the block out.
+
+  Everything is a percentage of the image, never a pixel. The modal is
+  sized by the viewport it opens in, and a pixel that is right at 1402
+  wide is wrong at every other width.
+
+  Sizes are drawn here in px, worked out from the frame's measured width.
+  An earlier version used container query units so the preview would need
+  no arithmetic -- but container-type:size stops an element taking its
+  size from its contents, and the frame takes its size from the image
+  inside it, so it collapsed to nothing the moment a background loaded.
+  The export is still in cqw, which is what the modal will use; only the
+  preview does the arithmetic.
+-->
+<style>
+  :root{
+    --bg:#0a0a0c; --panel:#131317; --line:#26262e;
+    --text:#e8e6e0; --muted:#8a8a95; --accent:#c468d8; --gold:#E9B84A;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:13px/1.5 ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+       display:flex;height:100vh;overflow:hidden}
+
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;
+         padding:20px;overflow:auto;background:#050505}
+  .frame{position:relative;line-height:0;box-shadow:0 0 0 1px var(--line)}
+  .frame>img.bgimg{display:block;max-width:100%;max-height:calc(100vh - 40px);
+                   width:auto;height:auto}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:60px;
+         border:1px dashed var(--line);border-radius:10px;line-height:1.8}
+
+  .slot{position:absolute;cursor:move;user-select:none;line-height:1;
+        outline:1px dashed rgba(196,104,216,.55);outline-offset:2px;
+        display:flex;white-space:nowrap;
+        font-family:ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+  .slot.sel{outline:1px solid var(--gold);outline-offset:3px}
+  .slot.hidebox{outline:none}
+  .slot>img{width:100%;height:100%;object-fit:contain;display:block}
+  .slot.imgslot{outline:1px dashed rgba(233,184,74,.5)}
+
+  .side{width:360px;flex-shrink:0;background:var(--panel);
+        border-left:1px solid var(--line);display:flex;flex-direction:column}
+  .side h1{margin:0;padding:14px 16px;font-size:13px;letter-spacing:1.4px;
+           border-bottom:1px solid var(--line);font-weight:700}
+  .scroll{flex:1;overflow-y:auto;padding:14px 16px}
+  .grp{margin-bottom:18px}
+  .grp>b{display:block;font-size:11px;letter-spacing:1.2px;color:var(--muted);
+         margin-bottom:7px;text-transform:uppercase}
+  label.f{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+  label.f>span{width:74px;color:var(--muted);flex-shrink:0}
+  input[type=text],input[type=number],select{
+    flex:1;min-width:0;background:#08080a;border:1px solid var(--line);
+    color:var(--text);border-radius:6px;padding:5px 8px;font:inherit;font-size:12px}
+  input[type=file]{font-size:11px;color:var(--muted);width:100%}
+  input[type=range]{flex:1;accent-color:var(--accent)}
+  button{background:#1c1c22;border:1px solid var(--line);color:var(--text);
+         border-radius:6px;padding:7px 11px;font:inherit;font-size:12px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700}
+  .slotlist{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+  .slotlist button{padding:5px 9px;font-size:11.5px}
+  .slotlist button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .hint{font-size:11px;color:var(--muted);line-height:1.7;margin-top:6px}
+  textarea{width:100%;height:220px;background:#08080a;border:1px solid var(--line);
+           color:#b8e0c8;border-radius:6px;padding:9px;
+           font:11px/1.55 ui-monospace,Consolas,monospace;resize:vertical}
+  .row{display:flex;gap:6px}
+  .row>*{flex:1}
+</style>
+
+<div class="stage">
+  <div id="frame" class="frame"></div>
+</div>
+
+<div class="side">
+  <h1>판매 모달 좌표 튜너</h1>
+  <div class="scroll">
+
+    <div class="grp">
+      <b>이미지</b>
+      <label class="f"><span>배경</span><input type="file" id="fBg" accept="image/*"></label>
+      <label class="f"><span>카드 그림</span><input type="file" id="fCard" accept="image/*"></label>
+      <div class="hint">배경은 등급별로 하나씩. 좌표는 퍼센트라 등급이 달라도
+        같은 템플릿이면 그대로 씁니다.</div>
+    </div>
+
+    <div class="grp">
+      <b>넣을 값</b>
+      <label class="f"><span>가격</span><input type="text" id="vPrice" value="10.08"></label>
+      <label class="f"><span>카드명</span><input type="text" id="vName" value="APEPE #0004"></label>
+    </div>
+
+    <div class="grp">
+      <b>자리 선택</b>
+      <div class="slotlist" id="tabs"></div>
+
+      <label class="f"><span>좌 %</span><input type="number" id="pX" step="0.05"></label>
+      <label class="f"><span>상 %</span><input type="number" id="pY" step="0.05"></label>
+      <label class="f" id="rowS"><span>글자 %</span>
+        <input type="range" id="pS" min="0.3" max="10" step="0.05">
+        <input type="number" id="pSn" step="0.05" style="max-width:68px"></label>
+      <label class="f" id="rowA"><span>정렬</span>
+        <select id="pA">
+          <option value="left">왼쪽 기준</option>
+          <option value="right">오른쪽 기준</option>
+          <option value="center">가운데 기준</option>
+        </select></label>
+      <label class="f" id="rowW"><span>폭 %</span><input type="number" id="pW" step="0.1"></label>
+      <label class="f" id="rowH"><span>높이 %</span><input type="number" id="pH" step="0.1"></label>
+      <label class="f" id="rowC"><span>색</span><input type="text" id="pC"></label>
+      <label class="f" id="rowB"><span>굵기</span>
+        <select id="pB">
+          <option value="400">400</option><option value="600">600</option>
+          <option value="700">700</option><option value="800">800</option>
+        </select></label>
+      <label class="f" id="rowL"><span>자간 %</span><input type="number" id="pL" step="0.02"></label>
+
+      <div class="hint">
+        드래그로 이동. 선택 후 <b>방향키</b> 0.05%, <b>Shift+방향키</b> 0.5%.<br>
+        오른쪽 기준은 USDT 앞 숫자처럼 <b>길어져도 끝이 안 밀려야</b> 하는 값에 씁니다.
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="row">
+        <button id="bBox">점선 끄기</button>
+        <button id="bReset">처음값으로</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <b>결과</b>
+      <textarea id="out" readonly></textarea>
+      <div class="row" style="margin-top:7px"><button class="pri" id="bCopy">복사</button></div>
+      <div class="hint">이 블록을 판매 모달 CSS에 넣습니다.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var W = 1402, H = 1122;
+  function pw(v){ return +((v / W) * 100).toFixed(2); }   // % of width
+  function ph(v){ return +((v / H) * 100).toFixed(2); }   // % of height
+
+  /* Measured off epic.png. Sizes are a percentage of the image WIDTH,
+     because that is what cqw means in the exported block -- the export
+     has to be the thing being tuned, not a conversion of it. */
+  var DEFAULTS = {
+    card:    { kind:'img',  label:'카드 그림',
+               x:pw(82),  y:ph(162), w:pw(531), h:ph(918) },
+
+    /* Right-anchored: USDT sits at x1105 on the background, so the figure
+       ends just short of it. Anchored left, "9.50" and "1250.00" would
+       start in the same place and the wider one would run into the word. */
+    price:   { kind:'text', label:'가격', align:'right',
+               x:pw(1085), y:ph(404), size:pw(60),
+               color:'#ffffff', weight:'800', ls:0 },
+
+    name:    { kind:'text', label:'카드명', align:'left',
+               x:pw(704),  y:ph(560), size:pw(26),
+               color:'#ffffff', weight:'700', ls:0 },
+
+    /* Inside the small preview card. Its own artwork and its own name --
+       the same two values as the big panel, drawn again at a size where
+       the thumbnail has to be cropped rather than fitted: the slot is
+       roughly square and the card is not, so contain would leave bars. */
+    pcard:   { kind:'img',  label:'미리보기 그림', fit:'cover',
+               x:pw(1032), y:ph(655), w:pw(99), h:ph(160) },
+
+    pname:   { kind:'text', label:'미리보기 카드명', align:'left',
+               x:pw(1139), y:ph(699), size:pw(15),
+               color:'#ffffff', weight:'700', ls:0 },
+
+    pprice:  { kind:'text', label:'미리보기 가격', align:'right',
+               x:pw(1230), y:ph(798), size:pw(26),
+               color:'#ffffff', weight:'800', ls:0 },
+
+    balance: { kind:'text', label:'잔액 문구', align:'left',
+               x:pw(505),  y:ph(1033), size:pw(17),
+               color:'rgba(232,230,224,.92)', weight:'400', ls:0.02 }
+  };
+
+  var S = JSON.parse(JSON.stringify(DEFAULTS));
+  var sel = 'price', showBox = true;
+  var bgURL = null, cardURL = null;
+  var frameW = 0;
+
+  function $(id){ return document.getElementById(id); }
+  var frame = $('frame');
+
+  function sample(k){
+    var p = $('vPrice').value || '0.00';
+    if (k === 'price' || k === 'pprice') return p;
+    if (k === 'name' || k === 'pname') return $('vName').value || '';
+    if (k === 'balance') return p + ' USDT has been added to your balance.';
+    return '';
+  }
+
+  /* ---- draw ----------------------------------------------------------
+     The background element is created once and kept. Rebuilding it on
+     every mousemove restarted the decode, and the frame lost its width
+     between frames -- which is the number every slot is placed against. */
+  var bgImg = null;
+
+  function ensureBg(){
+    if (!bgURL){
+      bgImg = null;
+      frame.innerHTML =
+        '<div class="empty">배경 이미지를 오른쪽에서 불러오세요<br>' +
+        '<span style="font-size:12px">epic.png · legendary.png …</span></div>';
+      return false;
+    }
+    if (!bgImg){
+      frame.innerHTML = '';
+      bgImg = document.createElement('img');
+      bgImg.className = 'bgimg';
+      bgImg.onload = function(){ measure(); render(); };
+      bgImg.src = bgURL;
+      frame.appendChild(bgImg);
+    }
+    return true;
+  }
+
+  function measure(){
+    frameW = bgImg ? bgImg.getBoundingClientRect().width : 0;
+  }
+
+  function render(){
+    if (!ensureBg()){ writeOut(); return; }
+
+    // clear slots only, leave the background in place
+    var old = frame.querySelectorAll('.slot');
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+
+    if (!frameW) measure();
+
+    Object.keys(S).forEach(function(k){
+      var s = S[k];
+      var d = document.createElement('div');
+      d.className = 'slot' + (k === sel ? ' sel' : '') +
+                    (showBox ? '' : ' hidebox') +
+                    (s.kind === 'img' ? ' imgslot' : '');
+      d.setAttribute('data-k', k);
+
+      if (s.kind === 'img'){
+        d.style.left = s.x + '%'; d.style.top = s.y + '%';
+        d.style.width = s.w + '%'; d.style.height = s.h + '%';
+        if (cardURL){
+          var ci = document.createElement('img');
+          ci.src = cardURL;
+          ci.style.objectFit = s.fit || 'contain';
+          d.appendChild(ci);
+        }
+      } else {
+        d.style.top = s.y + '%';
+        if (s.align === 'right'){
+          d.style.right = (100 - s.x) + '%';
+          d.style.transform = 'translateY(-50%)';
+        } else if (s.align === 'center'){
+          d.style.left = s.x + '%';
+          d.style.transform = 'translate(-50%,-50%)';
+        } else {
+          d.style.left = s.x + '%';
+          d.style.transform = 'translateY(-50%)';
+        }
+        // a percentage of the image width, resolved against the frame as
+        // it is drawn right now
+        d.style.fontSize      = ((s.size / 100) * frameW).toFixed(2) + 'px';
+        d.style.color         = s.color;
+        d.style.fontWeight    = s.weight;
+        d.style.letterSpacing = s.ls + 'em';
+        d.textContent = sample(k);
+      }
+      frame.appendChild(d);
+    });
+
+    writeOut();
+  }
+
+  window.addEventListener('resize', function(){ measure(); render(); });
+
+  /* ---- selection + drag ---------------------------------------------- */
+  var drag = null;
+
+  frame.addEventListener('mousedown', function(e){
+    var t = e.target;
+    while (t && t !== frame && t.className.indexOf('slot') < 0) t = t.parentNode;
+    if (!t || t === frame) return;
+    e.preventDefault();
+    sel = t.getAttribute('data-k');
+    var r = frame.getBoundingClientRect();
+    drag = { k:sel, x0:e.clientX, y0:e.clientY,
+             sx:S[sel].x, sy:S[sel].y, w:r.width, h:r.height };
+    paintTabs(); syncFields(); render();
+  });
+
+  window.addEventListener('mousemove', function(e){
+    if (!drag) return;
+    var s = S[drag.k];
+    s.x = +(drag.sx + ((e.clientX - drag.x0) / drag.w) * 100).toFixed(2);
+    s.y = +(drag.sy + ((e.clientY - drag.y0) / drag.h) * 100).toFixed(2);
+    syncFields(); render();
+  });
+
+  window.addEventListener('mouseup', function(){ drag = null; });
+
+  window.addEventListener('keydown', function(e){
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    var d = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    var step = e.shiftKey ? 0.5 : 0.05, s = S[sel];
+    s.x = +(s.x + d[0] * step).toFixed(2);
+    s.y = +(s.y + d[1] * step).toFixed(2);
+    syncFields(); render();
+  });
+
+  /* ---- fields --------------------------------------------------------- */
+  function paintTabs(){
+    var host = $('tabs'); host.innerHTML = '';
+    Object.keys(S).forEach(function(k){
+      var b = document.createElement('button');
+      b.textContent = S[k].label;
+      if (k === sel) b.className = 'on';
+      b.onclick = function(){ sel = k; paintTabs(); syncFields(); render(); };
+      host.appendChild(b);
+    });
+  }
+
+  function show(id, on){ $(id).style.display = on ? '' : 'none'; }
+
+  function syncFields(){
+    var s = S[sel], isImg = s.kind === 'img';
+    $('pX').value = s.x; $('pY').value = s.y;
+    show('rowW', isImg); show('rowH', isImg);
+    ['rowS','rowA','rowC','rowB','rowL'].forEach(function(r){ show(r, !isImg); });
+    if (isImg){ $('pW').value = s.w; $('pH').value = s.h; }
+    else {
+      $('pS').value = s.size; $('pSn').value = s.size;
+      $('pA').value = s.align; $('pC').value = s.color;
+      $('pB').value = s.weight; $('pL').value = s.ls;
+    }
+  }
+
+  function bind(id, key, num){
+    $(id).addEventListener('input', function(){
+      var raw = $(id).value;
+      var v = num ? parseFloat(raw) : raw;
+      if (num && isNaN(v)) return;
+      S[sel][key] = v;
+      if (id === 'pS')  $('pSn').value = v;
+      if (id === 'pSn') $('pS').value  = v;
+      render();
+    });
+  }
+  bind('pX','x',1); bind('pY','y',1); bind('pW','w',1); bind('pH','h',1);
+  bind('pS','size',1); bind('pSn','size',1);
+  bind('pA','align',0); bind('pC','color',0); bind('pB','weight',0); bind('pL','ls',1);
+
+  ['vPrice','vName'].forEach(function(id){
+    $(id).addEventListener('input', render);
+  });
+
+  $('fBg').addEventListener('change', function(e){
+    var f = e.target.files[0]; if (!f) return;
+    bgURL = URL.createObjectURL(f);
+    bgImg = null;          // force a rebuild; onload then measures
+    render();
+  });
+  $('fCard').addEventListener('change', function(e){
+    var f = e.target.files[0]; if (!f) return;
+    cardURL = URL.createObjectURL(f);
+    render();
+  });
+
+  $('bBox').onclick = function(){
+    showBox = !showBox;
+    this.textContent = showBox ? '점선 끄기' : '점선 켜기';
+    render();
+  };
+  $('bReset').onclick = function(){
+    S = JSON.parse(JSON.stringify(DEFAULTS));
+    syncFields(); render();
+  };
+  $('bCopy').onclick = function(){
+    var t = $('out'); t.select(); t.setSelectionRange(0, 99999);
+    try { document.execCommand('copy'); } catch(_) {}
+    var b = this; b.textContent = '복사됨';
+    setTimeout(function(){ b.textContent = '복사'; }, 1200);
+  };
+
+  /* ---- export --------------------------------------------------------
+     Custom properties, not rules, so the modal's stylesheet stays put and
+     only these numbers move. Same arrangement as .hwrap in index_kpi.html.
+     cqw here means 1% of the artwork's width. */
+  function writeOut(){
+    var L = [];
+    L.push('/* 판매 모달 좌표 — sale-tuner.html 로 뽑음 */');
+    L.push('.sale-art{');
+    ['card','pcard'].forEach(function(k){
+      var c = S[k];
+      L.push('  /* ' + c.label + ' — ' + (c.fit || 'contain') + ' */');
+      L.push('  --' + k + '-x: ' + c.x + '%;   --' + k + '-y: ' + c.y + '%;');
+      L.push('  --' + k + '-w: ' + c.w + '%;   --' + k + '-h: ' + c.h + '%;');
+      L.push('');
+    });
+    ['price','name','pprice','pname','balance'].forEach(function(k){
+      var s = S[k];
+      L.push('  /* ' + s.label + ' — ' + (
+        s.align === 'right'  ? '오른쪽 기준' :
+        s.align === 'center' ? '가운데 기준' : '왼쪽 기준') + ' */');
+      L.push('  --' + k + '-x: ' + s.x + '%;');
+      L.push('  --' + k + '-y: ' + s.y + '%;');
+      L.push('  --' + k + '-s: ' + s.size + 'cqw;');
+      L.push('  --' + k + '-c: ' + s.color + ';');
+      L.push('  --' + k + '-b: ' + s.weight + ';');
+      L.push('  --' + k + '-l: ' + s.ls + 'em;');
+      L.push('');
+    });
+    L.push('}');
+    $('out').value = L.join('\n');
+  }
+
+  paintTabs(); syncFields(); render();
+})();
+</script>

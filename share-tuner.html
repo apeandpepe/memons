@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>MEMONS — 공유 이미지 좌표 튜너</title>
+<!--
+  Local only. Never linked from the site and never committed.
+
+  Companion to sale-tuner.html, for the picture X shows rather than the
+  one the site shows. Three values go on: the card, the price, and the
+  percentage. Everything else is painted into the backdrop.
+
+  The X preview toggle matters more here than anywhere else. X renders a
+  link card at 1.91:1 and the artwork is 1.25:1, so the finished image is
+  the artwork sitting on a wider black canvas -- 17% of the width blank
+  on each side. Placing a value against the artwork alone tells you
+  nothing about where it lands in the thing people actually see.
+-->
+<style>
+  :root{ --bg:#0a0a0c; --panel:#131317; --line:#26262e;
+         --text:#e8e6e0; --muted:#8a8a95; --accent:#c468d8; --gold:#E9B84A }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:13px/1.5 ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+       display:flex;height:100vh;overflow:hidden}
+
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;
+         padding:20px;overflow:auto;background:#050505}
+
+  /* The X canvas. Holds the artwork centred; the bars either side are
+     simply this element showing through. */
+  .xwrap{position:relative;background:#000;display:none;
+         box-shadow:0 0 0 1px var(--line)}
+  .xwrap.on{display:block}
+  .xwrap .band{position:absolute;top:0;bottom:0;width:17.25%;
+               background:rgba(255,60,60,.10);display:none;pointer-events:none}
+  .xwrap.mark .band{display:block}
+  .xwrap .band.l{left:0} .xwrap .band.r{right:0}
+
+  .frame{position:relative;line-height:0;box-shadow:0 0 0 1px var(--line)}
+  .xwrap .frame{position:absolute;left:17.25%;top:0;width:65.5%;height:100%;
+                box-shadow:none}
+  .frame>img.bgimg{display:block;width:100%;height:100%}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:60px;
+         border:1px dashed var(--line);border-radius:10px;line-height:1.8}
+
+  .slot{position:absolute;cursor:move;user-select:none;line-height:1;
+        outline:1px dashed rgba(196,104,216,.55);outline-offset:2px;
+        display:flex;white-space:nowrap;
+        font-family:ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+  .slot.sel{outline:1px solid var(--gold);outline-offset:3px}
+  .slot.hidebox{outline:none}
+  .slot>img{width:100%;height:100%;display:block}
+  .slot.imgslot{outline:1px dashed rgba(233,184,74,.5)}
+
+  .side{width:350px;flex-shrink:0;background:var(--panel);
+        border-left:1px solid var(--line);display:flex;flex-direction:column}
+  .side h1{margin:0;padding:14px 16px;font-size:13px;letter-spacing:1.4px;
+           border-bottom:1px solid var(--line);font-weight:700}
+  .scroll{flex:1;overflow-y:auto;padding:14px 16px}
+  .grp{margin-bottom:18px}
+  .grp>b{display:block;font-size:11px;letter-spacing:1.2px;color:var(--muted);
+         margin-bottom:7px;text-transform:uppercase}
+  label.f{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+  label.f>span{width:70px;color:var(--muted);flex-shrink:0}
+  input[type=text],input[type=number],select{
+    flex:1;min-width:0;background:#08080a;border:1px solid var(--line);
+    color:var(--text);border-radius:6px;padding:5px 8px;font:inherit;font-size:12px}
+  input[type=file]{font-size:11px;color:var(--muted);width:100%}
+  input[type=range]{flex:1;accent-color:var(--accent)}
+  button{background:#1c1c22;border:1px solid var(--line);color:var(--text);
+         border-radius:6px;padding:7px 11px;font:inherit;font-size:12px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700}
+  .slotlist{display:flex;gap:5px;margin-bottom:10px}
+  .slotlist{flex-wrap:wrap}
+  .slotlist button{flex:1 1 44%;padding:5px 6px;font-size:11.5px}
+  .slotlist button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .hint{font-size:11px;color:var(--muted);line-height:1.7;margin-top:6px}
+  textarea{width:100%;height:190px;background:#08080a;border:1px solid var(--line);
+           color:#b8e0c8;border-radius:6px;padding:9px;
+           font:11px/1.55 ui-monospace,Consolas,monospace;resize:vertical}
+  .row{display:flex;gap:6px} .row>*{flex:1}
+</style>
+
+<div class="stage">
+  <div class="xwrap on" id="xwrap">
+    <div class="band l"></div><div class="band r"></div>
+    <div id="frame" class="frame"></div>
+  </div>
+</div>
+
+<div class="side">
+  <h1>공유 이미지 좌표 튜너</h1>
+  <div class="scroll">
+
+    <div class="grp">
+      <b>이미지</b>
+      <label class="f"><span>배경</span><input type="file" id="fBg" accept="image/*"></label>
+      <label class="f"><span>카드 그림</span><input type="file" id="fCard" accept="image/*"></label>
+      <div class="hint">1800 × 942 · 등급별 up/down<br>
+        up/down 은 크기가 같으니 등급당 한 벌만 뽑으면 됩니다.</div>
+    </div>
+
+    <div class="grp">
+      <b>넣을 값</b>
+      <label class="f"><span>가격</span><input type="text" id="vPrice" value="10.08"></label>
+      <label class="f"><span>수익률</span><input type="text" id="vPct" value="+908"></label>
+      <label class="f"><span>카드명</span><input type="text" id="vName" value="APEPE #0004"></label>
+      <div class="hint"><b>%</b> 기호는 배경에 있으니 숫자와 부호만 넣습니다.
+        긴 값(<b>+12500</b>)으로도 한 번 확인하세요.</div>
+    </div>
+
+    <div class="grp">
+      <b>자리 선택</b>
+      <div class="slotlist" id="tabs"></div>
+      <label class="f"><span>좌 %</span><input type="number" id="pX" step="0.05"></label>
+      <label class="f"><span>상 %</span><input type="number" id="pY" step="0.05"></label>
+      <label class="f" id="rowS"><span>글자 %</span>
+        <input type="range" id="pS" min="0.3" max="14" step="0.05">
+        <input type="number" id="pSn" step="0.05" style="max-width:66px"></label>
+      <label class="f" id="rowA"><span>정렬</span>
+        <select id="pA">
+          <option value="left">왼쪽 기준</option>
+          <option value="right">오른쪽 기준</option>
+          <option value="center">가운데 기준</option>
+        </select></label>
+      <label class="f" id="rowW"><span>폭 %</span><input type="number" id="pW" step="0.1"></label>
+      <label class="f" id="rowH"><span>높이 %</span><input type="number" id="pH" step="0.1"></label>
+      <label class="f" id="rowC"><span>색</span><input type="text" id="pC"></label>
+      <label class="f" id="rowB"><span>굵기</span>
+        <select id="pB"><option>400</option><option>600</option>
+          <option>700</option><option>800</option></select></label>
+      <div class="hint">드래그로 이동. <b>방향키</b> 0.05%, <b>Shift+방향키</b> 0.5%.</div>
+    </div>
+
+    <div class="grp">
+      <div class="row">
+        <button id="bBox">점선 끄기</button>
+        <button id="bBand">잘림영역 표시</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="bReset">처음값으로</button>
+      </div>
+      <div class="hint">그림이 이미 1.91:1 이라 여백이 없습니다. 붉은 띠가
+        보인다면 배경 비율이 어긋난 것입니다.</div>
+    </div>
+
+    <div class="grp">
+      <b>결과</b>
+      <textarea id="out" readonly></textarea>
+      <div class="row" style="margin-top:7px"><button class="pri" id="bCopy">복사</button></div>
+      <div class="hint">이 블록을 <b>api/og-sale.js</b> 의 LAYOUT 에 넣습니다.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var W = 1800, H = 942;
+  function pw(v){ return +((v / W) * 100).toFixed(2); }
+  function ph(v){ return +((v / H) * 100).toFixed(2); }
+
+  /* Measured off epicup.png. All percentages of the ARTWORK, not of the
+     wider X canvas -- the artwork is the thing being tuned and the bars
+     are added afterwards, so a number tied to the canvas would have to
+     be recalculated if the bars ever changed. */
+  var DEFAULTS = {
+    card:  { kind:'img',  label:'카드 그림',
+             x:pw(40),   y:ph(30),  w:pw(880), h:ph(880) },
+
+    /* Right-anchored: USDT is printed at x1174, so the figure ends short
+       of it and grows leftwards as the price gets bigger. */
+    price: { kind:'text', label:'가격', align:'right',
+             x:pw(1560), y:ph(440), size:pw(96),
+             color:'#ffffff', weight:'800' },
+
+    /* Also right-anchored, against the % printed at x1042. */
+    pct:   { kind:'text', label:'수익률', align:'right',
+             x:pw(1380), y:ph(640), size:pw(64),
+             color:'#ffffff', weight:'800' },
+
+    /* In the CARD box, left of the rarity badge at x990. Left-anchored:
+       it reads as a caption under the CARD label rather than a figure,
+       and the badge is far enough away that a long name still fits. */
+    name:  { kind:'text', label:'카드명', align:'left',
+             x:pw(1000), y:ph(800), size:pw(38),
+             color:'#ffffff', weight:'700' }
+  };
+
+  var S = JSON.parse(JSON.stringify(DEFAULTS));
+  var sel = 'price', showBox = true, showBand = false;
+  var bgURL = null, cardURL = null, frameW = 0;
+
+  function $(id){ return document.getElementById(id); }
+  var frame = $('frame'), xwrap = $('xwrap');
+
+  /* The X canvas is 1.91:1 and the artwork fills its height, so the
+     artwork takes 1.25/1.91 of the width and the rest is split in two. */
+  /* The artwork is now drawn at 1.91:1 itself, so it fills the X canvas
+     and there are no bars. Kept as a computed pair rather than hard
+     zeros: if a future backdrop is a different shape, the preview shows
+     the bars again instead of quietly cropping. */
+  var ART_FRAC  = Math.min(1, (W / H) / 1.91);
+  var BAND_FRAC = (1 - ART_FRAC) / 2;
+
+  function sizeCanvas(){
+    var maxW = Math.min(window.innerWidth - 350 - 60, 1100);
+    var maxH = window.innerHeight - 60;
+    var cw = Math.min(maxW, maxH * 1.91);
+    xwrap.style.width  = cw + 'px';
+    xwrap.style.height = (cw / 1.91) + 'px';
+    frame.style.left  = (BAND_FRAC * 100) + '%';
+    frame.style.width = (ART_FRAC  * 100) + '%';
+    var band = xwrap.querySelectorAll('.band');
+    band[0].style.width = band[1].style.width = (BAND_FRAC * 100) + '%';
+    frameW = frame.getBoundingClientRect().width;
+  }
+
+  function sample(k){
+    if (k === 'price') return $('vPrice').value || '0.00';
+    if (k === 'pct')   return $('vPct').value || '0';
+    if (k === 'name')  return $('vName').value || '';
+    return '';
+  }
+
+  var bgImg = null;
+
+  function ensureBg(){
+    if (!bgURL){
+      bgImg = null;
+      frame.innerHTML = '<div class="empty">배경 이미지를 불러오세요</div>';
+      return false;
+    }
+    if (!bgImg){
+      frame.innerHTML = '';
+      bgImg = document.createElement('img');
+      bgImg.className = 'bgimg';
+      bgImg.onload = function(){ sizeCanvas(); render(); };
+      bgImg.src = bgURL;
+      frame.appendChild(bgImg);
+    }
+    return true;
+  }
+
+  function render(){
+    if (!ensureBg()){ writeOut(); return; }
+    var old = frame.querySelectorAll('.slot');
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    if (!frameW) sizeCanvas();
+
+    Object.keys(S).forEach(function(k){
+      var s = S[k];
+      var d = document.createElement('div');
+      d.className = 'slot' + (k === sel ? ' sel' : '') +
+                    (showBox ? '' : ' hidebox') +
+                    (s.kind === 'img' ? ' imgslot' : '');
+      d.setAttribute('data-k', k);
+
+      if (s.kind === 'img'){
+        d.style.left = s.x + '%'; d.style.top = s.y + '%';
+        d.style.width = s.w + '%'; d.style.height = s.h + '%';
+        if (cardURL){
+          var ci = document.createElement('img');
+          ci.src = cardURL;
+          ci.style.objectFit = 'contain';
+          d.appendChild(ci);
+        }
+      } else {
+        d.style.top = s.y + '%';
+        if (s.align === 'right'){
+          d.style.right = (100 - s.x) + '%';
+          d.style.transform = 'translateY(-50%)';
+        } else if (s.align === 'center'){
+          d.style.left = s.x + '%';
+          d.style.transform = 'translate(-50%,-50%)';
+        } else {
+          d.style.left = s.x + '%';
+          d.style.transform = 'translateY(-50%)';
+        }
+        d.style.fontSize   = ((s.size / 100) * frameW).toFixed(2) + 'px';
+        d.style.color      = s.color;
+        d.style.fontWeight = s.weight;
+        d.textContent = sample(k);
+      }
+      frame.appendChild(d);
+    });
+    writeOut();
+  }
+
+  window.addEventListener('resize', function(){ sizeCanvas(); render(); });
+
+  var drag = null;
+  frame.addEventListener('mousedown', function(e){
+    var t = e.target;
+    while (t && t !== frame && String(t.className).indexOf('slot') < 0) t = t.parentNode;
+    if (!t || t === frame) return;
+    e.preventDefault();
+    sel = t.getAttribute('data-k');
+    var r = frame.getBoundingClientRect();
+    drag = { k:sel, x0:e.clientX, y0:e.clientY,
+             sx:S[sel].x, sy:S[sel].y, w:r.width, h:r.height };
+    paintTabs(); syncFields(); render();
+  });
+  window.addEventListener('mousemove', function(e){
+    if (!drag) return;
+    var s = S[drag.k];
+    s.x = +(drag.sx + ((e.clientX - drag.x0) / drag.w) * 100).toFixed(2);
+    s.y = +(drag.sy + ((e.clientY - drag.y0) / drag.h) * 100).toFixed(2);
+    syncFields(); render();
+  });
+  window.addEventListener('mouseup', function(){ drag = null; });
+  window.addEventListener('keydown', function(e){
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    var d = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    var st = e.shiftKey ? 0.5 : 0.05, s = S[sel];
+    s.x = +(s.x + d[0]*st).toFixed(2);
+    s.y = +(s.y + d[1]*st).toFixed(2);
+    syncFields(); render();
+  });
+
+  function paintTabs(){
+    var host = $('tabs'); host.innerHTML = '';
+    Object.keys(S).forEach(function(k){
+      var b = document.createElement('button');
+      b.textContent = S[k].label;
+      if (k === sel) b.className = 'on';
+      b.onclick = function(){ sel = k; paintTabs(); syncFields(); render(); };
+      host.appendChild(b);
+    });
+  }
+  function show(id, on){ $(id).style.display = on ? '' : 'none'; }
+  function syncFields(){
+    var s = S[sel], isImg = s.kind === 'img';
+    $('pX').value = s.x; $('pY').value = s.y;
+    show('rowW', isImg); show('rowH', isImg);
+    ['rowS','rowA','rowC','rowB'].forEach(function(r){ show(r, !isImg); });
+    if (isImg){ $('pW').value = s.w; $('pH').value = s.h; }
+    else {
+      $('pS').value = s.size; $('pSn').value = s.size;
+      $('pA').value = s.align; $('pC').value = s.color; $('pB').value = s.weight;
+    }
+  }
+  function bind(id, key, num){
+    $(id).addEventListener('input', function(){
+      var v = num ? parseFloat($(id).value) : $(id).value;
+      if (num && isNaN(v)) return;
+      S[sel][key] = v;
+      if (id === 'pS')  $('pSn').value = v;
+      if (id === 'pSn') $('pS').value  = v;
+      render();
+    });
+  }
+  bind('pX','x',1); bind('pY','y',1); bind('pW','w',1); bind('pH','h',1);
+  bind('pS','size',1); bind('pSn','size',1);
+  bind('pA','align',0); bind('pC','color',0); bind('pB','weight',0);
+
+  ['vPrice','vPct','vName'].forEach(function(id){
+    $(id).addEventListener('input', render);
+  });
+  $('fBg').addEventListener('change', function(e){
+    var f = e.target.files[0]; if (!f) return;
+    bgURL = URL.createObjectURL(f); bgImg = null; render();
+  });
+  $('fCard').addEventListener('change', function(e){
+    var f = e.target.files[0]; if (!f) return;
+    cardURL = URL.createObjectURL(f); render();
+  });
+  $('bBox').onclick = function(){
+    showBox = !showBox;
+    this.textContent = showBox ? '점선 끄기' : '점선 켜기';
+    render();
+  };
+  $('bBand').onclick = function(){
+    showBand = !showBand;
+    xwrap.classList.toggle('mark', showBand);
+    this.textContent = showBand ? '잘림영역 숨기기' : '잘림영역 표시';
+  };
+  $('bReset').onclick = function(){
+    S = JSON.parse(JSON.stringify(DEFAULTS)); syncFields(); render();
+  };
+  $('bCopy').onclick = function(){
+    var t = $('out'); t.select(); t.setSelectionRange(0, 99999);
+    try { document.execCommand('copy'); } catch(_) {}
+    var b = this; b.textContent = '복사됨';
+    setTimeout(function(){ b.textContent = '복사'; }, 1200);
+  };
+
+  /* Written as fractions of the artwork so og-sale.js can multiply by
+     whatever it draws the artwork at, rather than carrying a second copy
+     of 1406x1125 that would have to be kept in step with the files. */
+  function writeOut(){
+    var L = [];
+    L.push('/* 공유 이미지 좌표 — share-tuner.html 로 뽑음 */');
+    L.push('{');
+    var c = S.card;
+    L.push('  card:  { x:' + c.x + ', y:' + c.y +
+           ', w:' + c.w + ', h:' + c.h + ' },');
+    ['price','pct','name'].forEach(function(k){
+      var s = S[k];
+      L.push('  ' + (k + ':').padEnd(7) +
+             '{ x:' + s.x + ', y:' + s.y + ', size:' + s.size +
+             ", align:'" + s.align + "'," );
+      L.push('           color:\'' + s.color + '\', weight:' + s.weight + ' },');
+    });
+    L.push('}');
+    $('out').value = L.join('\n');
+  }
+
+  sizeCanvas(); paintTabs(); syncFields(); render();
+})();
+</script>
