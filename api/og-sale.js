@@ -206,11 +206,23 @@ export default async function handler(req) {
 
   const bg = `${url.origin}/images/og/sale-${rarity}-${dir}.png`;
 
-  /* The address the cards table holds, when it holds one. The path below
-     is how every other endpoint builds it and is correct today, but it
-     encodes a bucket layout in a second place; the column is the record. */
-  const card = sale.image_url ||
-    `${STORAGE_BASE}/${rarity}/${sale.card_id}.png`;
+  /* Card art through Supabase's rendering endpoint rather than straight
+     from storage.
+
+     The cards are webp. This renderer reads png and jpeg and leaves a
+     webp out silently -- the frame draws, the card does not, and nothing
+     says why. Asking storage to render it gives back a format that can
+     be decoded, and the file on disk stays as it is.
+
+     contain, not the default: cover crops to the box it is given, and a
+     card cropped square loses its own frame. The box is deliberately
+     taller than any card so contain has nothing to trim. */
+  const src = sale.image_url ||
+    `${STORAGE_BASE}/${rarity}/${sale.card_id}.webp`;
+  const card = src.replace(
+    "/storage/v1/object/public/",
+    "/storage/v1/render/image/public/",
+  ) + "?width=1000&height=1600&resize=contain";
 
   return new ImageResponse(
     el("div", {
