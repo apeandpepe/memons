@@ -227,7 +227,14 @@ export default async function handler(req) {
     (pct >= 0 ? "+" : "\u2212") +
     Math.abs(Math.round(pct)).toLocaleString("en-US");
 
-  const font = await chakraBold(url.origin);
+  /* The font is fetched with the rest, not before it. A crawler waits a
+     short time and then gives up; making it queue behind a font request
+     that only matters on a cold instance is the difference between a
+     card and no card. */
+  const font = await Promise.race([
+    chakraBold(url.origin),
+    new Promise((r) => setTimeout(() => r(null), 2500)),
+  ]);
 
   const bg = `${url.origin}/images/og/sale-${rarity}-${dir}.png`;
 

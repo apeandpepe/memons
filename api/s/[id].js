@@ -27,9 +27,24 @@ function esc(s = "") {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+/* The site answers on apepe.io and on www.apepe.io, and apepe.io
+   redirects. A crawler that is handed the bare host reads og:url and
+   canonical naming an address that then moves it somewhere else --
+   which is a crawler being told, mid-read, that the real document is
+   elsewhere. It follows, and what it finds there is this page again
+   under a different name.
+
+   So the canonical host is decided here rather than taken from whichever
+   name the request happened to arrive under. */
+const CANONICAL_HOST = "www.apepe.io";
+
 export default function handler(req, res) {
   const proto = (req.headers["x-forwarded-proto"] || "https").split(",")[0];
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  const raw = req.headers["x-forwarded-host"] || req.headers.host || "";
+
+  // Preview deployments have their own hostnames and must keep them;
+  // only the production names are folded onto the canonical one.
+  const host = /(^|\.)apepe\.io$/i.test(raw) ? CANONICAL_HOST : raw;
   const origin = `${proto}://${host}`;
 
   // Digits only. The id goes straight into an address, so it is cut down
@@ -65,6 +80,8 @@ export default function handler(req, res) {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${esc(image)}">
+<meta property="og:image:secure_url" content="${esc(image)}">
+<meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="${OG_W}">
 <meta property="og:image:height" content="${OG_H}">
 <meta property="og:image:alt" content="A MEMONS card sale">
@@ -74,6 +91,7 @@ export default function handler(req, res) {
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(desc)}">
 <meta name="twitter:image" content="${esc(image)}">
+<meta name="twitter:image:alt" content="A MEMONS card sale">
 
 <!-- Canonical names this page, not the marketplace. Point it at the
      marketplace and a crawler is being told the real document is over

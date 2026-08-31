@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>MEMONS — 공유 테스트</title>
+<!--
+  Local only. Never linked from the site and never committed.
+
+  The share link cannot be checked by opening it: a person who visits
+  /s/<id> is moved on to the marketplace, and the picture only exists for
+  a crawler reading the tags. So this page pulls the picture up directly,
+  and hands the link to X and to the validators that show what a crawler
+  sees.
+
+  It talks to the deployed site, not to anything local -- /api/og-sale
+  runs on the server, so there is nothing here to run it against.
+-->
+<style>
+  :root{ --bg:#0a0a0c; --panel:#131317; --line:#26262e;
+         --text:#e8e6e0; --muted:#8a8a95; --accent:#c468d8; --gold:#E9B84A }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;background:var(--bg);color:var(--text);
+       font:13.5px/1.65 ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+  h1{font-size:14px;letter-spacing:1.6px;margin:0 0 18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:16px;margin-bottom:14px;max-width:1000px}
+  .card>b{display:block;font-size:11px;letter-spacing:1.2px;color:var(--muted);
+          margin-bottom:10px;text-transform:uppercase}
+  label{display:flex;align-items:center;gap:9px;margin-bottom:8px;font-size:12.5px}
+  label>span{width:96px;color:var(--muted);flex-shrink:0}
+  input[type=text]{flex:1;background:#08080a;border:1px solid var(--line);
+    color:var(--text);border-radius:6px;padding:7px 10px;font:inherit;font-size:12.5px}
+  button{background:#1c1c22;border:1px solid var(--line);color:var(--text);
+         border-radius:6px;padding:8px 13px;font:inherit;font-size:12.5px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .rar{display:flex;gap:8px;margin-bottom:12px}
+  .rar button{flex:1}
+  .rar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .shot{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+        background:#000;min-height:80px;display:flex;align-items:center;
+        justify-content:center}
+  .shot img{width:100%;display:block}
+  .shot .msg{color:var(--muted);font-size:12px;padding:26px}
+  code{background:#08080a;border:1px solid var(--line);border-radius:4px;
+       padding:2px 6px;font:12px ui-monospace,Consolas,monospace;color:#b8e0c8}
+  .sql{white-space:pre;background:#08080a;border:1px solid var(--line);
+       border-radius:6px;padding:10px;font:11.5px/1.6 ui-monospace,Consolas,monospace;
+       color:#b8e0c8;overflow-x:auto}
+  .note{font-size:11.5px;color:var(--muted);line-height:1.75;margin-top:8px}
+</style>
+
+<h1>공유 테스트</h1>
+
+<div class="card">
+  <b>1 · 거래번호 찾기</b>
+  <div class="rar" id="rar">
+    <button data-r="epic" class="on">EPIC</button>
+    <button data-r="legendary">LEGENDARY</button>
+    <button data-r="mythic">MYTHIC</button>
+  </div>
+  <div class="sql" id="sql"></div>
+  <div class="row"><button id="bSql">SQL 복사</button></div>
+  <div class="note">Supabase SQL Editor 에 붙여넣고 실행한 뒤,
+    나온 <code>id</code> 를 아래에 넣으세요.</div>
+</div>
+
+<div class="card">
+  <b>2 · 확인</b>
+  <label><span>사이트</span><input type="text" id="site" value="https://apepe.io"></label>
+  <label><span>거래번호</span><input type="text" id="tid" placeholder="예: 1482"></label>
+  <div class="row">
+    <button class="pri" id="bImg">이미지 보기</button>
+    <button id="bX">X 작성창 열기</button>
+    <button id="bVal">X 검사기</button>
+    <button id="bOg">OpenGraph 검사기</button>
+  </div>
+  <div class="note">
+    <b>이미지 보기</b> 는 <code>/api/og-sale</code> 를 직접 부릅니다. 그림이 맞는지 볼 때.<br>
+    <b>X 작성창</b> 은 실제 공유와 같습니다. 올리지 않아도 미리보기는 뜹니다.<br>
+    <b>검사기</b> 는 크롤러가 읽는 태그를 그대로 보여줍니다.
+  </div>
+  <div class="shot" id="shot"><div class="msg">거래번호를 넣고 눌러주세요</div></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+
+  /* Same wording and tags as the capsule share, so a MEMONS timeline
+     reads as one voice rather than two. */
+  var TAGS = 'MEMONS,APEPE';
+  var TEXT = 'Just sold my MEMONS card on the marketplace.';
+
+  var rarity = 'epic';
+
+  function sqlText(){
+    return "select id, card_id, price, created_at\n" +
+           "  from trades\n" +
+           " where card_id like '" + rarity + "%'\n" +
+           " order by created_at desc\n" +
+           " limit 5;";
+  }
+  function paintSql(){ $('sql').textContent = sqlText(); }
+
+  $('rar').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    rarity = b.getAttribute('data-r');
+    var all = $('rar').querySelectorAll('button');
+    for (var i = 0; i < all.length; i++) all[i].className = '';
+    b.className = 'on';
+    paintSql();
+  });
+
+  $('bSql').onclick = function(){
+    var ta = document.createElement('textarea');
+    ta.value = sqlText();
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(_) {}
+    ta.remove();
+    this.textContent = '복사됨';
+    var b = this; setTimeout(function(){ b.textContent = 'SQL 복사'; }, 1200);
+  };
+
+  function base(){ return ($('site').value || '').replace(/\/+$/, ''); }
+  function id(){ return ($('tid').value || '').replace(/[^0-9]/g, ''); }
+
+  function need(){
+    if (!id()){ alert('거래번호를 넣어주세요'); return false; }
+    return true;
+  }
+
+  $('bImg').onclick = function(){
+    if (!need()) return;
+    var url = base() + '/api/og-sale?t=' + id() + '&_=' + Date.now();
+    var host = $('shot');
+    host.innerHTML = '<div class="msg">불러오는 중…</div>';
+    var im = new Image();
+    im.onload  = function(){ host.innerHTML = ''; host.appendChild(im); };
+    im.onerror = function(){
+      host.innerHTML = '<div class="msg">이미지가 오지 않았습니다. ' +
+        '거래번호가 맞는지, 그 카드가 EPIC 이상인지 확인하세요.</div>';
+    };
+    im.src = url;
+  };
+
+  /* Cache busting is deliberately left off here. The image endpoint is
+     pinned immutable, so a stale copy is a real possibility -- but X
+     caches by address too, and adding a parameter would make this a
+     different link from the one the site will actually post. */
+  function shareUrl(){ return base() + '/s/' + id(); }
+
+  $('bX').onclick = function(){
+    if (!need()) return;
+    window.open('https://x.com/intent/tweet' +
+      '?text=' + encodeURIComponent(TEXT) +
+      '&url='  + encodeURIComponent(shareUrl()) +
+      '&hashtags=' + encodeURIComponent(TAGS),
+      '_blank', 'noopener,noreferrer,width=600,height=560');
+  };
+  $('bVal').onclick = function(){
+    if (!need()) return;
+    window.open('https://cards-dev.twitter.com/validator', '_blank', 'noopener');
+    navigator.clipboard && navigator.clipboard.writeText(shareUrl());
+  };
+  $('bOg').onclick = function(){
+    if (!need()) return;
+    window.open('https://www.opengraph.xyz/url/' +
+      encodeURIComponent(shareUrl()), '_blank', 'noopener');
+  };
+
+  paintSql();
+})();
+</script>
