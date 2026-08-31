@@ -38,6 +38,27 @@ const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 const RARITIES = ["epic", "legendary", "mythic"];
 
 /* ---------------------------------------------------------------------
+   The typeface.
+
+   Left unstated, this renderer falls back to its own default, and the
+   figures come out in a face the artwork never uses -- next to USDT and
+   SOLD FOR, which are Chakra Petch printed into the backdrop, the
+   mismatch is the first thing anyone sees.
+
+   Loaded once per instance rather than per request: the file is small
+   and constant, and fetching it again for every share image would put a
+   round trip in front of a picture that is otherwise cached forever.
+--------------------------------------------------------------------- */
+let FONT = null;
+async function chakraBold(origin) {
+  if (FONT) return FONT;
+  const r = await fetch(`${origin}/fonts/ChakraPetch-Bold.ttf`);
+  if (!r.ok) return null;
+  FONT = await r.arrayBuffer();
+  return FONT;
+}
+
+/* ---------------------------------------------------------------------
    Layout, from share-tuner.html.
 
    Keyed by rarity then direction. legendary and mythic place their
@@ -49,17 +70,18 @@ const RARITIES = ["epic", "legendary", "mythic"];
    contain, so what hangs over the edge is empty space, not card.
 --------------------------------------------------------------------- */
 const EPIC_UP = {
-  card:  { x: -1.87, y: -0.12, w: 60, h: 90 },
-  price: { x: 79.76, y: 46.71, size: 5.33, align: "right", color: "#ffffff", weight: 800 },
-  pct:   { x: 77.13, y: 67.25, size: 3.56, align: "right", color: "#ffffff", weight: 800 },
-  name:  { x: 56.11, y: 81.98, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
+  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
+  price: { x: 79.49, y: 47.23, size: 5.55, align: "right", color: "#ffffff", weight: 800 },
+  pct:   { x: 73.96, y: 66.92, size: 4.85, align: "right", color: "#ffffff", weight: 800 },
+  name:  { x: 55.11, y: 81.81, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
 };
 
+// Only the price sits differently; the other three match EPIC_UP.
 const EPIC_DOWN = {
-  card:  { x: -1.87, y: -0.12, w: 60, h: 90 },
-  price: { x: 81.03, y: 45.67, size: 5.33, align: "right", color: "#ffffff", weight: 800 },
-  pct:   { x: 76.22, y: 67.94, size: 3.56, align: "right", color: "#ffffff", weight: 800 },
-  name:  { x: 56.11, y: 84.06, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
+  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
+  price: { x: 79.49, y: 46.36, size: 5.55, align: "right", color: "#ffffff", weight: 800 },
+  pct:   { x: 73.96, y: 66.92, size: 4.85, align: "right", color: "#ffffff", weight: 800 },
+  name:  { x: 55.11, y: 81.81, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
 };
 
 const LEGENDARY = {
@@ -140,6 +162,7 @@ function value(s, text) {
     display: "flex",
     alignItems: "center",
     fontSize: `${Math.round(fs)}px`,
+    fontFamily: "Chakra Petch",
     fontWeight: s.weight,
     color: s.color,
     lineHeight: 1,
@@ -204,6 +227,8 @@ export default async function handler(req) {
     (pct >= 0 ? "+" : "\u2212") +
     Math.abs(Math.round(pct)).toLocaleString("en-US");
 
+  const font = await chakraBold(url.origin);
+
   const bg = `${url.origin}/images/og/sale-${rarity}-${dir}.png`;
 
   /* Card art through Supabase's rendering endpoint rather than straight
@@ -256,6 +281,12 @@ export default async function handler(req) {
     {
       width: W,
       height: H,
+      /* One weight is enough: every value drawn here is bold. A missing
+         file is not fatal -- the renderer falls back to its own face,
+         which is worse looking but still a picture. */
+      fonts: font
+        ? [{ name: "Chakra Petch", data: font, weight: 700, style: "normal" }]
+        : undefined,
       headers: {
         /* A trade never changes. Unlike /api/og — which draws a price the
            admin can edit and so expires in an hour — every figure here is
