@@ -79,7 +79,7 @@ async function chakraBold(origin) {
 --------------------------------------------------------------------- */
 const LAYOUT = {
   card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
-  price: { x: 81.0, y: 71.0, size: 10.0, align: "right", color: "#ffffff", weight: 800 },
+  price: { x: 81.0, y: 72.6, size: 7.5, align: "right", color: "#ffffff", weight: 800 },
 };
 
 // Only these three trade, so only these three have backdrops.
