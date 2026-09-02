@@ -95,7 +95,7 @@ const BG = {
   rare:      "og-rare.jpg",
   epic:      "og-epic.jpg",
   legendary: "og-legendary.jpg",
-  // mythic: "og-mythic.jpg",   // uncomment once the backdrop exists
+  mythic:    "og-mythic.jpg",
   // special: "og-special.jpg",
 };
 
@@ -400,8 +400,26 @@ export default async function handler(req) {
     ? el("div", { style: plateStyle(PLATE_TOP), children: plateBody })
     : bakedNum;
 
-  const bgFile = BG[rarity];
-  const bgUrl = bgFile ? `${url.origin}/images/og/${bgFile}` : null;
+  /* The backdrop, overridable per request.
+
+     Choosing between candidate artwork otherwise means a deploy for each
+     one. `bg` takes a filename under images/og, or a full https address
+     for something not committed yet.
+
+     Constrained to a filename or an https URL: this address is put
+     straight into the image, and an unchecked value would let any request
+     draw anything into a picture served from our domain. */
+  const bgParam = (url.searchParams.get("bg") || "").trim();
+  let bgFile = BG[rarity];
+  let bgUrl = bgFile ? `${url.origin}/images/og/${bgFile}` : null;
+
+  if (bgParam) {
+    if (/^https:\/\/[\w.-]+\/[\w./-]*$/.test(bgParam)) {
+      bgUrl = bgParam;
+    } else if (/^[\w.-]+\.(jpg|jpeg|png|webp)$/i.test(bgParam)) {
+      bgUrl = `${url.origin}/images/og/${bgParam}`;
+    }
+  }
   // Whatever the card does not use, split evenly either side. Floored, so
   // rounding cannot push the three columns a pixel past the canvas and set
   // the layout shrinking something to compensate.
