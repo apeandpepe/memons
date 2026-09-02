@@ -319,7 +319,10 @@ export default async function handler(req) {
   const rc = rgb(rgbc);
   /* MYTHIC is a rainbow on the card and on the bar. One colour cannot
      stand in for it, so the border and the figure take a gradient. */
-  const RAINBOW = "linear-gradient(90deg,#ff3b3b,#ffb03b,#ffe83b,#4bd964,#3bd0ff,#7a5bff,#ff3bd0)";
+  /* Violet, blue, cyan, gold -- the palette the mythic bar on the reveal
+     screen was redrawn in. A full spectrum here and that palette there
+     read as two different rarities wearing the same name. */
+  const RAINBOW = "linear-gradient(90deg,#a04bff,#5b6bff,#2f8fe0,#00b6e2,#00cfc0,#e8c07a,#b06ee3)";
   const isRainbow = rarity === "mythic";
 
   /* Rarities whose backdrop already carries the plate. Drawing another
