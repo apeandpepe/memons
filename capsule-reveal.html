@@ -990,7 +990,7 @@ var BARS={
              split:51.1, padL:8.6, padLabel:0, padVal:76, fsLabel:2.85, fsVal:3.75, fsUnit:3.85, lineGap:4, textY:0},
   legendary:{art:[2032,307], aw:1.138, padB:0.111, bottom:62,
              split:51.8, padL:6.0, padLabel:16, padVal:81, fsLabel:2.65, fsVal:4.05, fsUnit:3.25, lineGap:2, textY:0},
-  mythic:   {art:[2100,296], aw:1.103, padB:0.117, bottom:62,
+  mythic:   {art:[1933,300], aw:1.103, padB:0.117, bottom:62,
              split:51.6, padL:5.0, padLabel:18, padVal:75, fsLabel:2.55, fsVal:4.4, fsUnit:3.05, lineGap:2, textY:0}
 };
 
@@ -1959,6 +1959,49 @@ const SHARE_URL  = location.origin + '/open-capsule.html';
 const SHARE_TAGS = 'MEMONS,APEPE';
 const HOT = ['epic','legendary','mythic'];   // worth bragging about
 
+/* The wording, from the admin.
+
+   Several may be set for one button and one is picked per press. The
+   same sentence going out under every pull reads as automated -- to X,
+   which quietly throttles it, and to anyone who scrolls past the second
+   one. Which is why this is a list and not a line.
+
+   Fetched once on load and kept: the value changes at the pace of a
+   meeting, not a pull. If the request fails the button still works,
+   with the wording below -- a share that posts nothing because a table
+   was unreachable is worse than a share that posts the old line. */
+const SHARE_FALLBACK = {
+  pull1:  ['I just pulled a {rarity} card from MEMONS \uD83D\uDD25'],
+  pull10: ['Opened 10 capsules from MEMONS \u2014 best pull: a {rarity} card \uD83D\uDD25'],
+};
+const SHARE_LINES = { pull1: null, pull10: null };
+
+(function loadShareLines(){
+  const U = "https://neixdrtamznrooougcda.supabase.co";
+  const K = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  Object.keys(SHARE_FALLBACK).forEach(function(slot){
+    fetch(U + '/rest/v1/rpc/share_text_lines', {
+      method: 'POST',
+      headers: { apikey: K, Authorization: 'Bearer ' + K,
+                 'content-type': 'application/json' },
+      body: JSON.stringify({ p_slot: slot }),
+    })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(a){
+        if (Array.isArray(a) && a.length) SHARE_LINES[slot] = a;
+      })
+      .catch(function(){ /* fallback stands */ });
+  });
+})();
+
+/* {rarity} in upper case, matching what the admin's preview shows and
+   what the sale wording already does. */
+function shareWording(slot, rarity){
+  const list = SHARE_LINES[slot] || SHARE_FALLBACK[slot];
+  return list[Math.floor(Math.random() * list.length)]
+    .replace(/\{rarity\}/g, String(rarity || '').toUpperCase());
+}
+
 function openShare(text, it){
   // Short share link: /c/<card id>. The endpoint resolves the artwork from the
   // id and serves Open Graph tags, so X shows the card itself and the tweet
@@ -1992,10 +2035,7 @@ function showShareSingle(it){
   b.classList.remove('hidden');
   b.classList.toggle('hot', hot);
   b.style.setProperty('--rc', it.color || '#E9B84A');
-  b.onclick = () => openShare(
-    `I just pulled a ${it.rarity} card from MEMONS 🔥`,
-    it
-  );
+  b.onclick = () => openShare(shareWording('pull1', it.rarity), it);
 }
 
 function showSaveSingle(it){
@@ -2026,10 +2066,7 @@ function showShareTen(items){
   b.classList.remove('hidden');
   b.classList.toggle('hot', hot);
   b.style.setProperty('--rc', best.color || '#E9B84A');
-  b.onclick = () => openShare(
-    `Opened 10 capsules from MEMONS — best pull: a ${best.rarity} card 🔥`,
-    best
-  );
+  b.onclick = () => openShare(shareWording('pull10', best.rarity), best);
 }
 
 function hideShare(){

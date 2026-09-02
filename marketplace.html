@@ -4998,27 +4998,28 @@
 
   /* Fetched once and kept. The wording is set in the admin and changes
      rarely; asking for it on every open would put a round trip in front
-     of a window that is otherwise instant. */
+     of a window that is otherwise instant.
+
+     A list, not a line: several may be set and one is picked per press.
+     The same sentence under every sale reads as automated, both to X
+     and to anyone scrolling. The pick happens at the press rather than
+     here, so opening the window twice does not post the same one. */
+  var FALLBACK = ['Pulled. Collected. SOLD. \u26A1\n' +
+                  'See what this MEMON turned into on the Marketplace.\n#MEMONS'];
   var textCache = null;
-  function shareText(){
+  function shareLines(){
     if(textCache !== null) return Promise.resolve(textCache);
-    return fetch(SB_URL + '/rest/v1/rpc/share_sale_text', {
+    return fetch(SB_URL + '/rest/v1/rpc/share_text_lines', {
       method:'POST',
       headers:{ 'content-type':'application/json',
                 apikey:SB_ANON, Authorization:'Bearer '+SB_ANON },
-      body:'{}'
+      body: JSON.stringify({ p_slot:'sale' })
     }).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(t){
-        textCache = (typeof t === 'string' && t) ? t :
-          'Pulled. Collected. SOLD. \u26A1\n' +
-          'See what this MEMON turned into on the Marketplace.\n#MEMONS';
+      .then(function(a){
+        textCache = (Array.isArray(a) && a.length) ? a : FALLBACK;
         return textCache;
       })
-      .catch(function(){
-        textCache = 'Pulled. Collected. SOLD. \u26A1\n' +
-          'See what this MEMON turned into on the Marketplace.\n#MEMONS';
-        return textCache;
-      });
+      .catch(function(){ textCache = FALLBACK; return textCache; });
   }
 
   /* cards.name holds only the number within its rarity, the same as in
@@ -5059,7 +5060,7 @@
     document.body.style.overflow = 'hidden';
     var c = $s('hClose'); if(c) c.focus();
 
-    shareText();   // warm it while the window is being looked at
+    shareLines();   // warm it while the window is being looked at
   };
 
   function close(){
@@ -5085,7 +5086,8 @@
   $s('hShare').onclick = function(){
     if(!current) return;
     var url = SHARE_HOST + '/s/' + encodeURIComponent(String(current.id));
-    shareText().then(function(text){
+    shareLines().then(function(list){
+      var text = list[Math.floor(Math.random() * list.length)];
       window.open('https://x.com/intent/tweet' +
         '?text=' + encodeURIComponent(
             text.replace(/\{rarity\}/g, String(current.rarity||'').toUpperCase())
