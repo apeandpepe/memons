@@ -256,7 +256,7 @@ export default async function handler(req) {
 
   const CARD_W = q("cw", 525);
   const CARD_H2 = q("ch", 700);
-  const CARD_BOTTOM = q("cb", 745);
+  const CARD_BOTTOM = q("cb", 750);
   /* Buyback prices differ per capsule. Absent, assume the paid one: a
      share image is where the paid capsule gets shown off. */
   const capsule = (url.searchParams.get("cap") || "paid")
@@ -272,13 +272,13 @@ export default async function handler(req) {
      backdrop runs x 620-1172, y 784-860; the plate sits inside its front
      face, narrower than the podium. Wider or higher and it reads as a
      label stuck on top; lower and the canvas cuts it off. */
-  const PLATE_W = q("pw", 470);
-  const PLATE_H = q("ph", 112);
-  const PLATE_TOP = q("pt", 800);
+  const PLATE_W = q("pw", 570);
+  const PLATE_H = q("ph", 110);
+  const PLATE_TOP = q("pt", 750);
   const PLATE_R = q("pr", 18);
   const FS_LABEL = q("fl", 22);
-  const FS_VALUE = q("fv", 33);
-  const FS_UNIT  = q("fu", 22);
+  const FS_VALUE = q("fv", 35);
+  const FS_UNIT  = q("fu", 35);
 
   const rc = rgb(rgbc);
   /* MYTHIC is a rainbow on the card and on the bar. One colour cannot
@@ -416,13 +416,19 @@ export default async function handler(req) {
       alignItems: "center", justifyContent: "center", position: "relative",
       backgroundColor: "#050505",
       fontFamily: "Chakra Petch",
+      /* The backdrop belongs to the frame, not to a child of it.
+
+         It used to be an <img> stacked underneath the card. Two absolutely
+         positioned siblings in the same box, and moving one could stop the
+         other being drawn -- lowering the card to 750 was enough to lose
+         the backdrop entirely. As a background there is nothing to
+         displace: the card is drawn over it whatever its position. */
+      backgroundImage: `url(${bgUrl})`,
+      backgroundSize: `${W}px ${H}px`,
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "0 0",
     },
     children: [
-      el("img", {
-        src: bgUrl,
-        width: W, height: H,
-        style: { position: "absolute", left: 0, top: 0, width: `${W}px`, height: `${H}px` },
-      }),
       el("img", {
         src: card,
         style: {
