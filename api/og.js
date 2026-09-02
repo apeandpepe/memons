@@ -262,9 +262,9 @@ export default async function handler(req) {
      empty space either side. Two controls, one of which appeared broken.
 
      `cw` still overrides, for the case where the box should not match. */
-  const CARD_H2 = q("ch", 700);
+  const CARD_H2 = q("ch", 625);
   const CARD_W = q("cw", Math.round(CARD_H2 * 958 / 1280));
-  const CARD_BOTTOM = q("cb", 750);
+  const CARD_BOTTOM = q("cb", 700);
   /* Buyback prices differ per capsule. Absent, assume the paid one: a
      share image is where the paid capsule gets shown off. */
   const capsule = (url.searchParams.get("cap") || "paid")
@@ -308,13 +308,13 @@ export default async function handler(req) {
      backdrop runs x 620-1172, y 784-860; the plate sits inside its front
      face, narrower than the podium. Wider or higher and it reads as a
      label stuck on top; lower and the canvas cuts it off. */
-  const PLATE_W = q("pw", 570);
-  const PLATE_H = q("ph", 110);
+  const PLATE_W = q("pw", 525);
+  const PLATE_H = q("ph", 114);
   const PLATE_TOP = q("pt", 750);
   const PLATE_R = q("pr", 18);
   const FS_LABEL = q("fl", 22);
-  const FS_VALUE = q("fv", 35);
-  const FS_UNIT  = q("fu", 35);
+  const FS_VALUE = q("fv", 33);
+  const FS_UNIT  = q("fu", 22);
 
   const rc = rgb(rgbc);
   /* MYTHIC is a rainbow on the card and on the bar. One colour cannot
