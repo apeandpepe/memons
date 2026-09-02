@@ -36,14 +36,29 @@ export const config = { runtime: "edge" };
    round trip in front of a picture that is otherwise cached.
 --------------------------------------------------------------------- */
 let FONT = null;
+let FONT_ERR = null;
+
+/* Why the fetch failed, kept so it can be asked for.
+
+   A missing font is not fatal here -- the renderer falls back to its own
+   face and still returns a picture -- which is exactly what made this hard
+   to place: the image arrives looking almost right and nothing anywhere
+   says the file was never read. */
 async function chakraBold(origin) {
   if (FONT) return FONT;
   try {
-    const r = await fetch(`${origin}/fonts/ChakraPetch-Bold.ttf`);
-    if (!r.ok) return null;
-    FONT = await r.arrayBuffer();
+    const url = `${origin}/fonts/ChakraPetch-Bold.ttf`;
+    const r = await fetch(url);
+    if (!r.ok) { FONT_ERR = `HTTP ${r.status} @ ${url}`; return null; }
+    const buf = await r.arrayBuffer();
+    if (!buf || buf.byteLength < 1000) {
+      FONT_ERR = `too small: ${buf ? buf.byteLength : 0} bytes`;
+      return null;
+    }
+    FONT = buf;
     return FONT;
-  } catch {
+  } catch (e) {
+    FONT_ERR = String(e && e.message ? e.message : e).slice(0, 200);
     return null;
   }
 }
@@ -492,18 +507,45 @@ export default async function handler(req) {
      on a cold instance is the difference between a card and no card. */
   const font = await Promise.race([
     chakraBold(url.origin),
-    new Promise((r) => setTimeout(() => r(null), 2500)),
+    new Promise((r) => setTimeout(() => { FONT_ERR = FONT_ERR || "timeout 2500ms"; r(null); }, 2500)),
   ]);
+
+  /* ?fontcheck answers in text instead of drawing. Only way to see what
+     went wrong without a log line for a failure that is, by design, not an
+     error. Costs nothing when unused. */
+  if (url.searchParams.has("fontcheck")) {
+    return new Response(
+      JSON.stringify({
+        loaded: !!font,
+        bytes: font ? font.byteLength : 0,
+        error: FONT_ERR,
+        tried: `${url.origin}/fonts/ChakraPetch-Bold.ttf`,
+      }, null, 2),
+      { headers: { "content-type": "application/json" } },
+    );
+  }
 
   return new ImageResponse(
     bgUrl ? painted : drawn,
     {
       width: W,
       height: H,
-      /* One weight covers it: everything drawn here is bold. A missing
-         file is not fatal -- the renderer falls back to its own face. */
+      /* The same file registered at every weight the layout asks for.
+
+         Registered only at 700, the renderer had nothing to answer a
+         request for 800 -- which is what the figure and the rarity name
+         use -- and quietly substituted its own face. The label came out
+         in Chakra Petch and the number beside it did not, which reads as
+         the font having failed entirely rather than as one weight being
+         missing.
+
+         Satori matches on exact weight rather than falling back to the
+         nearest, so the list has to name each one. There is only one file
+         behind them; it is the same bold face at every entry. */
       fonts: font
-        ? [{ name: "Chakra Petch", data: font, weight: 700, style: "normal" }]
+        ? [400, 500, 600, 700, 800, 900].map((w) => ({
+            name: "Chakra Petch", data: font, weight: w, style: "normal",
+          }))
         : undefined,
       headers: {
         /* The artwork never changes but the figure does. Pinned immutable,

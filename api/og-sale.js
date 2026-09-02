@@ -291,8 +291,14 @@ export default async function handler(req) {
       /* One weight is enough: every value drawn here is bold. A missing
          file is not fatal -- the renderer falls back to its own face,
          which is worse looking but still a picture. */
+      /* Every weight, one file. Satori matches on exact weight rather than
+         the nearest, so a request for 800 against a font registered only
+         at 700 is answered with the renderer's own face -- and the picture
+         comes back with some lines in Chakra Petch and some not. */
       fonts: font
-        ? [{ name: "Chakra Petch", data: font, weight: 700, style: "normal" }]
+        ? [400, 500, 600, 700, 800, 900].map((w) => ({
+            name: "Chakra Petch", data: font, weight: w, style: "normal",
+          }))
         : undefined,
       headers: {
         /* A trade never changes. Unlike /api/og — which draws a price the
