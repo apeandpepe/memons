@@ -10,11 +10,14 @@
 //  would let anyone publish a MEMONS-branded picture of a sale that
 //  never happened.
 //
-//  Nothing is composed here. Six backdrops carry the whole design —
-//  wording, plates, logo, the % sign, the arrow — and this endpoint puts
-//  four values on top: the card, the price, the percentage, the name.
-//  Which backdrop depends on the rarity and on whether the sale was up
-//  or down on the capsule price.
+//  Nothing is composed here. Three backdrops carry the whole design —
+//  wording, SOLD, logo, USDT — and this endpoint puts two things on top:
+//  the card and the price. One backdrop per rarity.
+//
+//  There used to be six, split by whether the sale was up or down on the
+//  capsule price, because the artwork carried a percentage. The artwork
+//  no longer does, so the direction no longer picks anything and the
+//  capsule price is not needed to draw the image.
 //
 //  Coordinates come from share-tuner.html and are percentages of the
 //  1800x942 canvas, so they can be re-tuned by eye without arithmetic.
@@ -32,10 +35,6 @@ const STORAGE_BASE =
 
 const SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
 const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
-
-// Only these three trade, so only these three have backdrops. Anything
-// else gets no image rather than a broken one.
-const RARITIES = ["epic", "legendary", "mythic"];
 
 /* ---------------------------------------------------------------------
    The typeface.
@@ -59,50 +58,32 @@ async function chakraBold(origin) {
 }
 
 /* ---------------------------------------------------------------------
-   Layout, from share-tuner.html.
+   Layout.
 
-   Keyed by rarity then direction. legendary and mythic place their
-   values identically in both directions, so the same object is named
-   twice rather than copied — a copy is a second place to forget.
+   Every backdrop is the same drawing in a different colour, so one set
+   of numbers serves all three. Kept as a single object rather than one
+   per rarity: three copies of identical figures is three places to
+   forget when one of them moves.
 
-   card.x is slightly negative on every rarity: the slot begins a little
-   outside the left edge. The artwork is fitted inside that slot with
-   contain, so what hangs over the edge is empty space, not card.
+   card.x is slightly negative: the slot begins a little outside the left
+   edge. The artwork is fitted inside with contain, so what hangs over
+   the edge is empty space, not card.
+
+   price.x is the right edge, not the left. USDT is printed on the
+   backdrop, so the figure has to end in a fixed place and grow leftwards
+   as it gets longer.
+
+   Every one of these can be overridden from the query string -- see the
+   handler -- so they can be re-tuned against the rendered image rather
+   than a browser's guess at it.
 --------------------------------------------------------------------- */
-const EPIC_UP = {
-  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
-  price: { x: 79.49, y: 47.23, size: 5.55, align: "right", color: "#ffffff", weight: 800 },
-  pct:   { x: 73.96, y: 66.92, size: 4.85, align: "right", color: "#ffffff", weight: 800 },
-  name:  { x: 55.11, y: 81.81, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
-};
-
-// Only the price sits differently; the other three match EPIC_UP.
-const EPIC_DOWN = {
-  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
-  price: { x: 79.49, y: 46.36, size: 5.55, align: "right", color: "#ffffff", weight: 800 },
-  pct:   { x: 73.96, y: 66.92, size: 4.85, align: "right", color: "#ffffff", weight: 800 },
-  name:  { x: 55.11, y: 81.81, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
-};
-
-const LEGENDARY = {
-  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
-  price: { x: 79.76, y: 45.15, size: 5.55, align: "right", color: "#ffffff", weight: 800 },
-  pct:   { x: 71.59, y: 65.87, size: 4.85, align: "right", color: "#ffffff", weight: 800 },
-  name:  { x: 56.11, y: 82.33, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
-};
-
-const MYTHIC = {
-  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
-  price: { x: 79.85, y: 47.75, size: 5.55, align: "right", color: "#ffffff", weight: 800 },
-  pct:   { x: 72.41, y: 69.00, size: 4.85, align: "right", color: "#ffffff", weight: 800 },
-  name:  { x: 56.38, y: 85.98, size: 2.11, align: "left",  color: "#ffffff", weight: 700 },
-};
-
 const LAYOUT = {
-  epic:      { up: EPIC_UP,   down: EPIC_DOWN },
-  legendary: { up: LEGENDARY, down: LEGENDARY },
-  mythic:    { up: MYTHIC,    down: MYTHIC },
+  card:  { x: -1.96, y: 2.48, w: 60, h: 90 },
+  price: { x: 81.0, y: 71.0, size: 10.0, align: "right", color: "#ffffff", weight: 800 },
 };
+
+// Only these three trade, so only these three have backdrops.
+const HAS_BG = { epic: 1, legendary: 1, mythic: 1 };
 
 /* ---------------------------------------------------------------------
    The sale itself. One call, one row: a trade id that matches nothing
@@ -128,14 +109,6 @@ async function saleOf(id) {
   } catch {
     return null;
   }
-}
-
-// cards.name holds only the number within its rarity, the same as on the
-// marketplace. A name that is not a bare number is shown as it is.
-function displayName(name, cardId) {
-  const n = String(name == null ? "" : name).trim();
-  if (/^\d+$/.test(n)) return "APEPE #" + n;
-  return n || cardId || "";
 }
 
 const el = (type, props) => ({ type, props });
@@ -189,7 +162,7 @@ export default async function handler(req) {
     .slice(0, 19);
 
   const sale = t ? await saleOf(t) : null;
-  if (!sale || !LAYOUT[sale.rarity]) {
+  if (!sale || !HAS_BG[sale.rarity]) {
     return new Response("not found", {
       status: 404,
       headers: { "cache-control": "public, max-age=60" },
@@ -198,34 +171,38 @@ export default async function handler(req) {
 
   const rarity = sale.rarity;
   const price  = Number(sale.price) || 0;
-  const base   = Number(sale.capsule_price) || 0;
 
-  /* Measured against the capsule price, always — including for a card
-     bought on the market rather than pulled. The backdrop says so in its
-     own label, so the figure is what it claims to be: what this card has
-     done since it left a capsule, not what this seller made.
+  /* Layout numbers, overridable from the query string, the same way
+     /api/og takes them. A position set by eye has to be judged on the
+     image that will actually ship, not on a browser's rendering of a
+     copy of it, and the only way to see that image is to ask for it.
 
-     With no capsule price to measure against there is no direction and
-     no backdrop to choose, so the request is refused rather than
-     answered with a picture that quietly says zero. */
-  if (!(base > 0)) {
-    return new Response("no capsule price", {
-      status: 404,
-      headers: { "cache-control": "public, max-age=60" },
-    });
-  }
+     Absent, every one falls back to the figure in LAYOUT above, so a
+     normal request is untouched by any of this. */
+  const q = (k, d) => {
+    const v = Number(url.searchParams.get(k));
+    return Number.isFinite(v) && url.searchParams.has(k) ? v : d;
+  };
 
-  const pct = ((price - base) / base) * 100;
-  const dir = pct >= 0 ? "up" : "down";
-  const L   = LAYOUT[rarity][dir];
+  const L = {
+    card: {
+      x: q("cx", LAYOUT.card.x), y: q("cy", LAYOUT.card.y),
+      w: q("cw", LAYOUT.card.w), h: q("ch", LAYOUT.card.h),
+    },
+    price: {
+      ...LAYOUT.price,
+      x: q("px", LAYOUT.price.x),
+      y: q("py", LAYOUT.price.y),
+      size: q("ps", LAYOUT.price.size),
+    },
+  };
 
-  /* The sign is drawn, never printed on the backdrop. A "+" baked into
-     the artwork would read "+-15%" the moment a card sold below capsule,
-     and the down backdrops exist precisely because that happens. The %
-     itself is on the backdrop, so only the number and its sign go here. */
-  const pctText =
-    (pct >= 0 ? "+" : "\u2212") +
-    Math.abs(Math.round(pct)).toLocaleString("en-US");
+  /* A figure to lay out against. The plate has to hold the widest number
+     it will ever be given, and a real sale rarely obliges. Ignored unless
+     asked for. */
+  const shown = url.searchParams.has("p")
+    ? Number(url.searchParams.get("p"))
+    : price;
 
   /* The font is fetched with the rest, not before it. A crawler waits a
      short time and then gives up; making it queue behind a font request
@@ -236,7 +213,12 @@ export default async function handler(req) {
     new Promise((r) => setTimeout(() => r(null), 2500)),
   ]);
 
-  const bg = `${url.origin}/images/og/sale-${rarity}-${dir}.png`;
+  /* One backdrop per rarity, named for it. `bg` swaps it for another
+     file under images/og, so a candidate can be compared against the
+     one in use without moving files around. */
+  const bgFile = (url.searchParams.get("bg") || "").trim()
+    .replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 64);
+  const bg = `${url.origin}/images/og/${bgFile || rarity + "-sale.png"}`;
 
   /* Card art through Supabase's rendering endpoint rather than straight
      from storage.
@@ -280,9 +262,7 @@ export default async function handler(req) {
             objectFit: "contain",
           },
         }),
-        value(L.price, price.toFixed(2)),
-        value(L.pct,   pctText),
-        value(L.name,  displayName(sale.card_name, sale.card_id)),
+        value(L.price, shown.toFixed(2)),
       ],
     }),
     {
