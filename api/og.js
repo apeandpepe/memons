@@ -23,6 +23,31 @@ import { ImageResponse } from "@vercel/og";
 
 export const config = { runtime: "edge" };
 
+/* ---------------------------------------------------------------------
+   The typeface.
+
+   Left unstated, this renderer falls back to its own default and the
+   figures come out in a face the site never uses -- next to USDT and
+   MARKET PRICE, which are drawn here in the same call, the mismatch is
+   the first thing anyone sees.
+
+   Loaded once per instance rather than per request: the file is small
+   and constant, and fetching it again for every share image would put a
+   round trip in front of a picture that is otherwise cached.
+--------------------------------------------------------------------- */
+let FONT = null;
+async function chakraBold(origin) {
+  if (FONT) return FONT;
+  try {
+    const r = await fetch(`${origin}/fonts/ChakraPetch-Bold.ttf`);
+    if (!r.ok) return null;
+    FONT = await r.arrayBuffer();
+    return FONT;
+  } catch {
+    return null;
+  }
+}
+
 const STORAGE_BASE =
   "https://neixdrtamznrooougcda.supabase.co/storage/v1/object/public/cards";
 
@@ -199,9 +224,24 @@ export default async function handler(req) {
      its worst. Held 45px clear, its base sits in black instead: the
      difference falls to 5, and a card hanging in the light reads as
      deliberate where a card cutting into the plinth reads as a mistake. */
-  const CARD_W = 525;
-  const CARD_H2 = 700;
-  const CARD_BOTTOM = 745;
+  /* Layout numbers, overridable from the query string.
+
+     They are set by eye against the artwork, and the only honest place to
+     do that is the rendered image itself -- a preview drawn in a browser
+     is a different renderer at a different size. og-tuner.html points at
+     this endpoint and passes the values it is trying, so what is being
+     judged is the picture that will ship.
+
+     Absent, every one of them falls back to the tuned figure below, so a
+     normal request is untouched by any of this. */
+  const q = (k, d) => {
+    const v = Number(url.searchParams.get(k));
+    return Number.isFinite(v) && url.searchParams.has(k) ? v : d;
+  };
+
+  const CARD_W = q("cw", 525);
+  const CARD_H2 = q("ch", 700);
+  const CARD_BOTTOM = q("cb", 745);
   /* Buyback prices differ per capsule. Absent, assume the paid one: a
      share image is where the paid capsule gets shown off. */
   const capsule = (url.searchParams.get("cap") || "paid")
@@ -217,10 +257,13 @@ export default async function handler(req) {
      backdrop runs x 620-1172, y 784-860; the plate sits inside its front
      face, narrower than the podium. Wider or higher and it reads as a
      label stuck on top; lower and the canvas cuts it off. */
-  const PLATE_W = 470;
-  const PLATE_H = 112;
-  const PLATE_TOP = 800;
-  const PLATE_R = 18;
+  const PLATE_W = q("pw", 470);
+  const PLATE_H = q("ph", 112);
+  const PLATE_TOP = q("pt", 800);
+  const PLATE_R = q("pr", 18);
+  const FS_LABEL = q("fl", 22);
+  const FS_VALUE = q("fv", 33);
+  const FS_UNIT  = q("fu", 22);
 
   const rc = rgb(rgbc);
   /* MYTHIC is a rainbow on the card and on the bar. One colour cannot
@@ -281,7 +324,7 @@ export default async function handler(req) {
       children: [
         el("div", {
           style: {
-            fontSize: "22px", letterSpacing: "6px", fontWeight: 700,
+            fontSize: `${FS_LABEL}px`, letterSpacing: "6px", fontWeight: 700,
             color: "rgba(255,255,255,0.7)",
           },
           children: `${priced.label} (USDT)`,
@@ -289,7 +332,7 @@ export default async function handler(req) {
         el("div", {
           style: {
             display: "flex", alignItems: "baseline", gap: "12px", marginTop: "10px",
-            fontSize: "33px", fontWeight: 800, lineHeight: 1,
+            fontSize: `${FS_VALUE}px`, fontWeight: 800, lineHeight: 1,
             /* Rainbow paints the glyphs themselves. */
             ...(isRainbow
               ? { backgroundImage: RAINBOW, backgroundClip: "text", color: "transparent" }
@@ -298,7 +341,7 @@ export default async function handler(req) {
           children: [
             el("div", { children: priced.price.toFixed(2) }),
             el("div", {
-              style: { fontSize: "22px", letterSpacing: "3px", color: "rgba(255,255,255,0.7)" },
+              style: { fontSize: `${FS_UNIT}px`, letterSpacing: "3px", color: "rgba(255,255,255,0.7)" },
               children: "USDT",
             }),
           ],
@@ -357,6 +400,7 @@ export default async function handler(req) {
       width: `${W}px`, height: `${H}px`, display: "flex",
       alignItems: "center", justifyContent: "center", position: "relative",
       backgroundColor: "#050505",
+      fontFamily: "Chakra Petch",
     },
     children: [
       el("img", {
@@ -400,6 +444,7 @@ export default async function handler(req) {
       // makes the space look composed instead of unused -- and tells a
       // legendary from a common at a glance in the timeline.
       backgroundColor: "#050505",
+      fontFamily: "Chakra Petch",
       backgroundImage:
         `radial-gradient(circle at 50% 50%, ${rgba(rgbc, 0.16)} 0%, rgba(5,5,5,0) 62%)`,
     },
@@ -442,11 +487,24 @@ export default async function handler(req) {
     ],
   });
 
+  /* Fetched with a ceiling rather than waited on. A crawler gives up
+     quickly, and making it queue behind a font request that only matters
+     on a cold instance is the difference between a card and no card. */
+  const font = await Promise.race([
+    chakraBold(url.origin),
+    new Promise((r) => setTimeout(() => r(null), 2500)),
+  ]);
+
   return new ImageResponse(
     bgUrl ? painted : drawn,
     {
       width: W,
       height: H,
+      /* One weight covers it: everything drawn here is bold. A missing
+         file is not fatal -- the renderer falls back to its own face. */
+      fonts: font
+        ? [{ name: "Chakra Petch", data: font, weight: 700, style: "normal" }]
+        : undefined,
       headers: {
         /* The artwork never changes but the figure does. Pinned immutable,
            a price edited in the admin would leave the old one circulating.

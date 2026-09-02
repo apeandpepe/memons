@@ -33,6 +33,42 @@
   .stage.single .result{opacity:1;transform:translateY(0) scale(1)}
   .result img{width:100%;aspect-ratio:958/1280;object-fit:contain;display:block;
     border-radius:10px;box-shadow:0 0 42px -4px var(--rc,#E9B84A)}
+  /* On-chain mark, bottom-right of the card.
+
+     Held in a wrapper that carries the card's own shape rather than being
+     placed against .result directly. .result takes its height from the
+     card image, so until that image loads there is nothing to measure --
+     and a mark sized against an empty box came out filling the frame.
+     The wrapper has the aspect ratio baked in, so the mark sits correctly
+     from the first paint whether the artwork has arrived or not.
+
+     Percentages, not pixels: the card is a share of the viewport, so a
+     fixed offset that looks right on a desktop rides up over the frame on
+     a phone.
+
+     Values come from the panel behind ?tune. */
+  .cmwrap{position:absolute;left:0;top:0;width:100%;
+    aspect-ratio:958/1280;pointer-events:none;z-index:4}
+  /* A div with a background, not an img.
+
+     .result img sets width:100% and aspect-ratio 958/1280 for the card
+     artwork, and an <img> mark inside .result is caught by it too. Every
+     attempt to win that on specificity worked only while the stylesheet
+     was in step with the markup; a div cannot match `.result img` at all,
+     so the conflict is gone rather than outranked.
+
+     Square, sized as a share of the card. Percentages because the card is
+     a share of the viewport -- a fixed offset that sits right on a desktop
+     rides up over the frame on a phone. */
+  .cmark{position:absolute;
+    right:var(--cmR,14.7%);bottom:var(--cmB,28.1%);
+    width:var(--cmW,7.4%);
+    aspect-ratio:1/1;
+    background:var(--cmSrc,none) center/contain no-repeat;
+    opacity:var(--cmO,1);display:none;
+    filter:drop-shadow(0 1px 4px rgba(0,0,0,.65))}
+  .cmark.on{display:block}
+
   .badge{position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 7px;border-radius:5px;z-index:2}
   .badge.new{background:var(--gold);color:#000}.badge.dup{background:#555;color:#fff}
 
@@ -84,9 +120,14 @@
     transform:translateY(var(--textY,0px))}
   .pricebar.art .pi{display:none}
   .pricebar.art .ptxt{gap:var(--lineGap,1px)}
-  .pricebar.art .pl{font-size:calc(var(--aw) * var(--fsLabel,.021));
+  /* Each line carries its own offset. One shared padding moved both, and
+     the two have to sit against different things -- the label against the
+     panel edge, the figure against the button beside it. */
+  .pricebar.art .pl{margin-left:var(--padLabel,0px);
+    font-size:calc(var(--aw) * var(--fsLabel,.021));
     letter-spacing:.14em;color:rgba(255,255,255,.72)}
-  .pricebar.art .pvi{font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff}
+  .pricebar.art .pvi{margin-left:var(--padVal,0px);
+    font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff}
   .pricebar.art .pvi u{font-size:calc(var(--aw) * var(--fsUnit,.019));opacity:.6}
   .pricebar.art .pdiv,.pricebar.art .pgo,.pricebar.art .pv{display:none}
 
@@ -670,7 +711,7 @@
         <img class="lf in"  src="images/reveal/top-inner.png" alt="" aria-hidden="true">
       </div>
     </div>
-    <div class="result" id="result"><span class="badge" id="rbadge"></span><img id="art" alt=""><div class="shine"></div></div>
+    <div class="result" id="result"><span class="badge" id="rbadge"></span><img id="art" alt=""><div class="cmwrap"><div class="cmark" id="cmark" data-cmv="3"></div></div><div class="shine"></div></div>
   </div>
 
   <div class="info">
@@ -858,6 +899,7 @@
 <script src="data/collection.js"></script>
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
+<script src="attest-client.js"></script>
 <script>
 /* ====== config ====== */
 const HIGH = ['legendary','mythic'];   // pity-eligible high rarities
@@ -927,6 +969,49 @@ var PRICE = (function(){
   };
 })();
 
+/* Lifted out of paintPrice. Declared inside it, the table was rebuilt on
+   every repaint, so the ?tune panel had nothing lasting to write to --
+   every edit was discarded the next time the bar was drawn.
+
+   art[] is each file's own pixel size. Held as anything else it drifts
+   from the picture, and background-size:contain then draws the bar at a
+   fraction of its box -- mythic was carrying 935x140 against a file of
+   1933x300 and rendering narrow because of it.
+
+   split is where the divider is printed on the artwork, and usdtR is set
+   back from where USDT is printed, so the figure lands in the empty cell
+   rather than beside it. Both measured off the files. */
+var BARS={
+  common:   {buy:1, art:[1924,309], aw:1.173, padB:0.109, bottom:50,
+             cellL:20.3, usdtR:21.6, numPad:-12.7, fsNum:4.4, numY:4},
+  rare:     {buy:1, art:[1982,323], aw:1.138, padB:0.099, bottom:62,
+             cellL:60.0, usdtR:18.0, numPad:1.5, fsNum:4.5, numY:0},
+  epic:     {art:[1876,268], aw:1.103, padB:0.135, bottom:55,
+             split:51.1, padL:8.6, padLabel:0, padVal:76, fsLabel:2.85, fsVal:3.75, fsUnit:3.85, lineGap:4, textY:0},
+  legendary:{art:[2032,307], aw:1.138, padB:0.111, bottom:62,
+             split:51.8, padL:6.0, padLabel:16, padVal:81, fsLabel:2.65, fsVal:4.05, fsUnit:3.25, lineGap:2, textY:0},
+  mythic:   {art:[1933,300], aw:1.103, padB:0.117, bottom:62,
+             split:51.6, padL:5.0, padLabel:18, padVal:75, fsLabel:2.55, fsVal:4.4, fsUnit:3.05, lineGap:2, textY:0}
+};
+
+/* The on-chain mark on the card.
+
+   Shown from the moment the card appears rather than after the batch is
+   anchored. The card is queued the instant it is opened and goes out with
+   the next batch, so "pending" is a state that lasts minutes and exists
+   only because we batch -- putting a second icon on the card to describe
+   our own send schedule tells the player nothing they can act on.
+
+   Off entirely when the wallet is not connected: nothing was queued, so
+   there is nothing to mark. */
+function paintMark(it){
+  var el = document.getElementById('cmark');
+  if(!el) return;
+  var on = !!(window.MEMONS && MEMONS.connected) && !!(it && it.num);
+  el.classList.toggle('on', on);
+  if(on) el.style.setProperty('--cmSrc', 'url(images/attest/base-verified.png)');
+}
+
 function paintPrice(it){
   var bar=$('priceBar'); if(!bar) return;
   var found = it && PRICE.of(it.cap, it.rkey);
@@ -965,18 +1050,6 @@ function paintPrice(it){
 
      Every figure below is a percentage of the bar's own width, so one
      set holds on every screen. */
-  var BARS={
-    common:   {buy:1, art:[871,140], aw:1.024, padB:0.109, bottom:37,
-               cellL:63, usdtR:20, numPad:1.5, fsNum:4.5, numY:0},
-    rare:     {buy:1, art:[861,140], aw:1.024, padB:0.099, bottom:39,
-               cellL:63, usdtR:20, numPad:1.5, fsNum:4.5, numY:0},
-    epic:     {art:[979,140], aw:1.024, padB:0.135, bottom:23,
-               split:52, padL:8, fsLabel:2.6, fsVal:4.4, fsUnit:2.4, lineGap:2, textY:0},
-    legendary:{art:[976,140], aw:1.119, padB:0.111, bottom:18,
-               split:52, padL:8, fsLabel:2.6, fsVal:4.4, fsUnit:2.4, lineGap:2, textY:0},
-    mythic:   {art:[935,140], aw:1.023, padB:0.117, bottom:31,
-               split:52, padL:8, fsLabel:2.6, fsVal:4.4, fsUnit:2.4, lineGap:2, textY:0}
-  };
   var B=BARS[it.rkey];
   var st=bar.style;
 
@@ -1042,6 +1115,10 @@ function paintPrice(it){
       st.setProperty('--fsVal', B.fsVal/100);
       st.setProperty('--fsUnit', B.fsUnit/100);
       st.setProperty('--lineGap', B.lineGap+'px');
+    /* Per-line offsets. Absent on an older BARS row, both fall back to
+       zero and the bar renders as it did before. */
+    st.setProperty('--padLabel', (B.padLabel || 0)+'px');
+    st.setProperty('--padVal',   (B.padVal   || 0)+'px');
       st.setProperty('--textY', B.textY+'px');
       bar.style.cursor='pointer';
       bar.onclick=function(){ location.href='index.html#market'; };
@@ -1360,6 +1437,18 @@ async function ensureConnected(){
   try{ await MEMONS.connect(); return true; }
   catch(e){ revToast('Wallet connection required: '+(e.message||e)); return false; }
 }
+
+/* Queue what was just opened. Not awaited either: the reveal animation
+   is the point of this screen and must not wait on a request, and a card
+   that fails to queue is still the player's -- only the on-chain record
+   is missing, and nothing here could fix that anyway. */
+function queueAttest(list){
+  if(!window.MEMONS_ATTEST || !USE_SERVER) return;
+  try{
+    MEMONS_ATTEST.enqueueMany((list||[]).map(function(x){ return x && x.num; }))
+      .catch(function(){});
+  }catch(e){}
+}
 async function pullServer(){ const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c; }
 
 /* ---- pulls remaining ---- */
@@ -1395,6 +1484,7 @@ async function single(){
     let it;
     try{ it = await pullServer(); }
     catch(e){ busy=false; revToast(pullErrMsg(e)); return; }
+    queueAttest([it]);
     it=applyForce(it); LAB._it=it;
     $('stage').style.setProperty('--burst', burstColor(it));
     playOpen(()=>{ singleReveal(it); }, it.rkey);
@@ -1638,6 +1728,7 @@ function buildSingle(it, onArt){
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
     showShareSingle(it); showSaveSingle(it);
     PRICE.load().then(function(){ paintPrice(it); });
+    paintMark(it);
     onArt();
   };
 
@@ -1684,6 +1775,7 @@ async function ten(){
     items=[];
     try{ for(let i=0;i<10;i++){ const r=await MEMONS.pull(); items.push(mapCard(r.card)); refreshPulls(); } }
     catch(e){ busy=false; revToast(pullErrMsg(e) + (items.length?` (${items.length} succeeded)`:'')); if(!items.length) return; }
+    queueAttest(items);
   } else {
     busy=true; closeResult();
     items=Array.from({length:10},()=>rollOne());
@@ -2213,5 +2305,6 @@ document.querySelectorAll('[data-fxsrc]').forEach(b=>{ b.onclick=()=>{
   }); }
 })();
 </script>
+
 
 </body></html>

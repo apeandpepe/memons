@@ -101,6 +101,13 @@
     .fbar{gap:8px}.fbar .search{flex:1 1 100%}.fbar>.sel{flex:1 1 calc(33.333% - 6px);min-width:0;padding-left:8px;padding-right:6px}
     .fbar .fright{flex:1 1 100%;margin-left:0;justify-content:space-between}}
 
+  /* On-chain badge. Sits in the corner of the card art, small enough to
+     read as a mark rather than compete with the artwork. */
+  .card .atb{position:absolute;right:6px;top:6px;width:22%;max-width:34px;
+             height:auto;z-index:2;pointer-events:none;
+             filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+  .lrow .atb{width:22px;height:22px;flex:0 0 auto;margin-left:6px}
+
   /* grid view: complete card images (frame already baked in) */
   .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
   .gridloader{grid-column:1/-1;text-align:center;color:var(--muted);padding:48px;font-family:var(--font-head);font-size:13px;letter-spacing:.5px}
@@ -256,7 +263,48 @@
   var PER_PAGE=10;
   var RORDER={common:1,rare:2,epic:3,legendary:4,mythic:5};
   var RCOL={common:'var(--c-common)',rare:'var(--c-rare)',epic:'var(--c-epic)',legendary:'var(--c-legendary)',mythic:'var(--c-mythic)'};
+  var SB_URL="https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+
   var owned=[], cards=[], page=1, gridView=true, renderSeq=0, seasonMounted=false;
+
+  /* On-chain attestation state, keyed by card id.
+
+     A card the player holds several copies of can be part sent and part
+     waiting, so the badge reports the best state among them: one copy on
+     chain is enough for the card to read as recorded. */
+  var attest={};
+
+  function loadAttest(){
+    if(!(window.MEMONS && MEMONS.connected)) return Promise.resolve();
+    return fetch(SB_URL+'/rest/v1/rpc/attest_mine', {
+      method:'POST',
+      headers:{ 'content-type':'application/json', apikey:SB_ANON,
+                Authorization:'Bearer '+SB_ANON },
+      body: JSON.stringify({ p_address: String(MEMONS.address).toLowerCase() })
+    }).then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        attest={};
+        (Array.isArray(rows)?rows:[]).forEach(function(a){
+          if(a.chain!=='base') return;
+          var cur=attest[a.card_id];
+          if(cur==='sent') return;          // already the strongest state
+          if(a.status==='sent' || !cur) attest[a.card_id]=a.status;
+        });
+      })
+      .catch(function(){ attest={}; });
+  }
+
+  /* Nothing at all rather than a third icon for "not queued". A card with
+     no badge is one the chain has not heard of yet, and an icon saying so
+     would only add noise to a grid of a hundred. */
+  function attestBadge(cardId){
+    var st=attest[cardId];
+    if(st==='sent')    return '<img class="atb" src="images/attest/base-verified.png" alt="Base" title="Recorded on Base">';
+    if(st==='pending' || st==='blocked')
+                       return '<img class="atb" src="images/attest/base-pending.png" alt="Base" title="Waiting to be recorded on Base">';
+    return '';
+  }
 
   // preload a set of image URLs, then call cb (with a safety timeout)
   function preload(urls, cb){
@@ -352,7 +400,7 @@
           if(seq!==renderSeq) return;   // a newer render started; drop this one
           grid.innerHTML=slice.map(function(c){
             var img=c.image?'<img class="art" src="'+c.image+'" alt="" onerror="this.style.display=\'none\'">':'';
-            return '<div class="card">'+img+'<div class="qn">x'+c.count+'</div></div>';
+            return '<div class="card">'+img+attestBadge(c.id)+'<div class="qn">x'+c.count+'</div></div>';
           }).join('');
         });
       } else {
@@ -362,6 +410,7 @@
             '<div class="lthumb">'+img+'</div>'+
             '<div><div class="lname">'+c.name+'</div><div class="lid">'+c.id+'</div></div>'+
             '<span class="ltag">'+c.rarity.toUpperCase()+'</span>'+
+            attestBadge(c.id)+
             '<span class="lqn">x'+c.count+'</span></div>';
         }).join('');
       }
@@ -397,7 +446,12 @@
       $('grid').innerHTML=''; $('listv').innerHTML=''; $('empty').textContent='Connect your wallet to view your inventory.';
       $('empty').style.display='block'; $('chips').innerHTML=''; $('countNote').textContent=''; return;
     }
-    try{ var s=await MEMONS.state(); owned=s.owned||[]; }
+    /* Fetched with the inventory, not after it. Drawing the grid first
+       and adding badges a moment later makes every card twitch. */
+    try{
+      var res=await Promise.all([MEMONS.state(), loadAttest()]);
+      owned=(res[0] && res[0].owned) || [];
+    }
     catch(e){ owned=[]; }
     /* The flag decides whether a tab row is drawn at all, so the first
        paint waits for it. Without the wait the grid would appear

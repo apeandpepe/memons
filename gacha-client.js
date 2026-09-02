@@ -135,6 +135,21 @@
       if (!alive(t)) { clearStore(); return; }
       token = t;
       address = store.getItem(SS_ADDR) || null;
+
+      /* A session carried over from a previous visit is just as connected as
+         one made a moment ago, and listeners care about the state rather than
+         the event that produced it. Deferred to a task so a listener defined
+         further down the same file, or in a script that loads after this one,
+         is already there to hear it. */
+      if (address) {
+        setTimeout(function () {
+          try {
+            document.dispatchEvent(new CustomEvent("memons:connected", {
+              detail: { address: address, restored: true },
+            }));
+          } catch (e) {}
+        }, 0);
+      }
     } catch (e) {}
   })();
 
@@ -264,6 +279,18 @@
     persist();
     armExpiryTimer();
     bindWalletEvents();
+
+    /* Announced rather than called directly. Anything that needs to run the
+       moment a wallet is live -- the attestation delegation, for one -- hangs
+       off this instead of being wired into every page that has a connect
+       button. Dispatched after the session is stored, so a listener that
+       calls back in finds a usable token. */
+    try {
+      document.dispatchEvent(new CustomEvent("memons:connected", {
+        detail: { address: address },
+      }));
+    } catch (e) {}
+
     return address;
   }
 
@@ -505,4 +532,20 @@
   Object.defineProperty(M, "token", { get() { return token; }, configurable: true });
   Object.defineProperty(M, "address", { get() { return address; }, configurable: true });
   Object.defineProperty(M, "connected", { get() { return alive(token); }, configurable: true });
+
+  /* Pull in the attestation module rather than asking twenty-two pages to
+     each add a script tag. Wallets are connected from most of them, and a
+     tag missing from one is a page where the delegation is never offered.
+
+     Loaded once, guarded on the tag already being present so a page that
+     does include it explicitly does not get two copies. */
+  (function loadAttest() {
+    try {
+      if (document.querySelector('script[src*="attest-client"]')) return;
+      const el = document.createElement("script");
+      el.src = "attest-client.js";
+      el.async = true;
+      (document.head || document.documentElement).appendChild(el);
+    } catch (e) { /* the wallet still works without it */ }
+  })();
 })();
