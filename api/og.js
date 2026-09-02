@@ -254,14 +254,50 @@ export default async function handler(req) {
     return Number.isFinite(v) && url.searchParams.has(k) ? v : d;
   };
 
-  const CARD_W = q("cw", 525);
+  /* Height drives the card; width follows from the artwork's own shape.
+
+     Both were adjustable before, and adjusting the width did nothing
+     visible: the card is fitted with `contain`, and at 525x700 the box was
+     already the same proportion as the picture, so a wider box only added
+     empty space either side. Two controls, one of which appeared broken.
+
+     `cw` still overrides, for the case where the box should not match. */
   const CARD_H2 = q("ch", 700);
+  const CARD_W = q("cw", Math.round(CARD_H2 * 958 / 1280));
   const CARD_BOTTOM = q("cb", 750);
   /* Buyback prices differ per capsule. Absent, assume the paid one: a
      share image is where the paid capsule gets shown off. */
   const capsule = (url.searchParams.get("cap") || "paid")
     .replace(/[^a-z]/g, "").slice(0, 16) || "paid";
-  const priced = await priceOf(rarity, capsule);
+  let priced = await priceOf(rarity, capsule);
+
+  /* A figure to lay out against, for the tuner.
+
+     The plate has to be positioned for the widest number it will ever
+     hold, and the market rarely obliges by listing one at the time you are
+     looking. Ignored unless asked for. */
+  const pOverride = url.searchParams.get("p");
+  if (pOverride !== null) {
+    const pv = Number(pOverride);
+    priced = {
+      label: priced ? priced.label : "MARKET PRICE",
+      price: Number.isFinite(pv) ? pv : null,
+    };
+  }
+
+  /* Traded rarities keep the plate even with nothing to put in it.
+
+     The reveal screen already does this, for the reason written there: on
+     a quiet day nobody has listed one, and a card whose plate is missing
+     reads as a card worth nothing. A dash says the figure comes from the
+     market, which is true. The two screens describing the same card
+     differently is the thing worth avoiding.
+
+     Rarities with no market at all stay bare, as they do on the screen. */
+  const TRADED = { epic: 1, legendary: 1, mythic: 1 };
+  if (!priced && TRADED[rarity]) {
+    priced = { label: "MARKET PRICE", price: null };
+  }
 
   /* Two shapes. Buyback is a fixed figure the company pays, so icon,
      label and value sit in one row; the market price moves, so the label
@@ -348,13 +384,22 @@ export default async function handler(req) {
           style: {
             display: "flex", alignItems: "baseline", gap: "12px", marginTop: "10px",
             fontSize: `${FS_VALUE}px`, fontWeight: 800, lineHeight: 1,
-            /* Rainbow paints the glyphs themselves. */
-            ...(isRainbow
-              ? { backgroundImage: RAINBOW, backgroundClip: "text", color: "transparent" }
-              : { color: rgb(rgbc) }),
+            /* Solid white for mythic rather than the rainbow.
+
+               The figure used to be painted by clipping a gradient to the
+               glyphs -- backgroundClip:"text" with a transparent colour.
+               The renderer here does not support that clip, so the glyphs
+               kept their transparent colour and the plate came out empty
+               while every other rarity drew fine.
+
+               The rainbow still runs around the border below, which is
+               where it reads as mythic anyway. */
+            color: isRainbow ? "#ffffff" : rgb(rgbc),
           },
           children: [
-            el("div", { children: priced.price.toFixed(2) }),
+            el("div", {
+              children: priced.price == null ? "\u2014" : priced.price.toFixed(2),
+            }),
             el("div", {
               style: { fontSize: `${FS_UNIT}px`, letterSpacing: "3px", color: "rgba(255,255,255,0.7)" },
               children: "USDT",
@@ -392,7 +437,10 @@ export default async function handler(req) {
           fontSize: `${baked.fsNum}px`, fontWeight: 800,
           color: "#fff", lineHeight: 1,
         },
-        children: priced.price.toFixed(2),
+        /* Common and rare take this path and always carry a buyback
+           figure, so the dash should never show here -- but the value is
+           nullable now and a crash would lose the whole picture. */
+        children: priced.price == null ? "\u2014" : priced.price.toFixed(2),
       })
     : null;
 
