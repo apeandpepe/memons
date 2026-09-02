@@ -1956,7 +1956,6 @@ async function saveCard(url, name){
 }
 
 const SHARE_URL  = location.origin + '/open-capsule.html';
-const SHARE_TAGS = 'MEMONS,APEPE';
 const HOT = ['epic','legendary','mythic'];   // worth bragging about
 
 /* The wording, from the admin.
@@ -1971,8 +1970,8 @@ const HOT = ['epic','legendary','mythic'];   // worth bragging about
    with the wording below -- a share that posts nothing because a table
    was unreachable is worse than a share that posts the old line. */
 const SHARE_FALLBACK = {
-  pull1:  ['I just pulled a {rarity} card from MEMONS \uD83D\uDD25'],
-  pull10: ['Opened 10 capsules from MEMONS \u2014 best pull: a {rarity} card \uD83D\uDD25'],
+  pull1:  ['I just pulled a {rarity} card from MEMONS \uD83D\uDD25\n#MEMONS #APEPE'],
+  pull10: ['Opened 10 capsules from MEMONS \u2014 best pull: a {rarity} card \uD83D\uDD25\n#MEMONS #APEPE'],
 };
 const SHARE_LINES = { pull1: null, pull10: null };
 
@@ -2022,10 +2021,13 @@ function openShare(text, it){
     url = location.origin + '/c/' + encodeURIComponent(it.num) + '?v=' + SHARE_VERSION
         + (it.cap ? '&cap=' + encodeURIComponent(it.cap) : '');
   }
+  /* Hashtags ride inside the text rather than in X's own field. The
+     field took one fixed set for every post and could not be reached
+     from the admin; written into the wording, each of the several
+     messages can carry its own -- which is also what varies them. */
   const u = 'https://twitter.com/intent/tweet'
     + '?text=' + encodeURIComponent(text)
-    + '&url='  + encodeURIComponent(url)
-    + '&hashtags=' + encodeURIComponent(SHARE_TAGS);
+    + '&url='  + encodeURIComponent(url);
   window.open(u, '_blank', 'noopener,noreferrer,width=600,height=520');
 }
 
