@@ -171,19 +171,33 @@ const boltSvg = (color) =>
 const SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
 const SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 
-async function priceOf(rarity, capsule) {
+async function priceOf(rarity, capsule, id) {
   const H = { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON,
               "content-type": "application/json" };
-  const rpc = (fn) =>
-    fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: H, body: "{}" })
+  const rpc = (fn, body) =>
+    fetch(`${SB_URL}/rest/v1/rpc/${fn}`,
+          { method: "POST", headers: H, body: body || "{}" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null);
 
+  /* Common and rare are the buyback rarities; epic and up are the market
+     ones. Neither figure applies to both, so which one to ask for is
+     decided by rarity rather than by whichever happens to be available.
+
+     Buyback used to be read for every rarity whenever it was open, which
+     put an epic's market price behind a buyback price it never has. */
+  const BUYBACK = { common: 1, rare: 1 };
+
   try {
-    const [open, src, floors] = await Promise.all([
-      rpc("buyback_open"), rpc("market_floor_source"), rpc("market_floor_by_rarity"),
+    const [open, one] = await Promise.all([
+      BUYBACK[rarity] ? rpc("buyback_open") : null,
+      (BUYBACK[rarity] || !id)
+        ? null
+        : rpc("card_price", JSON.stringify({ p_card_id: id })),
     ]);
 
+    /* The only figure common and rare have. Neither trades on the market,
+       so their history is empty and nothing else would fill the plate. */
     if (open === true) {
       const r = await fetch(
         `${SB_URL}/rest/v1/buyback_prices?select=price&enabled=is.true&price=gt.0` +
@@ -194,11 +208,21 @@ async function priceOf(rarity, capsule) {
       if (p > 0) return { label: "INSTANT BUYBACK", price: p };
     }
 
-    const row = Array.isArray(floors) && floors.find((f) => f && f.rarity === rarity);
-    const fp = row && Number(row.price);
-    if (fp > 0) {
-      return { label: src === "bid" ? "HIGHEST BID" : "MARKET PRICE", price: fp };
-    }
+    /* What this one card last sold for.
+
+       It used to be the rarity floor, which is why thirty epics all
+       carried the same number. A floor is a fact about a rarity; the
+       image is about a card.
+
+       The listed price is deliberately not used. It is whatever the
+       seller is asking, it changes when they change their mind, and an
+       image made from it goes on claiming that figure long after the
+       listing is gone. A completed trade happened, and stays happened.
+
+       Never traded gives back nothing, and the plate draws a dash. */
+    const c = Array.isArray(one) && one[0];
+    const cp = c && Number(c.price);
+    if (cp > 0) return { label: "MARKET PRICE", price: cp };
   } catch (_) { /* draw without a figure */ }
   return null;
 }
@@ -269,7 +293,7 @@ export default async function handler(req) {
      share image is where the paid capsule gets shown off. */
   const capsule = (url.searchParams.get("cap") || "paid")
     .replace(/[^a-z]/g, "").slice(0, 16) || "paid";
-  let priced = await priceOf(rarity, capsule);
+  let priced = await priceOf(rarity, capsule, id);
 
   /* A figure to lay out against, for the tuner.
 
@@ -299,11 +323,6 @@ export default async function handler(req) {
     priced = { label: "MARKET PRICE", price: null };
   }
 
-  /* Two shapes. Buyback is a fixed figure the company pays, so icon,
-     label and value sit in one row; the market price moves, so the label
-     goes above a large number. One shape for both would hide which kind
-     of figure is on screen. */
-  const isBuy = priced && priced.label === "INSTANT BUYBACK";
   /* Plate size and position, set with share-tuner.html. The podium in the
      backdrop runs x 620-1172, y 784-860; the plate sits inside its front
      face, narrower than the podium. Wider or higher and it reads as a
@@ -334,8 +353,12 @@ export default async function handler(req) {
   };
   const baked = BAKED[rarity];
 
-  const plateBody = !priced ? [] : baked ? [] : isBuy ? [
-  ] : [
+  /* One plate. There were meant to be two shapes and the buyback one was
+     left empty, so an epic drew a plate with nothing in it whenever
+     buyback was open. Buyback is now read only for common and rare, which
+     paint their number onto the backdrop and never reach here -- so the
+     empty branch had nothing left to do. */
+  const plateBody = !priced ? [] : baked ? [] : [
     /* Market plate. Corners rounded a little: square fights the card's
        rounded frame, and any rounder reads as a pill. Two rings of border
        so the edge survives the light behind it. */
