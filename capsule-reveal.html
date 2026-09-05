@@ -756,6 +756,17 @@
         <path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
       </svg>SAVE
     </button>
+    <!-- 공유 이미지 저장. 위의 SAVE 는 카드 그림 그대로를 내려받고, 이쪽은
+         X 에 올라가는 그 화면 -- 배경과 가격판까지 얹힌 -- 을 내려받는다.
+         자랑하려고 저장하는 사람이 원하는 쪽은 대개 이쪽이다. -->
+    <button class="b save hidden" id="saveShotBtn" title="Save the image posted to X">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           style="vertical-align:-3px;margin-right:6px">
+        <rect x="3" y="4" width="18" height="14" rx="2"/>
+        <path d="M8 21h8"/><path d="M12 18v3"/>
+      </svg>X IMAGE
+    </button>
     <button class="b ghost hidden" id="again">CONTINUE</button>
   </div>
 
@@ -790,6 +801,16 @@
         <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="vertical-align:-2px;margin-right:6px">
           <path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/>
         </svg>SHARE
+      </button>
+      <!-- 열 장 중 한 장. SHARE 가 올리는 그 카드다: 올린 것과 저장한 것이
+           달라 보이면 어느 쪽이 진짜인지 헷갈린다. -->
+      <button class="b save" id="msaveShotBtn" title="Save the image posted to X">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             style="vertical-align:-3px;margin-right:6px">
+          <rect x="3" y="4" width="18" height="14" rx="2"/>
+          <path d="M8 21h8"/><path d="M12 18v3"/>
+        </svg>X IMAGE
       </button>
       <button class="b solid" id="mclose">CONTINUE</button>
     </div>
@@ -990,7 +1011,7 @@ var BARS={
              split:51.1, padL:8.6, padLabel:0, padVal:76, fsLabel:2.85, fsVal:3.75, fsUnit:3.85, lineGap:4, textY:0},
   legendary:{art:[2032,307], aw:1.138, padB:0.111, bottom:62,
              split:51.8, padL:6.0, padLabel:16, padVal:81, fsLabel:2.65, fsVal:4.05, fsUnit:3.25, lineGap:2, textY:0},
-  mythic:   {art:[1933,300], aw:1.103, padB:0.117, bottom:62,
+  mythic:   {art:[2100,296], aw:1.103, padB:0.117, bottom:62,
              split:51.6, padL:5.0, padLabel:18, padVal:75, fsLabel:2.55, fsVal:4.4, fsUnit:3.05, lineGap:2, textY:0}
 };
 
@@ -1726,7 +1747,7 @@ function buildSingle(it, onArt){
   const place=()=>{
     st.classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
-    showShareSingle(it); showSaveSingle(it);
+    showShareSingle(it); showSaveSingle(it); showSaveShot(it);
     PRICE.load().then(function(){ paintPrice(it); });
     paintMark(it);
     onArt();
@@ -1880,7 +1901,7 @@ function buildTen(items){
     `<span style="color:${r.color}">${r.label} <b>×${tal[r.label]}</b></span>`).join('');
   $('multi').classList.add('show');
   $('stage').classList.remove('opening');
-  showShareTen(items);
+  showShareTen(items); showSaveShotTen(items);
 }
 function tenReveal2(items){
   /* Nothing visual left. buildTen did it all while the film was playing;
@@ -1900,7 +1921,7 @@ function __oldSingle(){
     const bd=$('rbadge'); bd.className='badge '+(it.dup?'dup':'new'); bd.textContent=it.dup?'COLLECTED':'NEW';
     $('stage').classList.add('single'); $('hint').style.display='none';
     $('open1').classList.add('hidden'); $('open10').classList.add('hidden'); $('again').classList.remove('hidden');
-    showShareSingle(it); showSaveSingle(it);
+    showShareSingle(it); showSaveSingle(it); showSaveShot(it);
     PRICE.load().then(function(){ paintPrice(it); });
     refreshStatus(); busy=false;
   });
@@ -2058,12 +2079,75 @@ function showSaveSingle(it){
   };
 }
 
-function showShareTen(items){
-  const b = $('mshareBtn'); if(!b) return;
-  // headline the best card of the ten
+/* The share image, as it appears on X.
+
+   Saved through the same endpoint the link preview uses, so what lands in
+   the camera roll is the picture other people would have seen -- backdrop,
+   price plate and all -- rather than the bare artwork.
+
+   nc is a value the address has not carried before. The endpoint holds a
+   drawn image for an hour, and a card looked at earlier would otherwise
+   come back as whatever it looked like then. */
+function shotUrl(it){
+  if(!(it && it.num)) return null;
+  return location.origin + '/api/og?id=' + encodeURIComponent(it.num) +
+         '&cap=' + encodeURIComponent(it.cap || 'paid') +
+         '&nc=' + Date.now();
+}
+
+function showSaveShot(it){
+  const b = $('saveShotBtn'); if(!b) return;
+  if(!shotUrl(it)){ b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  b.disabled = false;
+  b.onclick = async () => {
+    b.disabled = true;
+    const before = b.innerHTML;
+    /* Drawn on request, so it takes a moment. Without this the button sits
+       looking untouched and gets pressed again. */
+    b.textContent = 'SAVING\u2026';
+    const ok = await saveCard(shotUrl(it), 'memons-share-' + (it.num || 'card'));
+    b.innerHTML = before;
+    b.textContent = ok ? 'SAVED' : 'OPENED';
+    setTimeout(()=>{ b.innerHTML = before; b.disabled = false; }, 1600);
+  };
+}
+
+function hideSaveShot(){
+  const b = $('saveShotBtn'); if(!b) return;
+  b.classList.add('hidden'); b.onclick = null;
+}
+
+/* The one card a ten-pull is judged by. Shared and saved alike, so the
+   picture that goes out and the picture that lands in the camera roll are
+   the same card. */
+function bestOf(items){
   const order = RAR.map(r => r.key);
   let best = items[0];
   items.forEach(it => { if(order.indexOf(it.rkey) > order.indexOf(best.rkey)) best = it; });
+  return best;
+}
+
+function showSaveShotTen(items){
+  const b = $('msaveShotBtn'); if(!b) return;
+  const best = bestOf(items);
+  if(!shotUrl(best)){ b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  b.disabled = false;
+  b.onclick = async () => {
+    b.disabled = true;
+    const before = b.innerHTML;
+    b.textContent = 'SAVING\u2026';
+    const ok = await saveCard(shotUrl(best), 'memons-share-' + (best.num || 'card'));
+    b.innerHTML = before;
+    b.textContent = ok ? 'SAVED' : 'OPENED';
+    setTimeout(()=>{ b.innerHTML = before; b.disabled = false; }, 1600);
+  };
+}
+
+function showShareTen(items){
+  const b = $('mshareBtn'); if(!b) return;
+  const best = bestOf(items);
   const hot = HOT.indexOf(best.rkey) >= 0;
   b.classList.remove('hidden');
   b.classList.toggle('hot', hot);
@@ -2087,6 +2171,7 @@ function closeResult(){
   // The last card's figure must not linger into the next result.
   var pb=$('priceBar'); if(pb) pb.classList.add('hidden');
   hideShare();
+  hideSaveShot();
   $('hint').style.display='';
   const cap=$('capvideo');
   if(cap){
