@@ -654,6 +654,61 @@
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
 
+  /* One face, cut out of a larger picture and read on its own.
+
+     Returns null when the enlarged crop yields no face, which happens on
+     a portrait too small or too blurred to recover -- the caller keeps
+     whatever it had. */
+  async function refine(src, box){
+    try{
+      var W = src.naturalWidth || src.width;
+      var H = src.naturalHeight || src.height;
+
+      /* Half a face width on every side. The descriptor is built from the
+         shape of the whole head; cropped tight to the detector's box it
+         loses the hairline and the jaw, which is much of what separates
+         one face from another. */
+      var pad = Math.max(box.width, box.height) * 0.5;
+      var x0 = Math.max(0, Math.round(box.x - pad));
+      var y0 = Math.max(0, Math.round(box.y - pad));
+      var x1 = Math.min(W, Math.round(box.x + box.width  + pad));
+      var y1 = Math.min(H, Math.round(box.y + box.height + pad));
+      var cw = x1 - x0, ch = y1 - y0;
+      if (cw < 16 || ch < 16) return null;
+
+      /* 224 across, the size the network was trained at. Enlarging a
+         50-pixel portrait invents no detail, but it stops the detector
+         from working below the scale it can work at -- which is the
+         difference between a descriptor and a row of noise. */
+      var side = 224;
+      var cv = document.createElement('canvas');
+      cv.width = side; cv.height = side;
+      var g = cv.getContext('2d');
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
+
+      /* Square, letterboxed rather than stretched. A face squeezed to fit
+         is a different shape, and shape is what is being measured. */
+      var scale = Math.min(side / cw, side / ch);
+      var dw = Math.round(cw * scale), dh = Math.round(ch * scale);
+      g.fillStyle = '#000';
+      g.fillRect(0, 0, side, side);
+      g.drawImage(src, x0, y0, cw, ch,
+                  Math.round((side - dw) / 2), Math.round((side - dh) / 2), dw, dh);
+
+      /* Its own options. The callers build theirs for the picture they
+         are looking at -- a whole card, a video frame -- and neither is
+         in scope here. This one knows exactly what it is looking at: one
+         face filling a 224 square. The threshold is low because the face
+         has already been found once; the question now is only what it
+         measures at this size. */
+      var hit = await faceapi.detectSingleFace(cv,
+          new faceapi.TinyFaceDetectorOptions({inputSize:224, scoreThreshold:0.2}))
+        .withFaceLandmarks(!fineMarks).withFaceDescriptor();
+      return hit ? hit.descriptor : null;
+    }catch(e){ return null; }
+  }
+
   var doc={type:null, blob:null, vec:null};
   var face={blob:null, vec:null};
   var country='', stream=null, loop=null, poll=null, handoff=null;
@@ -929,7 +984,28 @@
     var blob2 = used
       ? await new Promise(function(res){ src.toBlob(res,'image/jpeg',0.92); })
       : blob;
-    doc.blob=blob2; doc.vec=Array.from(r.descriptor);
+
+    /* The descriptor is taken again from the portrait alone, enlarged.
+
+       The first pass read it off the whole photograph, where the printed
+       portrait is a few percent of the frame -- forty or fifty pixels
+       across on a card held at arm's length. A descriptor measured at
+       that size is mostly noise, and it showed: across eighteen decided
+       checks the scores of the ones a reviewer passed and the ones they
+       turned down sat on top of each other, with the refusals averaging
+       slightly higher. The number was not weak, it was uninformative.
+
+       Cropped to the face and scaled to 224 across -- which is what the
+       network was trained on -- the same photograph yields a descriptor
+       worth comparing. The crop is padded by half a face width because
+       the descriptor wants hairline and jaw, not just the features.
+
+       Kept as a refinement rather than a replacement: if the second pass
+       finds nothing, the first descriptor stands. It is worse, but it is
+       better than turning away a document that was photographed well. */
+    doc.vec = Array.from((await refine(src, r.detection.box)) || r.descriptor);
+
+    doc.blob=blob2;
     $('docErr').textContent='';
     $('docCam').hidden=true; $('docUp').hidden=true; $('docShoot').hidden=true;
 
@@ -1124,7 +1200,18 @@
             var full=await faceapi.detectSingleFace(vid, opts)
               .withFaceLandmarks(!fineMarks).withFaceDescriptor();
             if(full){
-              face.vec=Array.from(full.descriptor);
+              /* Measured the same way the document's portrait is.
+
+                 The two descriptors are only comparable if they were
+                 taken under the same conditions. A selfie fills the frame
+                 and a printed portrait occupies a corner of one, so
+                 reading each off its own picture compares a face at 400
+                 pixels against a face at 50 -- and the difference between
+                 those two measurements is partly the difference in scale
+                 rather than in the faces. Both are cropped and scaled to
+                 the same square before the comparison is made. */
+              face.vec=Array.from(
+                (await refine(vid, full.detection.box)) || full.descriptor);
               face.blob=await grab(vid);
               stopCam();
               $('rvFace').src=URL.createObjectURL(face.blob);
