@@ -60,19 +60,19 @@
   body.connected .wdisc{display:block}
 
   .main{margin-left:var(--sbw);flex:1;min-width:0;display:flex;justify-content:center}
-  .wrap{padding:40px 40px 90px;width:100%;max-width:1180px}
-  .eyebrow{font-family:var(--font-head);font-size:11px;letter-spacing:5px;color:var(--gold-b);margin-bottom:12px}
+  .wrap{padding:40px 40px 50px;width:100%;max-width:1180px}
+  .eyebrow{font-family:var(--font-head);font-size:11px;letter-spacing:5px;color:var(--gold-b);margin-bottom:9px}
   h1{font-family:var(--font-head);font-weight:800;font-size:30px;letter-spacing:1px}
-  .sub{color:var(--muted);font-size:13.5px;margin-top:12px}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:8px}
 
   /* top earnable banner (like the mockup's top-right pill) */
-  .topbar{display:flex;align-items:center;justify-content:flex-end;margin:-52px 0 30px}
-  .earn{display:flex;align-items:center;gap:18px;padding:16px 20px 16px 18px;border:1px solid rgba(233,184,74,.28);
+  .topbar{display:flex;align-items:center;justify-content:flex-end;margin:-64px 0 20px}
+  .earn{display:flex;align-items:center;gap:16px;padding:13px 18px 13px 15px;border:1px solid rgba(233,184,74,.28);
     border-radius:16px;background:linear-gradient(120deg,rgba(233,184,74,.12),rgba(20,20,24,.5));
     box-shadow:0 8px 30px -12px rgba(233,184,74,.3)}
-  .earn img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 4px 18px rgba(233,184,74,.55))}
+  .earn img{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 4px 18px rgba(233,184,74,.55))}
   .earn .t{font-family:var(--font-head);font-size:12px;color:var(--muted);letter-spacing:.5px}
-  .earn .n{font-family:var(--font-head);font-size:30px;font-weight:700;color:var(--gold);line-height:1.05}
+  .earn .n{font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--gold);line-height:1.05}
   .earn a{margin-left:10px;font-family:var(--font-head);font-size:12px;letter-spacing:1.5px;font-weight:600;color:#221800;
     background:linear-gradient(135deg,#f9dd8f,var(--gold2) 45%,var(--gold) 80%);border-radius:11px;padding:14px 22px;
     position:relative;overflow:hidden;box-shadow:0 5px 18px -6px rgba(233,184,74,.5),inset 0 1px 0 rgba(255,255,255,.4);transition:.16s}
@@ -82,10 +82,13 @@
   .earn a:hover::after{animation:shine .7s ease}
 
   /* mission list */
-  .mhead{display:grid;grid-template-columns:minmax(0,1fr) 220px 220px;gap:24px;padding:0 30px 14px;
-    font-family:var(--font-head);font-size:11px;letter-spacing:2px;color:var(--dim)}
-  .mhead .c{text-align:center}
-  .mtable{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}
+  /* Rows as separate cards rather than one bordered table.
+
+     The table reads as a spreadsheet, and the column header above it only
+     makes sense while all three columns are visible -- on a phone they
+     stack and the header labels nothing. Separated, each mission is a
+     thing to act on and the header has nothing left to explain. */
+  .mtable{display:flex;flex-direction:column;gap:10px}
   /* Cap notice.
      A wallet that has taken all 80 capsules keeps referring -- the count on
      the leaderboard goes on rising -- but every claim now comes back
@@ -100,7 +103,7 @@
   .capnote span{font-size:12.5px;color:#a99d85;line-height:1.6;display:block;margin-top:3px}
 
   .mzone{position:relative}
-  .mzone.locked .mhead,.mzone.locked .mtable{filter:blur(4px) brightness(.42) saturate(.7);pointer-events:none;user-select:none;transition:filter .3s}
+  .mzone.locked .mtable{filter:blur(4px) brightness(.42) saturate(.7);pointer-events:none;user-select:none;transition:filter .3s}
   .event-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;padding:20px}
   /* An author display value beats the browser's [hidden] rule, so this
      overlay stayed in the layer above the missions even after being
@@ -240,11 +243,11 @@
     .el-when{font-size:9.5px;letter-spacing:1.8px}
   }
   @media(prefers-reduced-motion:reduce){ .el-cd .u.sec .n::after{animation:none} }
-  .mrow{display:grid;grid-template-columns:minmax(0,1fr) 220px 220px;gap:24px;align-items:center;padding:20px 30px;border-bottom:1px solid var(--line)}
-  .mrow:last-child{border-bottom:none}
-  .mrow:hover{background:rgba(255,255,255,.015)}
+  .mrow{display:grid;grid-template-columns:minmax(0,1fr) 200px 210px;gap:24px;align-items:center;
+    padding:18px 24px;border:1px solid var(--line);border-radius:14px;background:#121214;transition:.2s}
+  .mrow:hover{border-color:var(--line2);background:#16161a}
   .mrow .mL{display:flex;align-items:center;gap:18px}
-  .mrow .mico{width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,.02);border:1px solid var(--line);
+  .mrow .mico{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.03);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0;color:var(--muted);transition:.16s}
   .mrow .mico i{line-height:1}
   .mrow:hover .mico{background:rgba(255,255,255,.04);color:var(--text)}
@@ -252,6 +255,7 @@
   .mico.i-x{color:#e8e6e0}
   .mico.i-retweet,.mico.i-share,.mico.i-pfp{color:#5aa9ff}
   .mico.i-referral{color:#b884ff}
+  .mico.i-kyc{color:var(--gold)}
 
   /* Referral row.
      The count is the part that does the work. A button that quietly changes
@@ -350,17 +354,29 @@
   .modal .einp{max-width:none;font-size:14px;padding:13px 14px}
   .modal .mbtn{width:100%;margin-top:18px;padding:15px;letter-spacing:1px}
   .mrow .mdesc{color:var(--muted);font-size:12.5px;margin-top:4px}
-  .mrow .mrew{display:flex;align-items:center;justify-content:flex-start;gap:14px}
-  .mrow .mrew img{width:66px;height:66px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 18px rgba(233,184,74,.45))}
-  .mrow .mrew .rn{font-family:var(--font-head);font-weight:700;font-size:26px;color:var(--gold);line-height:1;min-width:36px;text-align:right}
-  .mrow .mrew .rl{font-family:var(--font-head);font-size:10px;color:var(--muted);letter-spacing:2px}
+  /* Capsule, then the count stacked under its own label.
+
+     Laid out in a row the number and the word sat side by side and the
+     eye read "3 CAPSULES" as one long string across the middle of the
+     card; stacked, the figure is the thing seen and the word underneath
+     only says what it counts. */
+  .mrow .mrew{display:flex;align-items:center;justify-content:flex-start;gap:12px}
+  .mrow .mrew img{width:62px;height:62px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 18px rgba(233,184,74,.45))}
+  .mrow .mrew .rt{display:flex;flex-direction:column;line-height:1.15}
+  .mrow .mrew .rn{font-family:var(--font-head);font-weight:700;font-size:25px;color:var(--gold);line-height:1}
+  .mrow .mrew .rl{font-family:var(--font-head);font-size:11px;color:var(--muted);letter-spacing:.4px;margin-top:3px}
   .act{display:flex;flex-direction:column;align-items:stretch;gap:7px}
-  .btn{font-family:var(--font-head);font-size:12.5px;letter-spacing:1.5px;font-weight:600;border-radius:11px;padding:13px 20px;cursor:pointer;
+  .btn{font-family:var(--font-head);font-size:13px;letter-spacing:1.2px;font-weight:600;border-radius:10px;padding:14px 22px;cursor:pointer;
     border:1px solid var(--line2);background:var(--panel2);color:var(--text);transition:.16s;text-align:center;position:relative;overflow:hidden}
   .btn:hover{border-color:var(--gold);color:var(--gold)}
-  /* GO: glassy blue */
-  .btn.go{background:linear-gradient(180deg,rgba(74,163,255,.14),rgba(74,163,255,.05));border-color:rgba(74,163,255,.45);color:#8fc4ff}
-  .btn.go:hover{background:linear-gradient(180deg,rgba(74,163,255,.22),rgba(74,163,255,.08));border-color:var(--x);color:#bcdcff}
+  /* GO: gold outline.
+
+     It was blue, from when the actions all opened X and the colour said
+     so. With the list cut back to two the blue reads as a different kind
+     of button rather than a quieter one, so both are gold now and the
+     difference is fill against outline. */
+  .btn.go{background:transparent;border-color:rgba(233,184,74,.55);color:var(--gold)}
+  .btn.go:hover{background:rgba(233,184,74,.08);border-color:var(--gold);color:var(--gold2)}
   /* CLAIM: gold with shine */
   .btn.claim{background:linear-gradient(135deg,#f9dd8f,var(--gold2) 42%,var(--gold) 78%,var(--gold-b));color:#221800;border:none;
     box-shadow:0 5px 18px -6px rgba(233,184,74,.55),inset 0 1px 0 rgba(255,255,255,.45)}
@@ -375,8 +391,31 @@
   .btn.done:hover{border-color:rgba(92,207,146,.4);color:var(--good)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .prog{font-family:var(--font-head);font-size:11px;color:var(--muted);text-align:center;letter-spacing:1px}
-  .foot-note{margin-top:26px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;
-    padding:16px 20px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  /* Rewards strip.
+
+     One image rather than five cards built in markup. The cards carry a
+     glow that spills past their own edges and sit on lit plinths, and
+     rebuilding that in CSS lands near it but not on it -- near it is
+     worse than nothing when the same artwork appears elsewhere. Two
+     files: the wide one lays the cards in a row, the narrow one stacks
+     them two and three, which is a different composition rather than the
+     same one scaled down.
+
+     Until the files exist the block renders as a bordered placeholder
+     rather than a broken image. */
+  .rewards{margin-top:20px;border-radius:18px;overflow:hidden;background:#050505;line-height:0}
+  .rewards img{width:100%;height:auto;display:block}
+  .rewards .rw-m{display:none}
+  .rewards .rw-ph{line-height:1.6;padding:46px 22px;text-align:center;color:var(--dim);
+    border:1px solid rgba(233,184,74,.3);border-radius:18px;
+    font-family:var(--font-head);font-size:12.5px;letter-spacing:1px}
+  @media(max-width:640px){
+    .rewards .rw-d{display:none}
+    .rewards .rw-m{display:block}
+  }
+
+  .foot-note{margin-top:18px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;
+    padding:13px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 
   .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
     background:#16160f;border:1px solid var(--gold-b);color:var(--text);padding:13px 22px;border-radius:11px;
@@ -392,7 +431,6 @@
     .earn img{width:56px;height:56px}
     .earn .n{font-size:24px}
     .earn a{margin-left:auto}
-    .mhead{display:none}
     .mrow{grid-template-columns:minmax(0,1fr) !important;gap:14px;text-align:center;justify-items:center;padding:20px 16px}
     .mrow .mL{flex-direction:column;text-align:center;gap:10px}
     .mrow .mrew{justify-content:center}
@@ -482,8 +520,6 @@
       <a href="mypage-collection.html"><i class="ti ti-cards"></i>Collection</a>
       <a href="mypage-inventory.html"><i class="ti ti-box"></i>Inventory</a>
       <a href="mypage-enhance.html"><i class="ti ti-arrow-up-circle"></i>Enhancement</a>
-      <a href="mypage-rewards.html"><i class="ti ti-gift"></i>Reward</a>
-      <a href="mypage-referral.html"><i class="ti ti-users"></i>Referral</a>
       <a href="mypage-kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
     </nav>
     <div class="side-foot">
@@ -507,7 +543,6 @@
     <div class="capnote" id="capNote" hidden></div>
 
     <div class="mzone" id="mzone">
-      <div class="mhead"><span>MISSION</span><span class="c">REWARD</span><span class="c">STATUS</span></div>
       <div class="mtable" id="mtable">
         <div class="mrow"><div class="mL"><div class="mico">⏳</div><div><div class="mname">Loading missions…</div></div></div><div></div><div></div></div>
       </div>
@@ -528,6 +563,15 @@
           <div class="el-when" id="elWhen" hidden></div>
         </div>
       </div>
+    </div>
+
+    <div class="rewards" id="rewards">
+      <img class="rw-d" src="images/mypage/rewards-desktop.webp"
+           alt="Proposed rewards: Common, Rare, Epic, Legendary and Mythic cards"
+           onerror="this.closest('#rewards').innerHTML='<div class=&quot;rw-ph&quot;>REWARDS &mdash; PROPOSED<br>artwork pending</div>'">
+      <img class="rw-m" src="images/mypage/rewards-mobile.webp"
+           alt="Proposed rewards: Common, Rare, Epic, Legendary and Mythic cards"
+           onerror="this.style.display='none'">
     </div>
 
     <div class="foot-note">
@@ -723,6 +767,7 @@
     share:{cls:'i-share', ic:'ti-share-3'},
     pfp:{cls:'i-pfp', ic:'ti-user-circle'},
     referral:{cls:'i-referral', ic:'ti-users'},
+    kyc:{cls:'i-kyc', ic:'ti-shield-check'},
   };
   var DESC={
     x_connect:'Create a wallet, connect X, and add your email',
@@ -734,6 +779,7 @@
        was written anywhere before: people were pressing a button that could
        not work and being told only that it had not worked. */
     referral:'Connect \uD835\uDD4F to get your link \u00b7 friends count once they connect \uD835\uDD4F too',
+    kyc:'Verify your identity',
   };
   // external action links (follow/retweet/share/pfp open X)
   //
@@ -858,7 +904,8 @@
 
       // middle: reward (capsule image + number)
       var R=document.createElement('div'); R.className='mrew';
-      R.innerHTML='<img src="images/mission-capsule.webp" alt=""><span class="rn">'+m.reward+'</span><span class="rl">CAPSULES</span>';
+      R.innerHTML='<img src="images/mission-capsule.webp" alt="">'+
+        '<span class="rt"><span class="rn">+'+m.reward+'</span><span class="rl">Capsules</span></span>';
       row.appendChild(R);
 
       // right: action
@@ -887,6 +934,40 @@
       }
       else if(m.done){
         btn.className='btn done'; btn.textContent='✓ COMPLETED'; btn.disabled=true; A.appendChild(btn);
+      }
+      /* KYC is decided elsewhere, and the row says where it stands.
+
+         The generic branch below offers a claim button to anything with no
+         link attached, which for this one would mean seven capsules for an
+         identity check nobody has made. The server refuses that now, so
+         the button would fail rather than pay -- but a button that cannot
+         work is still worse than the one that says what to do next.
+
+         Four answers, because there are four situations: not started, in
+         front of a reviewer, refused, and approved. Only the last of them
+         is a claim. */
+      else if(m.key==='kyc'){
+        var ks = d.kyc_state || 'none';
+        if(ks==='approved'){
+          btn.className='btn claim'; btn.textContent='CLAIM +'+m.reward;
+          btn.onclick=function(){ claim(m,btn); };
+          A.appendChild(btn);
+        } else if(ks==='pending'){
+          btn.className='btn'; btn.textContent='IN REVIEW'; btn.disabled=true;
+          A.appendChild(btn);
+          var n=document.createElement('div');
+          n.className='prog'; n.textContent='Usually within a day';
+          A.appendChild(n);
+        } else if(ks==='suspended' || ks==='locked'){
+          btn.className='btn'; btn.textContent='ON HOLD'; btn.disabled=true;
+          A.appendChild(btn);
+        } else {
+          var a=document.createElement('a');
+          a.className='btn go';
+          a.textContent = ks==='rejected' ? 'TRY AGAIN' : 'VERIFY';
+          a.href='mypage-kyc.html';
+          A.appendChild(a);
+        }
       }
       else if(LINK[m.key]){
         // external action first (go), then claim
@@ -1271,12 +1352,20 @@
     }catch(e){
       var msg=e.message||''+e;
       if(msg.includes('MISSION_MAXED')) toast('Already completed',true);
+      /* The server refuses this one until a reviewer has passed it, and the
+         page only offers the button when it believes that has happened --
+         so landing here means the two disagree, usually a page left open
+         since before the decision. */
+      else if(msg.includes('KYC_NOT_APPROVED')){
+        toast('Identity check not approved yet',true);
+        setTimeout(function(){ load(); }, 1200);
+      }
       else if(msg.includes('ACCOUNT_CAP_REACHED')) toast('Capsule limit reached — referrals still count toward the leaderboard',true);
       else if(msg.includes('NO_VALID_REFERRALS')){
         toast('No referrals to claim yet — invite a friend first',true);
         // Sent where the code is, rather than left on a button that cannot
         // work until somebody has used it.
-        setTimeout(function(){ location.href='mypage-referral'; }, 1400);
+        setTimeout(function(){ location.href='mypage-missions'; }, 1400);
       }
       else if(msg.includes('EVENT_CLOSED')) toast('The event is not open yet',true);
       else if(msg.includes('EVENT_CAP_REACHED')) toast('All event capsules have been issued',true);

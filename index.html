@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="base:app_id" content="6aa95a3109ac89ef27559e32" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MEMONS</title>
 <link rel="stylesheet" href="fonts.css">
@@ -858,13 +857,13 @@
 
   <div class="evpop-box" id="evBoxEvent" role="dialog" aria-modal="true" aria-label="Open beta rewards">
     <button class="evpop-x" data-close="event" aria-label="Close">&times;</button>
-    <a class="evpop-img" id="evPopLink" href="mypage-rewards.html">
+    <a class="evpop-img" id="evPopLink" href="mypage-missions.html">
       <img src="images/notice/reward-popup.png" alt="Open Beta Rewards"
            onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
     </a>
     <div class="evpop-foot">
       <div class="evpop-acts">
-        <a class="evpop-btn" id="evPopMission" href="mypage-rewards.html">CHECK REWARDS</a>
+        <a class="evpop-btn" id="evPopMission" href="mypage-missions.html">CHECK REWARDS</a>
       </div>
       <label class="evpop-chk">
         <input type="checkbox" data-hide="event">
@@ -875,13 +874,13 @@
 
   <div class="evpop-box" id="evBoxRank" role="dialog" aria-modal="true" aria-label="Referral rewards">
     <button class="evpop-x" data-close="rank" aria-label="Close">&times;</button>
-    <a class="evpop-img" id="rkPopLink" href="mypage-referral.html">
+    <a class="evpop-img" id="rkPopLink" href="mypage-missions.html">
       <img src="images/notice/referral-popup.png" alt="Referral Rewards"
            onerror="document.documentElement.dispatchEvent(new Event('rankpop:missing'))">
     </a>
     <div class="evpop-foot">
       <div class="evpop-acts">
-        <a class="evpop-btn" id="rkPopBtn" href="mypage-referral.html">CHECK REFERRAL</a>
+        <a class="evpop-btn" id="rkPopBtn" href="mypage-missions.html">CHECK REFERRAL</a>
       </div>
       <label class="evpop-chk">
         <input type="checkbox" data-hide="rank">
@@ -959,7 +958,7 @@
   var NOTICE_ID   = '6';
   /* 이벤트가 끝나 미션 페이지로 보낼 이유가 없다. 남은 할 일은 당첨 확인과
      본인확인뿐이라 두 버튼과 배너가 모두 보상 페이지를 가리킨다. */
-  var MISSION_URL = 'mypage-rewards';
+  var MISSION_URL = 'mypage-missions';
 
   /* Bump this when a new event goes up. The tick box is remembered against
      it, so a visitor who hid the last one still sees the next. */

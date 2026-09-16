@@ -65,7 +65,7 @@
   .ptitle{font-family:var(--font-head);font-weight:800;font-size:15px;letter-spacing:.5px;color:var(--gold)}
 
   /* row 1: 3 stat cards */
-  .row1{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:22px}
+  .row1{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
   .bigcard{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:20px;display:flex;align-items:center;gap:18px}
   .bigcard .bimg{width:88px;height:88px;object-fit:contain;flex-shrink:0}
   .bigcard .bimg-fb{width:74px;height:74px;border-radius:14px;background:var(--panel2);flex-shrink:0;display:none;align-items:center;justify-content:center;color:var(--dim);font-size:30px}
@@ -84,16 +84,28 @@
   @media(max-width:1050px){.row1{grid-template-columns:minmax(0,1fr)}.row2,.row3{grid-template-columns:minmax(0,1fr)}}
 
   /* event mission preview */
-  .mrow{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+  /* Rows as cards, matching the missions page.
+
+     They were separated by a top border, which reads as a table -- and
+     with only two of them left the first line sat right under the panel
+     title with nothing between. */
+  .mrow{display:flex;align-items:center;gap:14px;padding:15px 16px;margin-top:10px;
+    border:1px solid var(--line);border-radius:13px;background:#121214;transition:.16s}
+  .mrow:hover{border-color:var(--line2);background:#16161a}
   .mrow:first-of-type{border-top:0}
-  .mrow .mi{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#5aa9ff;flex-shrink:0}
+  .mrow .mi{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.03);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
   .mrow .mi i{font-size:18px}
   .mrow .mt{font-family:var(--font-head);font-weight:600;font-size:13.5px}
   .mrow .md{font-size:11.5px;color:var(--muted);margin-top:2px}
-  .mrow .mrew{font-family:var(--font-head);font-weight:700;font-size:12px;color:var(--gold);display:flex;align-items:center;gap:5px;margin-left:auto}
+  .mrow .mrew{display:flex;align-items:center;gap:7px;margin-left:auto}
   .mrow .mrew i{font-size:15px}
-  .mrow .mrew img.tk{width:34px;height:34px;object-fit:contain}
-  .mrow .mvf{font-family:var(--font-head);font-size:11px;letter-spacing:.5px;color:#1c1500;background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+  .mrow .mrew img.tk{width:40px;height:40px;object-fit:contain;
+    filter:drop-shadow(0 3px 12px rgba(233,184,74,.45))}
+  .mrow .mrn{font-family:var(--font-head);font-weight:700;font-size:17px;color:var(--gold);line-height:1}
+  .mrow .mvf{font-family:var(--font-head);font-size:11.5px;letter-spacing:1px;font-weight:600;
+    color:var(--gold);background:transparent;border:1px solid rgba(233,184,74,.55);
+    border-radius:9px;padding:9px 18px;cursor:pointer;transition:.16s}
+  .mrow .mvf:hover{background:rgba(233,184,74,.08);border-color:var(--gold)}
   .mnote{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
   .mnote i{color:var(--dim);font-size:16px}
 
@@ -126,30 +138,8 @@
   .resfoot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:14px}
 
   /* referral overview */
-  .ro{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-  .rostat .rol{font-family:var(--font-head);font-size:10.5px;letter-spacing:.5px;color:var(--muted)}
-  .rostat .rov{font-family:var(--font-head);font-weight:800;font-size:24px;margin-top:6px}
-  .rostat .rov .u{font-size:12px;color:var(--muted);font-weight:600;margin-left:3px}
-  .rolink{margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .rolinkbox{flex:1;min-width:220px}
-  .rolinkbox .rll{font-family:var(--font-head);font-size:10px;letter-spacing:1px;color:var(--gold);margin-bottom:7px}
-  .rolinkin{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:10px;background:#0a0a0c;padding:10px 13px}
-  .rolinkin input{flex:1;background:transparent;border:0;outline:none;color:var(--x);font-size:12px}
-  .rolinkin button{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:15px}
-  .rocopy{font-family:var(--font-head);font-size:12px;letter-spacing:.5px;color:#1c1500;background:linear-gradient(150deg,var(--gold2),var(--gold) 60%);border:0;border-radius:10px;padding:12px 20px;cursor:pointer;white-space:nowrap}
 
   /* top referrers */
-  .lb{display:flex;flex-direction:column}
-  .lbempty{padding:26px 12px;text-align:center;color:var(--muted);font-size:13px}
-  .lbrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
-  .lbrow:first-child{border-top:0}
-  .lbrow .lrank{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:800;font-size:12px;flex-shrink:0;background:var(--panel2);color:var(--muted)}
-  .lbrow.top1 .lrank{background:linear-gradient(150deg,#f4d27a,#E9B84A);color:#1c1500}
-  .lbrow.top2 .lrank{background:linear-gradient(150deg,#e8e8e8,#b8b8b8);color:#1c1500}
-  .lbrow.top3 .lrank{background:linear-gradient(150deg,#e0a066,#b87333);color:#1c1500}
-  .lbrow .lav{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--panel2)}
-  .lbrow .laddr{font-family:var(--font-head);font-size:13px;font-weight:600}
-  .lbrow .lref{margin-left:auto;font-family:var(--font-head);font-size:13px;color:var(--muted)}
 
   .footnote{text-align:center;color:var(--dim);font-size:12px;margin-top:30px}
   @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.wrap{padding:24px 16px 70px}.co{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -215,8 +205,6 @@
       <a href="mypage-collection.html"><i class="ti ti-cards"></i>Collection</a>
       <a href="mypage-inventory.html"><i class="ti ti-box"></i>Inventory</a>
       <a href="mypage-enhance.html"><i class="ti ti-arrow-up-circle"></i>Enhancement</a>
-      <a href="mypage-rewards.html"><i class="ti ti-gift"></i>Reward</a>
-      <a href="mypage-referral.html"><i class="ti ti-users"></i>Referral</a>
       <a href="mypage-kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
     </nav>
     <div class="side-foot"><div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div></div>
@@ -226,10 +214,6 @@
     <h1>Dashboard</h1>
     <p class="welcome" id="welcome">Welcome back!</p>
 
-    <!-- Season 0 / Season 1 switch. Filled by season-tabs.js, and left
-         empty while the admin's show_season0 flag is off. -->
-    <!-- 카드는 시즌 구분이 사라져 여기에는 탭이 없다. 추천인 탭은
-         REFERRAL OVERVIEW 위로 내려가 있다. -->
 
     <!-- ROW 1: stat cards -->
     <div class="row1">
@@ -242,11 +226,6 @@
         <img class="bimg" src="images/mypage/dash/cards.webp" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-cards"></i></span>
         <div><div class="bl">CARDS OWNED</div><div class="bv" id="cardNum">—<span class="u">Cards</span></div>
           <a class="link" href="mypage-collection.html" style="margin-top:8px">View Collection <i class="ti ti-arrow-right"></i></a></div>
-      </div>
-      <div class="bigcard refcolor" id="refCard">
-        <img class="bimg" src="images/mypage/dash/users.webp" alt="" onerror="this.closest('.bigcard').classList.add('noimg')"><span class="bimg-fb"><i class="ti ti-users"></i></span>
-        <div><div class="bl">VALID REFERRALS</div><div class="bv" id="refNum">—<span class="u">Users</span></div>
-          <a class="link" href="mypage-referral.html" style="margin-top:8px">View Referral <i class="ti ti-arrow-right"></i></a></div>
       </div>
     </div>
 
@@ -261,39 +240,6 @@
       <div class="panel">
         <div class="phead"><div class="ptitle">COLLECTION OVERVIEW</div><a class="link" href="mypage-collection.html">View Collection <i class="ti ti-arrow-right"></i></a></div>
         <div class="co" id="coGrid"></div>
-        <div class="res" id="resBlock">
-          <div class="rhd">REWARD ENTRY STATUS <small id="snapNote">(Snapshot TBA)</small></div>
-          <table class="rtab"><thead><tr><th>GRADE</th><th>YOUR CARDS</th><th>ENTRIES</th><th>STATUS</th></tr></thead>
-            <tbody id="resBody"></tbody></table>
-          <div class="resfoot" id="resFoot">Winners will be announced after the event.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ROW 3: referral + leaderboard -->
-    <!-- 추천인만 시즌으로 나뉜다. 탭을 화면 맨 위에 두면 바로 아래
-         카드와 컬렉션은 그대로인 채 여기 숫자만 바뀌어, 무엇이 바뀌는지
-         알기 어렵다. 바뀌는 것 바로 위에 둔다. -->
-    <div id="seasonTabs"></div>
-
-    <div class="row3">
-      <div class="panel">
-        <div class="ptitle" style="margin-bottom:18px">REFERRAL OVERVIEW</div>
-        <div class="ro">
-          <div class="rostat"><div class="rol">TOTAL REFERRALS</div><div class="rov" id="roTotal">—<span class="u">Users</span></div></div>
-          <div class="rostat"><div class="rol">VALID REFERRALS</div><div class="rov" id="roValid">—<span class="u">Users</span></div></div>
-          <div class="rostat"><div class="rol">MY RANK</div><div class="rov" id="roRank">—</div></div>
-        </div>
-        <div class="rolink">
-          <div class="rolinkbox"><div class="rll">YOUR REFERRAL LINK</div>
-            <div class="rolinkin"><input id="roLink" readonly value="—"><button id="roCopy2"><i class="ti ti-copy"></i></button></div></div>
-          <button class="rocopy" id="roCopy">Copy Link</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="phead"><div class="ptitle">TOP REFERRERS</div><a class="link" href="mypage-leaderboard.html">View All <i class="ti ti-arrow-right"></i></a></div>
-        <div class="lb" id="lb"></div>
       </div>
     </div>
 
@@ -304,8 +250,6 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="mypage-entry.js"></script>
-<script src="season-tabs.js"></script>
-<script src="leaderboard.js"></script>
 <script>
 (function(){
   var API="https://neixdrtamznrooougcda.supabase.co/functions/v1";
@@ -347,36 +291,11 @@
   // session moved off sessionStorage to survive mobile tab eviction.
   function token(){ return (window.MEMONS && window.MEMONS.token) || null; }
   function shortAddr(a){ return a? (a.slice(0,6)+'...'+a.slice(-4)) : ''; }
-  var owned=[], link='', seasonMounted=false;
+  var owned=[];
 
   function toast(m){ var t=document.createElement('div'); t.textContent=m;
     t.style.cssText='position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#161616;border:1px solid var(--line2);color:var(--text);font-size:13px;padding:12px 18px;border-radius:11px;z-index:90';
     document.body.appendChild(t); setTimeout(function(){t.remove();},2400); }
-
-  function renderLeaderboard(){
-    var data=(window.MEMONS_LEADERBOARD||[]).slice(0,5);
-    if(!data.length){
-      $('lb').innerHTML='<div class="lbempty">'+(window.MEMONS_LB_READY
-        ? 'No referrers yet.' : 'Loading...')+'</div>';
-      return;
-    }
-    $('lb').innerHTML=data.map(function(e){
-      var cls=e.rank<=3?(' top'+e.rank):'';
-      return '<div class="lbrow'+cls+'"><div class="lrank">'+e.rank+'</div>'+
-        '<img class="lav" src="images/mypage/dash/avatar.webp" alt="" onerror="this.style.visibility=\'hidden\'">'+
-        '<div class="laddr">'+e.address+'</div><div class="lref">'+e.referrals+' Users</div></div>';
-    }).join('');
-  }
-  window.MEMONS_LB_ONLOAD=function(){ renderLeaderboard(); };
-
-  /* Top Referrers follows the tab. leaderboard.js loads once on its own
-     for every season, which is right for the pages that have no tab;
-     here it is asked again for the season on screen. */
-  function loadBoard(){
-    if(typeof window.MEMONS_LB_LOAD !== 'function') return;
-    var season=(window.SeasonTabs && SeasonTabs.showsPast()) ? SeasonTabs.current() : '';
-    window.MEMONS_LB_LOAD(season || null);
-  }
 
   function renderCollection(){
     /* 탭을 따르지 않는다.
@@ -402,65 +321,23 @@
         '<div class="cobar"><i style="width:'+pct+'%"></i></div></div>';
     }).join('');
 
-    // reward entry status: epic/legendary/mythic (total count of that rarity owned)
-    /* The prize draw belongs to the open beta. There is no equivalent in
-       season 1, so on that tab the block is not drawn at all -- an empty
-       table reading "Not Eligible" would look like a draw the reader had
-       missed rather than one that does not exist. */
-    /* 오픈베타 추첨 결과다. 시즌이 합쳐졌으니 숨길 기준이 없어졌고,
-       당첨자에게는 아직 지급이 남아 있어 계속 보여야 한다. */
-    var resBlock=$('resBlock');
-    if(resBlock) resBlock.style.display='';
-
-    var cnt={epic:0,legendary:0,mythic:0};
-    rows.forEach(function(o){ var r=((o.cards&&o.cards.rarity)||'').toLowerCase(); if(cnt[r]!=null) cnt[r]++; });
-    var prizes=[['epic','EPIC PRIZE','100 Winners'],['legendary','LEGENDARY PRIZE','10 Winners'],['mythic','MYTHIC PRIZE','5 Winners']];
-    $('resBody').innerHTML=prizes.map(function(p){
-      var r=p[0], c=cnt[r], elig=c>0;
-      return '<tr><td><span class="g" style="--cc:var(--c-'+r+')">'+
-        '<img src="images/mypage/dash/grade-'+r+'.webp" alt="" onerror="this.outerHTML=\'<span class=&quot;gfb&quot; style=&quot;background:var(--c-'+r+')&quot;></span>\'">'+
-        '<span style="color:var(--c-'+r+')">'+p[1]+'</span> <span style="color:var(--dim);font-weight:400">('+p[2]+')</span></span></td>'+
-        '<td>'+c+'</td><td>'+c+(c===1?' Entry':' Entries')+'</td>'+
-        '<td>'+(elig?'<span class="st ok"><i class="ti ti-circle-check"></i>Auto Entered</span>':'<span class="st no"><i class="ti ti-circle-x"></i>Not Eligible</span>')+'</td></tr>';
-    }).join('');
   }
 
-  async function loadReferral(){
-    try{
-      /* Follows the tab, like the card figures above it. Without the
-         season the endpoint answers for every season, which is what it
-         did before and what it still does when no tab is shown. */
-      var season=(window.SeasonTabs && SeasonTabs.showsPast()) ? SeasonTabs.current() : '';
-      var url=API+'/referral'+(season?('?season='+encodeURIComponent(season)):'');
-      var r=await fetch(url,{headers:{Authorization:'Bearer '+token()}});
-      var j=await r.json();
-      $('roTotal').innerHTML=(j.total_referees||0)+'<span class="u">Users</span>';
-      $('roValid').innerHTML=(j.valid_ref||0)+'<span class="u">Users</span>';
-      $('roRank').textContent=j.rank?('#'+j.rank):'—';
-      $('refNum').innerHTML=(j.valid_ref||0)+'<span class="u">Users</span>';
-      if(j.code){ link=location.origin+'/r/'+j.code; $('roLink').value=link; }
-      else { $('roLink').value='Complete missions 1-5 to unlock'; }
-    }catch(e){}
-  }
-
-  function copy(){ if(!link) return; navigator.clipboard.writeText(link).then(function(){toast('Link copied');}); }
 
   /* Dashboard mission summary.
      These three rows used to be fixed markup: the reward figures drifted away
      from the missions table, and the action always read Verify no matter how
      much the user had already done. Reading the same endpoint the missions
      page uses keeps both honest. */
-  var DASH_ICON={x_connect:'ti-brand-x',follow:'ti-user-plus',retweet:'ti-repeat',
-                 share:'ti-share-3',pfp:'ti-user-circle',referral:'ti-users'};
-  var DASH_NAME={x_connect:'Connect Wallet & X',follow:'Follow APEPE on X',
-                 retweet:'Retweet Official Post',share:'Share Your Card',
-                 pfp:'Apply MEMONS Card as X Profile',referral:'Invite Friends'};
+  /* Names and descriptions are written here rather than taken from the
+     response, because the response carries the label the missions table
+     was seeded with and that is not always what should be read here. A
+     key with no entry falls back to the server's own label, so a mission
+     added later shows something sensible instead of its key. */
+  var DASH_ICON={x_connect:'ti-brand-x',kyc:'ti-shield-check'};
+  var DASH_NAME={x_connect:'Sign Up + Follow',kyc:'Complete KYC'};
   var DASH_DESC={x_connect:'Create a wallet, connect X, and add your email',
-                 follow:'Follow @apepeofficial on X',
-                 retweet:'Retweet the event post on X (Twitter)',
-                 share:'Share your acquired card on X (Twitter)',
-                 pfp:'Set MEMONS card as your profile picture',
-                 referral:'Invite friends and have them join'};
+                 kyc:'Verify your identity'};
 
   function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -477,7 +354,7 @@
 
     host.innerHTML=list.map(function(m){
       var icon=DASH_ICON[m.key]||'ti-target';
-      var name=DASH_NAME[m.key]||m.key;
+      var name=DASH_NAME[m.key]||m.label||m.key;
       var desc=DASH_DESC[m.key]||'';
       var prog=(m.max_claims>1) ? '<span class="mprog">'+m.claimed+' / '+m.max_claims+'</span>' : '';
       var action=m.done
@@ -485,14 +362,14 @@
         : '<a class="mvf" href="mypage-missions.html">Verify</a>';
       return '<div class="mrow"><div class="mi"><i class="ti '+icon+'"></i></div>'
         +'<div><div class="mt">'+esc(name)+'</div><div class="md">'+esc(desc)+'</div></div>'
-        +'<div class="mrew"><img class="tk" src="images/mypage/dash/ticket.webp" alt="" '
-        +'onerror="this.outerHTML=\'<i class=&quot;ti ti-ticket&quot;></i>\'">+'+m.reward+prog+'</div>'
+        +'<div class="mrew"><img class="tk" src="images/mission-capsule.webp" alt="">'
+        +'<span class="mrn">+'+m.reward+'</span>'+prog+'</div>'
         +action+'</div>';
     }).join('');
   }
 
   async function load(){
-    if(!(window.MEMONS && MEMONS.connected)){ renderLeaderboard(); return; }
+    if(!(window.MEMONS && MEMONS.connected)) return;
     $('welcome').textContent='Welcome back, '+shortAddr(MEMONS.address)+'!';
     try{ var s=await MEMONS.state(); owned=s.owned||[];
       var caps = (s.pulls_remaining!=null? s.pulls_remaining : (s.event_pulls||0));
@@ -502,32 +379,11 @@
          figure for a moment and then change it. */
     }catch(e){}
     await loadTotals();
-    if(window.SeasonTabs){
-      await SeasonTabs.ready();
-      if(!seasonMounted){
-        seasonMounted=true;
-        /* always: 카드가 합쳐진 뒤에도 추천인은 시즌으로 나뉜다.
-           어드민의 시즌0 스위치를 꺼도 이 탭은 남아야 한다.
-
-           onChange 에서 renderCollection 을 부르지 않는다. 카드 숫자는
-           탭과 무관하고, 다시 그리면 같은 값을 넣느라 화면만 깜빡인다. */
-        SeasonTabs.mount({ el:$('seasonTabs'), always:true, onChange:function(){
-          loadReferral(); loadBoard();
-        }});
-      } else {
-        SeasonTabs.refresh(owned);
-      }
-      loadBoard();
-    }
     renderCollection();
-    renderLeaderboard();
     await loadMissions();
-    await loadReferral();
-    $('roCopy').onclick=copy; $('roCopy2').onclick=copy;
   }
   load();
   var iv=setInterval(function(){ if(window.MEMONS && MEMONS.connected){ clearInterval(iv); load(); } }, 800);
-  renderLeaderboard();
 })();
 </script>
 <style>
