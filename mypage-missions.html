@@ -590,6 +590,25 @@
   </div>
 </div>
 
+<!-- Follow prompt.
+
+     The X mission links an account; it has never checked whether that
+     account follows anything, and X gives no way to ask. So this is an
+     invitation rather than a condition -- the capsules are already
+     granted by the time it appears.
+
+     A button rather than a window opened on load: a popup with no click
+     behind it is blocked, and a blocked popup is worse than no prompt,
+     because the user is told nothing and nothing happens. -->
+<div class="modal-bg" id="followModal">
+  <div class="modal">
+    <div class="mtitle">One more thing</div>
+    <div class="mtext">Follow <b>@apepeofficial</b> on 𝕏 for reward announcements and event results. It opens in a new tab.</div>
+    <button class="btn claim mbtn" id="followGo">FOLLOW @APEPEOFFICIAL</button>
+    <button class="btn mbtn" id="followSkip" style="margin-top:8px;background:transparent">LATER</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Connect gate. Outside the mission table, so it covers the page rather
@@ -1008,6 +1027,14 @@
     });
     // mission 1 gate: X linked but no contact email yet -> force the email modal
     if(d.x_connected && !currentEmail) openEmailModal(); else closeEmailModal();
+
+    /* The follow prompt waits its turn.
+
+       Both modals cover the screen, and coming back from X with no email
+       on file brings up that one -- the more important of the two, since
+       the capsules are held behind it. This appears once that is out of
+       the way, and only on the visit that made the link. */
+    if(d.x_connected && currentEmail) maybeAskFollow();
   }
 
   /* The referral row.
@@ -1392,6 +1419,30 @@
   }
   function closeEmailModal(){ var mb=$('emailModal'); if(mb) mb.classList.remove('show'); }
 
+  var FOLLOW_URL='https://x.com/intent/follow?screen_name=apepeofficial';
+
+  /* Shown once, on the visit that linked the account.
+
+     The flag is cleared before the modal opens rather than after it is
+     dismissed: a reader who closes the tab on this screen has already
+     had the invitation, and meeting it again on their next visit would
+     read as the mission having failed. */
+  function maybeAskFollow(){
+    var f=null;
+    try{ f=sessionStorage.getItem('memons:xjustlinked'); }catch(e){}
+    if(!f) return;
+    try{ sessionStorage.removeItem('memons:xjustlinked'); }catch(e){}
+
+    var mb=$('followModal'); if(!mb) return;
+    mb.classList.add('show');
+
+    $('followGo').onclick=function(){
+      window.open(FOLLOW_URL,'_blank','noopener');
+      mb.classList.remove('show');
+    };
+    $('followSkip').onclick=function(){ mb.classList.remove('show'); };
+  }
+
   // save email -> server also grants the 10 capsules (only if X is linked)
   async function confirmEmail(){
     var inp=$('emailInput'), btn=$('emailConfirm');
@@ -1434,7 +1485,17 @@
     try{
       var r=await fetch(API+'/x-auth/login?origin='+encodeURIComponent(location.origin),{headers:{Authorization:'Bearer '+tk}});
       var j=await r.json();
-      if(j.authUrl){ location.href=j.authUrl; }
+      /* Marked before leaving, read after coming back.
+
+         The round trip through X is a fresh page load, so there is no
+         state left in memory to say the connection was just made rather
+         than made last week -- and the prompt should only appear the
+         once. sessionStorage lasts exactly as long as the tab, which is
+         the life of this journey. */
+      if(j.authUrl){
+        try{ sessionStorage.setItem('memons:xjustlinked','1'); }catch(e){}
+        location.href=j.authUrl;
+      }
       else { toast('Could not start X login',true); }
     }catch(e){ toast('X login error',true); }
   }
