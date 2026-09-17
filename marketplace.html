@@ -2093,7 +2093,12 @@
       if(tab==='sell'){
         e.innerHTML = !(window.MEMONS && MEMONS.connected)
           ? '<b>Connect your wallet</b>Your cards will appear here.'
-          : '<b>Nothing to sell</b>Cards from the event cannot be traded. Open capsules to collect tradable cards.';
+          /* The old wording blamed the event: cards from it could not be
+             traded, which was true while mission capsules opened the
+             event capsule. They open the paid one now, so what is left
+             is the rarity floor -- common and rare are bought back
+             rather than sold on, and the market starts at epic. */
+          : '<b>Nothing to sell</b>Epic and above can be traded here.';
       }else{
         /* Two different silences. rows.length only says the card list
            loaded, and it is a hundred either way -- so it cannot tell an
@@ -3571,7 +3576,7 @@
     if(state==='approved'){
       gateShow('ALMOST THERE',
                'Your identity is verified. Trading opens once your reward cards are issued.',
-               'GO TO MY PAGE', function(){ window.top.location.href='mypage-missions.html'; });
+               'GO TO MY PAGE', function(){ window.top.location.href='mypage-rewards.html'; });
     }else if(state==='pending' || state==='invited'){
       gateShow('IN REVIEW',
                'Your verification is being reviewed. Trading opens once it is approved.',
