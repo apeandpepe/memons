@@ -1078,13 +1078,18 @@ function paintPrice(it){
   function fitValue(el){
     if(!el) return;
     el.style.transform='';
-    var cell = el.parentElement && el.parentElement.parentElement;
-    if(!cell) return;
 
-    /* How much room is left from where the figure starts to the cell's
-       own right edge. The figure is pushed in from the left by padVal,
-       and the cell has its own left padding before that. */
-    var room = cell.clientWidth - el.offsetLeft;
+    /* Measured against .ptxt, the element immediately around it, because
+       that is the one carrying overflow:hidden -- the cell outside it
+       clips nothing, so a figure measured against the cell looked as
+       though it fitted while the T of USDT was already gone.
+
+       offsetLeft is the push from padVal, which moves the figure right
+       inside .ptxt without making .ptxt any wider. */
+    var box = el.parentElement;
+    if(!box) return;
+
+    var room = box.clientWidth - el.offsetLeft;
     var want = el.scrollWidth;
     if(room <= 0 || want <= room) return;
 
