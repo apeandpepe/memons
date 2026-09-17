@@ -1498,7 +1498,13 @@ async function previewCard(id){
      rearranging a working module for. */
   const U = "https://neixdrtamznrooougcda.supabase.co";
   const K = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
-  const r = await fetch(U + '/rest/v1/cards?id=eq.' + encodeURIComponent(id) +
+  /* card_list, not the cards table. The table has row level security on
+     with no policy behind it, so a browser reads nothing from it at all
+     -- every row comes back missing rather than forbidden, which is why
+     a perfectly real card id reported itself as not found. The view is
+     what the collection page reads and carries the columns a public
+     archive needs. */
+  const r = await fetch(U + '/rest/v1/card_list?id=eq.' + encodeURIComponent(id) +
                         '&select=id,name,rarity,image_url&limit=1',
     { headers:{ apikey: K, Authorization: 'Bearer ' + K } });
   const rows = await r.json();
