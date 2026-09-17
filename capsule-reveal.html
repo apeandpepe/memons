@@ -126,8 +126,20 @@
   .pricebar.art .pl{margin-left:var(--padLabel,0px);
     font-size:calc(var(--aw) * var(--fsLabel,.021));
     letter-spacing:.14em;color:rgba(255,255,255,.72)}
+  /* The cell is a fixed share of the bar and the figure inside it is set
+     against the artwork, so both are sized for the number that was there
+     when they were measured. A four-figure price is wider than that, and
+     the USDT after it was the part that fell off the end -- clipped by
+     the cell, which is what gives the bar its shape.
+
+     Shrunk to fit rather than allowed to wrap or overflow: the cell sits
+     over a painted panel and its edges are the panel's, so there is
+     nowhere for a second line to go and nothing to gain by spilling past
+     the border. The scale is applied from the left, the side the figure
+     is anchored to. */
   .pricebar.art .pvi{margin-left:var(--padVal,0px);
-    font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff}
+    font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff;
+    display:inline-block;transform-origin:left center}
   .pricebar.art .pvi u{font-size:calc(var(--aw) * var(--fsUnit,.019));opacity:.6}
   .pricebar.art .pdiv,.pricebar.art .pgo,.pricebar.art .pv{display:none}
 
@@ -1052,6 +1064,35 @@ function paintPrice(it){
     bar.classList.add('hidden');
     return;
   }
+  /* Shrink the figure until it fits the cell it sits in.
+
+     Measured rather than guessed at: the cell's width is a percentage of
+     a bar whose own width depends on the screen, and the figure's size is
+     a percentage of that again, so there is no number of digits that is
+     safe everywhere. Reading what it came out as and scaling from there
+     holds on any screen and for any price.
+
+     Runs after the value is in the element, because that is the only
+     point at which its width is known. A price that already fits is left
+     alone. */
+  function fitValue(el){
+    if(!el) return;
+    el.style.transform='';
+    var cell = el.parentElement && el.parentElement.parentElement;
+    if(!cell) return;
+
+    /* How much room is left from where the figure starts to the cell's
+       own right edge. The figure is pushed in from the left by padVal,
+       and the cell has its own left padding before that. */
+    var room = cell.clientWidth - el.offsetLeft;
+    var want = el.scrollWidth;
+    if(room <= 0 || want <= room) return;
+
+    /* A little under the exact ratio. The last letter of USDT should not
+       end flush against the border it is being kept inside. */
+    el.style.transform = 'scale(' + (room / want * 0.96).toFixed(3) + ')';
+  }
+
   var info = found;
 
   bar.style.setProperty('--rc', it.color);
@@ -1126,6 +1167,7 @@ function paintPrice(it){
     $('pbValueIn').innerHTML=val;
     $('pbValueIn').classList.remove('hidden');
     $('pbValue').classList.add('hidden');
+    fitValue($('pbValueIn'));
     $('pbDiv').classList.add('hidden');
     $('pbGo').classList.add('hidden');
 
