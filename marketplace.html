@@ -2096,8 +2096,7 @@
           /* The old wording blamed the event: cards from it could not be
              traded, which was true while mission capsules opened the
              event capsule. They open the paid one now, so what is left
-             is the rarity floor -- common and rare are bought back
-             rather than sold on, and the market starts at epic. */
+             is the rarity floor. */
           : '<b>Nothing to sell</b>Epic and above can be traded here.';
       }else{
         /* Two different silences. rows.length only says the card list
@@ -5073,6 +5072,42 @@
     document.body.style.overflow = '';
     current = null;
   }
+
+  /* ?salepreview=epic_0021 opens the sold window for that card.
+
+     The window is only ever reached by selling something, which makes it
+     awkward to look at: checking a wording change or a piece of artwork
+     meant finding a card, listing it, and having somebody buy it. This
+     reads one row from card_list and fills the same window with it.
+
+     Nothing is sold and no balance moves. justNow is left off, so the
+     line about the balance -- which would be a lie here -- does not
+     appear. An optional price after a comma, for checking how a long
+     figure sits in the panel:
+
+       ?salepreview=epic_0021,1107.31 */
+  (function(){
+    var q = new URLSearchParams(location.search).get('salepreview');
+    if(!q) return;
+
+    var parts = q.split(',');
+    var id    = parts[0].trim();
+    var price = parts[1] ? Number(parts[1]) : 100;
+
+    fetch(SB_URL + '/rest/v1/card_list?id=eq.' + encodeURIComponent(id) +
+          '&select=id,name,rarity,image_url&limit=1',
+      { headers:{ apikey:SB_ANON, Authorization:'Bearer '+SB_ANON } })
+      .then(function(r){ return r.json(); })
+      .then(function(rows){
+        if(!rows || !rows.length){ alert('card not found: ' + id); return; }
+        var c = rows[0];
+        window.openSaleShare({
+          card_id: c.id, name: c.name, rarity: c.rarity,
+          image_url: c.image_url, price: price,
+        });
+      })
+      .catch(function(e){ alert('preview failed: ' + e); });
+  })();
 
   /* Clicking the dark area closes; clicking the artwork does not. Without
      the second half, a drag that starts on the picture and ends outside
