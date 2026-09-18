@@ -882,23 +882,33 @@
     font-size:var(--pprice-s);color:var(--pprice-c);
     font-weight:var(--pprice-b);letter-spacing:var(--pprice-l)}
   /* The rarity badge sits in the artwork to the right of the name, at a
-     spot fixed when the panel was drawn. A long name runs under it and
-     the two overlap -- which nothing clips, because the name is placed
-     over the picture rather than inside a box.
+     spot fixed when the panel was drawn. A card id is wider than the gap
+     before it and the two overlap -- which nothing clips, because the
+     name is placed over the picture rather than inside a box.
 
-     A width to stop at, then scaled down if the text needs more than
-     that. The width is a share of the artwork rather than a pixel
-     figure, so it holds as the panel resizes. */
+     A width to stop at, then scaled down to fit it. The widths were
+     measured against the badge on an 988px panel -- 58px and 70px -- and
+     written here as a share of the artwork so they hold as it resizes.
+
+     A percentage of what, though, matters: these are absolutely
+     positioned, so a percentage resolves against the positioned
+     ancestor. The artwork is that ancestor, which is what we want, but
+     an earlier attempt at 30% produced no effect at all -- worth
+     checking against the rendered width rather than assuming.
+
+     Scaled from the top left. From the centre the text drops as it
+     shrinks, which reads as a line sitting too low rather than a line
+     made smaller. */
   #sName{left:var(--name-x);top:var(--name-y);
     font-size:var(--name-s);color:var(--name-c);
     font-weight:var(--name-b);letter-spacing:var(--name-l);
-    max-width:var(--name-w,30%);white-space:nowrap;
-    display:inline-block;transform-origin:left center}
+    max-width:var(--name-w,5.87%);white-space:nowrap;
+    display:inline-block;transform-origin:left top}
   #sPname{left:var(--pname-x);top:var(--pname-y);
     font-size:var(--pname-s);color:var(--pname-c);
     font-weight:var(--pname-b);letter-spacing:var(--pname-l);
-    max-width:var(--pname-w,42%);white-space:nowrap;
-    display:inline-block;transform-origin:left center}
+    max-width:var(--pname-w,7.09%);white-space:nowrap;
+    display:inline-block;transform-origin:left top}
   #sBal{left:var(--balance-x);top:var(--balance-y);
     font-size:var(--balance-s);color:var(--balance-c);
     font-weight:var(--balance-b);letter-spacing:var(--balance-l)}
@@ -5046,12 +5056,21 @@
      -- the text is positioned over a picture, so it would simply be cut
      mid-word with no edge to explain it. Measured and scaled instead,
      from the left, which is the side it is anchored to. */
-  function fitName(el){
+  function fitName(el, liftPx){
     if(!el) return;
     el.style.transform = '';
     var room = el.clientWidth, want = el.scrollWidth;
     if(!room || want <= room) return;
-    el.style.transform = 'scale(' + (room / want).toFixed(3) + ')';
+
+    /* The lift is a nudge, not a correction for the scaling -- that is
+       what transform-origin handles. The name sits a shade low against
+       the label printed beside it once it is smaller, and four pixels on
+       a 988px panel puts it back on the line. Scaled with the panel, so
+       it stays four pixels' worth at any size. */
+    var lift = liftPx
+      ? ' translateY(' + (-liftPx * (el.offsetParent ? el.offsetParent.clientWidth / 988 : 1)).toFixed(2) + 'px)'
+      : '';
+    el.style.transform = 'scale(' + (room / want).toFixed(3) + ')' + lift;
   }
 
   function nameOf(t){
@@ -5079,7 +5098,7 @@
     $s('sPprice').textContent = price;
     $s('sName').textContent   = name;
     $s('sPname').textContent  = name;
-    fitName($s('sName'));
+    fitName($s('sName'), 4);
     fitName($s('sPname'));
 
     /* Only said when the sale just happened. Opened from the history a
