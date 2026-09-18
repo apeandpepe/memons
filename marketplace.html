@@ -886,29 +886,28 @@
      before it and the two overlap -- which nothing clips, because the
      name is placed over the picture rather than inside a box.
 
-     A width to stop at, then scaled down to fit it. The widths were
-     measured against the badge on an 988px panel -- 58px and 70px -- and
-     written here as a share of the artwork so they hold as it resizes.
+     A width to stop at, then scaled down to fit it. The two were measured
+     against the badges on a 988px panel: 120px for the card row, 70px
+     for the small card beside the share text.
 
-     A percentage of what, though, matters: these are absolutely
-     positioned, so a percentage resolves against the positioned
-     ancestor. The artwork is that ancestor, which is what we want, but
-     an earlier attempt at 30% produced no effect at all -- worth
-     checking against the rendered width rather than assuming.
+     Set in JavaScript rather than here, because a percentage in CSS
+     resolves against whatever each one is positioned within, and those
+     turn out to be different boxes -- the same 7.09% came out as 70px on
+     one and 30px on the other. Measuring the panel once and working in
+     pixels from there gives both the width that was actually intended.
 
      Scaled from the top left. From the centre the text drops as it
      shrinks, which reads as a line sitting too low rather than a line
-     made smaller. */
+     made smaller -- and the small lift on top of that is what puts each
+     one back on the line printed beside it. */
   #sName{left:var(--name-x);top:var(--name-y);
     font-size:var(--name-s);color:var(--name-c);
     font-weight:var(--name-b);letter-spacing:var(--name-l);
-    max-width:var(--name-w,5.87%);white-space:nowrap;
-    display:inline-block;transform-origin:left top}
+    white-space:nowrap;display:inline-block;transform-origin:left top}
   #sPname{left:var(--pname-x);top:var(--pname-y);
     font-size:var(--pname-s);color:var(--pname-c);
     font-weight:var(--pname-b);letter-spacing:var(--pname-l);
-    max-width:var(--pname-w,7.09%);white-space:nowrap;
-    display:inline-block;transform-origin:left top}
+    white-space:nowrap;display:inline-block;transform-origin:left top}
   #sBal{left:var(--balance-x);top:var(--balance-y);
     font-size:var(--balance-s);color:var(--balance-c);
     font-weight:var(--balance-b);letter-spacing:var(--balance-l)}
@@ -5056,20 +5055,28 @@
      -- the text is positioned over a picture, so it would simply be cut
      mid-word with no edge to explain it. Measured and scaled instead,
      from the left, which is the side it is anchored to. */
-  function fitName(el, liftPx){
+  /* widthAt988 and liftAt988 are what they were measured as on a panel
+     of that width; both are scaled to whatever the panel is now.
+
+     Read after the value is in the element and after the fonts have
+     settled. Measured too early the text is still in the fallback face
+     and comes out narrower -- 69px where the real figure was 143 -- and
+     a scale worked out from that shrinks it to less than half. */
+  function fitName(el, widthAt988, liftAt988){
     if(!el) return;
     el.style.transform = '';
-    var room = el.clientWidth, want = el.scrollWidth;
-    if(!room || want <= room) return;
+    el.style.maxWidth = '';
 
-    /* The lift is a nudge, not a correction for the scaling -- that is
-       what transform-origin handles. The name sits a shade low against
-       the label printed beside it once it is smaller, and four pixels on
-       a 988px panel puts it back on the line. Scaled with the panel, so
-       it stays four pixels' worth at any size. */
-    var lift = liftPx
-      ? ' translateY(' + (-liftPx * (el.offsetParent ? el.offsetParent.clientWidth / 988 : 1)).toFixed(2) + 'px)'
-      : '';
+    var art = document.querySelector('.sale-art');
+    var k = art && art.clientWidth ? art.clientWidth / 988 : 1;
+
+    var room = widthAt988 * k;
+    el.style.maxWidth = room.toFixed(1) + 'px';
+
+    var want = el.scrollWidth;
+    if(!want || want <= room) return;
+
+    var lift = liftAt988 ? ' translateY(' + (-liftAt988 * k).toFixed(2) + 'px)' : '';
     el.style.transform = 'scale(' + (room / want).toFixed(3) + ')' + lift;
   }
 
@@ -5098,8 +5105,17 @@
     $s('sPprice').textContent = price;
     $s('sName').textContent   = name;
     $s('sPname').textContent  = name;
-    fitName($s('sName'), 4);
-    fitName($s('sPname'));
+    /* After the fonts, not before. document.fonts.ready settles once the
+       faces the page asked for have loaded; until then the text is laid
+       out in a fallback and measures narrower than it will end up. */
+    var applyNames = function(){
+      fitName($s('sName'), 120, 4);
+      fitName($s('sPname'), 70, 2);
+    };
+    applyNames();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(applyNames);
+    }
 
     /* Only said when the sale just happened. Opened from the history a
        month later, "has been added to your balance" is describing
