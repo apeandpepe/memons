@@ -88,6 +88,160 @@
   }
 
   /* ===== VIDEO INTRO (HOME) ===== */
+  .hwrap{
+    /* --- the artwork itself -------------------------------- */
+    /* The header floats over the hero, so the top of the artwork sits
+       under it. Pushed down by roughly the header's height rather than the
+       artwork being redrawn -- the overlay is measured against the image,
+       so nothing else moves. */
+    --art-top: 0px;
+
+    /* --- OPEN CAPSULE button ------------------------------- */
+    --cta-x: 3.5%;      /* from the left  */
+    --cta-y: 37.5%;     /* from the top   */
+    --cta-size: 1.05cqw;
+    --cta-pad: 1.05cqw 1.6cqw;   /* up-down  left-right */
+
+    /* --- the two figures ------------------------------------
+       Four before: capsules, volume, trades, users. The artwork now
+       carries two panels rather than four, and the two that went were
+       both 24-hour market figures -- a quiet day made the front page
+       read as a dead market, which is not what a landing page is for.
+       What is left is the pair that only ever climbs. */
+    --kpi-y: 49%;       /* both, vertically */
+    --kpi-1: 27%;       /* total users      */
+    --kpi-2: 77%;       /* capsules opened  */
+    --kpi-size: 3.17cqw;    /* the number        */
+
+    /* --- highest sale: card art ---------------------------- */
+    --art-y: 64.5%;
+    --art-w: 14.5%;
+    --art-h: 26%;       /* box height; art is fitted inside it */
+    --art-1: 3.6%;
+    --art-2: 36%;
+    --art-3: 67%;
+    /* Put a figure here to lift or drop one card off the shared line. */
+    --art-y1: var(--art-y);
+    --art-y2: var(--art-y);
+    --art-y3: var(--art-y);
+
+    /* --- highest sale: the lines beside it ----------------- */
+    --sale-y: 71.5%;
+    --sale-1: 20.2%;
+    --sale-2: 53.5%;
+    --sale-3: 83%;
+    /* Put a figure here to lift or drop one block off the shared line. */
+    --sale-y1: var(--sale-y);
+    --sale-y2: var(--sale-y);
+    --sale-y3: var(--sale-y);
+    --sale-w: 22%;
+    --sale-name: 1.35cqw;
+    --sale-label: .82cqw;
+    --sale-price: 1.9cqw;
+    --sale-when: .85cqw;
+
+    position:relative;z-index:2;width:100%;max-width:1320px;margin:0 auto;
+    container-type:inline-size;
+  }
+
+  /* Two artworks, one overlay. The wide one is unreadable below about
+     820px -- the title shrinks to nothing and the cards turn to smudges --
+     so a tall composition takes over and the figures move to its slots. */
+  .hbg{width:100%;height:auto;display:block;margin-top:var(--art-top)}
+  .hbg-m{display:none}
+  /* Starts where the artwork does, not where the wrapper does, so pushing
+     the image clear of the header does not drag every coordinate with it. */
+  .hlay{position:absolute;top:var(--art-top);left:0;right:0;bottom:0;
+    font-family:var(--font-head)}
+
+  .hcta{position:absolute;left:var(--cta-x);top:var(--cta-y);
+    display:inline-flex;align-items:center;gap:.7cqw;
+    font-size:var(--cta-size);letter-spacing:.12cqw;color:#1c1500;font-weight:700;
+    background:linear-gradient(150deg,#f4d27a,var(--gold) 60%);
+    border-radius:.7cqw;padding:var(--cta-pad);text-decoration:none;white-space:nowrap}
+  .hcta span{font-size:calc(var(--cta-size) * 1.15)}
+
+  /* Just the total.
+
+     There was a 24-hour change beside it -- smaller type, green, always
+     positive, since both figures only ever climb. A number that can only
+     say one thing says nothing, and this one was sitting next to a total
+     large enough to carry the panel on its own. */
+  .kv{position:absolute;top:var(--kpi-y)}
+  .kv b{font-size:var(--kpi-size);font-weight:800;line-height:1;color:#fff}
+  .kv b small{font-size:calc(var(--kpi-size) * .4);font-weight:400;
+    color:var(--muted);margin-left:.45cqw}
+  .k1{left:var(--kpi-1)} .k2{left:var(--kpi-2)}
+
+  /* The artwork leaves part of each sale panel empty for the card that
+     actually topped that rarity, which is not known until the call lands. */
+  /* A fixed box with the art fitted inside, not sized by the file. The
+     three winners are different shapes, and letting each set its own height
+     pushed the lines under it to three different places. */
+  .hsimg{position:absolute;top:var(--art-y);width:var(--art-w);height:var(--art-h);
+    object-fit:contain;object-position:top center;
+    border-radius:.6cqw;display:block;opacity:0;transition:opacity .25s}
+  .hsimg.on{opacity:1}
+  .i1{left:var(--art-1);top:var(--art-y1)}
+  .i2{left:var(--art-2);top:var(--art-y2)}
+  .i3{left:var(--art-3);top:var(--art-y3)}
+
+  /* The rarity badge and the panel frame are in the artwork; these are the
+     lines that change. */
+  .hs{position:absolute;top:var(--sale-y);width:var(--sale-w)}
+  .s1{left:var(--sale-1);top:var(--sale-y1)}
+  .s2{left:var(--sale-2);top:var(--sale-y2)}
+  .s3{left:var(--sale-3);top:var(--sale-y3)}
+  .hs .n{font-size:var(--sale-name);color:#fff;line-height:1;font-weight:700}
+  .hs .l{font-size:var(--sale-label);letter-spacing:.11cqw;color:var(--muted);margin-top:1.15cqw}
+  .hs .p{font-size:var(--sale-price);font-weight:800;margin-top:.35cqw;line-height:1}
+  .hs .p small{font-size:calc(var(--sale-price) * .45);font-weight:400;
+    color:var(--muted);margin-left:.4cqw}
+  .hs .t{font-size:var(--sale-when);color:#6b6862;margin-top:.9cqw}
+  .r-epic{color:#c468d8} .r-legendary{color:#E9B84A} .r-mythic{color:#5b9bd5}
+
+  /* Below this the wide artwork stops being readable, so the tall one takes
+     over. Same overlay, same variables -- only their values change. */
+  @media(max-width:820px){
+    .hwrap{
+      --art-top: 62px;
+
+      --cta-x: 5%;      --cta-y: 22.6%;
+      --cta-size: 2.6cqw;
+      --cta-pad: 2.4cqw 3.6cqw;
+
+      --kpi-y: 60.5%;
+      --kpi-1: 21%;  --kpi-2: 65%;
+      --kpi-size: 5.3cqw;
+
+      /* The three slots are 248x383 boxes side by side, so the card takes
+         the upper two thirds and its figures sit underneath rather than
+         beside -- there is no room at this width for a column of text next
+         to the art. */
+      --art-y: 82%;  --art-w: 20%;   --art-h: 12.5%;
+      --art-1: 6%;   --art-2: 39%;  --art-3: 71%;
+      --art-y1: var(--art-y);
+      --art-y2: var(--art-y);
+      --art-y3: var(--art-y);
+
+      --sale-y: 93.5%; --sale-w: 29%;
+      --sale-1: 5%;  --sale-2: 37%; --sale-3: 68%;
+      --sale-y1: var(--sale-y);
+      --sale-y2: var(--sale-y);
+      --sale-y3: var(--sale-y);
+      --sale-name: 2.3cqw;
+      --sale-label: 1.5cqw;
+      --sale-price: 2.9cqw;
+      --sale-when: 1.5cqw;
+
+    }
+    .hbg-d{display:none}
+    .hbg-m{display:block}
+    .hcta span{font-size:3cqw}
+    .hs .l{letter-spacing:.12cqw;margin-top:.9cqw}
+    .hs .p{margin-top:.4cqw}
+    .hs .t{margin-top:.8cqw}
+  }
   /* header floats over the video, turns solid on scroll */
   header.head{position:fixed;top:0;left:0;right:0;z-index:50;
     background:transparent;border-bottom:1px solid transparent;
@@ -95,8 +249,12 @@
   header.head.scrolled{background:rgba(5,5,5,.82);backdrop-filter:blur(10px);
     border-bottom:1px solid var(--hair)}
 
-  .vhero{position:relative;width:100%;height:100vh;height:100svh;min-height:560px;overflow:hidden;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  /* The hero was a video sized to fill the viewport exactly. It is a still
+     now, and the composition is taller than a screen -- the sale panels sit
+     at the bottom of it. Height comes from the artwork and the section
+     scrolls vertically within its slide, rather than being cropped to fit. */
+  .vhero{position:relative;width:100%;min-height:100svh;overflow-y:auto;overflow-x:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
     background:var(--bg)}
   /* video (drop in images/home/intro.mp4 to auto-play) */
   .vhero .vbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:block}
@@ -571,138 +729,49 @@
 <!-- VIDEO INTRO (HOME) -->
 <!-- swap video: images/home/intro.mp4 -->
 <section class="vhero" id="home">
-  <video id="introVid" class="vbg" autoplay muted loop playsinline preload="none"
-         data-src="images/home/intro.mp4"
-         data-src-mobile="images/home/intro-mobile.mp4"
-         data-src-low="images/home/intro-low.mp4"
-         data-src-mobile-low="images/home/intro-mobile-low.mp4"></video>
-<script>
-(function(){
-  /* Two addresses, and the address is the whole answer.
+  <!-- The whole layout is one image; only the figures are live.
 
-     apepe.io   the full-size video
-     apepe.io/2 a smaller one
+       Everything that never changes -- title, labels, icons, rarity badges,
+       the card art -- is baked in, so there is no attempt to rebuild that
+       composition in CSS and no chance of it drifting from the design. The
+       overlay carries the numbers and nothing else, positioned as
+       percentages of the image so it holds at any width. -->
+  <div class="hwrap">
+    <img class="hbg hbg-d" src="images/home/hero.png" alt="MEMONS — own the moment, trade the legend">
+    <img class="hbg hbg-m" src="images/home/hero-mobile.png" alt="">
 
-     Nothing is remembered between visits and nothing is detected. Automatic
-     detection was tried and dropped: effectiveType reports 4g on connections
-     that plainly are not, and a visitor who landed on the wrong one had no
-     way to say so. Now anyone can wait out the big video if they want it, or
-     go straight to /2 if they do not — and change their mind by typing a
-     different address. */
-  function wantsLight(){
-    /* The path, not the query. /2 is a rewrite: the server hands over
-       index.html while the address bar still reads /2, so location.search
-       is empty there. ?tier=low stays supported for testing without
-       depending on the deployment config. */
-    if (/^\/2\/?$/.test(location.pathname)) return true;
-    return /[?&]tier=low/.test(location.search);
-  }
+    <div class="hlay">
+      <a class="hcta" href="#capsule">OPEN CAPSULE <span>&rarr;</span></a>
 
-  /* Autoplay is a request, not a guarantee. Low Power Mode, a per-site
-     setting, and the browsers built into wallet apps all refuse it, and the
-     refusal arrives as a rejected promise with the poster left on screen.
-     Rather than leave it there, the next thing the visitor does -- a touch,
-     a scroll, a key -- is taken as the gesture and the video is started
-     then. Listeners remove themselves on the first success. */
-  function tryPlay(el){
-    if(!el) return;
-    var done = false;
-    function attempt(){
-      if(done || !el) return;
-      var p = el.play();
-      if(p && p.then) p.then(function(){ done = true; drop(); }).catch(function(){});
-      else { done = true; drop(); }
-    }
-    function drop(){
-      ['touchstart','pointerdown','click','keydown','scroll'].forEach(function(ev){
-        window.removeEventListener(ev, attempt, true);
-      });
-      document.removeEventListener('visibilitychange', onVis);
-    }
-    function onVis(){ if(!document.hidden) attempt(); }
-    attempt();
-    ['touchstart','pointerdown','click','keydown','scroll'].forEach(function(ev){
-      window.addEventListener(ev, attempt, true);
-    });
-    document.addEventListener('visibilitychange', onVis);
-  }
+      <!-- Users on the left, capsules on the right: the artwork puts them
+           that way round. The ids stay with their figures rather than
+           with their positions, so moving a panel is a change to the
+           markup here and nothing else. -->
+      <!-- Users on the left, capsules on the right: the artwork puts them
+           that way round. Just the totals now -- the 24-hour change was a
+           second figure beside a number already large enough to read on
+           its own, and the smaller of the two was the one drawing the
+           eye. -->
+      <div class="kv k1"><b id="kUsr">&mdash;</b></div>
+      <div class="kv k2"><b id="kCap">&mdash;</b></div>
 
-  function pick(el){
-    if(!el) return;
-    var small = window.matchMedia && window.matchMedia('(max-width:1040px)').matches;
-    var slow  = wantsLight();
+      <img class="hsimg i1" id="imgEpic" alt="">
+      <img class="hsimg i2" id="imgLegendary" alt="">
+      <img class="hsimg i3" id="imgMythic" alt="">
 
-    var src = small
-      ? (slow && el.getAttribute('data-src-mobile-low')) || el.getAttribute('data-src-mobile')
-      : (slow && el.getAttribute('data-src-low'))        || el.getAttribute('data-src');
-    if(!src) return;
+      <div class="hs s1" id="hsEpic"></div>
+      <div class="hs s2" id="hsLegendary"></div>
+      <div class="hs s3" id="hsMythic"></div>
+    </div>
+  </div>
 
-    /* preload starts at none in the markup and is raised here, once. With
-       auto in the tag the browser began fetching on src assignment and
-       autoplay then started its own read, so the file came down twice. */
-    el.preload = slow ? 'metadata' : 'auto';
-    /* Set as a property, not left to the attribute alone. WebKit reads the
-       muted attribute when the element is parsed, and this element gets its
-       source afterwards -- at which point iOS has already decided the video
-       has audio and refuses to start it without a gesture. Assigning the
-       property puts that decision back the right way round. */
-    el.muted = true;
-    el.setAttribute('muted', '');
-    el.playsInline = true;
-    el.src = src;
-    tryPlay(el);
-
-    // Leaves a trace for anyone checking why they got the file they got.
-    try { document.documentElement.dataset.videoTier = slow ? 'low' : 'full'; } catch(e){}
-  }
-  pick(document.getElementById('introVid'));
-
-
-  /* The sections sit side by side, so lazy iframes count as nearly visible
-     and load at once. open-capsule alone pulls a 6MB video that way, before
-     the visitor has scrolled anywhere near it. Held back until the section
-     is actually approached. */
-  function watchFrames(){
-    var frames = document.querySelectorAll('iframe[data-src]');
-    if (!frames.length) return;
-    function loadFrame(f){
-      if (f.src || !f.dataset.src) return;
-      f.src = f.dataset.src;
-    }
-    if (!('IntersectionObserver' in window)) {
-      window.addEventListener('load', function(){
-        setTimeout(function(){ frames.forEach(loadFrame); }, 1500);
-      });
-      return;
-    }
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting) { loadFrame(e.target); io.unobserve(e.target); }
-      });
-    }, { root: null, rootMargin: '200px' });
-    frames.forEach(function(f){ io.observe(f); });
-  }
-  // This script sits with the video, above the iframes it is looking for, so
-  // it has to wait for the rest of the document before it can find them.
-  function onReady(){ watchFrames(); }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady);
-  } else {
-    onReady();
-  }
-})();
-</script>
-  <div class="vshade"></div>
-
-  <button class="vmute" id="vMute" aria-label="Toggle sound"></button>
-
-  <a class="vscroll" href="#marketplace" aria-label="Scroll down">
+  <a class="vscroll" href="#about" aria-label="Scroll down">
     <span class="mouse"></span>
     SCROLL
   </a>
 </section>
 
-<!-- MARKETPLACE -->
+
 <section id="marketplace" class="embedsec veiled" data-section="marketplace">
   <iframe class="embed" data-src="marketplace.html#embed" title="MARKETPLACE" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
   <div class="veil">
@@ -765,15 +834,9 @@
   };
   onScroll(); scroller.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('resize',onScroll);
 
-  const vid=document.getElementById('introVid'), mute=document.getElementById('vMute');
-  if(vid && matchMedia('(prefers-reduced-motion: reduce)').matches){ try{vid.pause();}catch(e){} }
-  if(vid && mute){
-    const spk='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9c1.3 1.3 1.3 4.7 0 6M19 7c2.5 2.6 2.5 7.4 0 10"/></svg>';
-    const off='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
-    const sync=()=>{ mute.innerHTML = vid.muted ? off : spk; };
-    sync();
-    mute.addEventListener('click',()=>{ vid.muted=!vid.muted; if(!vid.muted){ vid.play().catch(()=>{}); } sync(); });
-  }
+  /* The mute control went with the video. The hero is a still now, so
+     there is nothing to silence and nothing to pause for anyone who has
+     asked for less motion. */
 })();
 /* ===== wheel = horizontal slide nav (iframe slides forward via postMessage) ===== */
 (function(){
@@ -857,13 +920,13 @@
 
   <div class="evpop-box" id="evBoxEvent" role="dialog" aria-modal="true" aria-label="Open beta rewards">
     <button class="evpop-x" data-close="event" aria-label="Close">&times;</button>
-    <a class="evpop-img" id="evPopLink" href="mypage-missions.html">
+    <a class="evpop-img" id="evPopLink" href="mypage-rewards.html">
       <img src="images/notice/reward-popup.png" alt="Open Beta Rewards"
            onerror="document.documentElement.dispatchEvent(new Event('evpop:missing'))">
     </a>
     <div class="evpop-foot">
       <div class="evpop-acts">
-        <a class="evpop-btn" id="evPopMission" href="mypage-missions.html">CHECK REWARDS</a>
+        <a class="evpop-btn" id="evPopMission" href="mypage-rewards.html">CHECK REWARDS</a>
       </div>
       <label class="evpop-chk">
         <input type="checkbox" data-hide="event">
@@ -874,13 +937,13 @@
 
   <div class="evpop-box" id="evBoxRank" role="dialog" aria-modal="true" aria-label="Referral rewards">
     <button class="evpop-x" data-close="rank" aria-label="Close">&times;</button>
-    <a class="evpop-img" id="rkPopLink" href="mypage-missions.html">
+    <a class="evpop-img" id="rkPopLink" href="mypage-referral.html">
       <img src="images/notice/referral-popup.png" alt="Referral Rewards"
            onerror="document.documentElement.dispatchEvent(new Event('rankpop:missing'))">
     </a>
     <div class="evpop-foot">
       <div class="evpop-acts">
-        <a class="evpop-btn" id="rkPopBtn" href="mypage-missions.html">CHECK REFERRAL</a>
+        <a class="evpop-btn" id="rkPopBtn" href="mypage-referral.html">CHECK REFERRAL</a>
       </div>
       <label class="evpop-chk">
         <input type="checkbox" data-hide="rank">
@@ -958,7 +1021,7 @@
   var NOTICE_ID   = '6';
   /* 이벤트가 끝나 미션 페이지로 보낼 이유가 없다. 남은 할 일은 당첨 확인과
      본인확인뿐이라 두 버튼과 배너가 모두 보상 페이지를 가리킨다. */
-  var MISSION_URL = 'mypage-missions';
+  var MISSION_URL = 'mypage-rewards';
 
   /* Bump this when a new event goes up. The tick box is remembered against
      it, so a visitor who hid the last one still sees the next. */
@@ -1358,5 +1421,183 @@
      iframes, so a tag on the shell alone would count one visit for a
      session that moved through five of them. -->
 <script defer src="/_vercel/insights/script.js"></script>
+<script>
+/* ===== home: live figures + top sales ===============================
+   Read through kpi_public() and top_sales_by_rarity() rather than assembled
+   here, so the number on the front page and the one on the admin board are
+   the same number by construction.
+
+   Failure is silent. A visitor arriving during a database hiccup should see
+   a page with dashes on it, not an error where the headline was. */
+(function(){
+  var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
+  var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  var H = { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON,
+            'content-type': 'application/json' };
+
+  function $(id){ return document.getElementById(id); }
+  function n(v){ return Number(v||0).toLocaleString(); }
+  function esc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function ago(t){
+    var m = Math.max(0, Math.round((Date.now()-new Date(t).getTime())/60000));
+    if(m < 60) return m + 'm ago';
+    var h = Math.round(m/60);
+    return h < 48 ? h + 'h ago' : Math.round(h/24) + 'd ago';
+  }
+
+  /* Absolute for counts, percent for money. A thousand more capsules means
+     something on its own; a thousand more USDT of volume does not without
+     knowing what yesterday was. */
+
+  /* Counting up to the figure rather than jumping to it.
+
+     The call runs once a minute, and a number that sits still for sixty
+     seconds and then leaps by forty looks like a page that has stopped
+     working. Walked up instead, over the minute between calls, so the
+     figure is visibly moving the whole time.
+
+     One at a time, at whatever pace spreads the rise across the minute:
+     forty more users is a step every second and a half, six hundred more
+     capsules is a step every tenth of a second. A fixed interval would
+     have to pick one of those and be wrong about the other -- either
+     finishing in ten seconds and then sitting still, or never arriving.
+
+     What is shown between the two calls is interpolated. The figure it
+     starts from and the figure it arrives at are both real; the steps in
+     between are not measurements, and they never run past the last
+     reading -- the count stops on the number the server gave and waits
+     there if the next call is late. */
+  var counters = {};
+
+  /* Just under the interval between calls, so the count settles for a
+     moment before the next one arrives rather than being interrupted
+     mid-step. */
+  var SPAN = 55000;
+
+  function countTo(id, target){
+    var el = $(id);
+    if(!el) return;
+    target = Number(target || 0);
+
+    var c = counters[id];
+
+    /* First reading: printed outright. Counting up from zero to three
+       hundred thousand on the first paint is a flourish, and the figure
+       is the point. */
+    if(!c){
+      counters[id] = { shown: target, timer: 0 };
+      el.textContent = n(target);
+      return;
+    }
+    if(target === c.shown) return;
+
+    if(c.timer) clearInterval(c.timer);
+
+    var steps = Math.abs(target - c.shown);
+    var dir   = target > c.shown ? 1 : -1;
+
+    /* Never faster than the eye can follow and never so slow it fails to
+       arrive. Below 40ms the digits blur into a flicker; above 2s the
+       number reads as stopped, and at that point it is better to move in
+       larger jumps than to be late. */
+    var gap  = Math.min(2000, Math.max(40, Math.round(SPAN / steps)));
+    var each = Math.max(1, Math.ceil(steps / (SPAN / gap)));
+
+    c.timer = setInterval(function(){
+      var left = Math.abs(target - c.shown);
+      if(left === 0){ clearInterval(c.timer); c.timer = 0; return; }
+      c.shown += dir * Math.min(each, left);
+      el.textContent = n(c.shown);
+    }, gap);
+  }
+
+  async function loadKpi(){
+    try{
+      var r = await fetch(SB_URL+'/rest/v1/rpc/kpi_public',
+        { method:'POST', headers:H, body:'{}' });
+      var d = await r.json();
+      if(!d || d.total_users == null) return;
+
+      /* Two of the four now. kpi_public still returns the market figures
+         and they are left unread rather than removed -- the same function
+         feeds the admin board, where they are still wanted. */
+      countTo('kCap', d.capsules_opened);
+      countTo('kUsr', d.total_users);
+
+    }catch(e){}
+  }
+
+  // Each rarity has its own slot in the artwork, so the rows are placed by
+  // name rather than in the order they arrive.
+  var SLOT = { epic:'hsEpic', legendary:'hsLegendary', mythic:'hsMythic' };
+  var PIC  = { epic:'imgEpic', legendary:'imgLegendary', mythic:'imgMythic' };
+
+  async function loadTop(){
+    try{
+      var r = await fetch(SB_URL+'/rest/v1/rpc/top_sales_by_rarity',
+        { method:'POST', headers:H, body:'{}' });
+      var rows = await r.json();
+      if(!Array.isArray(rows)) return;
+
+      rows.forEach(function(x){
+        var host = $(SLOT[x.rarity]); if(!host) return;
+
+        // Faded in on load, so a slow image never shows as a broken frame
+        // over the artwork.
+        var pic = $(PIC[x.rarity]);
+        if(pic && x.image_url){
+          pic.onload = function(){ pic.classList.add('on'); };
+          pic.src = x.image_url;
+        }
+
+        var num = x.name || String(x.card_id).split('_').pop();
+        host.innerHTML =
+          '<div class="n">APEPE #'+esc(num)+'</div>'+
+          '<div class="l">HIGHEST SALE</div>'+
+          '<div class="p r-'+esc(x.rarity)+'">'+
+            Number(x.price).toLocaleString(undefined,
+              {minimumFractionDigits:2, maximumFractionDigits:2})+
+            '<small>USDT</small></div>'+
+          '<div class="t">Sold '+ago(x.sold_at)+'</div>';
+      });
+    }catch(e){}
+  }
+
+  function go(){ loadKpi(); loadTop(); }
+
+  /* Refreshed only while the hero is what the visitor is looking at.
+
+     The sections sit side by side, so this one is off screen most of the
+     time even though it is never unloaded -- polling regardless would spend
+     requests on a panel nobody can see. Paired with the tab check, since a
+     background tab is the same situation by another route. */
+  var seen = true, timer = null;
+  function tick(){
+    if(seen && !document.hidden) go();
+  }
+  function watch(){
+    var hero = document.getElementById('home');
+    if(hero && 'IntersectionObserver' in window){
+      new IntersectionObserver(function(e){
+        seen = e[0].isIntersecting;
+        if(seen) go();
+      }, { threshold: 0.15 }).observe(hero);
+    }
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden && seen) go();
+    });
+    if(timer) clearInterval(timer);
+    timer = setInterval(tick, 60000);
+  }
+
+  function start(){ go(); watch(); }
+  if(document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+
 </body>
 </html>
