@@ -314,7 +314,7 @@
   .embedsec{background:var(--bg);padding-top:var(--headH)}
   .embedsec iframe.embed{display:block;width:100%;border:0;
     height:calc(100vh - var(--headH));height:calc(100svh - var(--headH))}
-  .embedsec iframe.mkembed,.embedsec iframe.vembed,.embedsec iframe.abembed{
+  .embedsec iframe.mkembed,.embedsec iframe.vembed{
     height:calc(100vh - var(--headH));height:calc(100svh - var(--headH))}
   .sec-h{text-align:center;margin:0 auto 40px}
   /* The three held sections share one block, so they read as one decision
@@ -765,7 +765,7 @@
     </div>
   </div>
 
-  <a class="vscroll" href="#about" aria-label="Scroll down">
+  <a class="vscroll" href="#marketplace" aria-label="Scroll down">
     <span class="mouse"></span>
     SCROLL
   </a>
@@ -1599,5 +1599,48 @@
 })();
 </script>
 
+
+<script>
+/* data-src 를 src 로 옮기는 자리.
+
+   세 칸은 iframe 으로 들어온다. 마크업에는 data-src 만 적혀 있었고 그것을
+   src 로 바꿔주는 코드가 없어서, 마켓플레이스와 오픈캡슐과 볼트가 모두 빈
+   채로 남아 있었다. 메뉴를 눌러 그 자리로 가도 아무것도 없었던 이유다.
+
+   닫힌 칸은 불러오지 않는다. veiled 가 벗겨지는 순간에 불러오므로, 닫아둔
+   칸이 미리 열리는 일은 없다. */
+(function () {
+  function load(sec) {
+    if (sec.classList.contains('veiled')) return;
+    var f = sec.querySelector('iframe[data-src]');
+    if (!f) return;
+    f.src = f.getAttribute('data-src');
+    f.removeAttribute('data-src');
+  }
+
+  var secs = [].slice.call(document.querySelectorAll('.embedsec'));
+
+  /* 화면에 다가오면 불러온다. 세 칸을 한꺼번에 받지 않기 위해서다. */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) load(e.target); });
+    }, { rootMargin: '600px 0px' });
+    secs.forEach(function (s) { io.observe(s); });
+  } else {
+    secs.forEach(load);
+  }
+
+  /* 닫혀 있던 칸이 열리는 순간. 위의 관찰자는 이미 지나간 자리를 다시
+     알려주지 않으므로 여기서 직접 불러온다. */
+  if ('MutationObserver' in window) {
+    var mo = new MutationObserver(function (ms) {
+      ms.forEach(function (m) { load(m.target); });
+    });
+    secs.forEach(function (sec) {
+      mo.observe(sec, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+})();
+</script>
 </body>
 </html>
