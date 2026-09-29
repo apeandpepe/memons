@@ -65,14 +65,6 @@ replaced by the contract above for that reason.
 
 ---
 
-## Project token
-
-| Token | Chain | Address |
-| --- | --- | --- |
-| APEPE | `TBD` | `0xA3f751662e282E83EC3cBc387d225Ca56dD63D3A` |
-
----
-
 ## Accepted payment tokens
 
 Third-party standard token contracts. Listed for completeness; MEMONS
