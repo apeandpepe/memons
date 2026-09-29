@@ -1,6 +1,6 @@
 // =====================================================================
 //  Edge Function: market
-//  배포:  supabase functions deploy market --no-verify-jwt
+//  Deploy:  supabase functions deploy market --no-verify-jwt
 //
 //  Every button on the marketplace page posts here. The page has been
 //  live and returning 503 on all of them because this function did not

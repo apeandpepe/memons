@@ -211,8 +211,8 @@
   }
   if(window.SeasonTabs){
     SeasonTabs.ready(function(){
-      /* always: 레퍼럴 화면과 같은 이유다. 순위는 추천인 수로 매기고,
-         추천인은 카드와 달리 시즌이 합쳐지지 않았다. */
+      /* always: the same reason as on the referral page. The ranking goes by
+         referral count, and unlike the cards, referral seasons were not merged. */
       SeasonTabs.mount({ el:$('seasonTabs'), always:true, onChange:loadBoard });
       loadBoard();
     });

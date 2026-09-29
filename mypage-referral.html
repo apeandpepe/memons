@@ -429,11 +429,11 @@
       await SeasonTabs.ready();
       if(!seasonMounted){
         seasonMounted=true;
-        /* always: 카드와 달리 레퍼럴은 합쳐지지 않았다.
+        /* always: unlike the cards, referrals were not merged.
 
-           베타 카드는 시즌1 카드로 교체되어 고를 것이 없어졌지만,
-           추천인은 여전히 시즌 시작일을 기준으로 나뉜 별개의 수치다.
-           어드민의 시즌0 스위치를 꺼도 이 탭은 남아야 한다. */
+           The beta cards were replaced by season 1 cards and there is nothing
+           left to choose, but referrals remain separate figures split by the
+           season start date. This tab stays even with season 0 switched off. */
         SeasonTabs.mount({ el:$('seasonTabs'), always:true, onChange:loadSeason });
       }
       await loadSeason();

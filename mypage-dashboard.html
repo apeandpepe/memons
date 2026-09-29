@@ -301,12 +301,12 @@
     document.body.appendChild(t); setTimeout(function(){t.remove();},2400); }
 
   function renderCollection(){
-    /* 탭을 따르지 않는다.
+    /* Does not follow the tab.
 
-       한때는 카드도 시즌으로 나뉘어 있었고 이 숫자들이 탭을 따라갔다.
-       베타 카드가 시즌1 카드로 합쳐진 뒤로는 고를 것이 없다. 남은 탭은
-       추천인 전용이므로, 그것을 눌렀다고 보유 카드 수가 달라지면
-       거짓말이 된다. */
+       Cards were once split by season too, and these figures followed the
+       tab. Since the beta cards were merged into the season 1 cards there
+       is nothing left to choose. The remaining tab is for referrals only,
+       so a card count that changed when it was pressed would be a lie. */
     var season='s1';
     var rows=owned;
     var TOTAL=totalsFor(season);
