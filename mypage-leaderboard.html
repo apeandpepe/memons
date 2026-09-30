@@ -135,8 +135,6 @@
       <a href="mypage-collection.html"><i class="ti ti-cards"></i>Collection</a>
       <a href="mypage-inventory.html"><i class="ti ti-box"></i>Inventory</a>
       <a href="mypage-enhance.html"><i class="ti ti-arrow-up-circle"></i>Enhancement</a>
-      <a href="mypage-rewards.html"><i class="ti ti-gift"></i>Reward</a>
-      <a href="mypage-referral.html" class="on"><i class="ti ti-users"></i>Referral</a>
       <a href="mypage-kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
     </nav>
     <div class="side-foot"><div class="wchip"><div class="wa" id="waddr">Not connected</div><div class="ws" id="wstat">Connect wallet</div><button class="wdisc" id="wdisc">Disconnect</button></div></div>
@@ -213,8 +211,8 @@
   }
   if(window.SeasonTabs){
     SeasonTabs.ready(function(){
-      /* always: 레퍼럴 화면과 같은 이유다. 순위는 추천인 수로 매기고,
-         추천인은 카드와 달리 시즌이 합쳐지지 않았다. */
+      /* always: the same reason as on the referral page. The ranking goes by
+         referral count, and unlike the cards, referral seasons were not merged. */
       SeasonTabs.mount({ el:$('seasonTabs'), always:true, onChange:loadBoard });
       loadBoard();
     });

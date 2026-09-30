@@ -372,13 +372,14 @@
   .mktab.on{color:var(--gold);border-bottom-color:var(--gold)}
 
   /* ===== detail modal ===== */
-  /* 위쪽 여백을 더 준다.
+  /* Extra padding at the top.
 
-     이 화면은 메인 페이지 안에 끼워져 있고, 사이트 헤더는 그 바깥에서
-     화면 위에 고정되어 있다. 창이 iframe 기준으로 가운데에 서면 그
-     헤더에 위쪽이 가려, 카드 이름과 닫기 버튼이 잘린다.
+     This screen is embedded inside the main page, and the site header sits
+     outside it, fixed to the top of the window. When the modal centres
+     itself on the iframe, that header covers its top edge and the card name
+     and the close button get cut off.
 
-     헤더 높이만큼(약 72px) 내려 잡는다. */
+     So it is pushed down by the height of the header (about 72px). */
   .mkmodal{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;
     padding:96px 24px 24px}
   .mkmodal[hidden]{display:none}
@@ -616,8 +617,9 @@
     .mkm-art{max-width:340px}
   }
   @media(max-width:760px){
-    /* 좁은 화면에서는 헤더가 접히고 창이 전체를 차지하므로 여백이 필요
-       없다. 위쪽만 헤더 높이를 남긴다. */
+    /* On a narrow screen the header collapses and the modal takes the whole
+       screen, so no padding is needed. Only the header height is left at
+       the top. */
     .mkmodal{padding:60px 0 0}
     .mkmodal-box{max-width:none;max-height:calc(100vh - 60px);height:calc(100vh - 60px);
       border-radius:0;border:0}
@@ -881,12 +883,33 @@
   #sPprice{right:calc(100% - var(--pprice-x));top:var(--pprice-y);
     font-size:var(--pprice-s);color:var(--pprice-c);
     font-weight:var(--pprice-b);letter-spacing:var(--pprice-l)}
+  /* The rarity badge sits in the artwork to the right of the name, at a
+     spot fixed when the panel was drawn. A card id is wider than the gap
+     before it and the two overlap -- which nothing clips, because the
+     name is placed over the picture rather than inside a box.
+
+     A width to stop at, then scaled down to fit it. The two were measured
+     against the badges on a 988px panel: 120px for the card row, 70px
+     for the small card beside the share text.
+
+     Set in JavaScript rather than here, because a percentage in CSS
+     resolves against whatever each one is positioned within, and those
+     turn out to be different boxes -- the same 7.09% came out as 70px on
+     one and 30px on the other. Measuring the panel once and working in
+     pixels from there gives both the width that was actually intended.
+
+     Scaled from the top left. From the centre the text drops as it
+     shrinks, which reads as a line sitting too low rather than a line
+     made smaller -- and the small lift on top of that is what puts each
+     one back on the line printed beside it. */
   #sName{left:var(--name-x);top:var(--name-y);
     font-size:var(--name-s);color:var(--name-c);
-    font-weight:var(--name-b);letter-spacing:var(--name-l)}
+    font-weight:var(--name-b);letter-spacing:var(--name-l);
+    white-space:nowrap;display:inline-block;transform-origin:left top}
   #sPname{left:var(--pname-x);top:var(--pname-y);
     font-size:var(--pname-s);color:var(--pname-c);
-    font-weight:var(--pname-b);letter-spacing:var(--pname-l)}
+    font-weight:var(--pname-b);letter-spacing:var(--pname-l);
+    white-space:nowrap;display:inline-block;transform-origin:left top}
   #sBal{left:var(--balance-x);top:var(--balance-y);
     font-size:var(--balance-s);color:var(--balance-c);
     font-weight:var(--balance-b);letter-spacing:var(--balance-l)}
@@ -1395,18 +1418,21 @@
 
   /* ---------------------------------------------------------------
      MARKET CLOSED
-     거래 스위치를 끄면 이 화면은 아무것도 없는 빈 표만 보였다. 매물이
-     없는 것과 닫혀 있는 것을 구분할 수 없어서, 유저는 고장으로 읽는다.
+     With the trading switch off, this screen showed nothing but an empty
+     table. There was no way to tell "nothing for sale" from "closed", so
+     users read it as broken.
 
-     다시 열 때는 어드민 스위치만 켜면 된다. 이 덮개는 스위치를 읽어서
-     스스로 사라진다.
+     To open it again, all that is needed is the admin switch. This veil
+     reads the switch and removes itself.
      --------------------------------------------------------------- */
-  /* 거래를 막을 때 뜨는 팝업.
+  /* The popup that appears when a trade is blocked.
 
-     버튼 아래 한 줄로 붙여 두었더니 눈에 들어오지 않았다. 누른 직후에
-     가로막고, 무엇을 해야 하는지와 그리로 가는 버튼을 함께 준다. */
-  /* 1300. 카드 상세 창이 1200 이므로 그보다 위여야 한다. 거래를 누른
-     결과로 뜨는 안내가 그 창 뒤에 깔리면 보이지 않는다. */
+     As a single line under the button it went unnoticed. Now it blocks the
+     way right after the click, and gives both what has to be done and a
+     button that goes there. */
+  /* 1300. The card detail modal is 1200, so this has to sit above it. A
+     notice that appears as the result of pressing trade is invisible if it
+     ends up behind that modal. */
   .mkgate{position:fixed;inset:0;z-index:1300;display:none;
     align-items:center;justify-content:center;padding:24px;
     background:rgba(4,4,6,.78);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
@@ -1414,9 +1440,10 @@
   .mkgate-box{width:min(400px,100%);padding:34px 30px;border-radius:16px;text-align:center;
     border:1px solid rgba(233,184,74,.24);background:#0e0e10;
     box-shadow:0 24px 70px -24px rgba(0,0,0,.9)}
-  /* 이 화면의 다른 창과 같은 규칙을 따른다. 제목만 헤드 서체를 쓰고,
-     본문과 버튼은 기본 서체에 굵기로 무게를 준다. 팝업 하나만 다른
-     서체를 쓰면 붙여 넣은 것처럼 보인다. */
+  /* Follows the same rule as the other modals on this screen. Only the
+     title uses the head typeface; body text and buttons use the default
+     face and take their weight from the font weight. A popup that uses a
+     different typeface from everything else looks pasted in. */
   .mkgate-t{font-family:var(--font-head,inherit);font-size:20px;font-weight:800;
     letter-spacing:-.2px;color:var(--gold)}
   .mkgate-s{font:inherit;font-size:13.5px;color:#8d8a82;margin-top:12px;line-height:1.75}
@@ -1430,18 +1457,20 @@
     padding:13px;cursor:pointer;transition:.15s}
   .mkgate-x:hover{color:#e8e6e0}
 
-  /* 1250. 마켓이 닫혔을 때 화면을 덮는다. 카드 상세 창(1200)보다는
-     위, 거래 안내 팝업(1300)보다는 아래. */
+  /* 1250. Covers the screen when the market is closed. Above the card
+     detail modal (1200), below the trade notice popup (1300). */
   .mkveil{position:fixed;inset:0;z-index:1250;display:none;
     align-items:center;justify-content:center;text-align:center;padding:32px;
     background:radial-gradient(120% 90% at 50% 45%, rgba(20,17,10,.90), rgba(4,4,6,.97));
     backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
   .mkveil.on{display:flex}
-  /* 카드 한 장처럼. 문구만 떠 있으면 화면이 덜 그려진 것처럼 보인다. */
-  /* 카드 한 장처럼. 문구만 떠 있으면 화면이 덜 그려진 것처럼 보인다.
+  /* Like a single card. Text floating on its own makes the screen look half-drawn. */
+  /* Like a single card. Text floating on its own makes the screen look
+     half-drawn.
 
-     너비는 화면을 따라간다. 고정 폭으로 두면 넓은 모니터에서 가운데
-     작은 상자만 남아 초라해 보이고, 좁은 화면에서는 여백이 부족하다. */
+     The width follows the screen. At a fixed width, a wide monitor is left
+     with nothing but a small box in the middle, which looks meagre, and a
+     narrow screen does not have enough margin. */
   .mkveil-in{width:min(760px, 82vw);padding:78px 64px;border-radius:22px;
     border:1px solid rgba(233,184,74,.22);
     background:linear-gradient(180deg,rgba(233,184,74,.05),rgba(255,255,255,.012));
@@ -1452,12 +1481,12 @@
     font-size:clamp(30px, 4.6vw, 52px);letter-spacing:5px;line-height:1.2;
     background:linear-gradient(180deg,#f7dd9d,#E9B84A);
     -webkit-background-clip:text;background-clip:text;color:transparent}
-  /* 제목 아래 짧은 금선. 두 덩어리를 갈라 주는 역할만 한다. */
+  /* A short gold rule under the title. Its only job is to separate the two blocks. */
   .mkveil .mv-rule{width:78px;height:1px;margin:26px auto 0;
     background:linear-gradient(90deg,transparent,rgba(233,184,74,.75),transparent)}
   .mkveil .mv-s{font-family:var(--font-body);font-size:15.5px;color:#9a958a;
     margin-top:24px;line-height:1.95}
-  /* 인증 안내일 때만 나온다. 닫힘 안내에는 갈 곳이 없으므로 숨는다. */
+  /* Only appears for the verification notice. The closed notice has nowhere to go, so it stays hidden. */
   .mkveil .mv-go{display:none;margin-top:36px;padding:19px 46px;border-radius:12px;
     border:0;cursor:pointer;text-decoration:none;
     font-family:var(--font-head);font-weight:700;font-size:14px;letter-spacing:2.4px;
@@ -1465,8 +1494,8 @@
   .mkveil .mv-go:hover{filter:brightness(1.07);box-shadow:0 0 40px -8px rgba(233,184,74,.7)}
   .mkveil.kyc .mv-go{display:inline-block}
 
-  /* 모바일에서는 상자가 아니라 화면 자체가 된다. 좁은 화면에 테두리를
-     두르면 그만큼 안쪽이 줄어 글자가 눌린다. */
+  /* On mobile it becomes the screen itself rather than a box. A border on a
+     narrow screen shrinks the inside by that much and squeezes the text. */
   @media(max-width:640px){
     .mkveil{padding:0}
     .mkveil-in{width:100%;height:100%;padding:32px 26px;border:0;border-radius:0;
@@ -1508,9 +1537,10 @@
   });
 }</script>
 <div class="app">
-<!-- 덮개 하나로 두 가지를 말한다. 마켓이 닫혔을 때와, 열려 있지만
-     본인인증을 아직 안 했을 때. 덮개를 둘 두면 서로 겹친다. -->
-<!-- 거래를 누른 뒤 막혔을 때. 내용은 gateShow 가 채운다. -->
+<!-- One veil says two things: that the market is closed, and that it is open
+     but identity verification has not been done yet. Two separate veils
+     would overlap each other. -->
+<!-- For when a trade is blocked after being pressed. gateShow fills in the content. -->
 <div class="mkgate" id="mkGate">
   <div class="mkgate-box">
     <div class="mkgate-t" id="mgTitle"></div>
@@ -1534,14 +1564,16 @@
   var SB_URL="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 
-  /* 덮개는 마켓이 닫혔을 때만.
+  /* The veil only goes up when the market is closed.
 
-     인증하지 않은 사람도 시세와 매물은 볼 수 있어야 한다. 들어오자마자
-     벽부터 만나면 인증할 이유를 알 수가 없다. 거래를 누르는 순간 무엇이
-     필요한지 알려주는 편이 낫고, 그것은 submit 의 canProceed 가 한다.
+     People who have not verified should still be able to see prices and
+     listings. If the first thing they meet on arrival is a wall, there is
+     no way for them to see why they would verify. It is better to tell them
+     what is needed at the moment they press trade, and that is what
+     canProceed in submit does.
 
-     마켓 자체를 닫은 것은 다르다. 그때는 아직 열지 않은 것이므로 화면을
-     덮는 것이 맞다. */
+     Closing the market itself is a different matter. In that case it has
+     not opened yet, so covering the screen is the right thing. */
   function show(closed){
     var v=document.getElementById('mkVeil');
     if(!v) return;
@@ -1556,13 +1588,14 @@
       body:'{}', cache:'no-store'
     }).then(function(r){ return r.ok ? r.json() : null; })
       .then(function(j){ if(j) show(j.market !== true); })
-      /* 못 읽었으면 덮지 않는다. 열려 있는 마켓을 통신 한 번 실패로
-         닫아버리는 것보다, 닫힌 마켓이 잠깐 비어 보이는 편이 낫다. */
+      /* If it could not be read, do not cover. Better for a closed market to
+         look briefly empty than for one failed request to close an open
+         market. */
       .catch(function(){});
   }
 
   check();
-  /* 어드민에서 열면 새로고침 없이 사라지도록. */
+  /* So that it disappears without a refresh when it is opened from admin. */
   setInterval(check, 20000);
 })();
 </script>
@@ -1570,8 +1603,10 @@
 <header class="head">
   <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
   <nav class="nav">
-    <a href="index.html#home">HOME</a><a href="index.html#vault">MEMONS VAULT</a>
-    <a href="index.html#capsule">OPEN CAPSULE</a><a href="marketplace.html" class="on">MARKETPLACE</a>
+    <a href="index.html#home">HOME</a>
+    <a href="index.html#marketplace" class="on">MARKETPLACE</a>
+    <a href="index.html#capsule">OPEN CAPSULE</a>
+    <a href="index.html#vault">MEMONS VAULT</a>
     <a href="notice.html">NOTICE</a>
   </nav>
   <div class="hr">
@@ -2093,7 +2128,11 @@
       if(tab==='sell'){
         e.innerHTML = !(window.MEMONS && MEMONS.connected)
           ? '<b>Connect your wallet</b>Your cards will appear here.'
-          : '<b>Nothing to sell</b>Cards from the event cannot be traded. Open capsules to collect tradable cards.';
+          /* The old wording blamed the event: cards from it could not be
+             traded, which was true while mission capsules opened the
+             event capsule. They open the paid one now, so what is left
+             is the rarity floor. */
+          : '<b>Nothing to sell</b>Epic and above can be traded here.';
       }else{
         /* Two different silences. rows.length only says the card list
            loaded, and it is a hundred either way -- so it cannot tell an
@@ -2161,14 +2200,17 @@
         if(!myCards) return false;
         if(!myCards[c.card_id]) return false;
       }
-      /* 주문이 없는 카드도 남긴다.
+      /* Cards with no orders are kept too.
 
-         한때는 아무도 사거나 팔지 않는 카드를 BUY 탭에서 빼두었다. 매물이
-         있는 몇 장이 목록 아래로 밀리지 않게 하려는 것이었다.
+         At one point cards that nobody was buying or selling were left out
+         of the BUY tab, so that the few cards with listings would not be
+         pushed down the list.
 
-         그러면 첫 주문을 걸 수가 없다. 사고 싶은 카드가 목록에 없으니
-         매수 제안을 넣을 대상이 없고, 아무도 걸지 않으니 계속 비어 있다.
-         정렬이 매물 있는 것을 위로 올리므로, 목록에 두어도 묻히지 않는다. */
+         But then the first order can never be placed. A card someone wants
+         to buy is not in the list, so there is nothing to put a bid on, and
+         because nobody bids it stays empty. The sort lifts cards with
+         listings to the top, so leaving them in the list does not bury
+         them. */
       if(filter && c.rarity!==filter) return false;
       if(t && title(c).toLowerCase().indexOf(t)<0
            && String(c.card_id||'').toLowerCase().indexOf(t)<0) return false;
@@ -2203,8 +2245,9 @@
     cur=rows.find(function(c){return c.card_id===id;});
     if(!cur) return;
 
-    /* 앞 카드에서 뜬 안내를 지운다. 남겨두면 다른 카드를 열었는데도
-       "본인인증이 필요합니다" 가 붙어 있어, 그 카드의 문제로 읽힌다. */
+    /* Clears the notice raised by the previous card. Left in place, the
+       "identity verification required" message is still attached after a
+       different card is opened, and reads as a problem with that card. */
     gateHide();
 
     $m('mTitle').textContent=title(cur);
@@ -2605,12 +2648,14 @@
     drawChart(); drawMini(); syncSel();
   }
 
-  /* 거래가 있었던 날의 수. 이 값 이상이어야 차트를 그린다. 현재 창이
-     아니라 전체 기록 기준이므로, 24H 로 바꿨다고 차트가 사라지지 않는다.
+  /* The number of days that had trades. The chart is only drawn at or above
+     this value. It counts against the whole history rather than the current
+     window, so switching to 24H does not make the chart disappear.
 
-     1 로 둔다. 세 개를 요구하면 첫 거래가 나온 뒤로도 사흘을 기다려야
-     차트가 보이고, 그동안은 거래가 일어나고 있다는 사실 자체가 화면에
-     드러나지 않는다. 점 하나짜리 차트가 빈 화면보다 낫다. */
+     Set to 1. Requiring three means waiting three days after the first
+     trade before the chart appears, and in the meantime the screen shows no
+     sign that trading is happening at all. A chart with one point is better
+     than an empty screen. */
   var CHART_MIN_DAYS = 1;
 
   /* The three figures above the plot, from whatever slice is passed in.
@@ -3498,14 +3543,16 @@
 
   /* One button, two outcomes. Crossing the book trades at once; anything
      short of it rests as an order. The user sets a price, not a mechanism. */
-  /* 거래를 누를 수 있는 상태인지.
+  /* Whether trading can be pressed at all.
 
-     막는 이유가 둘이고 할 일이 서로 다르다. 지갑을 연결하지 않았으면
-     연결부터, 연결했는데 본인인증이 없으면 인증부터. 눌러 보고 나서
-     "안 됩니다" 한 줄만 받으면 무엇을 해야 하는지 알 수 없다.
+     There are two reasons for blocking it, and each calls for something
+     different. If the wallet is not connected, connect first; if it is
+     connected but there is no identity verification, verify first. Getting
+     a single "not allowed" line after pressing leaves no way to know what
+     to do.
 
-     화면은 막지 않는다. 시세와 매물은 누구나 볼 수 있어야 인증할 이유가
-     생긴다. */
+     The screen itself is not blocked. Anyone has to be able to see prices
+     and listings for a reason to verify to exist. */
   var SB_URL_MK="https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON_MK="sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
 
@@ -3515,8 +3562,8 @@
     document.getElementById('mgTitle').textContent = title;
     document.getElementById('mgSub').textContent   = text;
     var go=document.getElementById('mgGo');
-    /* 갈 곳이 없는 경우도 있다. 잠긴 계정에 버튼을 주면 눌러도 아무 일이
-       일어나지 않고, 그것이 고장으로 읽힌다. */
+    /* Sometimes there is nowhere to go. Giving a locked account a button
+       means nothing happens when it is pressed, and that reads as broken. */
     if(label){ go.hidden=false; go.textContent=label; go.onclick=function(){ gateHide(); act(); }; }
     else { go.hidden=true; go.onclick=null; }
     g.classList.add('on');
@@ -3528,7 +3575,7 @@
   (function(){
     var x=document.getElementById('mgX'), g=document.getElementById('mkGate');
     if(x) x.onclick=gateHide;
-    /* 바깥을 눌러도 닫힌다. 팝업 안을 눌렀을 때는 닫지 않는다. */
+    /* Clicking outside closes it too. Clicking inside the popup does not. */
     if(g) g.addEventListener('click', function(ev){ if(ev.target===g) gateHide(); });
   })();
 
@@ -3541,11 +3588,13 @@
       });
       return false;
     }
-    /* market_can_trade 에 직접 묻는다.
+    /* Ask market_can_trade directly.
 
-       처음에는 /market/me 의 enabled 를 봤는데, 배포된 응답에는 그 항목이
-       없어 언제나 undefined 였다. 거래가 되는 지갑에도 인증하라는 안내가
-       뜬 이유다. 거래 여부를 판단하는 함수가 따로 있으니 그것을 본다. */
+       At first this looked at enabled on /market/me, but the deployed
+       response does not have that field, so it was always undefined. That
+       is why wallets that could trade were still shown the notice telling
+       them to verify. There is a separate function that decides whether
+       trading is allowed, so look at that instead. */
     var ok=false;
     try{
       var res=await fetch(SB_URL_MK+'/rest/v1/rpc/market_can_trade', {
@@ -3556,8 +3605,8 @@
       });
       ok = (await res.json()) === true;
     }catch(e){
-      /* 물어보지 못했다면 막지 않는다. 서버가 어차피 거절하고, 그때는
-         이유가 함께 온다. */
+      /* If the question could not be asked, do not block. The server will
+         reject it anyway, and when it does the reason comes with it. */
       return true;
     }
     if(ok){ gateHide(); return true; }
@@ -3577,8 +3626,9 @@
                'Your verification is being reviewed. Trading opens once it is approved.',
                'CHECK STATUS', function(){ window.top.location.href='mypage-kyc.html'; });
     }else if(state==='locked' || state==='suspended'){
-      /* 막다른 길이다. 버튼을 주면 눌러도 통과할 수 없는 절차로 보내는
-         셈이라, 갈 곳을 주지 않고 사정을 말한다. */
+      /* This is a dead end. Giving a button would send them into a process
+         they cannot get through, so instead of somewhere to go they are
+         told what the situation is. */
       gateShow('UNAVAILABLE',
                'Verification is unavailable on this account. Please contact support.',
                null, null);
@@ -4935,9 +4985,10 @@
   document.addEventListener('memons:disconnected', function(){ $('mkBal').hidden=true; });
 })();
 </script>
-<!-- .app 을 닫는다. 1304행에서 열린 뒤 끝까지 닫히지 않아, 브라우저가
-     대신 닫아주고 있었다. 화면은 멀쩡하지만 __mkH() 가 .app 의 높이를
-     재서 부모 창에 알려주므로, 경계가 분명한 편이 낫다. -->
+<!-- Closes .app. It was opened on line 1304 and never closed, so the browser
+     was closing it for us. The page looks fine, but __mkH() measures the
+     height of .app and reports it to the parent window, so it is better for
+     the boundary to be explicit. -->
 </div>
 <!-- Vercel Web Analytics. Every page carries it: the sections are
      iframes, so a tag on the shell alone would count one visit for a
@@ -5024,6 +5075,37 @@
 
   /* cards.name holds only the number within its rarity, the same as in
      the grid above. */
+  /* Shrink a name until it stops at its own width.
+
+     max-width alone would clip it, and there is nothing to clip against
+     -- the text is positioned over a picture, so it would simply be cut
+     mid-word with no edge to explain it. Measured and scaled instead,
+     from the left, which is the side it is anchored to. */
+  /* widthAt988 and liftAt988 are what they were measured as on a panel
+     of that width; both are scaled to whatever the panel is now.
+
+     Read after the value is in the element and after the fonts have
+     settled. Measured too early the text is still in the fallback face
+     and comes out narrower -- 69px where the real figure was 143 -- and
+     a scale worked out from that shrinks it to less than half. */
+  function fitName(el, widthAt988, liftAt988){
+    if(!el) return;
+    el.style.transform = '';
+    el.style.maxWidth = '';
+
+    var art = document.querySelector('.sale-art');
+    var k = art && art.clientWidth ? art.clientWidth / 988 : 1;
+
+    var room = widthAt988 * k;
+    el.style.maxWidth = room.toFixed(1) + 'px';
+
+    var want = el.scrollWidth;
+    if(!want || want <= room) return;
+
+    var lift = liftAt988 ? ' translateY(' + (-liftAt988 * k).toFixed(2) + 'px)' : '';
+    el.style.transform = 'scale(' + (room / want).toFixed(3) + ')' + lift;
+  }
+
   function nameOf(t){
     var n = String(t.card_name == null ? '' : t.card_name).trim();
     return /^\d+$/.test(n) ? 'APEPE #' + n : (n || t.card_id || '');
@@ -5049,6 +5131,17 @@
     $s('sPprice').textContent = price;
     $s('sName').textContent   = name;
     $s('sPname').textContent  = name;
+    /* After the fonts, not before. document.fonts.ready settles once the
+       faces the page asked for have loaded; until then the text is laid
+       out in a fallback and measures narrower than it will end up. */
+    var applyNames = function(){
+      fitName($s('sName'), 120, 4);
+      fitName($s('sPname'), 70, 2);
+    };
+    applyNames();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(applyNames);
+    }
 
     /* Only said when the sale just happened. Opened from the history a
        month later, "has been added to your balance" is describing
@@ -5068,6 +5161,45 @@
     document.body.style.overflow = '';
     current = null;
   }
+
+  /* ?salepreview=epic_0021 opens the sold window for that card.
+
+     The window is only ever reached by selling something, which makes it
+     awkward to look at: checking a wording change or a piece of artwork
+     meant finding a card, listing it, and having somebody buy it. This
+     reads one row from card_list and fills the same window with it.
+
+     Nothing is sold and no balance moves. justNow is left off, so the
+     line about the balance -- which would be a lie here -- does not
+     appear. An optional price after a comma, for checking how a long
+     figure sits in the panel:
+
+       ?salepreview=epic_0021,1107.31 */
+  (function(){
+    var q = new URLSearchParams(location.search).get('salepreview');
+    if(!q) return;
+
+    var parts = q.split(',');
+    var id    = parts[0].trim();
+    var price = parts[1] ? Number(parts[1]) : 100;
+
+    fetch(SB_URL + '/rest/v1/card_list?id=eq.' + encodeURIComponent(id) +
+          '&select=id,name,rarity,image_url&limit=1',
+      { headers:{ apikey:SB_ANON, Authorization:'Bearer '+SB_ANON } })
+      .then(function(r){ return r.json(); })
+      .then(function(rows){
+        if(!rows || !rows.length){ alert('card not found: ' + id); return; }
+        var c = rows[0];
+        window.openSaleShare({
+          /* No card_name. The trades table has no such column, so a real
+             sale falls through to the card id -- and the preview should
+             show what a sale shows. */
+          card_id: c.id, rarity: c.rarity,
+          image_url: c.image_url, price: price,
+        });
+      })
+      .catch(function(e){ alert('preview failed: ' + e); });
+  })();
 
   /* Clicking the dark area closes; clicking the artwork does not. Without
      the second half, a drag that starts on the picture and ends outside

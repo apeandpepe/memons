@@ -126,8 +126,20 @@
   .pricebar.art .pl{margin-left:var(--padLabel,0px);
     font-size:calc(var(--aw) * var(--fsLabel,.021));
     letter-spacing:.14em;color:rgba(255,255,255,.72)}
+  /* The cell is a fixed share of the bar and the figure inside it is set
+     against the artwork, so both are sized for the number that was there
+     when they were measured. A four-figure price is wider than that, and
+     the USDT after it was the part that fell off the end -- clipped by
+     the cell, which is what gives the bar its shape.
+
+     Shrunk to fit rather than allowed to wrap or overflow: the cell sits
+     over a painted panel and its edges are the panel's, so there is
+     nowhere for a second line to go and nothing to gain by spilling past
+     the border. The scale is applied from the left, the side the figure
+     is anchored to. */
   .pricebar.art .pvi{margin-left:var(--padVal,0px);
-    font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff}
+    font-size:calc(var(--aw) * var(--fsVal,.042));color:#fff;
+    display:inline-block;transform-origin:left center}
   .pricebar.art .pvi u{font-size:calc(var(--aw) * var(--fsUnit,.019));opacity:.6}
   .pricebar.art .pdiv,.pricebar.art .pgo,.pricebar.art .pv{display:none}
 
@@ -756,9 +768,9 @@
         <path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
       </svg>SAVE
     </button>
-    <!-- 공유 이미지 저장. 위의 SAVE 는 카드 그림 그대로를 내려받고, 이쪽은
-         X 에 올라가는 그 화면 -- 배경과 가격판까지 얹힌 -- 을 내려받는다.
-         자랑하려고 저장하는 사람이 원하는 쪽은 대개 이쪽이다. -->
+    <!-- Save the share image. The SAVE above downloads the card artwork as
+         it is; this one downloads the screen that goes up on X -- background
+         and price bar and all. Someone saving to brag usually wants this one. -->
     <button class="b save hidden" id="saveShotBtn" title="Save the image posted to X">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -802,8 +814,8 @@
           <path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/>
         </svg>SHARE
       </button>
-      <!-- 열 장 중 한 장. SHARE 가 올리는 그 카드다: 올린 것과 저장한 것이
-           달라 보이면 어느 쪽이 진짜인지 헷갈린다. -->
+      <!-- One of the ten, and the card SHARE posts: if what went up and what
+           was saved look different, it is unclear which one is real. -->
       <button class="b save" id="msaveShotBtn" title="Save the image posted to X">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -1052,6 +1064,40 @@ function paintPrice(it){
     bar.classList.add('hidden');
     return;
   }
+  /* Shrink the figure until it fits the cell it sits in.
+
+     Measured rather than guessed at: the cell's width is a percentage of
+     a bar whose own width depends on the screen, and the figure's size is
+     a percentage of that again, so there is no number of digits that is
+     safe everywhere. Reading what it came out as and scaling from there
+     holds on any screen and for any price.
+
+     Runs after the value is in the element, because that is the only
+     point at which its width is known. A price that already fits is left
+     alone. */
+  function fitValue(el){
+    if(!el) return;
+    el.style.transform='';
+
+    /* Measured against .ptxt, the element immediately around it, because
+       that is the one carrying overflow:hidden -- the cell outside it
+       clips nothing, so a figure measured against the cell looked as
+       though it fitted while the T of USDT was already gone.
+
+       offsetLeft is the push from padVal, which moves the figure right
+       inside .ptxt without making .ptxt any wider. */
+    var box = el.parentElement;
+    if(!box) return;
+
+    var room = box.clientWidth - el.offsetLeft;
+    var want = el.scrollWidth;
+    if(room <= 0 || want <= room) return;
+
+    /* A little under the exact ratio. The last letter of USDT should not
+       end flush against the border it is being kept inside. */
+    el.style.transform = 'scale(' + (room / want * 0.96).toFixed(3) + ')';
+  }
+
   var info = found;
 
   bar.style.setProperty('--rc', it.color);
@@ -1126,6 +1172,7 @@ function paintPrice(it){
     $('pbValueIn').innerHTML=val;
     $('pbValueIn').classList.remove('hidden');
     $('pbValue').classList.add('hidden');
+    fitValue($('pbValueIn'));
     $('pbDiv').classList.add('hidden');
     $('pbGo').classList.add('hidden');
 
@@ -1430,6 +1477,13 @@ function pullErrMsg(e){
   return 'Pull failed: '+m;
 }
 /* map a server card -> reveal item structure */
+/* ?preview=epic_0021 shows that card's reveal without opening anything.
+
+   Declared here, ahead of everything that reads it: ensureConnected and
+   refreshPulls both check it, and either can run while the page is still
+   setting itself up. */
+const PREVIEW_ID = new URLSearchParams(location.search).get('preview');
+
 function mapCard(card){
   // the API returns the card either flat ({card_id, rarity, image_url}) or with
   // the artwork nested under cards{} — accept both
@@ -1453,6 +1507,10 @@ function mapCard(card){
   return it;
 }
 async function ensureConnected(){
+  /* A preview needs no wallet. It reads one row from the cards table and
+     spends nothing, so asking someone to connect before they can look at
+     a card is a hurdle in front of nothing. */
+  if(PREVIEW_ID) return true;
   if(!window.MEMONS) { revToast('Wallet module failed to load'); return false; }
   if(MEMONS.connected) return true;
   try{ await MEMONS.connect(); return true; }
@@ -1470,7 +1528,46 @@ function queueAttest(list){
       .catch(function(){});
   }catch(e){}
 }
-async function pullServer(){ const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c; }
+/* Preview: show a named card without pulling one.
+
+   ?preview=epic_0021 renders the reveal for that card and spends
+   nothing. There was no way to look at a card's reveal except by opening
+   a capsule and hoping, which is a poor way to check artwork and a worse
+   way to answer someone who writes in about what they saw.
+
+   The card is read straight from the cards table with the anon key, the
+   same way the collection page reads it. Nothing is written, no capsule
+   is consumed, and the wallet is not touched -- so this is safe to open
+   on a live account. */
+async function previewCard(id){
+  /* Its own copy of the keys. The ones above sit inside PRICE's closure
+     and are not reachable from here, and a preview is not worth
+     rearranging a working module for. */
+  const U = "https://neixdrtamznrooougcda.supabase.co";
+  const K = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
+  /* card_list, not the cards table. The table has row level security on
+     with no policy behind it, so a browser reads nothing from it at all
+     -- every row comes back missing rather than forbidden, which is why
+     a perfectly real card id reported itself as not found. The view is
+     what the collection page reads and carries the columns a public
+     archive needs. */
+  const r = await fetch(U + '/rest/v1/card_list?id=eq.' + encodeURIComponent(id) +
+                        '&select=id,name,rarity,image_url&limit=1',
+    { headers:{ apikey: K, Authorization: 'Bearer ' + K } });
+  const rows = await r.json();
+  if(!rows || !rows.length) throw new Error('CARD_NOT_FOUND: ' + id);
+  const c = rows[0];
+  return mapCard({ card_id: c.id, name: c.name, rarity: c.rarity,
+                   image_url: c.image_url, capsule_id: 'paid' });
+}
+
+async function pullServer(){
+  /* Preview stands in for the pull, rather than sitting beside it. The
+     reveal has several entry points and they all end here; branching at
+     the source means every one of them honours the parameter. */
+  if(PREVIEW_ID) return await previewCard(PREVIEW_ID);
+  const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c;
+}
 
 /* ---- pulls remaining ---- */
 async function refreshPulls(){
@@ -1478,6 +1575,14 @@ async function refreshPulls(){
   const box=document.getElementById('pullsbox');
   const chg=document.getElementById('chargeBtn');
   if(!el) return;
+  /* Nothing is being spent, so there is no count to keep. Shown as a dash
+     rather than hidden: the box is part of the layout the reveal was
+     built around, and an empty gap reads as a fault. */
+  if(PREVIEW_ID){
+    el.textContent='–';
+    if(chg) chg.style.display='none';
+    return;
+  }
   if(!window.MEMONS || !MEMONS.connected){
     el.textContent='–';
     if(chg) chg.textContent='CONNECT WALLET';

@@ -1,8 +1,8 @@
 // =====================================================================
-//  Edge Function: auth   (지갑 서명 로그인)
-//  GET  /auth/nonce?address=0x..   → 서명할 메시지 발급
-//  POST /auth/verify {address,signature,utm?} → 서명 검증 → 세션 JWT 발급
-//  배포:  supabase functions deploy auth --no-verify-jwt
+//  Edge Function: auth   (wallet signature login)
+//  GET  /auth/nonce?address=0x..   → issues the message to sign
+//  POST /auth/verify {address,signature,utm?} → verifies the signature → issues a session JWT
+//  Deploy:  supabase functions deploy auth --no-verify-jwt
 //
 //  Changed 2026-08-04 — verify now keeps what it learns.
 //
@@ -42,7 +42,7 @@ async function hmacKey() {
     { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"],
   );
 }
-// 유저가 서명할 메시지 (지갑 소유 증명용, 가스 없음)
+// The message the user signs (proof of wallet ownership, no gas)
 const loginMessage = (nonce: string) =>
   `MEMONS Login\n\nThis signature verifies wallet ownership only. No gas, no transaction.\nnonce: ${nonce}`;
 
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const url = new URL(req.url);
   try {
-    // --- nonce 발급 ---
+    // --- issue nonce ---
     if (url.pathname.endsWith("/nonce")) {
       const address = (url.searchParams.get("address") || "").toLowerCase();
       if (!/^0x[0-9a-f]{40}$/.test(address)) return json({ error: "bad address" }, 400);
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
       if (error) return json({ error: error.message }, 500);
       return json({ message: loginMessage(nonce) });
     }
-    // --- 서명 검증 → JWT ---
+    // --- verify signature → JWT ---
     if (url.pathname.endsWith("/verify")) {
       const body = await req.json();
       const { address, signature, utm } = body;
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       catch { return json({ error: "bad signature" }, 401); }
       if (recovered !== addr) return json({ error: "signature mismatch" }, 401);
 
-      await supabase.from("auth_nonces").delete().eq("address", addr); // 재사용 방지
+      await supabase.from("auth_nonces").delete().eq("address", addr); // prevents reuse
 
       /* Recorded after the signature is checked and before the token is
          issued. Awaited so a slow write does not race the redirect, but
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
 
       const token = await create(
         { alg: "HS256", typ: "JWT" },
-        { sub: addr, exp: getNumericDate(60 * 60 * 6) }, // 6시간
+        { sub: addr, exp: getNumericDate(60 * 60 * 6) }, // 6 hours
         await hmacKey(),
       );
       return json({ token, address: addr });

@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
-rem 활성 카드 100장만 골라냅니다. Storage 에는 예전 카드까지 125장이 있는데,
-rem 그중 지금 쓰이는 것만 올려야 필요 없는 파일이 늘지 않습니다.
+rem Picks out only the 100 active cards. Storage holds 125 including the old
+rem cards, and uploading just the ones in use keeps needless files from piling up.
 cd /d C:\develop\MEMONS\cards-work
 if exist upload rd /s /q upload
 mkdir upload

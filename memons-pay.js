@@ -23,14 +23,14 @@
 
      Defaults hold until the first lookup answers, so a slow network shows
      the usual figures rather than zero. */
-  /* 아래 넷은 모두 예비값이다. site_flags 응답이 오면 덮어쓴다.
+  /* All four below are fallbacks, overwritten once site_flags answers.
 
-     화면에 숫자를 적어 두면 어드민에서 값을 바꿔도 따라오지 않는다.
-     오픈 첫날 1 달러를 받으면서 2 달러라고 안내한 것이 그 때문이었다. */
-  let SINGLE_USDT   = 1;     // 낱개 한 개
-  let BUNDLE10_USDT = 10;    // 묶음 한 벌
-  let BUNDLE_SIZE   = 10;    // 묶음 한 벌에 들어가는 수
-  let MAX_PULLS     = 500;   // 한 번에 살 수 있는 최대 수량
+     Numbers written into the page do not follow a change made in the admin.
+     That is why, on the first day, we took 1 dollar and said it was 2. */
+  let SINGLE_USDT   = 1;     // one single
+  let BUNDLE10_USDT = 10;    // one bundle
+  let BUNDLE_SIZE   = 10;    // how many go into one bundle
+  let MAX_PULLS     = 500;   // the most that can be bought at once
   /* Deposits are governed by the database, not by this file.
 
      It used to be a constant here and another in verify-payment, and both

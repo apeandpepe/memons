@@ -191,13 +191,13 @@
       host.appendChild(myBtn);
     }
 
-    /* 마이페이지 사이드바 아래의 지갑 칩.
+    /* The wallet chip at the bottom of the My Page sidebar.
 
-       화면마다 각자 이 칩을 갱신하는 코드를 갖고 있었고, 여섯 화면에는
-       그것이 없어 연결한 뒤에도 "Not connected" 로 남아 있었다. 칩은
-       모든 마이페이지에 같은 모양으로 들어가므로 여기서 한 번에 다룬다.
+       Every page carried its own code for refreshing this chip, and six
+       pages had none, so they still read "Not connected" after connecting.
+       The chip is the same on every My Page, so it is handled here, once.
 
-       해당 요소가 없는 화면에서는 조용히 넘어간다. */
+       Pages without the element are passed over quietly. */
     function sideChip(addr) {
       var w = document.getElementById('waddr'),
           st = document.getElementById('wstat'),
@@ -642,8 +642,8 @@
     });
     discBtn.addEventListener('click', function (ev) { ev.preventDefault(); doDisconnect(true); });
 
-    /* 사이드바 칩의 Disconnect 도 같은 일을 한다. 헤더의 버튼과 나란히
-       보이면서 하나만 동작하면 고장으로 읽힌다. */
+    /* The sidebar chip's Disconnect does the same thing. Sitting alongside
+       the header button, only one of them working reads as broken. */
     var sideDisc = document.getElementById('wdisc');
     if (sideDisc) {
       sideDisc.addEventListener('click', function (ev) {
