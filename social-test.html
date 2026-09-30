@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEMONS — Social Login Test</title>
+<!--
+  Internal test page for the Google sign-in path. Not linked from
+  anywhere and not meant for players: it exists so the new login can be
+  exercised end to end without touching a page anyone uses.
+
+  Signing in is all this page does. Linking an existing wallet is a
+  separate job for a later screen -- a wallet the member holds the keys
+  to cannot be a deposit address, so the two must not be mixed up here.
+  MEMONS_SOCIAL.linkWallet() is still there for that screen to use.
+
+  Delete this page, or add it to .gitignore, once the real header carries
+  the button.
+-->
+<style>
+  :root{
+    --bg:#0d0d0f; --panel:#141418; --line:rgba(255,255,255,.12);
+    --fg:#e8e6e0; --muted:#8d8a82; --gold:#E9B84A; --good:#5ccf92; --bad:#e0556a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;
+    display:flex;align-items:flex-start;justify-content:center;padding:48px 16px 96px}
+  .wrap{width:100%;max-width:560px}
+  h1{font-size:22px;letter-spacing:1px;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 28px}
+  .card{border:1px solid var(--line);border-radius:14px;background:var(--panel);
+    padding:20px;margin-bottom:16px}
+  .lbl{font-size:11px;letter-spacing:1.6px;color:var(--muted);margin-bottom:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;font-size:13px;padding:11px 16px;border-radius:10px;cursor:pointer;
+    border:1px solid var(--line);background:transparent;color:var(--fg)}
+  button:hover{border-color:var(--gold);color:var(--gold)}
+  dl{margin:0;display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:13px}
+  dt{color:var(--muted)}
+  dd{margin:0;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .ok{color:var(--good)} .no{color:var(--bad)}
+  #log{border:1px solid var(--line);border-radius:12px;background:#08080a;padding:14px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.7;
+    white-space:pre-wrap;word-break:break-all;max-height:340px;overflow:auto;color:var(--muted)}
+  #log b{color:var(--fg);font-weight:600}
+  #gbtn{min-height:44px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>SOCIAL LOGIN TEST</h1>
+  <p class="sub">Internal page. Not linked from the site.</p>
+
+  <div class="card">
+    <div class="lbl">SIGN IN WITH GOOGLE</div>
+    <div id="gbtn"></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">SESSION</div>
+    <dl>
+      <dt>signed in</dt><dd id="vIn">—</dd>
+      <dt>uid</dt><dd id="vUid">—</dd>
+      <dt>wallets</dt><dd id="vWallets">—</dd>
+      <dt>token sub</dt><dd id="vSub">—</dd>
+      <dt>expires</dt><dd id="vExp">—</dd>
+    </dl>
+    <div class="row" style="margin-top:16px">
+      <button id="bMe">Refresh</button>
+      <button id="bOut">Sign out</button>
+    </div>
+  </div>
+
+  <div class="lbl" style="margin-left:2px">LOG</div>
+  <div id="log"></div>
+
+</div>
+
+<script src="gacha-client.js"></script>
+<script src="social-login.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  function log(msg, strong) {
+    var t = new Date().toTimeString().slice(0, 8);
+    $("log").innerHTML += (strong ? "<b>" : "") + t + "  " + msg +
+      (strong ? "</b>" : "") + "\n";
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
+  /* Reads the token this page is holding without asking the server, so
+     the panel still says something useful when the network is the thing
+     that is broken. */
+  function claims() {
+    var t = (window.MEMONS && window.MEMONS.token) ||
+            localStorage.getItem("memons_jwt_v1");
+    if (!t) return null;
+    try {
+      var p = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(decodeURIComponent(escape(atob(p))));
+    } catch (e) { return null; }
+  }
+
+  function paint(me) {
+    var c = claims();
+    $("vIn").innerHTML = c ? '<span class="ok">yes</span>'
+                           : '<span class="no">no</span>';
+    $("vSub").textContent = (c && c.sub) || "—";
+    $("vExp").textContent = c && c.exp
+      ? new Date(c.exp * 1000).toLocaleString() : "—";
+    if (me) {
+      $("vUid").textContent = me.uid || "—";
+      $("vWallets").textContent = (me.wallets || []).length
+        ? me.wallets.map(function (w) { return w.address; }).join("\n")
+        : "none linked";
+    }
+  }
+
+  function refresh() {
+    if (!claims()) {
+      paint({ uid: "—", wallets: [] });
+      log("no session");
+      return;
+    }
+    log("asking /social/me ...");
+    MEMONS_SOCIAL.me()
+      .then(function (me) {
+        paint(me);
+        var n = (me.wallets || []).length;
+        log("uid " + me.uid, true);
+        log("wallets: " + (n ? me.wallets.map(function (w) { return w.address; }).join(", ")
+                             : "none linked"));
+      })
+      .catch(function (e) { paint(null); log("me failed: " + e.message); });
+  }
+
+  document.addEventListener("memons:social-start", function () {
+    log("google credential received, verifying with the server ...");
+  });
+  document.addEventListener("memons:social-signed-in", function (e) {
+    log("signed in", true);
+    log("token issued, sub = " + e.detail.uid);
+    refresh();
+  });
+  document.addEventListener("memons:social-signed-out", function () {
+    log("signed out", true);
+    paint({ uid: "—", wallets: [] });
+  });
+  document.addEventListener("memons:social-error", function (e) {
+    log("error: " + e.detail.message);
+  });
+
+  $("bMe").onclick = refresh;
+  $("bOut").onclick = function () { MEMONS_SOCIAL.signOut(); };
+
+  MEMONS_SOCIAL.mountButton($("gbtn"))
+    .then(function () { log("google button ready"); })
+    .catch(function (e) { log("button failed: " + e.message); });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
