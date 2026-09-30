@@ -48,13 +48,15 @@
     } catch (e) {}
   }
 
+  function authHeader() {
+    var t = (window.MEMONS && window.MEMONS.token) ||
+            (store() && store().getItem(SS_TOKEN));
+    return t ? { Authorization: "Bearer " + t } : {};
+  }
+
   function post(path, body, auth) {
     var h = { "content-type": "application/json" };
-    if (auth) {
-      var t = (window.MEMONS && window.MEMONS.token) ||
-              (store() && store().getItem(SS_TOKEN));
-      if (t) h.Authorization = "Bearer " + t;
-    }
+    if (auth) Object.assign(h, authHeader());
     return fetch(API + path, {
       method: "POST",
       headers: h,
@@ -63,11 +65,7 @@
   }
 
   function get(path) {
-    var h = {};
-    var t = (window.MEMONS && window.MEMONS.token) ||
-            (store() && store().getItem(SS_TOKEN));
-    if (t) h.Authorization = "Bearer " + t;
-    return fetch(API + path, { headers: h }).then(readOrThrow);
+    return fetch(API + path, { headers: authHeader() }).then(readOrThrow);
   }
 
   /* The server says what went wrong in `error`. Surfacing that rather
@@ -78,6 +76,61 @@
       if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
       return j;
     });
+  }
+
+  function emit(name, detail) {
+    try {
+      document.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
+    } catch (e) {}
+  }
+
+  // --- which wallets are installed -----------------------------------
+
+  /* Every extension used to fight over window.ethereum and the last one
+     to load won, which is how a member with MetaMask and Bybit installed
+     ends up signing with whichever happened to win the race.
+
+     EIP-6963 is the way out: each extension announces itself with its own
+     name and its own provider object, so the member picks and we use the
+     one they picked. Extensions that do not announce are still reachable
+     through window.ethereum, which is kept as a last resort. */
+  var found = [];
+
+  function collect(e) {
+    var d = e && e.detail;
+    if (!d || !d.info || !d.provider) return;
+    var seen = found.some(function (x) { return x.info.uuid === d.info.uuid; });
+    if (!seen) {
+      found.push(d);
+      emit("memons:wallets-changed", { count: found.length });
+    }
+  }
+
+  try {
+    window.addEventListener("eip6963:announceProvider", collect);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+  } catch (e) {}
+
+  /* Asked again on demand: an extension that was still waking up when the
+     page loaded answers the second call. */
+  function wallets() {
+    try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
+    return found.map(function (d) {
+      return { uuid: d.info.uuid, name: d.info.name, icon: d.info.icon, rdns: d.info.rdns };
+    });
+  }
+
+  function providerFor(uuid) {
+    if (uuid) {
+      var hit = found.filter(function (d) { return d.info.uuid === uuid; })[0];
+      if (hit) return hit.provider;
+    }
+    /* Nothing chosen, or a browser with no announcing extension. */
+    if (found.length === 1) return found[0].provider;
+    if (window.MEMONS && window.MEMONS.eth && window.MEMONS.eth()) {
+      return window.MEMONS.eth();
+    }
+    return window.ethereum || null;
   }
 
   // --- Google -------------------------------------------------------
@@ -124,12 +177,6 @@
       });
   }
 
-  function emit(name, detail) {
-    try {
-      document.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
-    } catch (e) {}
-  }
-
   /* Draws Google's own button. Theirs rather than ours on purpose: the
      wording, the logo and the disabled states are all things Google
      requires, and a hand-made button is the usual reason sign-in is
@@ -157,10 +204,13 @@
 
   /* Signing proves the wallet is theirs. It costs nothing and moves
      nothing -- the same arrangement the wallet login already uses, with a
-     different message so one signature cannot stand in for the other. */
-  function linkWallet() {
-    var eth = (window.MEMONS && window.MEMONS.eth && window.MEMONS.eth()) ||
-              window.ethereum;
+     different message so one signature cannot stand in for the other.
+
+     Takes the uuid of the wallet the member picked. Without one it falls
+     back to whatever the browser offers, which is only safe when there is
+     exactly one. */
+  function linkWallet(uuid) {
+    var eth = providerFor(uuid);
     if (!eth) return Promise.reject(new Error("no wallet found in this browser"));
 
     var addr;
@@ -196,6 +246,35 @@
 
   function me() { return get("/social/me"); }
 
+  // --- reading our own session --------------------------------------
+
+  /* The claims inside the token this browser is holding, without asking
+     the server. The header has to decide what to draw before any network
+     call comes back, and a page that guesses wrong flickers. */
+  function claims() {
+    var t = (window.MEMONS && window.MEMONS.token) ||
+            (store() && store().getItem(SS_TOKEN));
+    if (!t) return null;
+    try {
+      var p = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      var c = JSON.parse(decodeURIComponent(escape(atob(p))));
+      if (c && c.exp && c.exp * 1000 < Date.now()) return null;
+      return c;
+    } catch (e) { return null; }
+  }
+
+  /* Which door the member came in by.
+
+     Both logins issue the same token; only the subject differs. A UID
+     means Google or Apple, an address means a wallet. Everything that has
+     to behave differently reads this rather than keeping its own flag,
+     which would go stale the moment a session is restored from storage. */
+  function isSocial() {
+    var c = claims();
+    return !!(c && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      .test(String(c.sub || "")));
+  }
+
   function signOut() {
     var s = store();
     if (s) {
@@ -211,8 +290,11 @@
 
   window.MEMONS_SOCIAL = {
     mountButton: mountButton,
+    wallets: wallets,
     linkWallet: linkWallet,
     me: me,
+    claims: claims,
+    isSocial: isSocial,
     signOut: signOut,
     clientId: GOOGLE_CLIENT_ID,
   };

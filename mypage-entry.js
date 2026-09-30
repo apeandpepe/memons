@@ -223,10 +223,69 @@
       wbtn.title = '';
       wbtn.classList.remove('connected');
       discBtn.style.display = 'none';
+      discBtn.textContent = 'Disconnect';
       switchBtn.style.display = 'none';
       myBtn.style.display = 'none';
       document.body.classList.remove('wallet-connected');
+      document.body.classList.remove('social-session');
       sideChip(null);
+    }
+
+    /* ---- signed in with Google or Apple --------------------------------
+
+       There is no address to show here, and there may never be one: the
+       account is the UID. The header still has to read as signed in, so
+       the same three controls appear, with the wallet-only one dropped and
+       Disconnect renamed to what it now does.
+
+       wallet-connected stays on deliberately. Every page uses that class to
+       mean "somebody is signed in" -- the My Page entry, the sidebar, the
+       referral panel all hang off it -- and a signed-in member who is shown
+       a logged-out site would reasonably think their account was gone. */
+    function renderSocial(c) {
+      wbtn.textContent = 'MEMBER';
+      wbtn.title = 'UID ' + c.sub;
+      wbtn.classList.add('connected');
+      discBtn.style.display = 'inline-block';
+      discBtn.textContent = 'Sign out';
+      switchBtn.style.display = 'none';   // nothing to switch between
+      myBtn.style.display = 'inline-flex';
+      document.body.classList.add('wallet-connected');
+      document.body.classList.add('social-session');
+      sideChipSocial('—');
+
+      /* The email is worth waiting a moment for -- it is the only thing on
+         screen that tells the member which account they are in. Until it
+         arrives the button says MEMBER rather than sitting empty, and if
+         the call fails it stays that way rather than reverting to a
+         logged-out header over a session that is perfectly valid. */
+      if (!window.MEMONS_SOCIAL) return;
+      window.MEMONS_SOCIAL.me().then(function (me) {
+        var w = (me.wallets && me.wallets[0] && me.wallets[0].address) || '';
+        var label = me.email || (w ? shortAddr(w) : 'UID ' + String(c.sub).slice(0, 8));
+        wbtn.textContent = label;
+        sideChipSocial(label);
+        document.dispatchEvent(new CustomEvent('memons:social-session',
+          { detail: { uid: me.uid, email: me.email || '', wallets: me.wallets || [] } }));
+      }).catch(function () {});
+    }
+
+    /* The sidebar chip, for a member with no address to put in it. */
+    function sideChipSocial(label) {
+      var w = document.getElementById('waddr'),
+          st = document.getElementById('wstat'),
+          d = document.getElementById('wdisc');
+      if (w)  w.textContent = label;
+      if (st) st.textContent = 'Signed in';
+      if (d)  d.style.display = '';
+      document.body.classList.add('connected');
+    }
+
+    function socialClaims() {
+      try {
+        return (window.MEMONS_SOCIAL && window.MEMONS_SOCIAL.isSocial())
+          ? window.MEMONS_SOCIAL.claims() : null;
+      } catch (e) { return null; }
     }
     function renderBusy(label) {
       wbtn.textContent = label;
@@ -560,6 +619,90 @@
       }
     }
 
+    /* ---- the sign-in sheet ---------------------------------------------
+
+       The header button used to go straight to the wallet, which made a
+       wallet the price of admission. Most people arriving at a card site
+       do not have one, and the ones who do should not have to prove it
+       before they can look around.
+
+       So the button now asks. Google first, because that is the door
+       almost everyone can already open; the wallet underneath, unchanged,
+       for the members who have been using it all along. Both end in the
+       same session, so nothing downstream has to know which was used. */
+    function showSignInSheet() {
+      if (document.getElementById('siSheet')) return;
+      if (!window.MEMONS_SOCIAL) { doConnect(); return; }
+
+      var wrap = document.createElement('div');
+      wrap.id = 'siSheet';
+      wrap.style.cssText = 'position:fixed;inset:0;z-index:2000;display:flex;'
+        + 'align-items:center;justify-content:center;background:rgba(0,0,0,.66);padding:18px';
+
+      wrap.innerHTML =
+        '<div style="width:100%;max-width:380px;background:linear-gradient(180deg,#111114,#0a0a0c);'
+          + 'border:1px solid rgba(233,184,74,.3);border-radius:18px;padding:26px 22px 20px;'
+          + 'box-shadow:0 20px 60px rgba(0,0,0,.7)">'
+        + '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:16px;'
+          + 'letter-spacing:1.4px;color:#E9B84A;text-align:center">SIGN IN</div>'
+        + '<div style="color:#a99d85;font-size:12.5px;line-height:1.6;text-align:center;margin:9px 0 20px">'
+          + 'Your cards and your balance live on your MEMONS account.</div>'
+        + '<div id="siGoogle" style="display:flex;justify-content:center;min-height:44px"></div>'
+        + '<div id="siErr" style="display:none;color:#e0556a;font-size:12px;text-align:center;margin-top:10px"></div>'
+        + '<div style="display:flex;align-items:center;gap:10px;margin:18px 0">'
+          + '<div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>'
+          + '<div style="color:#6b6862;font-size:11px;letter-spacing:1px">OR</div>'
+          + '<div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>'
+        + '</div>'
+        + '<button id="siWallet" style="width:100%;font-family:inherit;font-weight:700;font-size:13px;'
+          + 'padding:14px;border-radius:12px;border:1px solid rgba(233,184,74,.4);background:transparent;'
+          + 'color:#E9B84A;cursor:pointer">Connect wallet</button>'
+        + '<button id="siClose" style="width:100%;font-family:inherit;font-size:12.5px;padding:12px;'
+          + 'margin-top:6px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>'
+        + '</div>';
+
+      document.body.appendChild(wrap);
+
+      function close() { wrap.remove(); }
+      wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+      wrap.querySelector('#siClose').onclick = close;
+      wrap.querySelector('#siWallet').onclick = function () { close(); doConnect(); };
+
+      function fail(msg) {
+        var e = wrap.querySelector('#siErr');
+        if (!e) return;
+        e.textContent = msg;
+        e.style.display = 'block';
+      }
+
+      window.MEMONS_SOCIAL.mountButton(wrap.querySelector('#siGoogle'))
+        .catch(function () {
+          /* Google's script is blocked often enough -- an ad blocker, a
+             corporate network, a country that cannot reach it -- that the
+             sheet has to stay usable without it rather than showing an
+             empty box above a wallet button. */
+          fail('Google sign-in could not load. Use a wallet, or try again.');
+        });
+
+      document.addEventListener('memons:social-start', function () {
+        var g = wrap.querySelector('#siGoogle');
+        if (g) g.innerHTML = '<div style="color:#8d8a82;font-size:12.5px;padding:12px">Signing in…</div>';
+      }, { once: true });
+
+      document.addEventListener('memons:social-error', function (e) {
+        fail((e.detail && e.detail.message) || 'Sign-in failed.');
+      }, { once: true });
+
+      /* A full reload rather than repainting in place: every page on this
+         site reads the session once on load, so reloading is what makes
+         the page the member is standing on actually reflect being signed
+         in. It is also what the wallet login already does. */
+      document.addEventListener('memons:social-signed-in', function () {
+        close();
+        location.reload();
+      }, { once: true });
+    }
+
     async function doConnect() {
       if (busy) return;
       if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
@@ -629,6 +772,10 @@
         else if (window.MEMONS && window.MEMONS.resetSession) window.MEMONS.resetSession();
       } catch (e) {}
       try { if (window.MEMONS_WC) await window.MEMONS_WC.disconnect(); } catch (e) {}
+      /* Also drops Google's own "sign this person in automatically" flag.
+         Without it the next visit signs them straight back in, which is
+         not what anyone means by signing out. */
+      try { if (window.MEMONS_SOCIAL) window.MEMONS_SOCIAL.signOut(); } catch (e) {}
       try { if (window.MEMONS_REWARDS && window.MEMONS_REWARDS.clearServerOwned) window.MEMONS_REWARDS.clearServerOwned(); } catch (e) {}
       renderDisconnected();
       document.dispatchEvent(new CustomEvent('memons:disconnected'));
@@ -638,7 +785,8 @@
     wbtn.addEventListener('click', function (ev) {
       ev.preventDefault();
       if (window.MEMONS && window.MEMONS.connected) return;
-      doConnect();
+      if (window.MEMONS_SOCIAL) { showSignInSheet(); return; }
+      doConnect();   // the page did not load social-login.js
     });
     discBtn.addEventListener('click', function (ev) { ev.preventDefault(); doDisconnect(true); });
 
@@ -666,6 +814,17 @@
     /* ---- reflect the real state on load ------------------------------- */
     (async function init() {
       renderDisconnected();
+
+      /* A social session is settled before anything else is asked.
+
+         It needs no provider, no relay and no round trip, so checking it
+         first spares the member the second or two the wallet path spends
+         waking extensions up -- and, more importantly, stops that path
+         from finding no wallet and drawing a logged-out header over a
+         session that is perfectly good. */
+      var sc = socialClaims();
+      if (sc) { renderSocial(sc); return; }
+
       try {
         // Rebuild the WalletConnect provider before anything reads it.
         // Every navigation on this site is a full reload, so without this the

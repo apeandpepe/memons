@@ -1,0 +1,1118 @@
+From 7f656b6d3af1876b432273b6601124d5bfb035bc Mon Sep 17 00:00:00 2001
+From: IanF <choisiwoo4@gmail.com>
+Date: Wed, 30 Sep 2026 23:05:59 +0900
+Subject: [PATCH] Add sign-in sheet to the site header
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01EwuSm8r4ZMrsd4apqHXvJi
+---
+ collection.html                    |   3 +-
+ detail.html                        |   3 +-
+ index.html                         |   3 +-
+ marketplace.html                   |   3 +-
+ mypage-collection.html             |   3 +-
+ mypage-dashboard.html              |   3 +-
+ mypage-enhance.html                |   3 +-
+ mypage-entry.js                    | 161 ++++++++++++++++-
+ mypage-grade.html                  |   3 +-
+ mypage-history.html                |   3 +-
+ mypage-inventory.html              |   3 +-
+ mypage-kyc.html                    |   3 +-
+ mypage-leaderboard.html            |   3 +-
+ mypage-missions.html               |   3 +-
+ mypage-pulls.html                  |   3 +-
+ mypage-referral.html               |   3 +-
+ mypage-rewards.html                |   3 +-
+ notice-detail.html                 |   3 +-
+ notice.html                        |   3 +-
+ open-capsule.html                  |   3 +-
+ social-login.js                    | 122 ++++++++++---
+ supabase/functions/social/index.ts | 271 +++++++++++++++++++++++++++++
+ vault.html                         |   3 +-
+ 23 files changed, 573 insertions(+), 41 deletions(-)
+ create mode 100644 supabase/functions/social/index.ts
+
+diff --git a/collection.html b/collection.html
+index 38a08f0..6e8712f 100644
+--- a/collection.html
++++ b/collection.html
+@@ -996,7 +996,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+     <span class="hidden-chip"><span id="waddr"></span><span id="wstat"></span><button id="wdisc"></button></span>
+@@ -1077,6 +1077,7 @@
+ <nav class="m-drawer" id="mDrawer"></nav>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/detail.html b/detail.html
+index 86c8982..f263cae 100644
+--- a/detail.html
++++ b/detail.html
+@@ -152,7 +152,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+   </div>
+ </header>
+ 
+@@ -311,6 +311,7 @@
+ </script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <style>
+   .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+diff --git a/index.html b/index.html
+index 6c7ba56..4aa2cb0 100644
+--- a/index.html
++++ b/index.html
+@@ -723,7 +723,7 @@
+       <a href="https://t.me/APEPE_Official" target="_blank" rel="noopener" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="https://x.com/apepeofficial" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+   </div>
+ </header>
+ 
+@@ -874,6 +874,7 @@
+ </script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <style>
+   .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+diff --git a/marketplace.html b/marketplace.html
+index 6dbd14d..5b96de6 100644
+--- a/marketplace.html
++++ b/marketplace.html
+@@ -1519,6 +1519,7 @@
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <!-- ?v2: the file changed but kept its name, and browsers hold on to
+      scripts hard. An old copy still prices capsules at the previous
+@@ -1614,7 +1615,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+     <span class="hidden-chip"><span id="waddr"></span><span id="wstat"></span><button id="wdisc"></button></span>
+diff --git a/mypage-collection.html b/mypage-collection.html
+index e5465c5..09543e5 100644
+--- a/mypage-collection.html
++++ b/mypage-collection.html
+@@ -144,7 +144,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon" title="Wallet connected"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -198,6 +198,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script src="season-tabs.js"></script>
+ <script>
+diff --git a/mypage-dashboard.html b/mypage-dashboard.html
+index f24a1d7..965aa5a 100644
+--- a/mypage-dashboard.html
++++ b/mypage-dashboard.html
+@@ -193,7 +193,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -252,6 +252,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/mypage-enhance.html b/mypage-enhance.html
+index e101a99..0cf40ee 100644
+--- a/mypage-enhance.html
++++ b/mypage-enhance.html
+@@ -243,7 +243,7 @@
+   <div class="hr">
+     <button class="wbtn" id="headWallet">
+       <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>
+-      CONNECT WALLET
++      SIGN IN
+     </button>
+   </div>
+ </header>
+@@ -318,6 +318,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/mypage-entry.js b/mypage-entry.js
+index e635b28..cca1d31 100644
+--- a/mypage-entry.js
++++ b/mypage-entry.js
+@@ -223,11 +223,70 @@
+       wbtn.title = '';
+       wbtn.classList.remove('connected');
+       discBtn.style.display = 'none';
++      discBtn.textContent = 'Disconnect';
+       switchBtn.style.display = 'none';
+       myBtn.style.display = 'none';
+       document.body.classList.remove('wallet-connected');
++      document.body.classList.remove('social-session');
+       sideChip(null);
+     }
++
++    /* ---- signed in with Google or Apple --------------------------------
++
++       There is no address to show here, and there may never be one: the
++       account is the UID. The header still has to read as signed in, so
++       the same three controls appear, with the wallet-only one dropped and
++       Disconnect renamed to what it now does.
++
++       wallet-connected stays on deliberately. Every page uses that class to
++       mean "somebody is signed in" -- the My Page entry, the sidebar, the
++       referral panel all hang off it -- and a signed-in member who is shown
++       a logged-out site would reasonably think their account was gone. */
++    function renderSocial(c) {
++      wbtn.textContent = 'MEMBER';
++      wbtn.title = 'UID ' + c.sub;
++      wbtn.classList.add('connected');
++      discBtn.style.display = 'inline-block';
++      discBtn.textContent = 'Sign out';
++      switchBtn.style.display = 'none';   // nothing to switch between
++      myBtn.style.display = 'inline-flex';
++      document.body.classList.add('wallet-connected');
++      document.body.classList.add('social-session');
++      sideChipSocial('—');
++
++      /* The email is worth waiting a moment for -- it is the only thing on
++         screen that tells the member which account they are in. Until it
++         arrives the button says MEMBER rather than sitting empty, and if
++         the call fails it stays that way rather than reverting to a
++         logged-out header over a session that is perfectly valid. */
++      if (!window.MEMONS_SOCIAL) return;
++      window.MEMONS_SOCIAL.me().then(function (me) {
++        var w = (me.wallets && me.wallets[0] && me.wallets[0].address) || '';
++        var label = me.email || (w ? shortAddr(w) : 'UID ' + String(c.sub).slice(0, 8));
++        wbtn.textContent = label;
++        sideChipSocial(label);
++        document.dispatchEvent(new CustomEvent('memons:social-session',
++          { detail: { uid: me.uid, email: me.email || '', wallets: me.wallets || [] } }));
++      }).catch(function () {});
++    }
++
++    /* The sidebar chip, for a member with no address to put in it. */
++    function sideChipSocial(label) {
++      var w = document.getElementById('waddr'),
++          st = document.getElementById('wstat'),
++          d = document.getElementById('wdisc');
++      if (w)  w.textContent = label;
++      if (st) st.textContent = 'Signed in';
++      if (d)  d.style.display = '';
++      document.body.classList.add('connected');
++    }
++
++    function socialClaims() {
++      try {
++        return (window.MEMONS_SOCIAL && window.MEMONS_SOCIAL.isSocial())
++          ? window.MEMONS_SOCIAL.claims() : null;
++      } catch (e) { return null; }
++    }
+     function renderBusy(label) {
+       wbtn.textContent = label;
+       wbtn.title = '';
+@@ -560,6 +619,90 @@
+       }
+     }
+ 
++    /* ---- the sign-in sheet ---------------------------------------------
++
++       The header button used to go straight to the wallet, which made a
++       wallet the price of admission. Most people arriving at a card site
++       do not have one, and the ones who do should not have to prove it
++       before they can look around.
++
++       So the button now asks. Google first, because that is the door
++       almost everyone can already open; the wallet underneath, unchanged,
++       for the members who have been using it all along. Both end in the
++       same session, so nothing downstream has to know which was used. */
++    function showSignInSheet() {
++      if (document.getElementById('siSheet')) return;
++      if (!window.MEMONS_SOCIAL) { doConnect(); return; }
++
++      var wrap = document.createElement('div');
++      wrap.id = 'siSheet';
++      wrap.style.cssText = 'position:fixed;inset:0;z-index:2000;display:flex;'
++        + 'align-items:center;justify-content:center;background:rgba(0,0,0,.66);padding:18px';
++
++      wrap.innerHTML =
++        '<div style="width:100%;max-width:380px;background:linear-gradient(180deg,#111114,#0a0a0c);'
++          + 'border:1px solid rgba(233,184,74,.3);border-radius:18px;padding:26px 22px 20px;'
++          + 'box-shadow:0 20px 60px rgba(0,0,0,.7)">'
++        + '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:16px;'
++          + 'letter-spacing:1.4px;color:#E9B84A;text-align:center">SIGN IN</div>'
++        + '<div style="color:#a99d85;font-size:12.5px;line-height:1.6;text-align:center;margin:9px 0 20px">'
++          + 'Your cards and your balance live on your MEMONS account.</div>'
++        + '<div id="siGoogle" style="display:flex;justify-content:center;min-height:44px"></div>'
++        + '<div id="siErr" style="display:none;color:#e0556a;font-size:12px;text-align:center;margin-top:10px"></div>'
++        + '<div style="display:flex;align-items:center;gap:10px;margin:18px 0">'
++          + '<div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>'
++          + '<div style="color:#6b6862;font-size:11px;letter-spacing:1px">OR</div>'
++          + '<div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>'
++        + '</div>'
++        + '<button id="siWallet" style="width:100%;font-family:inherit;font-weight:700;font-size:13px;'
++          + 'padding:14px;border-radius:12px;border:1px solid rgba(233,184,74,.4);background:transparent;'
++          + 'color:#E9B84A;cursor:pointer">Connect wallet</button>'
++        + '<button id="siClose" style="width:100%;font-family:inherit;font-size:12.5px;padding:12px;'
++          + 'margin-top:6px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>'
++        + '</div>';
++
++      document.body.appendChild(wrap);
++
++      function close() { wrap.remove(); }
++      wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
++      wrap.querySelector('#siClose').onclick = close;
++      wrap.querySelector('#siWallet').onclick = function () { close(); doConnect(); };
++
++      function fail(msg) {
++        var e = wrap.querySelector('#siErr');
++        if (!e) return;
++        e.textContent = msg;
++        e.style.display = 'block';
++      }
++
++      window.MEMONS_SOCIAL.mountButton(wrap.querySelector('#siGoogle'))
++        .catch(function () {
++          /* Google's script is blocked often enough -- an ad blocker, a
++             corporate network, a country that cannot reach it -- that the
++             sheet has to stay usable without it rather than showing an
++             empty box above a wallet button. */
++          fail('Google sign-in could not load. Use a wallet, or try again.');
++        });
++
++      document.addEventListener('memons:social-start', function () {
++        var g = wrap.querySelector('#siGoogle');
++        if (g) g.innerHTML = '<div style="color:#8d8a82;font-size:12.5px;padding:12px">Signing in…</div>';
++      }, { once: true });
++
++      document.addEventListener('memons:social-error', function (e) {
++        fail((e.detail && e.detail.message) || 'Sign-in failed.');
++      }, { once: true });
++
++      /* A full reload rather than repainting in place: every page on this
++         site reads the session once on load, so reloading is what makes
++         the page the member is standing on actually reflect being signed
++         in. It is also what the wallet login already does. */
++      document.addEventListener('memons:social-signed-in', function () {
++        close();
++        location.reload();
++      }, { once: true });
++    }
++
+     async function doConnect() {
+       if (busy) return;
+       if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
+@@ -629,6 +772,10 @@
+         else if (window.MEMONS && window.MEMONS.resetSession) window.MEMONS.resetSession();
+       } catch (e) {}
+       try { if (window.MEMONS_WC) await window.MEMONS_WC.disconnect(); } catch (e) {}
++      /* Also drops Google's own "sign this person in automatically" flag.
++         Without it the next visit signs them straight back in, which is
++         not what anyone means by signing out. */
++      try { if (window.MEMONS_SOCIAL) window.MEMONS_SOCIAL.signOut(); } catch (e) {}
+       try { if (window.MEMONS_REWARDS && window.MEMONS_REWARDS.clearServerOwned) window.MEMONS_REWARDS.clearServerOwned(); } catch (e) {}
+       renderDisconnected();
+       document.dispatchEvent(new CustomEvent('memons:disconnected'));
+@@ -638,7 +785,8 @@
+     wbtn.addEventListener('click', function (ev) {
+       ev.preventDefault();
+       if (window.MEMONS && window.MEMONS.connected) return;
+-      doConnect();
++      if (window.MEMONS_SOCIAL) { showSignInSheet(); return; }
++      doConnect();   // the page did not load social-login.js
+     });
+     discBtn.addEventListener('click', function (ev) { ev.preventDefault(); doDisconnect(true); });
+ 
+@@ -666,6 +814,17 @@
+     /* ---- reflect the real state on load ------------------------------- */
+     (async function init() {
+       renderDisconnected();
++
++      /* A social session is settled before anything else is asked.
++
++         It needs no provider, no relay and no round trip, so checking it
++         first spares the member the second or two the wallet path spends
++         waking extensions up -- and, more importantly, stops that path
++         from finding no wallet and drawing a logged-out header over a
++         session that is perfectly good. */
++      var sc = socialClaims();
++      if (sc) { renderSocial(sc); return; }
++
+       try {
+         // Rebuild the WalletConnect provider before anything reads it.
+         // Every navigation on this site is a full reload, so without this the
+diff --git a/mypage-grade.html b/mypage-grade.html
+index 1e80a2c..af68e26 100644
+--- a/mypage-grade.html
++++ b/mypage-grade.html
+@@ -154,7 +154,7 @@
+         <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+         <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+       </div>
+-      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+       <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+       <button class="mpbtn" id="mpbtn">My Page</button>
+     </div>
+@@ -202,6 +202,7 @@
+ <script src="data/rewards.js"></script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script>
+   var RAR=MEMONS_DATA.rarities, REW=MEMONS_REWARDS, PER=10;
+   var byKey={}; RAR.forEach(function(r){byKey[r.key]=r;});
+diff --git a/mypage-history.html b/mypage-history.html
+index 8029f55..ad3cff0 100644
+--- a/mypage-history.html
++++ b/mypage-history.html
+@@ -175,7 +175,7 @@
+         <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+         <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+       </div>
+-      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+       <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+       <button class="mpbtn" id="mpbtn">My Page</button>
+     </div>
+@@ -212,6 +212,7 @@
+ <script src="data/rewards.js"></script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script>
+ 
+   var RAR=MEMONS_DATA.rarities, REW=MEMONS_REWARDS, byKey={};
+diff --git a/mypage-inventory.html b/mypage-inventory.html
+index 1374cac..4c9fbb6 100644
+--- a/mypage-inventory.html
++++ b/mypage-inventory.html
+@@ -180,7 +180,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon" title="Wallet connected"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -254,6 +254,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script src="season-tabs.js"></script>
+ <script>
+diff --git a/mypage-kyc.html b/mypage-kyc.html
+index 590b067..0eec558 100644
+--- a/mypage-kyc.html
++++ b/mypage-kyc.html
+@@ -134,7 +134,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon" title="Wallet connected"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -638,6 +638,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <!-- unpkg rather than jsdelivr: the latter does not resolve from every
+      network the site is reached on, and a blocked script here means the
+diff --git a/mypage-leaderboard.html b/mypage-leaderboard.html
+index 34b94fc..e3ce5d8 100644
+--- a/mypage-leaderboard.html
++++ b/mypage-leaderboard.html
+@@ -120,7 +120,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -158,6 +158,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script src="leaderboard.js"></script>
+ <script src="season-tabs.js"></script>
+diff --git a/mypage-missions.html b/mypage-missions.html
+index c3f5da5..a86a8c5 100644
+--- a/mypage-missions.html
++++ b/mypage-missions.html
+@@ -503,7 +503,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon" title="Wallet connected"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -626,6 +626,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/mypage-pulls.html b/mypage-pulls.html
+index f1cdb61..0ee6ec1 100644
+--- a/mypage-pulls.html
++++ b/mypage-pulls.html
+@@ -200,7 +200,7 @@
+         <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+         <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+       </div>
+-      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++      <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+       <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+       <button class="mpbtn" id="mpbtn">My Page</button>
+     </div>
+@@ -239,6 +239,7 @@
+ <script src="data/rewards.js"></script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script>
+ 
+   var RAR=MEMONS_DATA.rarities, byKey={};
+diff --git a/mypage-referral.html b/mypage-referral.html
+index a6997ce..1043496 100644
+--- a/mypage-referral.html
++++ b/mypage-referral.html
+@@ -192,7 +192,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -279,6 +279,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script src="season-tabs.js"></script>
+ <script>
+diff --git a/mypage-rewards.html b/mypage-rewards.html
+index 28ff668..a24fc44 100644
+--- a/mypage-rewards.html
++++ b/mypage-rewards.html
+@@ -269,7 +269,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon" title="Wallet connected"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+   </div>
+@@ -362,6 +362,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/notice-detail.html b/notice-detail.html
+index 50dae68..abfa0e7 100644
+--- a/notice-detail.html
++++ b/notice-detail.html
+@@ -120,7 +120,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+     <span class="hidden-chip"><span id="waddr"></span><span id="wstat"></span><button id="wdisc"></button></span>
+@@ -135,6 +135,7 @@
+ <script src="https://unpkg.com/marked@12/marked.min.js"></script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/notice.html b/notice.html
+index 8e0b2dc..813910f 100644
+--- a/notice.html
++++ b/notice.html
+@@ -99,7 +99,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+     <div class="wicon" id="wicon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg></div>
+     <button class="mpbtn" id="mpbtn">My Page</button>
+     <span class="hidden-chip"><span id="waddr"></span><span id="wstat"></span><button id="wdisc"></button></span>
+@@ -127,6 +127,7 @@
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <script>
+ (function(){
+diff --git a/open-capsule.html b/open-capsule.html
+index f191a96..2866f32 100644
+--- a/open-capsule.html
++++ b/open-capsule.html
+@@ -575,7 +575,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+   </div>
+ </header>
+ <section class="ocwrap">
+@@ -1549,6 +1549,7 @@ if(document.documentElement.classList.contains('embed')){
+ 
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <!-- ?v2: the file changed but kept its name, and browsers hold on to
+      scripts hard. An old copy still prices capsules at the previous
+      figures while the page around it shows the new ones. -->
+diff --git a/social-login.js b/social-login.js
+index 9da87ca..0f88023 100644
+--- a/social-login.js
++++ b/social-login.js
+@@ -48,13 +48,15 @@
+     } catch (e) {}
+   }
+ 
++  function authHeader() {
++    var t = (window.MEMONS && window.MEMONS.token) ||
++            (store() && store().getItem(SS_TOKEN));
++    return t ? { Authorization: "Bearer " + t } : {};
++  }
++
+   function post(path, body, auth) {
+     var h = { "content-type": "application/json" };
+-    if (auth) {
+-      var t = (window.MEMONS && window.MEMONS.token) ||
+-              (store() && store().getItem(SS_TOKEN));
+-      if (t) h.Authorization = "Bearer " + t;
+-    }
++    if (auth) Object.assign(h, authHeader());
+     return fetch(API + path, {
+       method: "POST",
+       headers: h,
+@@ -63,11 +65,7 @@
+   }
+ 
+   function get(path) {
+-    var h = {};
+-    var t = (window.MEMONS && window.MEMONS.token) ||
+-            (store() && store().getItem(SS_TOKEN));
+-    if (t) h.Authorization = "Bearer " + t;
+-    return fetch(API + path, { headers: h }).then(readOrThrow);
++    return fetch(API + path, { headers: authHeader() }).then(readOrThrow);
+   }
+ 
+   /* The server says what went wrong in `error`. Surfacing that rather
+@@ -80,6 +78,61 @@
+     });
+   }
+ 
++  function emit(name, detail) {
++    try {
++      document.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
++    } catch (e) {}
++  }
++
++  // --- which wallets are installed -----------------------------------
++
++  /* Every extension used to fight over window.ethereum and the last one
++     to load won, which is how a member with MetaMask and Bybit installed
++     ends up signing with whichever happened to win the race.
++
++     EIP-6963 is the way out: each extension announces itself with its own
++     name and its own provider object, so the member picks and we use the
++     one they picked. Extensions that do not announce are still reachable
++     through window.ethereum, which is kept as a last resort. */
++  var found = [];
++
++  function collect(e) {
++    var d = e && e.detail;
++    if (!d || !d.info || !d.provider) return;
++    var seen = found.some(function (x) { return x.info.uuid === d.info.uuid; });
++    if (!seen) {
++      found.push(d);
++      emit("memons:wallets-changed", { count: found.length });
++    }
++  }
++
++  try {
++    window.addEventListener("eip6963:announceProvider", collect);
++    window.dispatchEvent(new Event("eip6963:requestProvider"));
++  } catch (e) {}
++
++  /* Asked again on demand: an extension that was still waking up when the
++     page loaded answers the second call. */
++  function wallets() {
++    try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
++    return found.map(function (d) {
++      return { uuid: d.info.uuid, name: d.info.name, icon: d.info.icon, rdns: d.info.rdns };
++    });
++  }
++
++  function providerFor(uuid) {
++    if (uuid) {
++      var hit = found.filter(function (d) { return d.info.uuid === uuid; })[0];
++      if (hit) return hit.provider;
++    }
++    /* Nothing chosen, or a browser with no announcing extension. */
++    if (found.length === 1) return found[0].provider;
++    if (window.MEMONS && window.MEMONS.eth && window.MEMONS.eth()) {
++      return window.MEMONS.eth();
++    }
++    return window.ethereum || null;
++  }
++
+   // --- Google -------------------------------------------------------
+ 
+   var gisReady = null;
+@@ -124,12 +177,6 @@
+       });
+   }
+ 
+-  function emit(name, detail) {
+-    try {
+-      document.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
+-    } catch (e) {}
+-  }
+-
+   /* Draws Google's own button. Theirs rather than ours on purpose: the
+      wording, the logo and the disabled states are all things Google
+      requires, and a hand-made button is the usual reason sign-in is
+@@ -157,10 +204,13 @@
+ 
+   /* Signing proves the wallet is theirs. It costs nothing and moves
+      nothing -- the same arrangement the wallet login already uses, with a
+-     different message so one signature cannot stand in for the other. */
+-  function linkWallet() {
+-    var eth = (window.MEMONS && window.MEMONS.eth && window.MEMONS.eth()) ||
+-              window.ethereum;
++     different message so one signature cannot stand in for the other.
++
++     Takes the uuid of the wallet the member picked. Without one it falls
++     back to whatever the browser offers, which is only safe when there is
++     exactly one. */
++  function linkWallet(uuid) {
++    var eth = providerFor(uuid);
+     if (!eth) return Promise.reject(new Error("no wallet found in this browser"));
+ 
+     var addr;
+@@ -196,6 +246,35 @@
+ 
+   function me() { return get("/social/me"); }
+ 
++  // --- reading our own session --------------------------------------
++
++  /* The claims inside the token this browser is holding, without asking
++     the server. The header has to decide what to draw before any network
++     call comes back, and a page that guesses wrong flickers. */
++  function claims() {
++    var t = (window.MEMONS && window.MEMONS.token) ||
++            (store() && store().getItem(SS_TOKEN));
++    if (!t) return null;
++    try {
++      var p = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
++      var c = JSON.parse(decodeURIComponent(escape(atob(p))));
++      if (c && c.exp && c.exp * 1000 < Date.now()) return null;
++      return c;
++    } catch (e) { return null; }
++  }
++
++  /* Which door the member came in by.
++
++     Both logins issue the same token; only the subject differs. A UID
++     means Google or Apple, an address means a wallet. Everything that has
++     to behave differently reads this rather than keeping its own flag,
++     which would go stale the moment a session is restored from storage. */
++  function isSocial() {
++    var c = claims();
++    return !!(c && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
++      .test(String(c.sub || "")));
++  }
++
+   function signOut() {
+     var s = store();
+     if (s) {
+@@ -211,8 +290,11 @@
+ 
+   window.MEMONS_SOCIAL = {
+     mountButton: mountButton,
++    wallets: wallets,
+     linkWallet: linkWallet,
+     me: me,
++    claims: claims,
++    isSocial: isSocial,
+     signOut: signOut,
+     clientId: GOOGLE_CLIENT_ID,
+   };
+diff --git a/supabase/functions/social/index.ts b/supabase/functions/social/index.ts
+new file mode 100644
+index 0000000..a65d359
+--- /dev/null
++++ b/supabase/functions/social/index.ts
+@@ -0,0 +1,271 @@
++// =====================================================================
++//  Edge Function: social   (Google / Apple login, and linking a wallet)
++//
++//  POST /social/google  {idToken, utm?}            → session JWT
++//  POST /social/apple   {idToken, utm?}            → session JWT
++//  POST /social/link    {address, signature}       → links a wallet to the
++//                                                    member in the token
++//  GET  /social/me                                 → who the token is
++//
++//  Deploy:  supabase functions deploy social --no-verify-jwt
++//
++//  Needs STEP 60 (app_users, user_identities, user_wallets, social_login,
++//  link_wallet, uid_of).
++//
++//  The token this issues is the same shape as the one the wallet login
++//  issues -- same secret, same six hours -- so everything that already
++//  reads a MEMONS token keeps working. The only difference is what sits
++//  in `sub`: a UID here, a wallet address there. uid_of() in the database
++//  takes either, which is what lets the rest of the code move across one
++//  place at a time.
++//
++//  Environment:
++//    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   (auto-injected)
++//    APP_JWT_SECRET                            (same secret as auth)
++//    GOOGLE_CLIENT_ID                          (comma-separated if several)
++//    APPLE_CLIENT_ID                           (comma-separated if several)
++// =====================================================================
++import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
++import { verifyMessage } from "https://esm.sh/ethers@6.13.4";
++import { create, getNumericDate, verify } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
++import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5.9.6";
++
++const supabase = createClient(
++  Deno.env.get("SUPABASE_URL")!,
++  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
++);
++const JWT_SECRET = Deno.env.get("APP_JWT_SECRET")!;
++
++const cors = {
++  "Access-Control-Allow-Origin": "*",
++  "Access-Control-Allow-Headers": "authorization, content-type",
++  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
++};
++const json = (o: unknown, s = 200) =>
++  new Response(JSON.stringify(o), {
++    status: s,
++    headers: { ...cors, "content-type": "application/json" },
++  });
++
++async function hmacKey() {
++  return await crypto.subtle.importKey(
++    "raw",
++    new TextEncoder().encode(JWT_SECRET),
++    { name: "HMAC", hash: "SHA-256" },
++    false,
++    ["sign", "verify"],
++  );
++}
++
++/* The identity providers publish the keys their tokens are signed with.
++   Fetched once and cached by jose, which also refetches when a key it
++   has not seen turns up -- both providers rotate. */
++const GOOGLE_JWKS = createRemoteJWKSet(
++  new URL("https://www.googleapis.com/oauth2/v3/certs"),
++);
++const APPLE_JWKS = createRemoteJWKSet(
++  new URL("https://appleid.apple.com/auth/keys"),
++);
++
++const audiences = (name: string) =>
++  (Deno.env.get(name) || "").split(",").map((s) => s.trim()).filter(Boolean);
++
++/* Checks the token the browser got from Google or Apple.
++
++   Signature, issuer, expiry and audience are all checked here. The
++   audience matters most: without it any token signed by Google would be
++   accepted, including one issued to a completely different app. */
++async function verifyIdToken(provider: "google" | "apple", idToken: string) {
++  const jwks = provider === "google" ? GOOGLE_JWKS : APPLE_JWKS;
++  const issuer = provider === "google"
++    ? ["https://accounts.google.com", "accounts.google.com"]
++    : "https://appleid.apple.com";
++  const aud = audiences(
++    provider === "google" ? "GOOGLE_CLIENT_ID" : "APPLE_CLIENT_ID",
++  );
++  if (!aud.length) throw new Error(`${provider} client id is not configured`);
++
++  const { payload } = await jwtVerify(idToken, jwks, { issuer, audience: aud });
++
++  const subject = String(payload.sub || "");
++  if (!subject) throw new Error("token has no subject");
++
++  /* Only a verified email is kept. An unverified one is a string the
++     person typed, and support would read it as proof of who they are. */
++  const email = payload.email_verified === true || payload.email_verified === "true"
++    ? String(payload.email || "") || null
++    : null;
++
++  return { subject, email };
++}
++
++function clientIp(req: Request): string {
++  const xff = req.headers.get("x-forwarded-for");
++  const ip = (xff ? xff.split(",")[0] : "") || req.headers.get("x-real-ip") || "";
++  return ip.trim().replace(/[^a-zA-Z0-9.:]/g, "_").slice(0, 50);
++}
++
++/* The subject of the caller's own MEMONS token, or null. Used by the
++   routes that act on the member who is already signed in. */
++async function callerSub(req: Request): Promise<string | null> {
++  const h = req.headers.get("authorization") || "";
++  const t = h.startsWith("Bearer ") ? h.slice(7) : "";
++  if (!t) return null;
++  try {
++    const payload = await verify(t, await hmacKey());
++    return String((payload as Record<string, unknown>).sub || "") || null;
++  } catch {
++    return null;
++  }
++}
++
++const issueToken = async (uid: string) =>
++  await create(
++    { alg: "HS256", typ: "JWT" },
++    { sub: uid, exp: getNumericDate(60 * 60 * 6) }, // 6 hours, same as wallet login
++    await hmacKey(),
++  );
++
++/* The message a wallet signs to be linked.
++
++   Deliberately different from the sign-in message: a signature collected
++   for one purpose should not be replayable for the other. */
++const linkMessage = (nonce: string) =>
++  `MEMONS Link Wallet\n\nThis signature links this wallet to your MEMONS account.\nNo gas, no transaction.\nnonce: ${nonce}`;
++
++Deno.serve(async (req) => {
++  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
++  const url = new URL(req.url);
++
++  try {
++    // --- who am I -------------------------------------------------
++    if (url.pathname.endsWith("/me")) {
++      const sub = await callerSub(req);
++      if (!sub) return json({ error: "not signed in" }, 401);
++
++      const { data: uid } = await supabase.rpc("uid_of", { p_sub: sub });
++      if (!uid) return json({ error: "unknown member" }, 401);
++
++      const { data: wallets } = await supabase.rpc("wallets_of", { p_uid: uid });
++
++      /* The email is what the header shows, so the member can see which
++         account they are in. It is a label and nothing more -- no request
++         is ever trusted because of it. */
++      const { data: ident } = await supabase
++        .from("user_identities")
++        .select("provider, email")
++        .eq("uid", uid)
++        .limit(1)
++        .maybeSingle();
++
++      return json({
++        uid,
++        wallets: wallets ?? [],
++        email: ident?.email ?? null,
++        provider: ident?.provider ?? null,
++      });
++    }
++
++    // --- sign in with Google or Apple -----------------------------
++    const social = url.pathname.endsWith("/google")
++      ? "google"
++      : url.pathname.endsWith("/apple")
++      ? "apple"
++      : null;
++
++    if (social) {
++      const { idToken } = await req.json();
++      if (!idToken || typeof idToken !== "string") {
++        return json({ error: "idToken required" }, 400);
++      }
++
++      let who;
++      try {
++        who = await verifyIdToken(social as "google" | "apple", idToken);
++      } catch (e) {
++        return json({ error: `bad ${social} token: ${e}` }, 401);
++      }
++
++      const { data: uid, error } = await supabase.rpc("social_login", {
++        p_provider: social,
++        p_subject: who.subject,
++        p_email: who.email,
++      });
++      if (error || !uid) return json({ error: error?.message || "login failed" }, 500);
++
++      /* Logged after the account is settled and before the token goes
++         out. The result is ignored on purpose: signing in must not fail
++         because a log row did. */
++      try {
++        await supabase.from("social_login_log").insert({
++          uid,
++          provider: social,
++          ip: clientIp(req) || null,
++          ua: req.headers.get("user-agent"),
++        });
++      } catch (_) { /* the log is not the point */ }
++
++      return json({ token: await issueToken(uid), uid });
++    }
++
++    // --- ask for the message a wallet should sign -----------------
++    if (url.pathname.endsWith("/link-nonce")) {
++      const sub = await callerSub(req);
++      if (!sub) return json({ error: "not signed in" }, 401);
++
++      const address = (url.searchParams.get("address") || "").toLowerCase();
++      if (!/^0x[0-9a-f]{40}$/.test(address)) return json({ error: "bad address" }, 400);
++
++      const nonce = crypto.randomUUID();
++      const { error } = await supabase.from("auth_nonces").upsert({ address, nonce });
++      if (error) return json({ error: error.message }, 500);
++
++      return json({ message: linkMessage(nonce) });
++    }
++
++    // --- link the wallet ------------------------------------------
++    if (url.pathname.endsWith("/link")) {
++      const sub = await callerSub(req);
++      if (!sub) return json({ error: "not signed in" }, 401);
++
++      const { data: uid } = await supabase.rpc("uid_of", { p_sub: sub });
++      if (!uid) return json({ error: "unknown member" }, 401);
++
++      const { address, signature } = await req.json();
++      const addr = String(address || "").toLowerCase();
++      if (!/^0x[0-9a-f]{40}$/.test(addr)) return json({ error: "bad address" }, 400);
++
++      const { data: row } = await supabase
++        .from("auth_nonces").select("nonce").eq("address", addr).maybeSingle();
++      if (!row) return json({ error: "no nonce, request /social/link-nonce first" }, 400);
++
++      const message = linkMessage(row.nonce);
++      let recovered = "";
++      try { recovered = verifyMessage(message, signature).toLowerCase(); }
++      catch { return json({ error: "bad signature" }, 401); }
++      if (recovered !== addr) return json({ error: "signature mismatch" }, 401);
++
++      await supabase.from("auth_nonces").delete().eq("address", addr);
++
++      const { data: result, error } = await supabase.rpc("link_wallet", {
++        p_uid: uid,
++        p_address: addr,
++      });
++      if (error) {
++        /* The one failure worth naming. Anything else is ours, not
++           theirs, and a raw database message would say nothing useful. */
++        const taken = /another member/.test(error.message);
++        return json(
++          { error: taken ? "wallet_taken" : "link failed" },
++          taken ? 409 : 500,
++        );
++      }
++
++      return json({ status: result, address: addr, uid });
++    }
++
++    return json({ error: "not found" }, 404);
++  } catch (e) {
++    return json({ error: String(e) }, 500);
++  }
++});
+diff --git a/vault.html b/vault.html
+index abe54d0..ddda725 100644
+--- a/vault.html
++++ b/vault.html
+@@ -170,7 +170,7 @@
+       <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+       <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+     </div>
+-    <button class="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
++    <button class="wbtn"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+   </div>
+ </header>
+ 
+@@ -328,6 +328,7 @@ if(document.documentElement.classList.contains('embed')){
+ </script>
+ <script src="wallet-provider.js"></script>
+ <script src="gacha-client.js"></script>
++<script src="social-login.js"></script>
+ <script src="mypage-entry.js"></script>
+ <style>
+   .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
+-- 
+2.43.0
+
