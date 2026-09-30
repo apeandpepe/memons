@@ -270,7 +270,17 @@
       }).catch(function () {});
     }
 
-    /* The sidebar chip, for a member with no address to put in it. */
+    /* The sidebar chip, for a member with no address to put in it.
+
+       The body `connected` class is deliberately left alone here. Every My
+       Page carries CSS that reads it as "a wallet is attached": it hides
+       the header button and swaps in an icon and the page's own My Page
+       link. For a wallet that trade is fine, because the address is short
+       and the icon still means something. For a member signed in with
+       Google it hides the one thing on screen that says who they are and
+       leaves an unlabelled square in its place, which is exactly what a
+       signed-out header looks like -- and it put a second My Page button
+       next to the one added here. */
     function sideChipSocial(label) {
       var w = document.getElementById('waddr'),
           st = document.getElementById('wstat'),
@@ -278,7 +288,6 @@
       if (w)  w.textContent = label;
       if (st) st.textContent = 'Signed in';
       if (d)  d.style.display = '';
-      document.body.classList.add('connected');
     }
 
     function socialClaims() {
