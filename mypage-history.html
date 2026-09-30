@@ -265,7 +265,10 @@
     try{ var addr=await MEMONS.connect(); document.body.classList.add('connected');
       el('waddr').textContent=shortAddr(addr); el('wstat').textContent='Connected'; await loadMine(); }
     catch(e){ alert(e.message||'Wallet connection failed'); } }
-  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
+  /* Through the shared sheet, so Google is offered here too. doConnect
+     stays as the fallback for a page loaded without social-login.js. */
+  function signIn(){ return window.MEMONS_SIGNIN ? window.MEMONS_SIGNIN() : doConnect(); }
+  el('wbtn').onclick=signIn; el('wicon').onclick=signIn; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
   render();
   // if a session address exists (connected on another page), try to load
   try{ if(sessionStorage.getItem('memons_wallet_addr') && window.MEMONS){ /* user still needs to connect for token */ } }catch(e){}

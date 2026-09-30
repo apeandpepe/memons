@@ -703,6 +703,15 @@
       }, { once: true });
     }
 
+    /* A few pages wire their own sidebar or header button and cannot see
+       the sheet from in here. One entry point for all of them, so a page
+       never has to decide between the two logins itself. */
+    window.MEMONS_SIGNIN = function () {
+      if (window.MEMONS && window.MEMONS.connected) return;
+      if (window.MEMONS_SOCIAL) { showSignInSheet(); return; }
+      doConnect();
+    };
+
     async function doConnect() {
       if (busy) return;
       if (!window.MEMONS) { alert('Wallet client not loaded'); return; }

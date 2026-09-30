@@ -1,0 +1,106 @@
+From cba3bf9675c09a7759d7dad2829f0169c92f4f88 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 30 Sep 2026 23:16:10 +0900
+Subject: [PATCH] Route every header button through the sign-in sheet
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01EwuSm8r4ZMrsd4apqHXvJi
+---
+ mypage-entry.js     | 9 +++++++++
+ mypage-grade.html   | 5 ++++-
+ mypage-history.html | 5 ++++-
+ mypage-pulls.html   | 5 ++++-
+ open-capsule.html   | 9 ++++-----
+ 5 files changed, 25 insertions(+), 8 deletions(-)
+
+diff --git a/mypage-entry.js b/mypage-entry.js
+index cca1d31..98c75a8 100644
+--- a/mypage-entry.js
++++ b/mypage-entry.js
+@@ -703,6 +703,15 @@
+       }, { once: true });
+     }
+ 
++    /* A few pages wire their own sidebar or header button and cannot see
++       the sheet from in here. One entry point for all of them, so a page
++       never has to decide between the two logins itself. */
++    window.MEMONS_SIGNIN = function () {
++      if (window.MEMONS && window.MEMONS.connected) return;
++      if (window.MEMONS_SOCIAL) { showSignInSheet(); return; }
++      doConnect();
++    };
++
+     async function doConnect() {
+       if (busy) return;
+       if (!window.MEMONS) { alert('Wallet client not loaded'); return; }
+diff --git a/mypage-grade.html b/mypage-grade.html
+index af68e26..c530776 100644
+--- a/mypage-grade.html
++++ b/mypage-grade.html
+@@ -316,7 +316,10 @@
+     try{var addr=await MEMONS.connect();document.body.classList.add('connected');
+       el('waddr').textContent=shortAddr(addr);el('wstat').textContent='Connected';await syncOwned();}
+     catch(e){alert(e.message||'Wallet connection failed');} }
+-  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
++  /* Through the shared sheet, so Google is offered here too. doConnect
++     stays as the fallback for a page loaded without social-login.js. */
++  function signIn(){ return window.MEMONS_SIGNIN ? window.MEMONS_SIGNIN() : doConnect(); }
++  el('wbtn').onclick=signIn; el('wicon').onclick=signIn; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
+ 
+   function shortAddr2(a){return a?(a.slice(0,6)+'…'+a.slice(-4)):'';}
+   function setConnectedUI(addr){
+diff --git a/mypage-history.html b/mypage-history.html
+index ad3cff0..d0cb79c 100644
+--- a/mypage-history.html
++++ b/mypage-history.html
+@@ -265,7 +265,10 @@
+     try{ var addr=await MEMONS.connect(); document.body.classList.add('connected');
+       el('waddr').textContent=shortAddr(addr); el('wstat').textContent='Connected'; await loadMine(); }
+     catch(e){ alert(e.message||'Wallet connection failed'); } }
+-  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
++  /* Through the shared sheet, so Google is offered here too. doConnect
++     stays as the fallback for a page loaded without social-login.js. */
++  function signIn(){ return window.MEMONS_SIGNIN ? window.MEMONS_SIGNIN() : doConnect(); }
++  el('wbtn').onclick=signIn; el('wicon').onclick=signIn; el('mpbtn').onclick=function(){location.href='mypage-collection.html';};
+   render();
+   // if a session address exists (connected on another page), try to load
+   try{ if(sessionStorage.getItem('memons_wallet_addr') && window.MEMONS){ /* user still needs to connect for token */ } }catch(e){}
+diff --git a/mypage-pulls.html b/mypage-pulls.html
+index 0ee6ec1..9b0cab1 100644
+--- a/mypage-pulls.html
++++ b/mypage-pulls.html
+@@ -322,7 +322,10 @@
+     try{ var addr=await MEMONS.connect(); setConnectedUI(addr); await loadPulls(); }
+     catch(e){ alert(e.message||'Wallet connection failed'); }
+   }
+-  el('wbtn').onclick=doConnect; el('wicon').onclick=doConnect;
++  /* Through the shared sheet, so Google is offered here too. doConnect
++     stays as the fallback for a page loaded without social-login.js. */
++  function signIn(){ return window.MEMONS_SIGNIN ? window.MEMONS_SIGNIN() : doConnect(); }
++  el('wbtn').onclick=signIn; el('wicon').onclick=signIn;
+   el('mpbtn').onclick=function(){ location.href='mypage-collection.html'; };
+ 
+   var _wd=el('wdisc');
+diff --git a/open-capsule.html b/open-capsule.html
+index 2866f32..9aefa4b 100644
+--- a/open-capsule.html
++++ b/open-capsule.html
+@@ -1679,11 +1679,10 @@ if(document.documentElement.classList.contains('embed')){
+   });
+   render();
+ 
+-  // header connect button
+-  var hw=document.getElementById('headWallet');
+-  if(hw){ hw.addEventListener('click', async function(){
+-    try{ if(window.MEMONS&&!MEMONS.connected){ await MEMONS.connect(); } var a=(window.MEMONS&&MEMONS.address)||''; if(a){ hw.innerHTML=a.slice(0,6)+'…'+a.slice(-4); } }catch(e){}
+-  }); }
++  /* The header button used to be wired here as well as in
++     mypage-entry.js, so both handlers ran on one click: the sign-in sheet
++     opened and the wallet was called behind it. mypage-entry.js owns this
++     button on every page, so this copy is gone. */
+ })();
+ </script>
+ <script src="mypage-entry.js"></script>
+-- 
+2.43.0
+

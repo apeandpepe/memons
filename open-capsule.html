@@ -1679,11 +1679,10 @@ if(document.documentElement.classList.contains('embed')){
   });
   render();
 
-  // header connect button
-  var hw=document.getElementById('headWallet');
-  if(hw){ hw.addEventListener('click', async function(){
-    try{ if(window.MEMONS&&!MEMONS.connected){ await MEMONS.connect(); } var a=(window.MEMONS&&MEMONS.address)||''; if(a){ hw.innerHTML=a.slice(0,6)+'…'+a.slice(-4); } }catch(e){}
-  }); }
+  /* The header button used to be wired here as well as in
+     mypage-entry.js, so both handlers ran on one click: the sign-in sheet
+     opened and the wallet was called behind it. mypage-entry.js owns this
+     button on every page, so this copy is gone. */
 })();
 </script>
 <script src="mypage-entry.js"></script>
