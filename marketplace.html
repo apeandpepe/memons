@@ -1520,6 +1520,7 @@
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
 <script src="social-login.js"></script>
+<script src="deposit-client.js"></script>
 <script src="mypage-entry.js"></script>
 <!-- ?v2: the file changed but kept its name, and browsers hold on to
      scripts hard. An old copy still prices capsules at the previous
@@ -1797,37 +1798,17 @@
       <button class="mkm-x" id="tuClose" aria-label="Close">&times;</button>
     </header>
 
+    <!-- The address below belongs to this member and to nobody else, which
+         is what lets a deposit be recognised without being asked for an
+         amount first. The step that asked for one, the countdown it
+         started and the "send this exact figure" warning all existed to
+         tell two people's deposits apart at a shared address, and are
+         gone with it. -->
     <div class="mkm-body">
-      <div class="tu-step" id="tuStep1">
-        <label class="tu-label">Amount</label>
-        <div class="mkm-input">
-          <input id="tuAmount" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
-          <span class="tu-unit">USDT</span>
-        </div>
-        <div class="tu-hint" id="tuRange"></div>
-        <div class="tu-quick" id="tuQuick"></div>
-        <button class="mkm-go" id="tuNext">CONTINUE</button>
-        <div class="mkm-note" id="tuNote1"></div>
-      </div>
-
-      <div class="tu-step" id="tuStep2" hidden>
-        <div class="tu-amt"><b id="tuSendAmt">0</b> <small>USDT</small></div>
-        <div class="tu-warn">Send this exact amount, or the deposit will not be matched.</div>
-
-        <label class="tu-label">Send to</label>
-        <div class="tu-addr">
-          <code id="tuAddr">—</code>
-          <button id="tuCopy">COPY</button>
-        </div>
-        <label class="tu-label">Network</label>
-        <div class="chsel" id="tuChains"></div>
-        <div class="tu-hint" id="tuChainHint">USDT only. Send on the network selected here.</div>
-
-        <div class="tu-timer" id="tuTimer"></div>
-
-        <button class="mkm-go" id="tuPay">PAY FROM WALLET</button>
-        <button class="tu-cancel" id="tuCancel">Cancel this order</button>
-        <div class="mkm-note" id="tuNote2"></div>
+      <div id="tuPanel"></div>
+      <div class="tu-hint" style="margin-top:14px">
+        Your balance updates once the network confirms the transfer, usually
+        within a minute or two. This address is yours and can be reused.
       </div>
     </div>
   </div>
@@ -3964,6 +3945,13 @@
     return [{key:'polygon',label:'Polygon'}];
   }
 
+  /* Lives here rather than with the deposit code, which no longer needs
+     it: withdrawals still name a network and still have to print it. */
+  function chainLabel(key){
+    var f=chainList().filter(function(c){return c.key===key;})[0];
+    return f ? f.label : key;
+  }
+
   function buildChainPicker(hostId, initial, onPick){
     var host=$m(hostId);
     if(!host) return null;
@@ -4598,193 +4586,28 @@
   $m('ordClose').onclick=ordClose;
   $m('ordBg').onclick=ordClose;
 
-  /* ===== deposit ===================================================== */
-  var tuCfg=null, tuRecv='', tuOrder=null, tuTick=null;
+  /* ===== deposit =====================================================
 
+     A member has one deposit address. It is worked out from their UID,
+     it never changes, and the same address works on every network we
+     accept -- so a deposit is recognised by where it arrived rather than
+     by its amount.
+
+     That is what removed the rest of this block. Asking for a figure,
+     opening an order, counting down thirty minutes and refusing a
+     deposit that was a cent out all existed to tell two people's
+     transfers apart at one shared company address. None of it is needed
+     now, and every one of them was a way for a real deposit to fail. */
   function tuOpen(){
-    if(!(window.MEMONS && MEMONS.connected)){ alert('Connect your wallet first.'); return; }
     $m('tuModal').hidden=false;
     document.body.style.overflow='hidden';
-    tuLoad();
+    /* Drawn on open rather than on load: most visits never open this,
+       and the address is cached after the first one. */
+    if(window.MEMONS_DEPOSIT) MEMONS_DEPOSIT.render($m('tuPanel')).catch(function(){});
   }
   function tuClose(){
     $m('tuModal').hidden=true;
     document.body.style.overflow='';
-    if(tuTick){ clearInterval(tuTick); tuTick=null; }
-  }
-
-  async function tuLoad(){
-    try{
-      var r=await MEMONS.authFetch('/market/topup');
-      tuCfg=r.config||{};
-      tuRecv=(r.receivers&&r.receivers.balance)||'';
-      // An order already running is picked up where it was left, rather than
-      // silently replaced: the user may already have sent the money.
-      if(r.order){ tuShowOrder(r.order); return; }
-    }catch(e){}
-    tuShowForm();
-  }
-
-  function tuShowForm(){
-    $m('tuStep1').hidden=false; $m('tuStep2').hidden=true;
-    if(tuTick){ clearInterval(tuTick); tuTick=null; }
-    var lo=Number(tuCfg&&tuCfg.balance_min||5), hi=Number(tuCfg&&tuCfg.balance_max||5000);
-    $m('tuRange').textContent='Minimum '+num(lo)+' · maximum '+num(hi)+' USDT';
-    $m('tuQuick').innerHTML=[10,50,100,500].filter(function(v){return v>=lo&&v<=hi;})
-      .map(function(v){return '<button data-v="'+v+'">'+v+'</button>';}).join('');
-    $m('tuQuick').querySelectorAll('button').forEach(function(b){
-      b.onclick=function(){ $m('tuAmount').value=b.dataset.v; };
-    });
-    $m('tuNote1').textContent='';
-  }
-
-  /* Setting it on MEMONS is what makes payTo prompt for the right network,
-     so this has to happen before the transfer, not alongside it. */
-  function tuBuildChains(){
-    var cur = (window.MEMONS && MEMONS.getChain) ? MEMONS.getChain() : 'polygon';
-    buildChainPicker('tuChains', cur, function(key){
-      try{ if(window.MEMONS && MEMONS.setChain) MEMONS.setChain(key); }catch(e){}
-      var h=$m('tuChainHint');
-      if(h) h.textContent='USDT on '+chainLabel(key)+'. Send on this network only.';
-      var n=$m('tuNote2'); if(n){ n.textContent=''; n.className='mkm-note'; }
-    });
-  }
-  function chainLabel(key){
-    var f=chainList().filter(function(c){return c.key===key;})[0];
-    return f ? f.label : key;
-  }
-
-  function tuShowOrder(o){
-    tuOrder=o;
-    tuBuildChains();
-    $m('tuStep1').hidden=true; $m('tuStep2').hidden=false;
-    $m('tuSendAmt').textContent=num(o.amount_usdt);
-    $m('tuAddr').textContent=tuRecv||'Not configured';
-    $m('tuPay').disabled=!tuRecv;
-    $m('tuNote2').textContent='';
-    tuStartTimer(o.expires_at);
-  }
-
-  /* The window is the reason the amount can be matched to one person, so it
-     is shown counting down rather than as a timestamp to work out. */
-  function tuStartTimer(iso){
-    if(tuTick) clearInterval(tuTick);
-    var end=new Date(iso).getTime();
-    var el=$m('tuTimer');
-    var draw=function(){
-      var left=Math.max(0, Math.floor((end-Date.now())/1000));
-      var mm=String(Math.floor(left/60)).padStart(2,'0');
-      var ss=String(left%60).padStart(2,'0');
-      el.innerHTML='Expires in <b>'+mm+':'+ss+'</b>';
-      el.className='tu-timer'+(left<300?' soon':'');
-      if(left<=0){
-        clearInterval(tuTick); tuTick=null;
-        el.innerHTML='<b>Expired.</b> A transfer already sent will still be credited.';
-      }
-    };
-    draw(); tuTick=setInterval(draw,1000);
-  }
-
-  async function tuCreate(){
-    var v=Number($m('tuAmount').value);
-    var lo=Number(tuCfg&&tuCfg.balance_min||5), hi=Number(tuCfg&&tuCfg.balance_max||5000);
-    if(!(v>0)){ $m('tuNote1').textContent='Enter an amount.'; return; }
-    if(v<lo||v>hi){ $m('tuNote1').textContent='Between '+num(lo)+' and '+num(hi)+' USDT.'; return; }
-
-    var b=$m('tuNext'); b.disabled=true; var lbl=b.textContent; b.textContent='…';
-    try{
-      var r=await MEMONS.authFetch('/market/topup',{kind:'balance',value:v});
-      tuRecv=r.receiver||tuRecv;
-      tuShowOrder(r.order);
-    }catch(e){
-      /* One message for every failure told the reader to try again when
-         trying again could not work -- a dead session, a wallet that is
-         not on the tester list, and an amount out of range all read the
-         same. On a phone the session is the usual one: the tab is
-         discarded while the wallet app is in front, and the header still
-         shows an address. */
-      var msg=String((e&&e.message)||e);
-      var note=$m('tuNote1');
-      if(msg.indexOf('AMOUNT_OUT_OF_RANGE')>=0){
-        note.textContent='That amount is outside the allowed range.';
-      }else if(msg.indexOf('SESSION_EXPIRED')>=0 || msg.indexOf('AUTH')>=0){
-        note.textContent='Your session expired. Reconnect your wallet and try again.';
-      }else if(msg.indexOf('MARKET_CLOSED')>=0){
-        note.textContent='Deposits are not open yet.';
-      }else{
-        note.textContent='Could not start the deposit. ('+msg+')';
-      }
-    }finally{ b.disabled=false; b.textContent=lbl; }
-  }
-
-  async function tuPayNow(){
-    if(!tuOrder || !tuRecv) return;
-    var b=$m('tuPay'); b.disabled=true; var lbl=b.textContent;
-    $m('tuNote2').className='mkm-note';
-    try{
-      if(!window.MEMONS.payTo) throw new Error('NO_PAY');
-      b.textContent='CONFIRM IN WALLET…';
-      $m('tuNote2')._t0=0;
-      /* An order exists, which means the market function created one --
-         and it only does that for a wallet allowed to deposit, open switch
-         or tester list. The client's own copy of the switch cannot know
-         which, so it defers here and lets verify-payment decide. */
-      var r = await MEMONS.payTo(tuRecv, Number(tuOrder.amount_usdt), {
-        allowClosed:true,
-        onStatus:function(st){
-          if(st==='ordering')   $m('tuNote2').textContent='Preparing…';
-          if(st==='sending')    $m('tuNote2').textContent='Confirm the transfer in your wallet.';
-          if(st==='confirming'){
-            /* After a while, say what a long wait usually means. Polygon
-               settles in seconds; a minute of "waiting" is not a slow
-               confirmation, it is a transaction the network has not picked
-               up -- and the person is looking at a screen that gives them
-               no reason to check their wallet. */
-            var el=$m('tuNote2');
-            if(!el._t0) el._t0=Date.now();
-            var secs=Math.round((Date.now()-el._t0)/1000);
-            el.textContent = secs < 45
-              ? 'Waiting for confirmations…'
-              : 'Still waiting (' + secs + 's). If your wallet shows this as '
-                + 'pending, the network has not picked it up yet — you can '
-                + 'close this page, it will be credited when it confirms.';
-          }
-        }
-      });
-
-      /* payTo resolves either way: credited, or sent and still waiting on
-         confirmations. Announcing "credited" for both was a message that
-         did not match the balance underneath it -- and the balance is the
-         thing being looked at. */
-      if(r && r.pending){
-        $m('tuNote2').className='mkm-note';
-        $m('tuNote2').textContent =
-          'Payment sent. It will be credited once confirmed — you can close this.';
-        await loadBalance();
-        return;   // left open: closing it would look like the deposit failed
-      }
-
-      $m('tuNote2').textContent='Credited. Your balance is updated.';
-      await loadBalance();
-      setTimeout(tuClose, 1200);
-    }catch(e){
-      // Swallowing the reason left nothing to work from when this fails, so
-      // it goes to the console and the visible message names it too.
-      console.error('deposit payment failed:', e);
-      var m2=String((e&&e.message)||e);
-      $m('tuNote2').className='mkm-note bad';
-      if(m2.indexOf('NO_PAY')>=0){
-        $m('tuNote2').textContent='Send from your wallet app using the address above.';
-      }else if(m2.indexOf('4001')>=0 || /user rejected|denied/i.test(m2)){
-        $m('tuNote2').textContent='Cancelled in wallet.';
-      }else if(/not open yet/i.test(m2)){
-        $m('tuNote2').textContent='Deposits are not open yet.';
-      }else if(/insufficient/i.test(m2)){
-        $m('tuNote2').textContent='Not enough balance in your wallet for this transfer.';
-      }else{
-        $m('tuNote2').textContent=m2.slice(0,140);
-      }
-    }finally{ b.disabled=false; b.textContent=lbl; }
   }
 
   /* Hiding the balance is for reading the page where someone can see the
@@ -4814,18 +4637,6 @@
   $m('topupBtn').onclick=tuOpen;
   $m('tuClose').onclick=tuClose;
   $m('tuBg').onclick=tuClose;
-  $m('tuNext').onclick=tuCreate;
-  $m('tuPay').onclick=tuPayNow;
-  $m('tuCancel').onclick=async function(){
-    try{ await MEMONS.authFetch('/market/topup-cancel',{}); }catch(e){}
-    tuOrder=null; tuShowForm();
-  };
-  $m('tuCopy').onclick=function(){
-    var b=$m('tuCopy');
-    try{ navigator.clipboard.writeText(tuRecv); b.textContent='COPIED';
-      setTimeout(function(){ b.textContent='COPY'; },1400); }catch(e){}
-  };
-  $m('tuAmount').onkeydown=function(e){ if(e.key==='Enter') tuCreate(); };
 
   $m('mClose').onclick=closeCard;
   $m('modalBg').onclick=closeCard;

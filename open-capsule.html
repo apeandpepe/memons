@@ -1524,26 +1524,17 @@ if(document.documentElement.classList.contains('embed')){
 
          Here it only adds USDT to the balance. Capsules are bought on the screen before. -->
     <h3>DEPOSIT</h3>
-    <div class="psub" id="pmSub">Add USDT to your balance.</div>
-    <div class="pm-label">Network</div>
-    <div class="pm-chains" id="pmChains"></div>
-    <div class="pm-label">Amount</div>
-    <div class="pm-presets" id="pmPresets">
-      <button data-n="1">1</button>
-      <button data-n="10" class="on">10</button>
-      <button data-n="50">50</button>
-    </div>
-    <div class="pm-qty">
-      <button id="pmMinus" aria-label="Decrease">&minus;</button>
-      <!-- Typed input. Amounts other than the three set ones are entered more often. -->
-      <input class="qn qi" id="pmQn" type="text" inputmode="numeric" value="10">
-      <button id="pmPlus" aria-label="Increase">+</button>
-    </div>
-    <div class="pm-price"><span id="pmPulls">Deposit</span><b id="pmTotal">&mdash;</b></div>
-    <div class="pm-save" id="pmSave"></div>
-    <button class="pm-pay" id="pmPay">DEPOSIT</button>
+    <div class="psub" id="pmSub">Send USDT to your own address below.</div>
+
+    <!-- The amount box, the preset buttons and the pay-from-wallet button
+         are gone. They were here because every deposit went to one shared
+         address and could only be told apart by its figure. The address
+         below is this member's alone, so any amount, sent at any time,
+         lands on the right balance. -->
+    <div id="pmPanel"></div>
+
     <div class="pm-status" id="pmStatus"></div>
-    <div class="pm-bal" id="pmBal">Connect wallet to see balance</div>
+    <div class="pm-bal" id="pmBal">Sign in to see your balance</div>
   </div>
 </div>
 
@@ -1554,135 +1545,54 @@ if(document.documentElement.classList.contains('embed')){
      scripts hard. An old copy still prices capsules at the previous
      figures while the page around it shows the new ones. -->
 <script src="memons-pay.js?v2"></script>
+<script src="deposit-client.js"></script>
 <script>
 (function(){
-  var overlay=document.getElementById('pmOverlay'),
-      qn=document.getElementById('pmQn'), total=document.getElementById('pmTotal'),
-      pullsLbl=document.getElementById('pmPulls'), save=document.getElementById('pmSave'),
-      payBtn=document.getElementById('pmPay'), statusEl=document.getElementById('pmStatus'),
-      bal=document.getElementById('pmBal'), presets=document.getElementById('pmPresets'),
-      chainsBox=document.getElementById('pmChains');
-  var q=10;
+  var overlay   = document.getElementById('pmOverlay'),
+      statusEl  = document.getElementById('pmStatus'),
+      bal       = document.getElementById('pmBal'),
+      panel     = document.getElementById('pmPanel');
 
-  // ---- network selector (USDT on Polygon / Ethereum / BNB Chain) ----
-  function renderChains(){
-    if(!chainsBox || !window.MEMONS || !MEMONS.chains) return;
-    var list = MEMONS.chains(), cur = MEMONS.getChain();
-    chainsBox.innerHTML = '';
-    list.forEach(function(c){
-      var b=document.createElement('button');
-      b.type='button'; b.textContent=c.label; b.dataset.chain=c.key;
-      if(c.key===cur) b.classList.add('on');
-      b.onclick=function(){
-        try{ MEMONS.setChain(c.key); }catch(e){ return; }
-        Array.prototype.forEach.call(chainsBox.children,function(x){ x.classList.toggle('on', x.dataset.chain===c.key); });
-        statusEl.textContent='';
-      };
-      chainsBox.appendChild(b);
-    });
-  }
-  /* Here q is the USDT amount to put in, not a number of capsules. This dialog
-     only fills the balance; capsules are bought with it on the screen before. */
-  function render(){
-    qn.value=q;
-    total.textContent=q+' USDT';
-    pullsLbl.textContent='Deposit';
-    payBtn.textContent='DEPOSIT '+q+' USDT';
-    save.textContent = siteBal>0
-      ? ('Balance ' + siteBal.toFixed(2) + ' \u2192 ' + (siteBal+q).toFixed(2) + ' USDT')
-      : '';
-    Array.prototype.forEach.call(presets.children,function(b){ b.classList.toggle('on', (+b.dataset.n)===q); });
-  }
-  function set(v){ q=Math.max(1,Math.min(5000, v|0)); render(); }
-  document.getElementById('pmMinus').onclick=function(){ set(q-1); };
-  document.getElementById('pmPlus').onclick=function(){ set(q+1); };
-  Array.prototype.forEach.call(presets.children,function(b){ b.onclick=function(){ set(+b.dataset.n); }; });
+  /* What this dialog does now: show the member where to send USDT.
 
-  /* Nothing is corrected while typing. Fixing up the '5' the moment it is
-     entered on the way to '50' makes the next character impossible to type. */
-  qn.oninput=function(){
-    var v=qn.value.replace(/[^0-9]/g,''); qn.value=v;
-    var n=parseInt(v,10);
-    if(!isNaN(n) && n>0){ q=n;
-      total.textContent=n+' USDT';
-      payBtn.textContent='DEPOSIT '+n+' USDT'; }
-  };
-  qn.onblur=function(){ var n=parseInt(qn.value,10); set(isNaN(n)?1:n); };
-  qn.onkeydown=function(e){ if(e.key==='Enter') qn.blur(); };
-
-  var siteBal = 0;
-
+     It used to ask for an amount, open an order against a shared company
+     address and send the transfer from the member's wallet. All of that
+     was in service of telling two people's deposits apart at one address.
+     The address here belongs to one member, so the amount does not have
+     to be agreed in advance, the order does not have to exist, and no
+     wallet has to be connected to put money in. */
   async function refreshBal(){
     try{
-      if(window.MEMONS&&MEMONS.connected){
-        var s=await MEMONS.state();
-        /* The on-site balance as well as the pull count. It decides
-           whether the second button appears at all, so it is fetched
-           here rather than only when someone presses something. */
-        try{
-          var m=await MEMONS.authFetch('/market/me');
-          /* /market/me answers with balance as a plain number, not an
-             object -- reading .available off it gave undefined every
-             time, so the balance read as zero and the button stayed
-             hidden for everyone. The object form is kept as a fallback
-             in case the endpoint ever grows one. */
-          var b = m && m.balance;
-          siteBal = Number((b && typeof b === 'object') ? b.available : b) || 0;
-        }catch(e){ siteBal = 0; }
-        bal.innerHTML='Balance: <b>'+siteBal.toFixed(2)+' USDT</b>'+
-          ' &nbsp;·&nbsp; Capsules: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>';
+      if(!(window.MEMONS && MEMONS.connected)){
+        bal.textContent='Sign in to see your balance';
+        return;
       }
-      else { bal.textContent='Connect wallet to see balance'; siteBal=0; }
+      var s = await MEMONS.state();
+      var siteBal = 0;
+      try{
+        var m = await MEMONS.authFetch('/market/me');
+        /* /market/me answers with balance as a plain number, not an
+           object -- reading .available off it gave undefined every time.
+           The object form is kept in case the endpoint ever grows one. */
+        var b = m && m.balance;
+        siteBal = Number((b && typeof b === 'object') ? b.available : b) || 0;
+      }catch(e){ siteBal = 0; }
+      bal.innerHTML='Balance: <b>'+siteBal.toFixed(2)+' USDT</b>'+
+        ' &nbsp;\u00b7&nbsp; Capsules: <b>'+(s.pulls_remaining!=null?s.pulls_remaining:0)+'</b>';
     }catch(e){}
   }
 
-  function openModal(){ overlay.classList.add('on'); statusEl.textContent=''; renderChains(); refreshBal(); }
+  function openModal(){
+    overlay.classList.add('on');
+    statusEl.textContent='';
+    if(window.MEMONS_DEPOSIT) MEMONS_DEPOSIT.render(panel).catch(function(){});
+    refreshBal();
+  }
   function closeModal(){ overlay.classList.remove('on'); }
+
   document.getElementById('chargeBtn').addEventListener('click', openModal);
   document.getElementById('pmClose').addEventListener('click', closeModal);
   overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
-
-  /* A deposit is two steps: create the order, take back the receiving
-     address, then send to it. The server judges what a transfer is for from
-     the address the money reached, so the address cannot be set here.
-
-     It uses the same path as the deposit on the marketplace screen. Kept
-     as two copies, only one gets fixed and they drift apart. */
-  payBtn.addEventListener('click', async function(){
-    payBtn.disabled=true; statusEl.style.color='#978b62';
-    try{
-      if(!(window.MEMONS&&MEMONS.connected)){
-        statusEl.textContent='Connecting wallet…'; await MEMONS.connect();
-      }
-      statusEl.textContent='Preparing…';
-      var o=await MEMONS.authFetch('/market/topup',{ kind:'balance', value:q });
-      var to=o && o.receiver;
-      var amt=(o && o.order && o.order.amount_usdt) || q;
-      if(!to) throw new Error('Deposits are not available right now.');
-
-      await MEMONS.payTo(to, amt, { allowClosed:true, onStatus:function(st,c,n){
-        if(st==='sending') statusEl.textContent='Confirm the transfer in your wallet…';
-        else if(st==='confirming') statusEl.textContent='Confirming on-chain… '+(c!=null?(c+'/'+(n||20)):'');
-        else if(st==='credited') statusEl.textContent='Deposited!';
-      }});
-      statusEl.style.color='#6fbf73';
-      statusEl.textContent='Deposited '+amt+' USDT.';
-      await refreshBal();
-    }catch(e){
-      var m=(e&&e.message)?String(e.message):'Deposit failed.';
-      statusEl.style.color='#e0776a';
-      statusEl.textContent =
-        m.indexOf('AMOUNT_OUT_OF_RANGE')>=0 ? 'That amount is outside the allowed range.' :
-        m.indexOf('SESSION_EXPIRED')>=0     ? 'Session expired. Reconnect your wallet and try again.' :
-        m.indexOf('MARKET_CLOSED')>=0       ? 'Deposits are not open yet.' : m;
-    }finally{ payBtn.disabled=false; }
-  });
-  render();
-
-  /* The header button used to be wired here as well as in
-     mypage-entry.js, so both handlers ran on one click: the sign-in sheet
-     opened and the wallet was called behind it. mypage-entry.js owns this
-     button on every page, so this copy is gone. */
 })();
 </script>
 <script src="mypage-entry.js"></script>
