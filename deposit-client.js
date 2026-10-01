@@ -60,6 +60,21 @@
 
   function clear() { cached = null; inflight = null; }
 
+  /* What has arrived so far, newest first. Not cached: a member looking
+     at this list is usually looking because they have just sent
+     something. */
+  function history() {
+    var t = token();
+    if (!t) return Promise.reject(new Error("NOT_SIGNED_IN"));
+    return fetch(API + "/deposit/history", { headers: { Authorization: "Bearer " + t } })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+          return j.deposits || [];
+        });
+      });
+  }
+
   // --- the QR --------------------------------------------------------
 
   /* Two sources, because one CDN being unreachable should leave a missing
@@ -217,5 +232,10 @@
   document.addEventListener("memons:social-signed-out", clear);
   document.addEventListener("memons:expired", clear);
 
-  window.MEMONS_DEPOSIT = { address: address, render: render, clear: clear };
+  window.MEMONS_DEPOSIT = {
+    address: address,
+    history: history,
+    render: render,
+    clear: clear,
+  };
 })();

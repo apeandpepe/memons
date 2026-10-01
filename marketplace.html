@@ -4292,9 +4292,33 @@
     try{
       var r=await hisFetch();
       HIS_TESTNET = r.testnet === true;
+
+      /* Deposits come from the chain now, not from a top-up order.
+
+         r.topups lists orders, and orders stopped being created when the
+         deposit address became the member's own -- so that list is empty
+         for everyone and would say "no deposits yet" over a balance that
+         plainly came from somewhere. These are the transfers that
+         actually arrived, shaped to fit the same table. */
+      var deposits = [];
+      try{
+        if(window.MEMONS_DEPOSIT){
+          deposits = (await MEMONS_DEPOSIT.history()).map(function(d){
+            return {
+              created_at:  d.seen_at,
+              kind:        'balance',
+              amount_usdt: d.amount_usdt,
+              chain:       d.chain,
+              status:      d.credited ? 'paid' : 'pending',
+              tx_hash:     d.tx_hash,
+            };
+          });
+        }
+      }catch(e){ /* the rest of the history is still worth showing */ }
+
       hisData={
         trades:r.trades||[], ledger:r.ledger||[],
-        topups:r.topups||[], withdrawals:r.withdrawals||[],
+        topups:deposits, withdrawals:r.withdrawals||[],
         limit:r.limit||200
       };
     }catch(e){
