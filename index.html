@@ -211,6 +211,17 @@
      up into it. */
   @media(max-width:1040px) and (min-aspect-ratio:7/10){
     .hwrap{ --art-top:58px; }
+
+    /* The section is a screen tall and its contents are shorter, and they
+       were packed against the top -- so every pixel left over piled up
+       underneath as one long empty stretch. Centred, the slack is shared
+       between top and bottom and reads as margin rather than as the page
+       having ended early.
+
+       section.vhero rather than .vhero: the rule that sets flex-start is
+       further down the file, and at equal weight the later one wins.
+       Naming the element too outweighs it without having to move either. */
+    section.vhero{ justify-content:center; }
   }
 
   /* The tall artwork goes to tall screens, not merely narrow ones.
