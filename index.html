@@ -1542,30 +1542,25 @@
      something on its own; a thousand more USDT of volume does not without
      knowing what yesterday was. */
 
-  /* Counting up to the figure rather than jumping to it.
+  /* Moving to the new figure once, when it arrives.
 
-     The call runs once a minute, and a number that sits still for sixty
-     seconds and then leaps by forty looks like a page that has stopped
-     working. Walked up instead, over the minute between calls, so the
-     figure is visibly moving the whole time.
+     This used to walk the difference out across the whole minute between
+     calls, so that the number was always visibly climbing. It was not: a
+     step was never allowed to be slower than two seconds, and three more
+     users in a minute is three steps. The figure climbed for six seconds,
+     stood still for fifty-four, then climbed again -- a stutter, and a
+     worse impression than standing still would have been.
 
-     One at a time, at whatever pace spreads the rise across the minute:
-     forty more users is a step every second and a half, six hundred more
-     capsules is a step every tenth of a second. A fixed interval would
-     have to pick one of those and be wrong about the other -- either
-     finishing in ten seconds and then sitting still, or never arriving.
-
-     What is shown between the two calls is interpolated. The figure it
-     starts from and the figure it arrives at are both real; the steps in
-     between are not measurements, and they never run past the last
-     reading -- the count stops on the number the server gave and waits
-     there if the next call is late. */
+     It cannot be made to climb smoothly, because people arrive in whole
+     numbers and a few of them arrive per minute. Anything continuous here
+     would be invented. So the count is no longer a ticker pretending to
+     watch the number rise; it is a short move that says the figure
+     changed, and then it rests on a figure the server actually gave. */
   var counters = {};
 
-  /* Just under the interval between calls, so the count settles for a
-     moment before the next one arrives rather than being interrupted
-     mid-step. */
-  var SPAN = 55000;
+  /* Long enough to be seen as movement, short enough that the number is
+     readable again almost at once. */
+  var SPAN = 600;
 
   function countTo(id, target){
     var el = $(id);
@@ -1584,24 +1579,21 @@
     }
     if(target === c.shown) return;
 
-    if(c.timer) clearInterval(c.timer);
+    if(c.timer) cancelAnimationFrame(c.timer);
 
-    var steps = Math.abs(target - c.shown);
-    var dir   = target > c.shown ? 1 : -1;
+    var from = c.shown, t0 = 0;
 
-    /* Never faster than the eye can follow and never so slow it fails to
-       arrive. Below 40ms the digits blur into a flicker; above 2s the
-       number reads as stopped, and at that point it is better to move in
-       larger jumps than to be late. */
-    var gap  = Math.min(2000, Math.max(40, Math.round(SPAN / steps)));
-    var each = Math.max(1, Math.ceil(steps / (SPAN / gap)));
-
-    c.timer = setInterval(function(){
-      var left = Math.abs(target - c.shown);
-      if(left === 0){ clearInterval(c.timer); c.timer = 0; return; }
-      c.shown += dir * Math.min(each, left);
+    function frame(now){
+      if(!t0) t0 = now;
+      var p = Math.min(1, (now - t0) / SPAN);
+      /* Eased out, so it arrives rather than stopping dead. */
+      var e = 1 - Math.pow(1 - p, 3);
+      c.shown = Math.round(from + (target - from) * e);
       el.textContent = n(c.shown);
-    }, gap);
+      if(p < 1){ c.timer = requestAnimationFrame(frame); }
+      else { c.shown = target; el.textContent = n(target); c.timer = 0; }
+    }
+    c.timer = requestAnimationFrame(frame);
   }
 
   async function loadKpi(){
@@ -1680,7 +1672,10 @@
       if(!document.hidden && seen) go();
     });
     if(timer) clearInterval(timer);
-    timer = setInterval(tick, 60000);
+    /* Three minutes rather than one. The figure moves in a single step now,
+       so the interval decides how often the panel twitches; once a minute
+       made it restless for a number that is read in passing. */
+    timer = setInterval(tick, 180000);
   }
 
   function start(){ go(); watch(); }
