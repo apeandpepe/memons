@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="base:app_id" content="6aa9325509ac89ef27559dea" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MEMONS</title>
 <link rel="stylesheet" href="fonts.css">
@@ -150,6 +149,7 @@
      so a tall composition takes over and the figures move to its slots. */
   .hbg{width:100%;height:auto;display:block;margin-top:var(--art-top)}
   .hbg-m{display:none}
+  .hbg-f{display:none}
   /* Starts where the artwork does, not where the wrapper does, so pushing
      the image clear of the header does not drag every coordinate with it. */
   .hlay{position:absolute;top:var(--art-top);left:0;right:0;bottom:0;
@@ -212,6 +212,17 @@
      up into it. */
   @media(max-width:1040px) and (min-aspect-ratio:7/10){
     .hwrap{ --art-top:58px; }
+
+    /* The section is a screen tall and its contents are shorter, and they
+       were packed against the top -- so every pixel left over piled up
+       underneath as one long empty stretch. Centred, the slack is shared
+       between top and bottom and reads as margin rather than as the page
+       having ended early.
+
+       section.vhero rather than .vhero: the rule that sets flex-start is
+       further down the file, and at equal weight the later one wins.
+       Naming the element too outweighs it without having to move either. */
+    section.vhero{ justify-content:center; }
   }
 
   /* The tall artwork goes to tall screens, not merely narrow ones.
@@ -263,6 +274,63 @@
     .hs .l{letter-spacing:.12cqw;margin-top:.9cqw}
     .hs .p{margin-top:.4cqw}
     .hs .t{margin-top:.8cqw}
+  }
+  /* A third artwork, for the shape a foldable makes when it is opened.
+
+     The wide one is 1:0.67 and the tall one 1:2.17; an unfolded Fold is
+     1:1.16, which is neither. The wide one left a third of the screen
+     empty and the tall one ran half of itself off the bottom. This one is
+     drawn at 1:1.14, so it lands on an 823px screen at 807px and the
+     slack is the 16px the artwork is pushed down to clear the header.
+
+     Only this shape: wider than 1:1.1 is a phone on its side and takes the
+     wide artwork, narrower than 7:10 is an ordinary phone and takes the
+     tall one. */
+  @media(max-width:1040px) and (min-aspect-ratio:7/10) and (max-aspect-ratio:11/10){
+    .hwrap{
+      --art-top: 16px;
+
+      --cta-x: 4.3%;   --cta-y: 31.3%;
+      --cta-size: 2.2cqw;
+      --cta-pad: 2cqw 3cqw;
+
+      --kpi-y: 41.5%;
+      --kpi-1: 31%;  --kpi-2: 79%;
+      --kpi-size: 4.4cqw;
+
+      /* Each rarity frame is 367x547 in the artwork: the card takes the
+         width under the badge and its figures sit underneath. */
+      --art-y: 63%;  --art-w: 18.7%;  --art-h: 23%;
+      --art-1: 8.3%; --art-2: 40.4%;  --art-3: 72.5%;
+      --art-y1: var(--art-y);
+      --art-y2: var(--art-y);
+      --art-y3: var(--art-y);
+
+      --sale-y: 85.2%; --sale-w: 27%;
+      --sale-1: 4.2%;  --sale-2: 36%;  --sale-3: 68.3%;
+      --sale-y1: var(--sale-y);
+      --sale-y2: var(--sale-y);
+      --sale-y3: var(--sale-y);
+      --sale-name: 2.2cqw;
+      --sale-label: 1.5cqw;
+      --sale-price: 3cqw;
+      --sale-when: 1.4cqw;
+    }
+    .hbg-d{display:none}
+    .hbg-m{display:none}
+    .hbg-f{display:block}
+    .hcta span{font-size:2.5cqw}
+    .hs .l{letter-spacing:.12cqw;margin-top:.9cqw}
+    .hs .p{margin-top:.4cqw}
+    .hs .t{margin-top:.8cqw}
+    section.vhero{ justify-content:flex-start; }
+    /* The artwork reaches both edges here, so the scroll cue has nowhere
+       to sit but on top of the middle panel's price.
+
+       Named with the section as well, because the rule that gives it
+       display:flex sits further down the file and at equal weight the
+       later one wins. */
+    section.vhero .vscroll{display:none}
   }
   /* header floats over the video, turns solid on scroll */
   header.head{position:fixed;top:0;left:0;right:0;z-index:50;
@@ -744,7 +812,7 @@
       <a href="https://t.me/APEPE_Official" target="_blank" rel="noopener" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
       <a href="https://x.com/apepeofficial" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
     </div>
-    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> SIGN IN</button>
+    <button class="wbtn" id="headWallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg> CONNECT WALLET</button>
   </div>
 </header>
 
@@ -761,6 +829,7 @@
   <div class="hwrap">
     <img class="hbg hbg-d" src="images/home/hero.png" alt="MEMONS — own the moment, trade the legend">
     <img class="hbg hbg-m" src="images/home/hero-mobile.png" alt="">
+    <img class="hbg hbg-f" src="images/home/hero-fold.png" alt="">
 
     <div class="hlay">
       <a class="hcta" href="#capsule">OPEN CAPSULE <span>&rarr;</span></a>
@@ -895,7 +964,6 @@
 </script>
 <script src="wallet-provider.js"></script>
 <script src="gacha-client.js"></script>
-<script src="social-login.js"></script>
 <script src="mypage-entry.js"></script>
 <style>
   .m-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#E9B84A;cursor:pointer;padding:0;margin-right:6px}
