@@ -203,7 +203,28 @@
 
   /* Below this the wide artwork stops being readable, so the tall one takes
      over. Same overlay, same variables -- only their values change. */
-  @media(max-width:820px){
+  /* Wide artwork on a small screen: an unfolded foldable, or a phone
+     turned sideways.
+
+     It was drawn for a wide screen and starts at the very top, where the
+     floating header then covers the title. On a wide screen the title sits
+     below the header and they never meet; narrow the screen and it rides
+     up into it. */
+  @media(max-width:1040px) and (min-aspect-ratio:7/10){
+    .hwrap{ --art-top:58px; }
+  }
+
+  /* The tall artwork goes to tall screens, not merely narrow ones.
+
+     Splitting on width alone sent it to unfolded foldables too, and 707px
+     across is almost square -- at 1:2.17 the image comes out 1532px tall
+     and half of it, cards and button included, falls off the bottom of an
+     823px screen.
+
+     Reading the shape as well sends those screens the 1:0.67 artwork,
+     which lands at 707x471 with room to spare. Real phones, at 0.45 to
+     0.56, are untouched. */
+  @media(max-width:820px) and (max-aspect-ratio:7/10){
     .hwrap{
       --art-top: 62px;
 
