@@ -246,6 +246,35 @@
 
   function me() { return get("/social/me"); }
 
+  // --- reading our own session --------------------------------------
+
+  /* The claims inside the token this browser is holding, without asking
+     the server. The header has to decide what to draw before any network
+     call comes back, and a page that guesses wrong flickers. */
+  function claims() {
+    var t = (window.MEMONS && window.MEMONS.token) ||
+            (store() && store().getItem(SS_TOKEN));
+    if (!t) return null;
+    try {
+      var p = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      var c = JSON.parse(decodeURIComponent(escape(atob(p))));
+      if (c && c.exp && c.exp * 1000 < Date.now()) return null;
+      return c;
+    } catch (e) { return null; }
+  }
+
+  /* Which door the member came in by.
+
+     Both logins issue the same token; only the subject differs. A UID
+     means Google or Apple, an address means a wallet. Everything that has
+     to behave differently reads this rather than keeping its own flag,
+     which would go stale the moment a session is restored from storage. */
+  function isSocial() {
+    var c = claims();
+    return !!(c && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      .test(String(c.sub || "")));
+  }
+
   function signOut() {
     var s = store();
     if (s) {
@@ -264,6 +293,8 @@
     wallets: wallets,
     linkWallet: linkWallet,
     me: me,
+    claims: claims,
+    isSocial: isSocial,
     signOut: signOut,
     clientId: GOOGLE_CLIENT_ID,
   };

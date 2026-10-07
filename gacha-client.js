@@ -193,11 +193,25 @@
     });
     const j = await r.json().catch(() => ({}));
 
-    // The server rejected our credentials. Nothing the caller does will fix
-    // that, so drop the session here instead of surfacing a raw 401.
+    /* The server rejected our credentials.
+
+       A lapsed token is one reason for that, and the session should go.
+       It is not the only reason: an endpoint that has not yet learnt to
+       read a UID answers 401 to a member who signed in with Google, and
+       throwing their session away over it logged them out the moment they
+       opened a page that called one -- they signed in, walked to My Page,
+       and were signed out by the first request it made.
+
+       So the token decides. If it has expired the session is genuinely
+       over. If it has not, the server refused this particular call, and
+       that is the caller's problem to report, not a reason to end a
+       session the member is still holding. */
     if (r.status === 401 && opts.auth) {
-      expire();
-      throw new Error("SESSION_EXPIRED");
+      if (!alive(token)) {
+        expire();
+        throw new Error("SESSION_EXPIRED");
+      }
+      throw new Error(j.error || "NOT_AUTHORIZED");
     }
     if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
     return j;
