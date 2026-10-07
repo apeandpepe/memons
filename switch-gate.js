@@ -3,8 +3,8 @@
  *
  *  A member who signed in with their wallet and has not yet moved to a
  *  MEMONS number sees this before anything else: the site asks them to
- *  attach a Google account, and nothing behind it is reachable until they
- *  do. Everyone else never knows it exists.
+ *  attach a Google account or an email, and nothing behind it is reachable
+ *  until they do. Everyone else never knows it exists.
  *
  *  Drop it in after gacha-client.js on any page that needs the gate:
  *
@@ -128,6 +128,19 @@
     '#msg-gate .addr{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;',
       'font-size:13px;color:#C6C3BA;word-break:break-all}',
     '#msg-gate .gbtn{min-height:48px;display:flex;justify-content:center}',
+    '#msg-gate .or{display:flex;align-items:center;gap:10px}',
+    '#msg-gate .or i{flex:1;height:1px;background:rgba(255,255,255,.12)}',
+    '#msg-gate .or span{color:#6E6B64;font-size:11px;letter-spacing:.1em;font-style:normal}',
+    '#msg-gate .fld{width:100%;font-family:inherit;font-size:14.5px;padding:13px 14px;',
+      'border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#0D0D0F;',
+      'color:#ECEAE4;outline:none}',
+    '#msg-gate .fld:focus{border-color:rgba(233,184,74,.5)}',
+    '#msg-gate .go{width:100%;font-family:inherit;font-weight:700;font-size:13.5px;',
+      'padding:14px;border-radius:10px;border:1px solid rgba(233,184,74,.4);',
+      'background:transparent;color:#E9B84A;cursor:pointer}',
+    '#msg-gate .go[disabled]{opacity:.55;cursor:default}',
+    '#msg-gate .ok{border-left:2px solid #5FBE86;background:rgba(95,190,134,.08);',
+      'padding:14px 16px;font-size:14px;line-height:1.7;color:#AEDCC2}',
     '#msg-gate .help{text-align:center;font-size:13.5px;color:#6E6B64;line-height:1.7}',
     '#msg-gate .help a{color:#9A978E}',
     '#msg-gate .err{border-left:2px solid #C4584F;background:rgba(196,88,79,.08);',
@@ -178,7 +191,8 @@
         "</div>" +
         "<div>" +
           "<h1>Sign in without<br>your wallet</h1>" +
-          '<p style="margin-top:12px">MEMONS now uses a Google account. Connect yours once and ' +
+          '<p style="margin-top:12px">MEMONS now uses an account of your own — Google or email. ' +
+            'Set one up once and ' +
             "everything you own moves with you — you won't need the wallet again.</p>" +
         "</div>" +
         brings(info) +
@@ -188,6 +202,13 @@
           : "") +
         '<div id="msg-gate-err"></div>' +
         '<div class="gbtn" id="msg-gate-g"></div>' +
+        '<div class="or"><i></i><span>OR</span><i></i></div>' +
+        '<div style="display:flex;flex-direction:column;gap:9px">' +
+          '<input id="msg-gate-em" class="fld" type="email" autocomplete="email" placeholder="Email">' +
+          '<input id="msg-gate-pw" class="fld" type="password" autocomplete="new-password" ' +
+            'placeholder="Choose a password (8+ characters)">' +
+          '<button id="msg-gate-go" class="go" type="button">CONTINUE WITH EMAIL</button>' +
+        "</div>" +
         '<div class="help">Having trouble? ' +
           '<a href="mailto:' + SUPPORT + '?subject=Account%20transfer">' + SUPPORT + "</a>" +
         "</div>" +
@@ -197,6 +218,7 @@
     document.documentElement.style.overflow = "hidden";
 
     mountGoogle();
+    wireEmail();
   }
 
   function fail(msg) {
@@ -210,6 +232,57 @@
   function busy(msg) {
     var g = document.getElementById("msg-gate-g");
     if (g) g.innerHTML = '<div class="busy">' + esc(msg) + "</div>";
+  }
+
+  function note(msg, good) {
+    var box = document.getElementById("msg-gate-err");
+    if (box) box.innerHTML = '<div class="' + (good ? "ok" : "err") + '">' + esc(msg) + "</div>";
+  }
+
+  // --- the same move, by email ---------------------------------------
+
+  /* For the members Google leaves out. They make a password here and the
+     account moves in the same step, exactly as it does for Google. */
+  function wireEmail() {
+    var em = document.getElementById("msg-gate-em");
+    var pw = document.getElementById("msg-gate-pw");
+    var go = document.getElementById("msg-gate-go");
+    if (!em || !pw || !go) return;
+
+    if (!window.MEMONS_EMAIL) {
+      em.parentNode.style.display = "none";
+      var or = document.querySelector("#msg-gate .or");
+      if (or) or.style.display = "none";
+      return;
+    }
+
+    function run() {
+      go.disabled = true;
+      go.textContent = "Moving your collection\u2026";
+      note("");
+
+      window.MEMONS_EMAIL.link(em.value.trim(), pw.value)
+        .then(function (r) {
+          /* Confirmation is usually on, so the honest thing to show is
+             the mail rather than a page they have not reached yet. */
+          if (r && r.status === "confirm_sent") {
+            go.disabled = false;
+            go.textContent = "CONTINUE WITH EMAIL";
+            note("Check " + em.value.trim() + " and open the link to finish.", true);
+            return;
+          }
+          window.location.reload();
+        })
+        .catch(function (e) {
+          go.disabled = false;
+          go.textContent = "CONTINUE WITH EMAIL";
+          note(String(e.message || e));
+        });
+    }
+
+    go.addEventListener("click", run);
+    pw.addEventListener("keydown", function (e) { if (e.key === "Enter") run(); });
+    em.addEventListener("keydown", function (e) { if (e.key === "Enter") pw.focus(); });
   }
 
   // --- Google, then the move -----------------------------------------

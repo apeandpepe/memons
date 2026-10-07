@@ -641,60 +641,161 @@
        same session, so nothing downstream has to know which was used. */
     function showSignInSheet() {
       if (document.getElementById('siSheet')) return;
-      if (!window.MEMONS_SOCIAL) { doConnect(); return; }
+      if (!window.MEMONS_SOCIAL && !window.MEMONS_EMAIL) { doConnect(); return; }
+
+      var mode = 'signin';   // or 'signup'
 
       var wrap = document.createElement('div');
       wrap.id = 'siSheet';
       wrap.style.cssText = 'position:fixed;inset:0;z-index:2000;display:flex;'
-        + 'align-items:center;justify-content:center;background:rgba(0,0,0,.66);padding:18px';
+        + 'align-items:center;justify-content:center;background:rgba(0,0,0,.72);'
+        + 'padding:18px;overflow-y:auto';
+
+      var fld = 'width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;padding:13px 14px;'
+        + 'border-radius:10px;border:1px solid rgba(255,255,255,.14);'
+        + 'background:#0d0d0f;color:#ECEAE4;outline:none';
 
       wrap.innerHTML =
         '<div style="width:100%;max-width:380px;background:linear-gradient(180deg,#111114,#0a0a0c);'
-          + 'border:1px solid rgba(233,184,74,.3);border-radius:18px;padding:26px 22px 20px;'
-          + 'box-shadow:0 20px 60px rgba(0,0,0,.7)">'
-        + '<div style="font-family:var(--font-head,inherit);font-weight:800;font-size:16px;'
+          + 'border:1px solid rgba(233,184,74,.3);border-radius:18px;padding:26px 22px 18px;'
+          + 'box-shadow:0 20px 60px rgba(0,0,0,.7);margin:auto">'
+        + '<div id="siTitle" style="font-family:var(--font-head,inherit);font-weight:800;font-size:16px;'
           + 'letter-spacing:1.4px;color:#E9B84A;text-align:center">SIGN IN</div>'
-        + '<div style="color:#a99d85;font-size:12.5px;line-height:1.6;text-align:center;margin:9px 0 20px">'
+        + '<div id="siLead" style="color:#a99d85;font-size:12.5px;line-height:1.6;text-align:center;margin:9px 0 18px">'
           + 'Your cards and your balance live on your MEMONS account.</div>'
+
         + '<div id="siGoogle" style="display:flex;justify-content:center;min-height:44px"></div>'
-        + '<div id="siErr" style="display:none;color:#e0556a;font-size:12px;text-align:center;margin-top:10px"></div>'
-        + '<div style="display:flex;align-items:center;gap:10px;margin:18px 0">'
+
+        + '<div style="display:flex;align-items:center;gap:10px;margin:16px 0">'
           + '<div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>'
           + '<div style="color:#6b6862;font-size:11px;letter-spacing:1px">OR</div>'
           + '<div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>'
         + '</div>'
-        + '<button id="siWallet" style="width:100%;font-family:inherit;font-weight:700;font-size:13px;'
-          + 'padding:14px;border-radius:12px;border:1px solid rgba(233,184,74,.4);background:transparent;'
-          + 'color:#E9B84A;cursor:pointer">Connect wallet</button>'
-        + '<button id="siClose" style="width:100%;font-family:inherit;font-size:12.5px;padding:12px;'
-          + 'margin-top:6px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>'
+
+        + '<div style="display:flex;flex-direction:column;gap:9px">'
+          + '<input id="siEmail" type="email" autocomplete="email" placeholder="Email" style="' + fld + '">'
+          + '<input id="siPass" type="password" placeholder="Password" style="' + fld + '">'
+          + '<button id="siGo" style="width:100%;font-family:inherit;font-weight:700;font-size:13.5px;'
+            + 'padding:14px;border-radius:11px;border:0;cursor:pointer;color:#1A1400;'
+            + 'background:linear-gradient(150deg,#F6D684,#E9B84A 62%)">CONTINUE</button>'
+        + '</div>'
+
+        + '<div id="siMsg" style="display:none;font-size:12.5px;line-height:1.6;text-align:center;margin-top:11px"></div>'
+
+        + '<div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12.5px">'
+          + '<button id="siSwap" style="border:0;background:transparent;color:#9A978E;'
+            + 'font-family:inherit;font-size:12.5px;cursor:pointer;padding:4px 0">Create an account</button>'
+          + '<button id="siForgot" style="border:0;background:transparent;color:#6b6862;'
+            + 'font-family:inherit;font-size:12.5px;cursor:pointer;padding:4px 0">Forgot password?</button>'
+        + '</div>'
+
+        + '<div style="margin-top:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.08)">'
+          + '<button id="siWallet" style="width:100%;font-family:inherit;font-size:12.5px;padding:12px;'
+            + 'border-radius:10px;border:1px solid rgba(255,255,255,.12);background:transparent;'
+            + 'color:#8d8a82;cursor:pointer">Member since before? Use your wallet</button>'
+        + '</div>'
+
+        + '<button id="siClose" style="width:100%;font-family:inherit;font-size:12.5px;padding:11px;'
+          + 'margin-top:4px;border:0;background:transparent;color:#6b6862;cursor:pointer">Cancel</button>'
         + '</div>';
 
       document.body.appendChild(wrap);
 
+      var $ = function (id) { return wrap.querySelector('#' + id); };
+
       function close() { wrap.remove(); }
       wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
-      wrap.querySelector('#siClose').onclick = close;
-      wrap.querySelector('#siWallet').onclick = function () { close(); doConnect(); };
+      $('siClose').onclick = close;
 
-      function fail(msg) {
-        var e = wrap.querySelector('#siErr');
+      /* The wallet is not a way in any more, it is the way back in for
+         somebody who joined before there was anything else. Hence the
+         wording, and hence its place at the bottom. */
+      $('siWallet').onclick = function () { close(); doConnect(); };
+
+      function say(msg, bad) {
+        var e = $('siMsg');
         if (!e) return;
         e.textContent = msg;
-        e.style.display = 'block';
+        e.style.color = bad ? '#e0556a' : '#7FC79B';
+        e.style.display = msg ? 'block' : 'none';
+      }
+      function fail(msg) { say(msg, true); }
+
+      function busyBtn(on, label) {
+        var b = $('siGo');
+        if (!b) return;
+        b.disabled = !!on;
+        b.style.opacity = on ? '.6' : '';
+        b.textContent = on ? (label || 'Please wait…') : (mode === 'signup' ? 'CREATE ACCOUNT' : 'CONTINUE');
       }
 
-      window.MEMONS_SOCIAL.mountButton(wrap.querySelector('#siGoogle'))
-        .catch(function () {
-          /* Google's script is blocked often enough -- an ad blocker, a
-             corporate network, a country that cannot reach it -- that the
-             sheet has to stay usable without it rather than showing an
-             empty box above a wallet button. */
-          fail('Google sign-in could not load. Use a wallet, or try again.');
+      function setMode(m) {
+        mode = m;
+        $('siTitle').textContent = m === 'signup' ? 'CREATE ACCOUNT' : 'SIGN IN';
+        $('siSwap').textContent  = m === 'signup' ? 'I already have an account' : 'Create an account';
+        $('siPass').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
+        $('siPass').placeholder = m === 'signup' ? 'Password (8+ characters)' : 'Password';
+        say('');
+        busyBtn(false);
+      }
+      $('siSwap').onclick = function () { setMode(mode === 'signup' ? 'signin' : 'signup'); };
+
+      $('siForgot').onclick = function () {
+        if (!window.MEMONS_EMAIL) return;
+        var email = $('siEmail').value.trim();
+        if (!email) { fail('Enter your email first, then press this again.'); return; }
+        window.MEMONS_EMAIL.reset(email).then(function () {
+          say('If that address has an account, a reset link is on its way.');
+        }).catch(function (e) { fail(String(e.message || e)); });
+      };
+
+      function submit() {
+        if (!window.MEMONS_EMAIL) { fail('Email sign-in is unavailable. Use Google or a wallet.'); return; }
+        var email = $('siEmail').value.trim();
+        var pass  = $('siPass').value;
+        say('');
+        busyBtn(true);
+
+        var run = mode === 'signup'
+          ? window.MEMONS_EMAIL.signUp(email, pass)
+          : window.MEMONS_EMAIL.signIn(email, pass);
+
+        run.then(function (r) {
+          /* Supabase is usually set to confirm the address first, so the
+             honest thing to show is the mail, not a dashboard. */
+          if (r && r.status === 'confirm_sent') {
+            busyBtn(false);
+            say('Check ' + email + ' and open the link to finish.');
+            return;
+          }
+          close();
+          location.reload();
+        }).catch(function (e) {
+          busyBtn(false);
+          fail(String(e.message || e));
         });
+      }
+
+      $('siGo').onclick = submit;
+      $('siPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+      $('siEmail').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('siPass').focus(); });
+
+      if (window.MEMONS_SOCIAL) {
+        window.MEMONS_SOCIAL.mountButton($('siGoogle'))
+          .catch(function () {
+            /* Google's script is blocked often enough -- an ad blocker, a
+               corporate network, a country that cannot reach it -- that the
+               sheet has to stay usable without it rather than showing an
+               empty box. The email form below is the answer. */
+            $('siGoogle').innerHTML = '<div style="color:#6b6862;font-size:12px;padding:10px;'
+              + 'text-align:center">Google sign-in could not load. Use your email below.</div>';
+          });
+      } else {
+        $('siGoogle').style.display = 'none';
+      }
 
       document.addEventListener('memons:social-start', function () {
-        var g = wrap.querySelector('#siGoogle');
+        var g = $('siGoogle');
         if (g) g.innerHTML = '<div style="color:#8d8a82;font-size:12.5px;padding:12px">Signing in…</div>';
       }, { once: true });
 
@@ -710,6 +811,8 @@
         close();
         location.reload();
       }, { once: true });
+
+      setTimeout(function () { try { $('siEmail').focus(); } catch (e) {} }, 60);
     }
 
     /* A few pages wire their own sidebar or header button and cannot see
@@ -717,7 +820,7 @@
        never has to decide between the two logins itself. */
     window.MEMONS_SIGNIN = function () {
       if (window.MEMONS && window.MEMONS.connected) return;
-      if (window.MEMONS_SOCIAL) { showSignInSheet(); return; }
+      if (window.MEMONS_SOCIAL || window.MEMONS_EMAIL) { showSignInSheet(); return; }
       doConnect();
     };
 
@@ -803,7 +906,7 @@
     wbtn.addEventListener('click', function (ev) {
       ev.preventDefault();
       if (window.MEMONS && window.MEMONS.connected) return;
-      if (window.MEMONS_SOCIAL) { showSignInSheet(); return; }
+      if (window.MEMONS_SOCIAL || window.MEMONS_EMAIL) { showSignInSheet(); return; }
       doConnect();   // the page did not load social-login.js
     });
     discBtn.addEventListener('click', function (ev) { ev.preventDefault(); doDisconnect(true); });
