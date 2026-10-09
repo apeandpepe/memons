@@ -12,6 +12,13 @@
   const API = "https://neixdrtamznrooougcda.supabase.co/functions/v1";
 
   const SS_TOKEN = "memons_jwt_v1", SS_ADDR = "memons_addr_v1";
+  /* How the session was created: "wallet" or, for Google and email
+     sign-in, left unset. The wallet guards below only make sense for a
+     session a wallet produced, and running them on a social session logs
+     the member out -- their address is a MEMONS number that no browser
+     wallet will ever report. Unset is read as "not a wallet session", so
+     the guards stay off unless we know otherwise. */
+  const SS_KIND  = "memons_kind_v1";
   const SKEW_MS = 60 * 1000;   // treat a token as dead a minute early
   const SS_UTM  = "memons_utm_v1";
 
@@ -65,6 +72,7 @@
 
   let token = null;
   let address = null;
+  let kind = null;
 
   // Never read window.ethereum directly. On mobile the active provider is the
   // WalletConnect one, and some wallets make window.ethereum non-writable, so
@@ -117,14 +125,18 @@
   function clearStore() {
     if (!store) return;
     try {
-      store.removeItem(SS_TOKEN); store.removeItem(SS_ADDR);
+      store.removeItem(SS_TOKEN); store.removeItem(SS_ADDR); store.removeItem(SS_KIND);
       store.removeItem("memons_exp_v1");         // written by an earlier build
     } catch (e) {}
   }
   function persist() {
     if (!store) return;
     try {
-      if (token) { store.setItem(SS_TOKEN, token); store.setItem(SS_ADDR, address || ""); }
+      if (token) {
+        store.setItem(SS_TOKEN, token);
+        store.setItem(SS_ADDR, address || "");
+        if (kind) store.setItem(SS_KIND, kind); else store.removeItem(SS_KIND);
+      }
       else clearStore();
     } catch (e) {}
   }
@@ -135,6 +147,7 @@
       if (!alive(t)) { clearStore(); return; }
       token = t;
       address = store.getItem(SS_ADDR) || null;
+      kind = store.getItem(SS_KIND) || null;
 
       /* A session carried over from a previous visit is just as connected as
          one made a moment ago, and listeners care about the state rather than
@@ -290,6 +303,7 @@
 
     const res = await post("/auth/verify", { address, signature, utm: readUtm() }, false);
     token = res.token;
+    kind = "wallet";
     persist();
     armExpiryTimer();
     bindWalletEvents();
@@ -335,6 +349,7 @@
   // treating that as a disconnect logs the user out on every page load.
   async function ensureSameAccount() {
     try {
+      if (kind !== "wallet") return;   // social session: no wallet to match
       const p = eth();
       if (!p || !address) return;
       const accs = await p.request({ method: "eth_accounts" });
@@ -344,7 +359,7 @@
   }
 
   function resetSession() {
-    token = null; address = null; persist();
+    token = null; address = null; kind = null; persist();
     if (expTimer) { clearTimeout(expTimer); expTimer = null; }
   }
 
@@ -386,6 +401,7 @@
       // Wallets fire this immediately after the user approves the very first
       // connection, with the account we just authenticated. Reloading here
       // destroys the session a fraction of a second after creating it.
+      if (kind !== "wallet") return;   // social session: not our wallet
       if (!address) return;
       if (next === address) return;
 
@@ -393,7 +409,10 @@
       location.reload();
     });
 
-    p.on("disconnect", function () { resetSession(); location.reload(); });
+    p.on("disconnect", function () {
+      if (kind !== "wallet") return;   // social session: not our wallet
+      resetSession(); location.reload();
+    });
 
     // chainChanged is deliberately not handled. Sign-in uses personal_sign,
     // which is chain independent, and memons-pay.js switches chains on purpose
