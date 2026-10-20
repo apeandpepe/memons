@@ -680,6 +680,7 @@
          button does anything. -->
     <div class="ql">YOUR PULLS</div>
     <div class="pullsleft none" id="pullsLeft"><b>&mdash;</b><span>REMAINING</span></div>
+    <div id="przWrap" hidden></div>
     <button class="obtn gold" id="openOne">OPEN CAPSULE</button>
     <!-- Ten-pull button retired. Kept hidden rather than deleted: the click
          handler and the pull accounting behind it are unchanged, so putting
@@ -1784,5 +1785,344 @@ if(document.documentElement.classList.contains('embed')){
      iframes, so a tag on the shell alone would count one visit for a
      session that moved through five of them. -->
 <script defer src="/_vercel/insights/script.js"></script>
+<style>
+/* 이벤트 상품.
+
+   캡슐 버튼 위에 둔다. 상품을 받으러 온 사람이 가장 먼저 보는 곳이
+   여기이고, 받은 뒤에 바로 뽑기로 이어진다. */
+.prz{border:1px solid rgba(233,184,74,.38);border-radius:14px;padding:14px 15px;
+     margin:0 0 14px;background:linear-gradient(180deg,rgba(233,184,74,.09),rgba(233,184,74,.02))}
+.prz .pz-top{display:flex;align-items:center;gap:10px;margin-bottom:3px;flex-wrap:wrap}
+.prz .pz-tag{font:700 10.5px/1 inherit;letter-spacing:.14em;color:#E9B84A;
+     border:1px solid rgba(233,184,74,.45);border-radius:999px;padding:4px 8px}
+.prz .pz-sub{font-size:11.5px;letter-spacing:.1em;color:rgba(255,255,255,.45);text-transform:uppercase}
+.prz .pz-name{font:800 17px/1.25 inherit;letter-spacing:.02em;margin:6px 0 2px}
+.prz .pz-note{font-size:12.5px;line-height:1.6;color:rgba(255,255,255,.52);margin:6px 0 0}
+.prz .pz-btn{margin-top:12px}
+.prz.pz-done{border-color:rgba(92,207,146,.35);
+     background:linear-gradient(180deg,rgba(92,207,146,.08),rgba(92,207,146,.02))}
+.prz.pz-done .pz-tag{color:#5ccf92;border-color:rgba(92,207,146,.4)}
+.prz .pz-card{display:flex;align-items:center;gap:12px;margin-top:10px}
+.prz .pz-card img{width:52px;height:52px;object-fit:cover;border-radius:8px;
+     border:1px solid rgba(255,255,255,.14);flex:none}
+.prz .pz-err{font-size:12.5px;color:#ff8da0;margin-top:9px;line-height:1.55}
+.prz[data-r="mythic"]{border-color:rgba(224,85,106,.45)}
+.prz[data-r="mythic"] .pz-tag{color:#ff8da0;border-color:rgba(224,85,106,.5)}
+.prz[data-r="epic"]{border-color:rgba(196,104,216,.42)}
+.prz[data-r="epic"] .pz-tag{color:#d99ae8;border-color:rgba(196,104,216,.48)}
+</style>
+
+
+<script>
+/* =====================================================================
+   Event prizes
+
+   A prize is not a pull. Nothing is spent, the rarity is already decided,
+   and the only thing between the winner and the card is identity
+   verification -- which is why this is on the page at all rather than
+   pushed from the admin screen. A winner who has not verified sees why,
+   and the check opens here instead of sending them away.
+
+   Claiming goes through the same /game function as a pull, so the address
+   comes from the token. Nothing here tells the server who is asking.
+
+   ---------------------------------------------------------------------
+   Two things about the client this is built on, both learnt the hard way.
+
+   MEMONS.authFetch THROWS on any non-2xx. It does not hand back a body
+   with an error in it. So every server answer that is not a success
+   arrives as an exception whose message is the error code, and reading
+   r.error would have meant the KYC branch never ran -- the one branch the
+   whole design exists for.
+
+   The session can arrive after this script does. The event for that is
+   'memons:connected' on document.
+   ===================================================================== */
+(function(){
+  var wrap = document.getElementById('przWrap');
+  if(!wrap) return;
+
+  /* One list, rendered whole. An earlier version wrote the revealed card
+     straight into the row's innerHTML and then reloaded the list, which
+     rebuilt the container and wiped the card a moment after showing it.
+     What was claimed is kept on the item instead, so re-rendering for any
+     reason keeps it. */
+  var items = [];
+  var claiming = null;   // id in flight; load() stands back while set
+
+  var MSG = {
+    ALREADY_CLAIMED   : 'This prize has already been claimed.',
+    NOT_CLAIMABLE     : 'This prize is no longer claimable.',
+    NOT_YOURS         : 'This prize belongs to another account.',
+    PRIZE_MISSING     : 'This prize is no longer available.',
+    NO_CARD_FOR_RARITY: 'No card of this grade is available right now. Please try again shortly.',
+    NO_WALLET         : 'Your wallet could not be found. Please sign in again.',
+    SESSION_EXPIRED   : 'Your session has expired. Please sign in again.',
+    NOT_AUTHORIZED    : 'Please sign in again to claim this prize.',
+    BAD_BODY          : 'Could not claim. Please reload the page and try again.',
+    PRIZE_FAILED      : 'Something went wrong. Please try again.'
+  };
+
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+
+  function what(p){
+    return p.rarity ? ('Guaranteed ' + p.rarity.toUpperCase() + ' Card')
+                    : (p.qty + (p.qty > 1 ? ' Capsules' : ' Capsule'));
+  }
+
+  /* Every call goes through here so a thrown error becomes a code the
+     rest of the file can branch on. */
+  async function call(body){
+    try{
+      var d = await MEMONS.authFetch('/game', body);
+      return { ok:true, data:d || {} };
+    }catch(e){
+      var m = String((e && e.message) || '');
+      return { ok:false, code:(m.match(/^[A-Z][A-Z_]*/) || [''])[0] || m };
+    }
+  }
+
+  function render(){
+    if(!items.length){ wrap.hidden = true; wrap.innerHTML = ''; return; }
+    wrap.hidden = false;
+
+    wrap.innerHTML = items.map(function(p){
+      var done = p.status === 'claimed';
+      var r    = p.rarity ? ' data-r="' + esc(p.rarity) + '"' : '';
+      var body;
+
+      if(p.ready){
+        /* Armed. The card is already decided and waiting; what is left is
+           the opening, and that belongs on the reveal screen like every
+           other capsule. */
+        body = '<div class="pz-note">Your capsule is ready. ' +
+               'Open it to reveal your ' + esc((p.rarity || '').toUpperCase()) + ' card.</div>' +
+               '<button class="obtn gold pz-btn pz-open" data-id="' + p.id + '">OPEN CAPSULE</button>';
+      }else if(done && p.card_id){
+        body = '<div class="pz-note">Opened. The card is in your collection.</div>';
+      }else if(done && p.got && !p.rarity){
+        body = '<div class="pz-note">' + (p.got.pulls_added || p.qty) +
+               ' capsules added to your pulls. Open them below.</div>';
+      }else if(done){
+        body = '<div class="pz-note">' +
+               (p.rarity ? 'Added to your collection.' : 'Capsules added to your pulls.') +
+               '</div>';
+      }else if(p.needs_kyc){
+        /* The state matters. "Under review" is a wait; "not submitted" is
+           something to do now. Telling them apart is the difference
+           between a winner who waits and one who gives up. */
+        var st = p.kyc_state;
+        body = '<div class="pz-note">' + (
+            st === 'pending'  ? 'Your identity check is under review. You can claim once it is approved.'
+          : st === 'rejected' ? 'Your identity check was not approved. Please submit it again.'
+          :                     'Verify your identity to claim this prize.'
+        ) + '</div>' +
+        (st === 'pending' ? '' :
+          '<button class="obtn gold pz-btn pz-kyc" data-id="' + p.id + '">VERIFY IDENTITY</button>');
+      }else{
+        body = '<button class="obtn gold pz-btn pz-claim" data-id="' + p.id + '">' +
+               (claiming === p.id ? 'OPENING…' : 'CLAIM') + '</button>';
+      }
+
+      return '<div class="prz' + (done ? ' pz-done' : '') + '"' + r +
+             (p.ready ? ' data-ready="1"' : '') +
+               ' data-row="' + p.id + '">' +
+               '<div class="pz-top">' +
+                 '<span class="pz-tag">' +
+                   (p.ready ? 'READY TO OPEN' : done ? 'OPENED' : 'EVENT PRIZE') + '</span>' +
+                 (p.prize_label ? '<span class="pz-sub">' + esc(p.prize_label) + '</span>' : '') +
+               '</div>' +
+               '<div class="pz-name">' + esc(what(p)) + '</div>' +
+               body +
+               (p.err ? '<div class="pz-err">' + esc(p.err) + '</div>' : '') +
+             '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.pz-claim').forEach(function(b){
+      b.disabled = (claiming !== null);
+      b.onclick = function(){ claim(+b.dataset.id); };
+    });
+    wrap.querySelectorAll('.pz-open').forEach(function(b){
+      b.onclick = function(){ toReveal(); };
+    });
+    wrap.querySelectorAll('.pz-kyc').forEach(function(b){
+      b.onclick = function(){ openVerify(); };
+    });
+  }
+
+  /* The same hop the OPEN CAPSULE button makes, including the top-frame
+     case: this page is also served inside an iframe on the front page,
+     and replacing only the frame leaves the reveal with no way back. */
+  function toReveal(){
+    var u = 'capsule-reveal.html';
+    if(window.top !== window.self){
+      try{ window.top.location.href = u; return; }catch(e){}
+    }
+    location.href = u;
+  }
+
+  function find(id){
+    for(var i=0;i<items.length;i++) if(items[i].id === id) return items[i];
+    return null;
+  }
+
+  /* Opens over this page and comes back here -- the same flow the
+     marketplace uses before a sale. If the member abandons it the
+     callback never fires, so nothing is left in a waiting state: the
+     button is already back to normal before this is called. */
+  function openVerify(){
+    if(window.MEMONS && MEMONS.verify){
+      MEMONS.verify('prize', function(){ load(); });
+    }else{
+      load();
+    }
+  }
+
+  async function claim(id){
+    if(claiming !== null) return;
+    var p = find(id);
+    if(!p) return;
+
+    claiming = id;
+    p.err = null;
+    render();
+
+    var r = await call({ prize:'claim', id:id });
+
+    if(!r.ok){
+      claiming = null;
+      if(r.code === 'KYC_REQUIRED'){
+        /* Verification was not done, or was done and then revoked. The
+           thrown error carries only the code, not which state -- so the
+           list is reloaded to pick up kyc_state and the row then says the
+           right thing by itself. */
+        await load();
+        openVerify();
+        return;
+      }
+      p.err = MSG[r.code] || 'Could not claim. Please try again.';
+      render();
+      return;
+    }
+
+    /* Committed server-side from here on. Nothing below may report this
+       as a failure. */
+    var got = r.data.prize || {};
+    claiming = null;
+
+    /* A grade prize is not handed over here. The server has decided the
+       rarity and armed it; the card comes out of the reveal screen, which
+       is where opening a capsule has always happened. Going straight
+       there means the winner never sees a middle step. */
+    if(got.rarity && !got.card_id){
+      p.status = 'armed';
+      p.ready  = true;
+      render();
+      toReveal();
+      return;
+    }
+
+    p.status = 'claimed';
+    p.got = got;
+    p.err = null;
+    render();
+
+    /* Capsules land on the pull counter, so it has to be re-read. Guarded
+       on its own: a fault in refreshing a number must not look like a
+       failed claim. */
+    try{
+      if(typeof window.refreshPulls === 'function') window.refreshPulls();
+      else if(window.MEMONS && MEMONS.state) await MEMONS.state();
+    }catch(e){}
+  }
+
+  /* Merges rather than replaces, so a card revealed a moment ago survives
+     a reload that happens for any other reason.
+
+     Returns true once the server has actually answered. The caller uses
+     that to stop asking. */
+  async function load(){
+    if(claiming !== null) return false;
+    if(!(window.MEMONS && MEMONS.connected)){
+      items = []; render(); return false;
+    }
+
+    var r = await call({ prize:'list' });
+    if(!r.ok){
+      /* A member with no prizes and a member we could not ask about look
+         the same from here. Keeping whatever is already on screen is the
+         safer of the two: it never removes a prize that exists.
+
+         Not counted as answered either, so the poll below keeps trying --
+         a request that failed because the session was half-restored
+         succeeds a second later. */
+      return false;
+    }
+
+    var fresh = r.data.prizes || [];
+    items = fresh.map(function(n){
+      var old = find(n.id);
+      if(old && old.got) n.got = old.got;
+      return n;
+    });
+    render();
+    return true;
+  }
+
+  window.przReload = load;
+
+  /* Keep asking until the server answers once.
+
+     The first version asked twice -- on load and 1.2s later -- and gave up.
+     On a phone the session is restored from storage after a round trip or
+     two, and on a slow connection that lands well past 1.2s: the panel
+     stayed hidden for the rest of the visit and the winner saw nothing,
+     with no error and nothing to click. Every report of "I never got my
+     prize" came from a phone.
+
+     Thirty seconds of polling at rest costs nothing and removes the whole
+     class of failure. It stops at the first real answer. */
+  var poll = null, tries = 0, answered = false;
+
+  async function tick(){
+    if(answered) return;
+    if(await load()){
+      answered = true;
+      if(poll){ clearInterval(poll); poll = null; }
+    }
+  }
+
+  function startPoll(){
+    if(poll || answered) return;
+    poll = setInterval(function(){
+      tries++;
+      if(tries > 20){ clearInterval(poll); poll = null; return; }   // ~30s
+      tick();
+    }, 1500);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ tick(); startPoll(); });
+  }else{
+    tick(); startPoll();
+  }
+
+  /* The session can be restored or signed into after this script runs.
+     This is the event the client actually dispatches, on document --
+     but it may fire before this listener exists, which is why the poll
+     above is the thing that is relied on. */
+  document.addEventListener('memons:connected', function(){ answered = false; tick(); startPoll(); });
+
+  /* Coming back to a backgrounded tab. Phones suspend timers, so the
+     poll may have been frozen through the whole sign-in. */
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible' && !answered){ tries = 0; tick(); startPoll(); }
+  });
+})();
+</script>
 </body>
 </html>
