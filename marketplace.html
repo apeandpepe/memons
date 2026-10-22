@@ -3835,12 +3835,12 @@
       /* Who names the destination. The server decides this, not the page:
          it is the difference between an address that can receive and a
          number that cannot, and only the server can tell them apart. */
-      wdEditable = !!r.payout_editable;
+      wdEditable = r.payout_editable !== false;
       $m('wdToFixed').hidden = wdEditable;
       $m('wdToEdit').hidden  = !wdEditable;
-      $m('wdToHint').textContent = wdEditable
-        ? 'You signed in with Google or email, so there is no wallet on your account. Enter a wallet you can access — MetaMask, or an exchange deposit address.'
-        : 'Your connected wallet. Withdrawals cannot be sent elsewhere.';
+      $m('wdToHint').textContent =
+        'Enter a wallet you can access — MetaMask, or an exchange deposit address. ' +
+        'A transfer to an address you do not hold the keys to cannot be undone.';
 
       // One at a time: a second request while the first is unpaid would be
       // indistinguishable when the transfer is made by hand.
