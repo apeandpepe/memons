@@ -1749,8 +1749,17 @@
         <div class="tu-hint" id="wdChainHint">You receive USDT on this network.</div>
 
         <label class="tu-label">To</label>
-        <div class="wd-to"><code id="wdTo">—</code></div>
-        <div class="tu-hint">Your connected wallet. Withdrawals cannot be sent elsewhere.</div>
+        <!-- Two shapes, one slot. A wallet member is paid to the address they
+             signed in with and has nothing to decide. A Google or email member
+             has no wallet -- the address on their account is a number computed
+             from their UID, with no key behind it -- so they have to name one,
+             or the money goes somewhere nobody can reach. -->
+        <div class="wd-to" id="wdToFixed"><code id="wdTo">—</code></div>
+        <div class="mkm-input" id="wdToEdit" hidden>
+          <input id="wdToInput" type="text" spellcheck="false" autocomplete="off"
+                 placeholder="0x… your wallet address">
+        </div>
+        <div class="tu-hint" id="wdToHint">Your connected wallet. Withdrawals cannot be sent elsewhere.</div>
 
         <button class="mkm-go" id="wdGo">REQUEST WITHDRAWAL</button>
         <div class="mkm-note" id="wdNote"></div>
@@ -3792,7 +3801,7 @@
      The destination is the connected wallet, not a field. A mistyped address
      sends the money somewhere nobody can reach, and there is no undo for
      that; anyone who needs a different destination can be handled by hand. */
-  var wdBusy=false, wdAvail=0;
+  var wdBusy=false, wdAvail=0, wdEditable=false;
 
   var wdChain='polygon';
 
@@ -3822,6 +3831,16 @@
       wdAvail=Number(r.balance||0);
       $m('wdAvail').textContent='Available '+num(wdAvail)+' USDT'+
         (r.locked ? ' · '+num(r.locked)+' locked in open orders' : '');
+
+      /* Who names the destination. The server decides this, not the page:
+         it is the difference between an address that can receive and a
+         number that cannot, and only the server can tell them apart. */
+      wdEditable = !!r.payout_editable;
+      $m('wdToFixed').hidden = wdEditable;
+      $m('wdToEdit').hidden  = !wdEditable;
+      $m('wdToHint').textContent = wdEditable
+        ? 'You signed in with Google or email, so there is no wallet on your account. Enter a wallet you can access — MetaMask, or an exchange deposit address.'
+        : 'Your connected wallet. Withdrawals cannot be sent elsewhere.';
 
       // One at a time: a second request while the first is unpaid would be
       // indistinguishable when the transfer is made by hand.
@@ -3870,9 +3889,22 @@
       $m('wdNote').textContent='More than your available balance.';
       return;
     }
+    if(wdEditable){
+      /* 형식만 봅니다. 그 주소가 정말 본인 것인지는 확인할 방법이 없고,
+         확인할 수 있는 척하면 더 위험합니다. */
+      var to=($m('wdToInput').value||'').trim();
+      if(!/^0x[0-9a-fA-F]{40}$/.test(to)){
+        go.disabled=true;
+        $m('wdNote').className='mkm-note';
+        $m('wdNote').textContent='Enter the wallet address to receive the USDT.';
+        return;
+      }
+    }
     go.disabled=false;
     $m('wdNote').className='mkm-note';
-    $m('wdNote').textContent='Sent to your connected wallet after review.';
+    $m('wdNote').textContent = wdEditable
+      ? 'Sent to the address above after review. Check it carefully \u2014 a transfer cannot be undone.'
+      : 'Sent to your connected wallet after review.';
   }
 
   async function wdSubmit(){
@@ -3882,14 +3914,26 @@
     /* The network is named in the confirmation because it is the one choice
        here that cannot be undone: USDT sent on a chain the wallet does not
        hold is not recoverable by cancelling anything. */
-    if(!confirm('Withdraw '+num(v)+' USDT on '+chainLabel(wdChain)+'?\n'+
-                'It goes to your connected wallet on that network.\n'+
-                'The amount leaves your balance now and is sent after review.')) return;
+    var wdTo='';
+    if(wdEditable){
+      wdTo=($m('wdToInput').value||'').trim().toLowerCase();
+      if(!/^0x[0-9a-f]{40}$/.test(wdTo)) return;
+    }
+    /* The network is named in the confirmation because it is the one choice
+       here that cannot be undone: USDT sent on a chain the wallet does not
+       hold is not recoverable by cancelling anything. The address is named
+       for the same reason \u2014 it is read back in full so a wrong one is
+       seen before it is sent, not after. */
+    if(!confirm('Withdraw '+num(v)+' USDT on '+chainLabel(wdChain)+'?\n\n'+
+                'To: '+(wdEditable ? wdTo : 'your connected wallet')+'\n\n'+
+                'The amount leaves your balance now and is sent after review.\n'+
+                'A transfer cannot be undone.')) return;
 
     wdBusy=true;
     var b=$m('wdGo'); b.disabled=true; var lbl=b.textContent; b.textContent='…';
     try{
-      var r=await MEMONS.authFetch('/market/withdraw',{amount:v, chain:wdChain});
+      var r=await MEMONS.authFetch('/market/withdraw',
+        wdEditable ? {amount:v, chain:wdChain, to:wdTo} : {amount:v, chain:wdChain});
       $m('wdForm').hidden=true; $m('wdDone').hidden=false;
       $m('wdSent').textContent=num(v);
       $m('wdPending').innerHTML='Requested <b>just now</b> on <b>'+
@@ -3917,6 +3961,7 @@
         : m2.indexOf('KYC_REQUIRED')>=0          ? 'Identity verification is required before withdrawing.'
         : m2.indexOf('WITHDRAWALS_CLOSED')>=0   ? 'Withdrawals are not open yet.'
         : m2.indexOf('SESSION_EXPIRED')>=0      ? 'Your session expired. Reconnect your wallet and try again.'
+        : m2.indexOf('NOT_A_WALLET')>=0         ? 'That is a MEMONS account number, not a wallet you control. Enter the address of a wallet you can access.'
         : m2.indexOf('BAD_ADDRESS')>=0          ? 'That destination address is not valid.'
         : m2.indexOf('BAD_AMOUNT')>=0           ? 'Enter a valid amount.'
         : 'Could not submit. ('+m2+')';
@@ -3932,6 +3977,7 @@
   $m('wdBack').onclick=wdClose;
   $m('wdGo').onclick=wdSubmit;
   $m('wdAmount').oninput=wdCheck;
+  $m('wdToInput').oninput=wdCheck;
   $m('wdAmount').onkeydown=function(e){ if(e.key==='Enter' && !$m('wdGo').disabled) wdSubmit(); };
 
   /* ===== network picker ================================================
