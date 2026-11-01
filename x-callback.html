@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+  MEMONS — x-callback.html
+
+  Where X sends the member back to. It does one thing: hand the code to
+  our server and send the member on to wherever they started.
+
+  The URL of this page must match a Callback URI in the X developer
+  console exactly, and must match REDIRECT_URI in x-auth.js. All three
+  are the same string:
+
+      https://www.apepe.io/x-callback.html
+
+  Nothing here is worth looking at, which is the point -- the member
+  should see it for about a second.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMONS &mdash; Signing in&hellip;</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{ --bg:#000; --gold:#F1C14C; --text:#eceae4; --muted:#8a8780; --red:#e0556a; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text); min-height:100vh;
+    display:grid; place-items:center; padding:24px;
+    font-family:var(--font-body, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  }
+  .box{text-align:center; max-width:420px}
+  .mk{
+    width:46px; height:46px; margin:0 auto 22px; border:2px solid var(--gold);
+    border-radius:11px; display:grid; place-items:center;
+    color:var(--gold); font-weight:700; font-size:24px;
+  }
+  .spin{
+    width:26px; height:26px; margin:0 auto 18px; border-radius:50%;
+    border:2px solid rgba(241,193,76,.22); border-top-color:var(--gold);
+    animation:sp .8s linear infinite;
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){ .spin{animation:none} }
+  h1{font-size:16px; font-weight:600; letter-spacing:.4px; margin-bottom:8px}
+  p{font-size:13.5px; color:var(--muted); line-height:1.7}
+  .err h1{color:var(--red)}
+  a.btn{
+    display:inline-block; margin-top:20px; border:1px solid var(--gold);
+    color:var(--gold); padding:10px 20px; border-radius:8px;
+    font-size:12.5px; font-weight:600; letter-spacing:1.2px; text-decoration:none;
+  }
+  a.btn:hover{background:var(--gold); color:#000}
+</style>
+</head>
+<body>
+
+<div class="box" id="box">
+  <div class="mk">M</div>
+  <div class="spin" id="spin"></div>
+  <h1 id="t">Signing you in&hellip;</h1>
+  <p id="s">One moment.</p>
+</div>
+
+<script src="x-auth.js"></script>
+<script>
+(function(){
+  var box=document.getElementById('box'),
+      spin=document.getElementById('spin'),
+      t=document.getElementById('t'),
+      s=document.getElementById('s');
+
+  function fail(title, detail, back){
+    box.className='box err';
+    if(spin) spin.remove();
+    t.textContent=title;
+    s.textContent=detail||'';
+    var a=document.createElement('a');
+    a.className='btn'; a.href=back||'/'; a.textContent='GO BACK';
+    box.appendChild(a);
+  }
+
+  /* Where to continue. The page the member started from, with a note
+     saying what happened so it can show the right thing without asking
+     the server again. */
+  function onward(url, params){
+    var u;
+    try{ u=new URL(url, location.href); }catch(e){ u=new URL('/', location.href); }
+    Object.keys(params||{}).forEach(function(k){
+      if(params[k]!==undefined && params[k]!==null) u.searchParams.set(k, params[k]);
+    });
+    location.replace(u.toString());
+  }
+
+  if(!window.MEMONS_X){
+    fail('Could not sign in', 'x-auth.js did not load.', '/');
+    return;
+  }
+
+  MEMONS_X.complete().then(function(r){
+    if(r.mode==='link'){
+      onward(r.returnTo, { x:'linked' });
+      return;
+    }
+    /* fresh means this account was made by this very sign-in. The page
+       we return to asks whether they already had one. */
+    onward(r.returnTo, { x: r.fresh ? 'new' : 'ok' });
+  }).catch(function(e){
+    var back=e.returnTo||'/';
+    if(e.code==='access_denied' || e.message==='cancelled'){
+      /* They pressed Cancel on X. Not a failure -- just go back. */
+      onward(back, { x:'cancelled' });
+      return;
+    }
+    fail('Could not sign in', String(e.message||e), back);
+  });
+})();
+</script>
+</body>
+</html>

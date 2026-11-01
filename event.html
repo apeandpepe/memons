@@ -174,7 +174,9 @@
     letter-spacing:-.2px;cursor:pointer;transition:.18s}
   .cta:hover:not(:disabled){filter:brightness(1.07)}
   .cta:disabled{opacity:.45;cursor:default}
-  .cta.sm{width:auto;padding:12px 22px;font-size:13.5px;border-radius:9px}
+  /* nowrap: 이 작은 버튼은 좁은 칸(결과표 한 칸, 수상 배너 끝)에 들어가서,
+     두면 "Issue / my / card" 처럼 세 줄로 접힙니다. */
+  .cta.sm{width:auto;padding:12px 22px;font-size:13.5px;border-radius:9px;white-space:nowrap}
   .ulink{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);
     border-bottom:1px solid var(--hair);padding-bottom:3px;margin-top:18px;transition:.2s}
   .ulink:hover{color:var(--gold);border-color:var(--line)}
@@ -300,6 +302,9 @@
   .ed.epic{color:var(--c-epic);background:rgba(196,104,216,.13);border:1px solid rgba(196,104,216,.3)}
   .ed.participation{color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--hair)}
 
+  /* 표는 좁은 화면에서 줄지 않는 칸(순위·등급·버튼)이 있어서, 폭이 모자라면
+     페이지 전체를 옆으로 밀어 버립니다. 표만 따로 스크롤시켜 가둡니다. */
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{width:100%;border-collapse:collapse}
   thead th{text-align:left;font-size:10.5px;letter-spacing:2px;color:var(--muted);
     text-transform:uppercase;font-weight:600;padding:0 14px 14px;border-bottom:1px solid var(--hair)}
@@ -745,7 +750,7 @@
         wins.length+' selected works</div></div>'+
 
       (list.length
-        ? '<table><thead><tr><th>Rank</th><th>Artwork</th><th>Creator</th>'+
+        ? '<div class="tscroll"><table><thead><tr><th>Rank</th><th>Artwork</th><th>Creator</th>'+
             '<th>Edition</th><th>Status</th></tr></thead><tbody>'+
           list.map(function(w){
             var isMe = myHandle && String(w.x_handle||'').toLowerCase()===myHandle;
@@ -762,7 +767,7 @@
                   ? '<a class="view" href="'+esc(w.post_url)+'" target="_blank" rel="noopener">View post '+OUT+'</a>'
                   : '<span style="color:var(--faint);font-size:13px">—</span>')+'</td>'+
             '</tr>';
-          }).join('')+'</tbody></table>'
+          }).join('')+'</tbody></table></div>'
         : '<div class="empty">Nothing matches that search.</div>')+
     '</div>';
   }
@@ -781,11 +786,18 @@
     var cx=document.getElementById('cx');
     if(cx) cx.onclick=function(){
       cx.disabled=true; cx.textContent='…';
-      MEMONS_X.signIn({ returnTo: location.pathname+location.hash })
-        .catch(function(e){
-          cx.disabled=false; cx.textContent='Connect X';
-          say('emsg','bad', e.message||e);
-        });
+      /* try 로 감싸는 이유: x-auth.js 가 안 올라가 있으면 MEMONS_X 가
+         없어서 아래 한 줄이 그 자리에서 터집니다. 그러면 .catch 는
+         붙지도 못하고, 버튼은 '…' 인 채로 영영 멈춥니다 -- 쓰는
+         사람에게는 아무 말도 없이 죽은 버튼으로만 보입니다. */
+      function fail(e){
+        cx.disabled=false; cx.textContent='Connect X';
+        say('emsg','bad', (e && e.message) ? e.message : String(e));
+      }
+      try{
+        if(!window.MEMONS_X) throw new Error('X sign-in is unavailable on this page. (x-auth.js did not load)');
+        MEMONS_X.signIn({ returnTo: location.pathname+location.hash }).catch(fail);
+      }catch(e){ fail(e); }
     };
 
     var cpy=document.getElementById('cpy');
@@ -839,13 +851,14 @@
 
       if(r.ok){
         var s=String(r.data.result||'');
-        if(s.indexOf('already')===0){
-          say('emsg','bad','That post has already been entered.');
-        }else{
-          say('emsg','ok','Entry received. Good luck.');
-          document.getElementById('purl').value='';
-        }
-        loadMine();
+        /* 할 말은 다시 그린 뒤에 씁니다. loadMine 이 이 칸을 통째로 새로
+           만들기 때문에, 먼저 쓰면 몇십 ms 뒤에 지워집니다 — 접수는 됐는데
+           아무 말도 못 듣는 상태가 됩니다. 주소 칸은 새로 그려지며 비므로
+           따로 비울 것이 없습니다. */
+        loadMine(function(){
+          if(s.indexOf('already')===0) say('emsg','bad','That post has already been entered.');
+          else                         say('emsg','ok','Entry received. Good luck.');
+        });
         return;
       }
 
@@ -874,11 +887,12 @@
     });
   }
 
-  function loadMine(){
-    if(!tok() || !C){ mine=[]; renderDetail(); return; }
+  function loadMine(after){
+    if(!tok() || !C){ mine=[]; renderDetail(); if(after) after(); return; }
     game({contest:'mine_entries', event:C.event_key}).then(function(r){
       mine=(r.ok && r.data.entries)||[];
       renderDetail();
+      if(after) after();
     });
   }
 
