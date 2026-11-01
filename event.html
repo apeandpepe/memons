@@ -456,7 +456,31 @@
   };
   var OUT='↗';
   var STATUS={live:'Live', ended:'Ended', upcoming:'Upcoming'};
-  var TIERS=[['mythic','MYTHIC'],['legendary','LEGENDARY'],['epic','EPIC']];
+  /* 등급은 캠페인이 정합니다 (step110).
+
+     전에는 mythic/legendary/epic 세 개가 여기 박혀 있었습니다. 카드
+     뽑기 등급을 그대로 쓴 것인데, 컨테스트는 매번 다릅니다 -- 1st /
+     2nd / 3rd / additional / random 같은 것이 들어올 자리가 없었습니다.
+
+     정의가 없는 옛 캠페인은 예전 세 등급으로 그립니다. */
+  var LEGACY=[{key:'mythic',label:'MYTHIC',color:'#b9a7ff'},
+              {key:'legendary',label:'LEGENDARY',color:'#E9B84A'},
+              {key:'epic',label:'EPIC',color:'#c468d8'}];
+  function tiers(){
+    return (C && C.tier_defs && C.tier_defs.length) ? C.tier_defs : LEGACY;
+  }
+  function tierOf(key){
+    var l=tiers();
+    for(var i=0;i<l.length;i++) if(l[i].key===key) return l[i];
+    return {key:key, label:String(key||'').toUpperCase(), color:'#8d8a82'};
+  }
+  /* 배지 색. 등급마다 색이 달라서 CSS 클래스로는 감당이 안 됩니다 --
+     캠페인이 색을 정하므로 줄마다 직접 입힙니다. */
+  function edge(key){
+    var c=tierOf(key).color||'#8d8a82';
+    return '<span class="ed" style="color:'+esc(c)+';background:'+esc(c)+'1f;'+
+      'border:1px solid '+esc(c)+'4d">'+esc(tierOf(key).label)+'</span>';
+  }
 
   function pill(st){
     return '<span class="pill '+esc(st)+'"><i></i>'+(STATUS[st]||'')+'</span>';
@@ -541,11 +565,15 @@
   // ══════════════════════════════════════════════ DETAIL ══════════
 
   var C=null, step='overview', wins=[], mine=[], myWins=[], me=null,
-      rq='', rtier='all', xpending=null;
+      rq='', rtier='all', rpage=1, xpending=null;
+
+  /* 한 등급이 500명인 캠페인이 있습니다. 한 장에 다 그리면 표가
+     수천 줄이 되고, 전화에서는 아예 못 넘깁니다. */
+  var PER=50;
 
   function heroHtml(){
     var t=C.tiers||{};
-    var any=TIERS.some(function(x){ return t[x[0]]; });
+    var any=tiers().some(function(x){ return t[x.key]; });
 
     return '<div class="crumb"><a href="#">← Campaigns</a>'+
         '<span class="sep">/</span><span class="cur">'+esc(C.title)+'</span></div>'+
@@ -578,12 +606,15 @@
         '</div>'+
       '</div>'+
 
-      (any ? '<div class="stats">'+TIERS.map(function(x){
+      (any ? '<div class="stats">'+tiers().map(function(x){
+          var n=t[x.key]||0;
           return '<div class="stat">'+
-            '<i style="background:var(--c-'+x[0]+')"></i>'+
-            '<div class="n">'+String(t[x[0]]||0).padStart(2,'0')+'</div>'+
-            '<div class="t" style="color:var(--c-'+x[0]+')">'+x[1]+'</div>'+
-            '<div class="w">winners</div></div>';
+            '<i style="background:'+esc(x.color||'#E9B84A')+'"></i>'+
+            '<div class="n">'+(n<100?String(n).padStart(2,'0'):String(n))+'</div>'+
+            '<div class="t" style="color:'+esc(x.color||'#E9B84A')+'">'+esc(x.label)+'</div>'+
+            /* 상품이 적혀 있으면 그걸 보여 줍니다. 등급 이름만으로는
+               1st 와 2nd 가 얼마나 다른지 알 수 없습니다. */
+            '<div class="w">'+(x.prize?esc(x.prize):'winners')+'</div></div>';
         }).join('')+'</div>' : '')+
 
       '<div class="steps">'+
@@ -711,14 +742,49 @@
       return true;
     });
 
+    /* 쪽 나누기. 거르고 난 뒤의 길이로 계산합니다 -- 등급 탭을
+       누르면 목록이 줄어드는데, 그때 남은 쪽 번호를 그대로 두면
+       빈 쪽에 서 있게 됩니다. */
+    var pages=Math.max(1, Math.ceil(list.length/PER));
+    if(rpage>pages) rpage=pages;
+    if(rpage<1)     rpage=1;
+    var from=(rpage-1)*PER;
+    var page=list.slice(from, from+PER);
+
+    /* 500명이면 쪽이 10장입니다. 전부 그리면 줄바꿈이 나므로
+       앞뒤 두 장과 처음·끝만 두고 가운데는 … 로 접습니다. */
+    var nums=[];
+    (function(){
+      var i, last=0;
+      for(i=1;i<=pages;i++){
+        if(i===1 || i===pages || Math.abs(i-rpage)<=1){
+          if(last && i-last>1) nums.push(-1);
+          nums.push(i); last=i;
+        }
+      }
+    })();
+
     var counts={all:wins.length};
-    TIERS.forEach(function(x){
-      counts[x[0]]=wins.filter(function(w){return w.tier===x[0];}).length;
+    tiers().forEach(function(x){
+      counts[x.key]=wins.filter(function(w){return w.tier===x.key;}).length;
     });
 
     var myHandle = me && me.handle ? me.handle.toLowerCase() : null;
     var myRow = myHandle ? wins.filter(function(w){
       return String(w.x_handle||'').toLowerCase()===myHandle; })[0] : null;
+
+    /* 빈 칸은 아예 그리지 않습니다.
+
+       핸들만 올린 캠페인에서는 순위·작품·글 주소가 전부 없습니다.
+       그래도 칸을 세우면 513줄이 '—' 와 'No image' 로 뒤덮여, 뭔가
+       빠진 화면처럼 보입니다. 한 명이라도 값이 있을 때만 세웁니다.
+
+       Status 는 수상자 본인에게 카드 받는 버튼이 서는 자리이기도
+       해서, 본인이면 글 주소가 없어도 세웁니다. */
+    var hasRank = wins.some(function(w){ return w.rank; });
+    var hasArt  = wins.some(function(w){ return w.artwork_url; });
+    var hasStatus = wins.some(function(w){ return w.post_url; }) ||
+                    !!(myRow && myWins.length);
 
     return '<div class="sect">'+
       '<div class="headrow"><div>'+
@@ -732,7 +798,7 @@
       (myRow ? '<div class="yours">'+
         '<div><div class="k">Your result</div>'+
           '<div class="rk">'+(myRow.rank?'#'+String(myRow.rank).padStart(2,'0'):'—')+'</div></div>'+
-        '<span class="ed '+esc(myRow.tier)+'">'+esc(String(myRow.tier).toUpperCase())+'</span>'+
+        edge(myRow.tier)+
         '<span class="who">@'+esc(myRow.x_handle)+'</span>'+
         '<span class="sp"></span>'+
         (myWins.length
@@ -742,35 +808,76 @@
 
       (myRow ? claimHtml() : '')+
 
+      /* 로그인하지 않은 수상자를 위한 한 줄.
+
+         로그아웃 상태로 들어오면 명단만 보입니다 -- 자기 이름이
+         거기 있어도, 로그인하면 상품 받을 정보를 낼 수 있다는 것을
+         알 방법이 없습니다. 500명짜리 명단에서는 그대로 나가 버리는
+         사람이 대부분일 것입니다. */
+      ((C.claim_open && !(me && me.handle))
+        ? '<div class="yours" style="margin-bottom:22px">'+
+            '<div><div class="k">Winners</div>'+
+            '<div style="font-size:15px;margin-top:4px">'+
+              'Sign in with X to submit where your reward should go.</div></div>'+
+            '<span class="sp"></span>'+
+            '<button class="cta sm" id="rx">'+I.x+' Sign in with X</button>'+
+          '</div>'
+        : '')+
+
       '<div class="bar"><div class="tabs">'+
-        [['all','All']].concat(TIERS).map(function(x){
-          return '<button class="tab'+(rtier===x[0]?' on':'')+'" data-t="'+x[0]+'">'+
-            (x[0]==='all'?'All':x[1].charAt(0)+x[1].slice(1).toLowerCase())+
-            ' <span style="color:var(--faint)">'+(counts[x[0]]||0)+'</span></button>';
+        [{key:'all',label:'All'}].concat(tiers()).map(function(x){
+          return '<button class="tab'+(rtier===x.key?' on':'')+'" data-t="'+esc(x.key)+'">'+
+            esc(x.label)+
+            ' <span style="color:var(--faint)">'+(counts[x.key]||0)+'</span></button>';
         }).join('')+
       '</div><div class="sidenote" style="padding-bottom:13px">'+
         wins.length+' selected works</div></div>'+
 
       (list.length
-        ? '<div class="tscroll"><table><thead><tr><th>Rank</th><th>Artwork</th><th>Creator</th>'+
-            '<th>Edition</th><th>Status</th></tr></thead><tbody>'+
-          list.map(function(w){
+        ? '<div class="tscroll"><table><thead><tr>'+
+            (hasRank   ? '<th>Rank</th>'    : '')+
+            (hasArt    ? '<th>Artwork</th>' : '')+
+            '<th>Creator</th><th>Edition</th>'+
+            (hasStatus ? '<th>Status</th>'  : '')+
+          '</tr></thead><tbody>'+
+          page.map(function(w){
             var isMe = myHandle && String(w.x_handle||'').toLowerCase()===myHandle;
             return '<tr'+(isMe?' class="me"':'')+'>'+
-              '<td class="rk">'+(w.rank?String(w.rank).padStart(2,'0'):'—')+'</td>'+
-              '<td class="art">'+(w.artwork_url
-                ? '<img src="'+esc(w.artwork_url)+'" alt="" loading="lazy">'
-                : '<div class="none">No image</div>')+'</td>'+
+              (hasRank
+                ? '<td class="rk">'+(w.rank?String(w.rank).padStart(2,'0'):'—')+'</td>' : '')+
+              (hasArt
+                ? '<td class="art">'+(w.artwork_url
+                    ? '<img src="'+esc(w.artwork_url)+'" alt="" loading="lazy">'
+                    : '<div class="none">No image</div>')+'</td>' : '')+
               '<td class="who">@'+esc(w.x_handle)+'</td>'+
-              '<td><span class="ed '+esc(w.tier)+'">'+esc(String(w.tier).toUpperCase())+'</span></td>'+
-              '<td>'+(isMe && myWins.length
-                ? '<a class="cta sm" href="index.html#capsule">Issue card '+I.arr+'</a>'
-                : w.post_url
-                  ? '<a class="view" href="'+esc(w.post_url)+'" target="_blank" rel="noopener">View post '+OUT+'</a>'
-                  : '<span style="color:var(--faint);font-size:13px">—</span>')+'</td>'+
+              '<td>'+edge(w.tier)+'</td>'+
+              (hasStatus
+                ? '<td>'+(isMe && myWins.length
+                    ? '<a class="cta sm" href="index.html#capsule">Issue card '+I.arr+'</a>'
+                    : w.post_url
+                      ? '<a class="view" href="'+esc(w.post_url)+'" target="_blank" rel="noopener">View post '+OUT+'</a>'
+                      : '<span style="color:var(--faint);font-size:13px">—</span>')+'</td>' : '')+
             '</tr>';
-          }).join('')+'</tbody></table></div>'
-        : '<div class="empty">Nothing matches that search.</div>')+
+          }).join('')+'</tbody></table></div>'+
+          (pages>1
+            ? '<div class="bar" style="justify-content:center;gap:8px;padding-top:18px">'+
+                '<button class="tab" data-p="'+(rpage-1)+'"'+(rpage<=1?' disabled':'')+'>‹</button>'+
+                nums.map(function(n){
+                  return n<0
+                    ? '<span style="color:var(--faint);padding:0 2px">…</span>'
+                    : '<button class="tab'+(n===rpage?' on':'')+'" data-p="'+n+'">'+n+'</button>';
+                }).join('')+
+                '<button class="tab" data-p="'+(rpage+1)+'"'+(rpage>=pages?' disabled':'')+'>›</button>'+
+                '<span class="sidenote" style="padding:0 0 0 10px">'+
+                  (from+1)+'–'+Math.min(from+PER, list.length)+' / '+list.length+'</span>'+
+              '</div>'
+            : '')
+        : '<div class="empty">'+(wins.length
+            ? 'Nothing matches that search.'
+            /* 아무도 없는 것과 검색에 안 걸린 것은 다른 일입니다.
+               한 문장으로 뭉뚱그리면, 명단을 아직 안 올린 것을
+               검색 탓으로 읽게 됩니다. */
+            : 'Winners have not been announced yet.')+'</div>')+
     '</div>';
   }
 
@@ -879,22 +986,39 @@
       b.onclick=function(){ step=b.dataset.s; renderDetail(); window.scrollTo({top:0}); };
     });
 
-    var cx=document.getElementById('cx');
-    if(cx) cx.onclick=function(){
+    /* 결과 화면의 로그인 버튼. Participate 쪽 버튼과 같은 일을
+       하므로 같은 처리를 씁니다 -- 둘이 갈라지면 한쪽만 고치게
+       됩니다. */
+    ['cx','rx'].forEach(function(id){
+      var cx=document.getElementById(id);
+      if(!cx) return;
+      var was=cx.innerHTML;
+      cx.onclick=function(){
       cx.disabled=true; cx.textContent='…';
       /* try 로 감싸는 이유: x-auth.js 가 안 올라가 있으면 MEMONS_X 가
          없어서 아래 한 줄이 그 자리에서 터집니다. 그러면 .catch 는
          붙지도 못하고, 버튼은 '…' 인 채로 영영 멈춥니다 -- 쓰는
          사람에게는 아무 말도 없이 죽은 버튼으로만 보입니다. */
       function fail(e){
-        cx.disabled=false; cx.textContent='Connect X';
-        say('emsg','bad', (e && e.message) ? e.message : String(e));
+        cx.disabled=false; cx.innerHTML=was;
+        /* 결과 화면에는 #emsg 가 없습니다. 그쪽에서는 버튼 옆에
+           바로 적습니다 -- 아무 말 없이 되돌아가면 눌리지 않은
+           것처럼 보입니다. */
+        var msg=(e && e.message) ? e.message : String(e);
+        if(document.getElementById('emsg')) say('emsg','bad', msg);
+        else {
+          var p=document.createElement('div');
+          p.className='msg bad'; p.style.cssText='flex-basis:100%;margin-top:8px';
+          p.textContent=msg;
+          if(!cx.parentNode.querySelector('.msg')) cx.parentNode.appendChild(p);
+        }
       }
       try{
         if(!window.MEMONS_X) throw new Error('X sign-in is unavailable on this page. (x-auth.js did not load)');
         MEMONS_X.signIn({ returnTo: location.pathname+location.hash }).catch(fail);
       }catch(e){ fail(e); }
-    };
+      };
+    });
 
     var cpy=document.getElementById('cpy');
     if(cpy) cpy.onclick=function(){
@@ -914,11 +1038,19 @@
     });
 
     wrap.querySelectorAll('[data-t]').forEach(function(b){
-      b.onclick=function(){ rtier=b.dataset.t; renderDetail(); };
+      b.onclick=function(){ rtier=b.dataset.t; rpage=1; renderDetail(); };
+    });
+    wrap.querySelectorAll('[data-p]').forEach(function(b){
+      b.onclick=function(){
+        if(b.disabled) return;
+        rpage=+b.dataset.p; renderDetail();
+        var t=document.querySelector('.sect table');
+        if(t) t.scrollIntoView({block:'start'});
+      };
     });
     var ri=document.getElementById('rq');
     if(ri) ri.oninput=function(){
-      rq=ri.value; renderDetail();
+      rq=ri.value; rpage=1; renderDetail();
       var n=document.getElementById('rq');
       n.focus(); n.setSelectionRange(n.value.length, n.value.length);
     };
