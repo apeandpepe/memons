@@ -469,6 +469,16 @@
   function tiers(){
     return (C && C.tier_defs && C.tier_defs.length) ? C.tier_defs : LEGACY;
   }
+  /* 카드를 주는 등급인가 (step111).
+
+     'Issue my card' 는 캡슐 화면으로 보내 카드를 받게 하는 버튼이라,
+     상품이 토큰인 등급에서는 눌러도 받을 것이 없습니다. 등급 정의가
+     켜 준 등급에서만 세웁니다. 정의가 없는 옛 캠페인은 지금까지대로
+     mythic/legendary/epic 이 카드입니다. */
+  function isCard(key){
+    if(C && C.tier_defs && C.tier_defs.length) return !!tierOf(key).card;
+    return key==='mythic' || key==='legendary' || key==='epic';
+  }
   function tierOf(key){
     var l=tiers();
     for(var i=0;i<l.length;i++) if(l[i].key===key) return l[i];
@@ -945,9 +955,17 @@
       NOT_YOURS   : 'This prize is not on your account.',
       CLAIM_CLOSED: 'Submissions are closed for this campaign.',
       NO_FORM     : 'Nothing to submit yet.',
+      /* 빠져 있던 둘. 서버는 보내고 있었는데 화면이 알아듣지 못해
+         "다시 시도" 로만 뭉개고 있었습니다. */
+      BAD_ID      : 'Could not tell which prize this is. Please reload the page.',
+      BAD_DATA    : 'Could not read what was entered. Please reload the page.',
+      CLAIM_FAILED: 'Something went wrong on our side. Please try again shortly.',
       NETWORK     : 'Could not reach the server. Please try again.'
     }[head];
-    return say1 || 'Could not save that. Please try again.';
+    /* 모르는 코드면 그 코드를 그대로 붙입니다. "다시 시도하세요" 만
+       보여 주면, 수상자도 우리도 무엇이 막았는지 알 수가 없습니다 --
+       500명한테서 같은 문의가 오면 답할 말이 없습니다. */
+    return say1 || ('Could not save that. (' + (code || 'unknown') + ')');
   }
 
   function submitClaim(){
