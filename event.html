@@ -740,6 +740,8 @@
           : '<span style="font-size:12.5px;color:var(--muted)">Available after winner verification.</span>')+
       '</div>' : '')+
 
+      (myRow ? claimHtml() : '')+
+
       '<div class="bar"><div class="tabs">'+
         [['all','All']].concat(TIERS).map(function(x){
           return '<button class="tab'+(rtier===x[0]?' on':'')+'" data-t="'+x[0]+'">'+
@@ -770,6 +772,100 @@
           }).join('')+'</tbody></table></div>'
         : '<div class="empty">Nothing matches that search.</div>')+
     '</div>';
+  }
+
+  /* ── 수상자 정보 제출 (step109) ──────────────────────────────────
+
+     구글폼을 대신합니다. 이름을 적는 칸이 없다는 점이 핵심입니다 --
+     누구인지는 X 로그인이 이미 정했고, 서버는 그 줄의 임자에게만
+     제출을 허락합니다. 사칭할 자리가 화면에 없습니다.
+
+     받을 칸은 캠페인마다 다르므로 admin 에 적힌 대로 그립니다. */
+  function myWin(){ return myWins.length ? myWins[0] : null; }
+
+  function claimHtml(){
+    var w=myWin();
+    var fs=(C.claim_fields && C.claim_fields.length) ? C.claim_fields : null;
+    if(!w || !fs) return '';
+
+    /* 닫혀 있어도, 이미 낸 사람에게는 낸 것을 보여 줍니다 -- 냈는지
+       아닌지 모르는 채로 두는 쪽이 더 불안합니다. */
+    if(!C.claim_open && !w.submitted) return '';
+
+    var d=w.claim_data||{};
+    var done=!!w.submitted;
+
+    return '<div class="sect enter" id="claimbox" style="margin-top:26px">'+
+      '<h3 style="font-size:clamp(24px,2.6vw,34px)">'+
+        esc(C.claim_title||'Claim your prize')+'</h3>'+
+      (C.claim_body?'<div class="sub">'+esc(C.claim_body)+'</div>'
+                   :'<div class="sub">Tell us where to send it.</div>')+
+
+      (done?'<div class="msg ok" style="margin:0 0 20px">'+
+        'Submitted. You can change it while the campaign is open.</div>':'')+
+
+      fs.map(function(f){
+        var v=d[f.key]==null?'':String(d[f.key]);
+        return '<div class="fld"><div class="k">'+esc(f.label)+
+            (f.required?' *':'')+'</div>'+
+          '<input class="inp" id="cf_'+esc(f.key)+'" value="'+esc(v)+'" '+
+            'placeholder="'+esc(f.hint||'')+'" autocomplete="off" spellcheck="false"'+
+            (C.claim_open?'':' disabled')+'></div>';
+      }).join('')+
+
+      (C.claim_open
+        ? '<button class="cta" id="csub">'+(done?'Update':'Submit')+'</button>'
+        : '<button class="cta" disabled>Submissions are closed</button>')+
+
+      '<div class="note">Only @'+esc(w.x_handle||(me&&me.handle)||'')+
+        ' can submit this. Nobody else can see or change it.</div>'+
+      '<div class="msg" id="cmsg"></div>'+
+    '</div>';
+  }
+
+  /* 서버가 'MISSING:BingX UID' 처럼 칸 이름을 달아 보냅니다. */
+  function claimError(code){
+    var i=String(code||'').indexOf(':');
+    var head=i<0?String(code||''):code.slice(0,i);
+    var who =i<0?'':code.slice(i+1);
+    var say1={
+      MISSING     : who+' is required.',
+      BAD_WALLET  : who+' must look like 0x followed by 40 characters.',
+      NOT_A_WALLET: who+' is a MEMONS account number, not a wallet you can withdraw from.',
+      BAD_EMAIL   : who+' does not look like an email address.',
+      BAD_NUMBER  : who+' must be digits only.',
+      TOO_LONG    : who+' is too long.',
+      NOT_YOURS   : 'This prize is not on your account.',
+      CLAIM_CLOSED: 'Submissions are closed for this campaign.',
+      NO_FORM     : 'Nothing to submit yet.',
+      NETWORK     : 'Could not reach the server. Please try again.'
+    }[head];
+    return say1 || 'Could not save that. Please try again.';
+  }
+
+  function submitClaim(){
+    var w=myWin(), fs=C.claim_fields||[];
+    if(!w) return;
+    var b=document.getElementById('csub');
+    var out={};
+    fs.forEach(function(f){
+      var el=document.getElementById('cf_'+f.key);
+      out[f.key]=el?(el.value||'').trim():'';
+    });
+
+    b.disabled=true; b.textContent='Saving…'; say('cmsg','','');
+    game({contest:'claim', id:w.id, data:out}).then(function(r){
+      if(r.ok){
+        /* 낸 값을 곧바로 손에 든 것에도 반영합니다 -- 다시 그릴 때
+           칸이 비어 보이면 저장이 안 된 것처럼 읽힙니다. */
+        w.claim_data=r.data.claim||out; w.submitted=true;
+        renderDetail();
+        say('cmsg','ok','Saved. We will use this to send your prize.');
+        return;
+      }
+      b.disabled=false; b.textContent = w.submitted?'Update':'Submit';
+      say('cmsg','bad', claimError(r.code));
+    });
   }
 
   // ── detail render + wiring ─────────────────────────────────────
@@ -809,6 +905,9 @@
 
     var sub=document.getElementById('sub');
     if(sub) sub.onclick=enter;
+
+    var csub=document.getElementById('csub');
+    if(csub) csub.onclick=submitClaim;
 
     wrap.querySelectorAll('[data-del]').forEach(function(b){
       b.onclick=function(){ removeEntry(+b.dataset.del, b); };
