@@ -150,8 +150,11 @@
 
   .hero{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;
     padding-bottom:48px}
+  /* 16:9. 목록 카드(.thumb)와 같은 비율이고, 관리자 화면이 올리라고
+     적어 둔 크기(1200×675)와도 같습니다. 여기만 4:3 이어서, 같은
+     그림인데 상세에서만 좌우가 잘려 나갔습니다. */
   .hero .pic{border:1px solid var(--hair);border-radius:14px;overflow:hidden;
-    background:var(--panel2);aspect-ratio:4/3}
+    background:var(--panel2);aspect-ratio:16/9}
   .hero .pic img{width:100%;height:100%;object-fit:cover}
   .meta{display:flex;align-items:center;gap:14px;font-size:11.5px;letter-spacing:2px;
     text-transform:uppercase;color:var(--muted);margin-bottom:16px}
@@ -794,7 +797,7 @@
     var hasRank = wins.some(function(w){ return w.rank; });
     var hasArt  = wins.some(function(w){ return w.artwork_url; });
     var hasStatus = wins.some(function(w){ return w.post_url; }) ||
-                    !!(myRow && myWins.length);
+                    !!(myRow && myWins.length && isCard(myRow.tier));
 
     return '<div class="sect">'+
       '<div class="headrow"><div>'+
@@ -811,9 +814,14 @@
         edge(myRow.tier)+
         '<span class="who">@'+esc(myRow.x_handle)+'</span>'+
         '<span class="sp"></span>'+
-        (myWins.length
+        (myWins.length && isCard(myRow.tier)
           ? '<a class="cta sm" href="index.html#capsule">Issue my card '+I.arr+'</a>'
-          : '<span style="font-size:12.5px;color:var(--muted)">Available after winner verification.</span>')+
+          : myWins.length
+            /* 상품이 카드가 아니면 받을 곳이 없습니다. 상품이 무엇인지
+               적어 주는 편이 쓸 수 없는 버튼보다 낫습니다. */
+            ? '<span style="font-size:13px;color:var(--muted)">'+
+                esc(tierOf(myRow.tier).prize || myRow.prize_label || '')+'</span>'
+            : '<span style="font-size:12.5px;color:var(--muted)">Available after winner verification.</span>')+
       '</div>' : '')+
 
       (myRow ? claimHtml() : '')+
@@ -862,7 +870,7 @@
               '<td class="who">@'+esc(w.x_handle)+'</td>'+
               '<td>'+edge(w.tier)+'</td>'+
               (hasStatus
-                ? '<td>'+(isMe && myWins.length
+                ? '<td>'+(isMe && myWins.length && isCard(w.tier)
                     ? '<a class="cta sm" href="index.html#capsule">Issue card '+I.arr+'</a>'
                     : w.post_url
                       ? '<a class="view" href="'+esc(w.post_url)+'" target="_blank" rel="noopener">View post '+OUT+'</a>'
