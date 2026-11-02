@@ -55,31 +55,32 @@
   button,input{font-family:inherit}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
-  /* ===== header ===== */
-  .head{position:sticky;top:0;z-index:40;background:rgba(7,7,7,.9);backdrop-filter:blur(14px);
+  /* ===== header =====
+     수치는 marketplace.html · collection.html 과 한 글자도 다르지 않게
+     맞춰 둔 것입니다. 여기만 고치면 메뉴 위치가 다시 어긋납니다. */
+  .head{position:sticky;top:0;z-index:40;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);
     display:flex;align-items:center;justify-content:space-between;gap:20px;
-    padding:13px 34px;border-bottom:1px solid var(--hair)}
+    padding:14px 36px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px}
   .brand img{height:44px;width:auto;display:block}
-  /* 다른 페이지 머리글과 같은 묶음. 이 페이지만 아이콘이 없고
-     SIGN IN 이 링크여서, 누르면 로그인 창 대신 홈으로 갔습니다. */
-  .hr{display:flex;align-items:center;gap:18px}
-  .soc{display:flex;gap:15px;color:#bdbab2}
-  .soc a{display:grid;place-items:center;transition:color .2s}
-  .soc a:hover{color:var(--gold)}
-  .soc svg{width:17px;height:17px;fill:currentColor}
-  @media(max-width:1040px){.soc{display:none}}
-  .nav{display:flex;gap:32px;font-size:12.5px;letter-spacing:1.3px;color:#cfccc4;font-weight:500}
-  .nav a{position:relative;padding:8px 0;transition:color .2s}
+  .nav{display:flex;gap:34px;font-size:13px;letter-spacing:1.4px;color:#cdcabf;font-weight:600}
+  .nav a{position:relative;padding:6px 0;transition:color .2s}
   .nav a:hover{color:#fff}
   .nav a.on{color:var(--gold)}
-  .nav a.on::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-14px;
-    height:2px;background:var(--gold)}
-  .wbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);color:var(--gold);
-    background:transparent;padding:9px 16px;border-radius:8px;font-weight:600;
-    font-size:11.5px;letter-spacing:1.3px;cursor:pointer;transition:.2s;white-space:nowrap}
-  .wbtn:hover{background:var(--gold);color:#000;border-color:var(--gold)}
-  .wbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7}
-  @media(max-width:1040px){.nav{display:none}}
+  .nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-20px;height:2px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hr{display:flex;align-items:center;gap:20px}
+  .soc{display:flex;gap:16px;color:#b7b4ac}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:18px;height:18px;fill:currentColor}
+  .wbtn{border:1px solid var(--gold);color:var(--gold);background:transparent;
+    padding:10px 16px;border-radius:8px;font-weight:600;
+    font-size:12px;letter-spacing:1.4px;cursor:pointer;transition:.2s;white-space:nowrap;
+    display:flex;align-items:center;gap:8px}
+  .wbtn:hover{background:var(--gold);color:#000}
+  .wbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7}
+  @media(max-width:1040px){.nav,.soc{display:none}}
 
   .wrap{max-width:1240px;margin:0 auto;padding:60px 34px 110px}
 
@@ -379,7 +380,7 @@
 <body>
 
 <header class="head">
-  <a href="index.html" class="brand"><img src="images/logo.png" alt="MEMONS"></a>
+  <div class="brand"><a href="index.html"><img src="images/logo.png" alt="MEMONS"></a></div>
   <nav class="nav">
     <a href="index.html#home">HOME</a>
     <a href="index.html#marketplace">MARKETPLACE</a>
@@ -394,7 +395,7 @@
       <a href="https://x.com/apepeofficial" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
     </div>
     <button class="wbtn" id="hdrAuth">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/></svg>
       <span id="hdrAuthText">SIGN IN</span>
     </button>
   </div>
@@ -417,7 +418,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-02 16:10";
+  var BUILD = "2026-11-02 16:35";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
