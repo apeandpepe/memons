@@ -59,7 +59,15 @@
   .head{position:sticky;top:0;z-index:40;background:rgba(7,7,7,.9);backdrop-filter:blur(14px);
     display:flex;align-items:center;justify-content:space-between;gap:20px;
     padding:13px 34px;border-bottom:1px solid var(--hair)}
-  .brand img{height:40px;width:auto}
+  .brand img{height:44px;width:auto;display:block}
+  /* 다른 페이지 머리글과 같은 묶음. 이 페이지만 아이콘이 없고
+     SIGN IN 이 링크여서, 누르면 로그인 창 대신 홈으로 갔습니다. */
+  .hr{display:flex;align-items:center;gap:18px}
+  .soc{display:flex;gap:15px;color:#bdbab2}
+  .soc a{display:grid;place-items:center;transition:color .2s}
+  .soc a:hover{color:var(--gold)}
+  .soc svg{width:17px;height:17px;fill:currentColor}
+  @media(max-width:1040px){.soc{display:none}}
   .nav{display:flex;gap:32px;font-size:12.5px;letter-spacing:1.3px;color:#cfccc4;font-weight:500}
   .nav a{position:relative;padding:8px 0;transition:color .2s}
   .nav a:hover{color:#fff}
@@ -378,11 +386,18 @@
     <a href="index.html#capsule">OPEN CAPSULE</a>
     <a href="event.html" class="on">CAMPAIGNS</a>
     <a href="index.html#vault">MEMONS VAULT</a>
+    <a href="notice.html">NOTICE</a>
   </nav>
-  <a class="wbtn" href="index.html">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
-    SIGN IN
-  </a>
+  <div class="hr">
+    <div class="soc">
+      <a href="https://t.me/APEPE_Official" target="_blank" rel="noopener" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L4.5 13.4l-4.8-1.5c-1-.3-1-.9.2-1.4l18.8-7.2c.9-.3 1.6.2 1.2 1Z"/></svg></a>
+      <a href="https://x.com/apepeofficial" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8-9.2L1 2h7l4.8 6.3L18.9 2Zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20Z"/></svg></a>
+    </div>
+    <button class="wbtn" id="hdrAuth">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+      <span id="hdrAuthText">SIGN IN</span>
+    </button>
+  </div>
 </header>
 
 <div class="wrap" id="wrap"><div class="spin"></div></div>
@@ -402,7 +417,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-02 15:55";
+  var BUILD = "2026-11-02 16:10";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -424,10 +439,18 @@
   }
   /* 'en-US' 를 못 박습니다. 비워 두면 브라우저 언어를 따라가서,
      한국에서 보면 영어 페이지에 날짜만 한글로 나옵니다. */
+  /* UTC 로 그립니다.
+
+     보는 사람의 시간대로 바꾸면, 같은 캠페인이 한국에서는 Nov 8,
+     미국에서는 Nov 7 로 보입니다. 마감이 UTC 기준이고 공지도 그
+     날짜로 나가므로, 화면도 그 하나를 보여야 합니다 -- 11/7 23:59
+     UTC 마감이 한국 사람에게 Nov 8 로 보이면 하루를 더 있는 줄
+     압니다. */
   function fmt(d){
     if(!d) return '';
     var x=new Date(d); if(isNaN(x)) return '';
-    return x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    return x.toLocaleDateString('en-US',
+      {month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
   }
   function period(c){
     if(!c.starts_at && !c.ends_at) return 'To be announced';
@@ -1052,8 +1075,33 @@
       }
 
       renderDetail();
+      /* 토큰이 살아 있는지는 여기서야 확실해집니다. 처음 그릴 때의
+         SIGN IN 을 로그인한 사람에게 그대로 두지 않습니다. */
+      syncHeader();
     });
   }
+
+  /* 머리글의 SIGN IN.
+
+     다른 페이지와 같은 일을 해야 합니다 -- 전에는 홈으로 가는 링크라
+     눌러도 로그인 창이 안 열렸습니다. social-login.js 가 띄우는
+     공통 창을 씁니다. 로그인한 뒤에는 My Page 로 바뀝니다. */
+  function syncHeader(){
+    var b=document.getElementById('hdrAuth'),
+        t=document.getElementById('hdrAuthText');
+    if(!b||!t) return;
+    if(tok()){
+      t.textContent='MY PAGE';
+      b.onclick=function(){ location.href='mypage-dashboard.html'; };
+    }else{
+      t.textContent='SIGN IN';
+      b.onclick=function(){
+        if(window.MEMONS_SIGNIN) window.MEMONS_SIGNIN();
+        else location.href='index.html';   /* 공통 창이 없으면 홈으로 */
+      };
+    }
+  }
+  syncHeader();
 
   // ── start ──────────────────────────────────────────────────────
   var x=new URLSearchParams(location.search).get('x');
