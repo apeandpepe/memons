@@ -185,7 +185,9 @@
   .ulink:hover{color:var(--gold);border-color:var(--line)}
 
   /* tier stats */
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);
+  /* 등급 수가 캠페인마다 다릅니다(step110). 세 칸으로 못 박아 두면
+     다섯 등급짜리가 3+2 로 접혀 오른쪽이 비어 보입니다. */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
     border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
   .stat{text-align:center;padding:36px 16px;position:relative}
   .stat + .stat::before{content:"";position:absolute;left:0;top:26px;bottom:26px;
@@ -215,9 +217,15 @@
   .prose p{margin-bottom:16px}
   .prose p:last-child{margin-bottom:0}
 
-  .partner{display:grid;grid-template-columns:300px 1fr;gap:40px;align-items:start;
+  /* 가로형. 시안의 파트너 그림이 정사각형이 아니라 2:1 에 가깝고,
+     칸도 더 넓게 잡혀 있습니다. */
+  .partner{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:44px;align-items:start;
     padding:40px 0;border-top:1px solid var(--hair);margin-top:40px}
-  .partner .pic{border-radius:12px;overflow:hidden;background:var(--panel2);aspect-ratio:1/1}
+  /* 본문이 없어지면서 파트너가 구역의 첫 칸이 되었습니다. 그때는
+     위 선과 여백이 빈 띠로만 남습니다 -- 위 등급 칸의 아래 선이
+     이미 구분선 노릇을 합니다. */
+  .partner:first-child{border-top:0;margin-top:0;padding-top:8px}
+  .partner .pic{border-radius:12px;overflow:hidden;background:var(--panel2);aspect-ratio:2/1}
   .partner .pic img{width:100%;height:100%;object-fit:cover}
   .partner h3{font-size:clamp(26px,2.8vw,38px);font-weight:700;letter-spacing:-.03em;margin:12px 0 15px}
   .partner p{font-size:15px;color:var(--muted);line-height:1.75;max-width:520px}
@@ -342,7 +350,7 @@
     .cols{grid-template-columns:1fr;gap:38px}
     .vline{display:none}
     .partner{grid-template-columns:1fr;gap:24px}
-    .partner .pic{max-width:260px;aspect-ratio:16/10}
+    .partner .pic{max-width:420px;aspect-ratio:2/1}
     .enter h3{font-size:34px}
     .art,.art img,.art .none{width:120px}
     .art img,.art .none{height:48px}
@@ -390,6 +398,13 @@
 <script>
 (function(){
   "use strict";
+
+  /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
+     열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
+     찍힙니다. */
+  var BUILD = "2026-11-02 15:55";
+  try{ console.log("%cMEMONS campaigns build "+BUILD,
+                   "color:#E9B84A;font-weight:700"); }catch(e){}
 
   var SB_URL  = "https://neixdrtamznrooougcda.supabase.co";
   var SB_ANON = "sb_publishable_xXzlHTJ4cX8kJoEGXw_csw_q5qFK1nO";
@@ -481,6 +496,17 @@
   function isCard(key){
     if(C && C.tier_defs && C.tier_defs.length) return !!tierOf(key).card;
     return key==='mythic' || key==='legendary' || key==='epic';
+  }
+  /* 공개 명단의 핸들은 일부만 보여 줍니다.
+
+     전체를 적어 두면 제3자가 당첨자를 그대로 추려 갈 수 있습니다 --
+     DM 으로 "수상 확인은 여기서" 라며 접근하는 사칭이 붙을 자리가
+     바로 그 목록입니다. 본인은 자기 줄이 가려지지 않으므로(아래
+     isMe) 자기 것을 알아보는 데 문제가 없습니다. */
+  function mask(h){
+    var s=String(h||'');
+    if(s.length<=2) return s+'***';
+    return s.slice(0, s.length<=5 ? 2 : 4)+'***';
   }
   function tierOf(key){
     var l=tiers();
@@ -577,7 +603,7 @@
 
   // ══════════════════════════════════════════════ DETAIL ══════════
 
-  var C=null, step='overview', wins=[], mine=[], myWins=[], me=null,
+  var C=null, wins=[], myWins=[], me=null,
       rq='', rtier='all', rpage=1, xpending=null;
 
   /* 한 등급이 500명인 캠페인이 있습니다. 한 장에 다 그리면 표가
@@ -628,24 +654,22 @@
             /* 상품이 적혀 있으면 그걸 보여 줍니다. 등급 이름만으로는
                1st 와 2nd 가 얼마나 다른지 알 수 없습니다. */
             '<div class="w">'+(x.prize?esc(x.prize):'winners')+'</div></div>';
-        }).join('')+'</div>' : '')+
-
-      '<div class="steps">'+
-        [['overview','01','Overview'],['participate','02','Participate'],['results','03','Results']]
-          .map(function(s,i){
-            return (i?'<span class="slash">/</span>':'')+
-              '<button class="step'+(step===s[0]?' on':'')+'" data-s="'+s[0]+'">'+
-                '<em>'+s[1]+'</em>'+s[2]+'</button>';
-          }).join('')+
-      '</div>';
+        }).join('')+'</div>' : '')+'';
   }
 
-  // ── 01 overview ────────────────────────────────────────────────
-  function secOverview(){
+  /* 탭을 없앴습니다.
+
+     Overview / Participate / Results 로 나눠 두었더니, 참가하려는
+     사람이 탭을 한 번 더 눌러야 했고 결과를 보러 온 사람도 마찬가지
+     였습니다. 캠페인은 X 에서 돌아가므로 참가 인증을 사이트로 끌고
+     오는 대신, 소개와 결과만 한 장에 이어 둡니다. */
+  function secAbout(){
     var p=C.partner;
+    /* 본문은 싣지 않습니다. 참가 방법은 X 공지에 있고, 여기까지
+       옮겨 적으면 두 곳을 함께 고쳐야 합니다 -- 한쪽만 고치는 날이
+       반드시 옵니다. 파트너 소개만 둡니다. */
+    if(!p) return '';
     return '<div class="sect">'+
-      (C.body ? '<div class="prose">'+paras(C.body)+'</div>'
-              : '<div class="prose"><p>'+esc(C.summary||'')+'</p></div>')+
       (p ? '<div class="partner">'+
         '<div class="pic">'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'')+'</div>'+
         '<div>'+
@@ -659,85 +683,6 @@
             (p.chat?'<span class="bar2"></span><a href="'+esc(p.chat)+'" target="_blank" rel="noopener">Community '+OUT+'</a>':'')+
           '</div>'+
         '</div></div>' : '')+
-    '</div>';
-  }
-
-  // ── 02 participate ─────────────────────────────────────────────
-  function secParticipate(){
-    var tags=String(C.tags||'').split(/\s+/).filter(Boolean);
-    var connected = me && me.handle;
-
-    return '<div class="sect enter">'+
-      '<h3>Enter the campaign</h3>'+
-      '<div class="sub">Create on X. Verify on MEMONS.</div>'+
-
-      '<div class="cols">'+
-        /* ── 01 share ─────────────────────────────── */
-        '<div>'+
-          '<div class="num"><b>01</b> / Participate</div>'+
-          '<h4>Share your creation</h4>'+
-          '<p>'+esc(C.summary||'Create a meme for this campaign.')+'<br>'+
-            'Quote the campaign post and tag the accounts below.</p>'+
-          (tags.length?'<div class="handles">'+tags.map(function(h){
-            var n=h.replace(/^@/,'');
-            return '<a href="https://x.com/'+encodeURIComponent(n)+'" target="_blank" rel="noopener">@'+esc(n)+'</a>';
-          }).join('')+'</div>':'<div style="height:18px"></div>')+
-          (C.link_url
-            ? '<a class="cta" href="'+esc(C.link_url)+'" target="_blank" rel="noopener">'+
-                'Open campaign on X <span>'+OUT+'</span></a>' : '')+
-          (C.slogan
-            ? '<div class="slogan"><div><div class="k">Campaign slogan</div>'+
-                '<div class="v" id="slg">'+esc(C.slogan)+'</div></div>'+
-                '<button class="copy" id="cpy" title="Copy">'+I.cp+'</button></div>' : '')+
-        '</div>'+
-
-        '<div class="vline"></div>'+
-
-        /* ── 02 verify ────────────────────────────── */
-        '<div>'+
-          '<div class="num"><b>02</b> / Verify</div>'+
-          '<h4>Confirm your entry</h4>'+
-
-          '<div class="fld"><div class="k">X account</div>'+
-            '<div class="xrow">'+I.x+
-              '<span class="'+(connected?'ok':'')+'">'+
-                (connected?'@'+esc(me.handle):'Not connected')+'</span>'+
-              (connected?'':'<button class="cta sm" id="cx">Connect X</button>')+
-            '</div></div>'+
-
-          '<div class="fld"><div class="k">Quote-post URL</div>'+
-            '<input class="inp" id="purl" placeholder="https://x.com/yourname/status/…" '+
-              'autocomplete="off" spellcheck="false"'+(C.entry_open?'':' disabled')+'></div>'+
-
-          '<label class="chk"><input type="checkbox" id="agree"'+(C.entry_open?'':' disabled')+'>'+
-            '<span>I agree to the '+
-              (C.rules_url?'<a href="'+esc(C.rules_url)+'" target="_blank" rel="noopener">campaign rules</a>':'campaign rules')+
-              ', and that my entry may be published as a MEMONS card.</span></label>'+
-
-          (C.entry_open
-            ? '<button class="cta" id="sub">Verify participation</button>'
-            : '<button class="cta" disabled>Entries are closed</button>')+
-
-          '<div class="note">'+(connected
-            ? 'The post must be from @'+esc(me.handle)+'.'
-            : 'Connect your X account to confirm this post is yours.')+'</div>'+
-          '<div class="msg" id="emsg"></div>'+
-
-          (mine.length?'<div class="mine"><div class="k">Your entries</div>'+
-            mine.map(function(e){
-              return '<div class="erow">'+
-                '<a href="'+esc(e.post_url)+'" target="_blank" rel="noopener">'+esc(e.post_url)+'</a>'+
-                '<span class="st '+esc(e.status)+'">'+esc(e.status)+'</span>'+
-                (e.status==='pending'
-                  ? '<button class="xbtn" data-del="'+e.id+'">remove</button>' : '')+
-              '</div>';
-            }).join('')+'</div>':'')+
-        '</div>'+
-      '</div>'+
-
-      '<div class="foot"><span>Your work could become a MEMONS card.</span>'+
-        (C.rules_url?'<a class="view" href="'+esc(C.rules_url)+'" target="_blank" rel="noopener">'+
-          'Campaign rules '+OUT+'</a>':'')+'</div>'+
     '</div>';
   }
 
@@ -804,9 +749,11 @@
         '<div class="eyebrow">Campaign results</div>'+
         '<h1 style="font-size:44px">The selected works</h1>'+
         '<div class="lede">Discover the winning creations and collect your card.</div>'+
-      '</div>'+
-      '<label class="search">'+I.find+
-        '<input id="rq" placeholder="Search X handle" value="'+esc(rq)+'"></label></div>'+
+      /* 검색창을 뺐습니다. 핸들을 가려 놓고 검색을 열어 두면, 아무
+         핸들이나 쳐 넣어 당첨 여부를 하나씩 확인할 수 있습니다 --
+         가린 것이 소용없어집니다. 본인 것은 로그인하면 맨 위에
+         따로 나오므로 찾을 일도 없습니다. */
+      '</div></div>'+
 
       (myRow ? '<div class="yours">'+
         '<div><div class="k">Your result</div>'+
@@ -867,7 +814,8 @@
                 ? '<td class="art">'+(w.artwork_url
                     ? '<img src="'+esc(w.artwork_url)+'" alt="" loading="lazy">'
                     : '<div class="none">No image</div>')+'</td>' : '')+
-              '<td class="who">@'+esc(w.x_handle)+'</td>'+
+              /* 본인 줄만 통째로. 나머지는 가립니다. */
+              '<td class="who">@'+esc(isMe ? w.x_handle : mask(w.x_handle))+'</td>'+
               '<td>'+edge(w.tier)+'</td>'+
               (hasStatus
                 ? '<td>'+(isMe && myWins.length && isCard(w.tier)
@@ -1003,19 +951,11 @@
 
   // ── detail render + wiring ─────────────────────────────────────
   function renderDetail(){
-    wrap.innerHTML = heroHtml() +
-      (step==='overview' ? secOverview()
-       : step==='participate' ? secParticipate()
-       : secResults());
+    /* 한 장에 이어 붙입니다: 머리글 → 소개 → 결과.
+       발표 전이면 secResults 가 "아직 발표 전" 한 줄만 그립니다. */
+    wrap.innerHTML = heroHtml() + secAbout() + secResults();
 
-    wrap.querySelectorAll('.step').forEach(function(b){
-      b.onclick=function(){ step=b.dataset.s; renderDetail(); window.scrollTo({top:0}); };
-    });
-
-    /* 결과 화면의 로그인 버튼. Participate 쪽 버튼과 같은 일을
-       하므로 같은 처리를 씁니다 -- 둘이 갈라지면 한쪽만 고치게
-       됩니다. */
-    ['cx','rx'].forEach(function(id){
+    ['rx'].forEach(function(id){
       var cx=document.getElementById(id);
       if(!cx) return;
       var was=cx.innerHTML;
@@ -1046,22 +986,8 @@
       };
     });
 
-    var cpy=document.getElementById('cpy');
-    if(cpy) cpy.onclick=function(){
-      var s=document.getElementById('slg');
-      try{ navigator.clipboard.writeText(s.textContent); cpy.style.color='var(--green)';
-           setTimeout(function(){ cpy.style.color=''; }, 1200); }catch(e){}
-    };
-
-    var sub=document.getElementById('sub');
-    if(sub) sub.onclick=enter;
-
     var csub=document.getElementById('csub');
     if(csub) csub.onclick=submitClaim;
-
-    wrap.querySelectorAll('[data-del]').forEach(function(b){
-      b.onclick=function(){ removeEntry(+b.dataset.del, b); };
-    });
 
     wrap.querySelectorAll('[data-t]').forEach(function(b){
       b.onclick=function(){ rtier=b.dataset.t; rpage=1; renderDetail(); };
@@ -1074,12 +1000,6 @@
         if(t) t.scrollIntoView({block:'start'});
       };
     });
-    var ri=document.getElementById('rq');
-    if(ri) ri.oninput=function(){
-      rq=ri.value; rpage=1; renderDetail();
-      var n=document.getElementById('rq');
-      n.focus(); n.setSelectionRange(n.value.length, n.value.length);
-    };
   }
 
   function say(id, cls, text){
@@ -1087,71 +1007,6 @@
     m.className='msg '+cls; m.textContent=text;
   }
 
-  function enter(){
-    var url=(document.getElementById('purl').value||'').trim();
-    var ok=document.getElementById('agree').checked;
-    var b=document.getElementById('sub');
-
-    if(!me || !me.handle){ say('emsg','bad','Connect your X account first.'); return; }
-    if(!url){ say('emsg','bad','Paste the link to your quote post.'); return; }
-    if(!/(?:twitter|x)\.com\/[A-Za-z0-9_]{1,15}\/status(?:es)?\/\d+/.test(url)){
-      say('emsg','bad','That does not look like a post link. It should look like https://x.com/yourname/status/123…');
-      return;
-    }
-    if(!ok){ say('emsg','bad','Please agree to the rules first.'); return; }
-
-    b.disabled=true; b.textContent='Checking…';
-    say('emsg','','');
-
-    game({contest:'enter', event:C.event_key, url:url}).then(function(r){
-      b.disabled=false; b.textContent='Verify participation';
-
-      if(r.ok){
-        var s=String(r.data.result||'');
-        /* 할 말은 다시 그린 뒤에 씁니다. loadMine 이 이 칸을 통째로 새로
-           만들기 때문에, 먼저 쓰면 몇십 ms 뒤에 지워집니다 — 접수는 됐는데
-           아무 말도 못 듣는 상태가 됩니다. 주소 칸은 새로 그려지며 비므로
-           따로 비울 것이 없습니다. */
-        loadMine(function(){
-          if(s.indexOf('already')===0) say('emsg','bad','That post has already been entered.');
-          else                         say('emsg','ok','Entry received. Good luck.');
-        });
-        return;
-      }
-
-      /* 거절은 저마다 할 말이 다릅니다. 특히 NOT_YOUR_POST 는
-         "남의 글"이라는 뜻이라, 뭉뚱그리면 유저가 왜 막혔는지
-         영영 모릅니다. */
-      say('emsg','bad', {
-        NOT_YOUR_POST : 'That post is not from your X account. Enter a post from @'+(me.handle||''),
-        BAD_URL       : 'That link could not be read. Copy the post link from X.',
-        ENTRY_CLOSED  : 'Entries are closed for this campaign.',
-        NO_X          : 'Connect your X account first.',
-        NO_ACCOUNT    : 'Please sign in again.',
-        NETWORK       : 'Could not reach the server. Please try again.'
-      }[r.code] || 'Could not submit that entry. Please try again.');
-    });
-  }
-
-  function removeEntry(id, b){
-    if(!confirm('Remove this entry?')) return;
-    b.disabled=true;
-    game({contest:'unenter', id:id}).then(function(r){
-      if(r.ok){ loadMine(); return; }
-      b.disabled=false;
-      say('emsg','bad', r.code==='ALREADY_JUDGED'
-        ? 'That entry has already been judged.' : 'Could not remove that entry.');
-    });
-  }
-
-  function loadMine(after){
-    if(!tok() || !C){ mine=[]; renderDetail(); if(after) after(); return; }
-    game({contest:'mine_entries', event:C.event_key}).then(function(r){
-      mine=(r.ok && r.data.entries)||[];
-      renderDetail();
-      if(after) after();
-    });
-  }
 
   // ── load ───────────────────────────────────────────────────────
   function currentKey(){
@@ -1196,14 +1051,7 @@
         return;
       }
 
-      /* 발표가 났으면 결과부터 보여줍니다. 그걸 보러 온 사람이
-         대부분이고, 탭을 한 번 더 누르게 할 이유가 없습니다. */
-      if(C.show_winners && wins.length) step='results';
-      else if(C.entry_open)             step='participate';
-      else                              step='overview';
-
       renderDetail();
-      loadMine();
     });
   }
 
@@ -1213,7 +1061,7 @@
 
   function route(){
     var key=currentKey();
-    step='overview';
+    rpage=1; rtier='all'; rq='';
     if(!key){ C=null; loadList(); return; }
     loadDetail(key);
   }
