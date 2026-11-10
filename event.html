@@ -418,7 +418,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-02 16:35";
+  var BUILD = "2026-11-10 17:05 · 등급별 입력 칸";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -807,7 +807,7 @@
         ? '<div class="yours" style="margin-bottom:22px">'+
             '<div><div class="k">Winners</div>'+
             '<div style="font-size:15px;margin-top:4px">'+
-              'Sign in with X to submit where your reward should go.</div></div>'+
+              'Sign in with X to claim your reward.</div></div>'+
             '<span class="sp"></span>'+
             '<button class="cta sm" id="rx">'+I.x+' Sign in with X</button>'+
           '</div>'
@@ -880,9 +880,31 @@
      받을 칸은 캠페인마다 다르므로 admin 에 적힌 대로 그립니다. */
   function myWin(){ return myWins.length ? myWins[0] : null; }
 
+  /* 이 칸이 이 등급에 보이는가. 서버 contest_field_for_tier 와 같은
+     판정입니다 -- 한쪽만 고치면 화면에 없는 칸을 필수로 요구하거나,
+     보이는 칸이 저장되지 않습니다. */
+  function fieldForTier(f, tier){
+    var t=f && f.tiers;
+    if(!t || !t.length) return true;
+    var mine=String(tier||'').trim().toLowerCase();
+    for(var i=0;i<t.length;i++){
+      if(String(t[i]||'').trim().toLowerCase()===mine) return true;
+    }
+    return false;
+  }
+
+  /* 내 등급에 보이는 칸만. 카드 등급은 캡슐로 받으니 지갑 칸이
+     필요 없고, 터보 참여상은 지갑이 있어야 합니다. */
+  function myFields(){
+    var w=myWin();
+    if(!w) return [];
+    return (C.claim_fields||[]).filter(function(f){ return fieldForTier(f, w.tier); });
+  }
+
   function claimHtml(){
     var w=myWin();
-    var fs=(C.claim_fields && C.claim_fields.length) ? C.claim_fields : null;
+    var all=myFields();
+    var fs=all.length ? all : null;
     if(!w || !fs) return '';
 
     /* 닫혀 있어도, 이미 낸 사람에게는 낸 것을 보여 줍니다 -- 냈는지
@@ -935,6 +957,7 @@
       NOT_YOURS   : 'This prize is not on your account.',
       CLAIM_CLOSED: 'Submissions are closed for this campaign.',
       NO_FORM     : 'Nothing to submit yet.',
+      NO_FIELDS_FOR_TIER : 'There is nothing to submit for this prize.',
       /* 빠져 있던 둘. 서버는 보내고 있었는데 화면이 알아듣지 못해
          "다시 시도" 로만 뭉개고 있었습니다. */
       BAD_ID      : 'Could not tell which prize this is. Please reload the page.',
@@ -949,7 +972,7 @@
   }
 
   function submitClaim(){
-    var w=myWin(), fs=C.claim_fields||[];
+    var w=myWin(), fs=myFields();
     if(!w) return;
     var b=document.getElementById('csub');
     var out={};
