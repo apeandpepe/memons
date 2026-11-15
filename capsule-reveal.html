@@ -1471,6 +1471,15 @@ function revToast(msg){
 }
 function pullErrMsg(e){
   const m=(e&&e.message)?e.message:String(e);
+  /* 수상 카드 쪽 사정은 캡슐과 다릅니다. "Pull failed" 로 뭉개면
+     이미 받은 사람도, 아직 카드가 없는 사람도 같은 말을 봅니다. */
+  if(m.includes('ALREADY_CLAIMED'))  return 'You already opened this one. The card is in your collection.';
+  if(m.includes('CARDS_NOT_OPEN'))   return 'Cards are not ready yet. Check back soon.';
+  if(m.includes('CARD_NOT_LINKED'))  return 'Your card is still being prepared.';
+  if(m.includes('NOT_A_CARD_PRIZE')) return 'This prize is not a card.';
+  if(m.includes('NOT_YOURS'))        return 'That prize is not on this account.';
+  if(m.includes('NO_ACCOUNT'))       return 'Please sign in again.';
+  if(m.includes('not signed in') || m.includes('SESSION')) return 'Please sign in to open your prize.';
   if(m.includes('MISSIONS_INCOMPLETE')) return 'Complete missions 1–3 first to open capsules.';
   if(m.includes('NO_PULLS_LEFT'))    return 'You have used all your pulls.';
   if(m.includes('WALLET_NOT_FOUND')) return 'This wallet has no pulls yet.';
@@ -1484,6 +1493,18 @@ function pullErrMsg(e){
    refreshPulls both check it, and either can run while the page is still
    setting itself up. */
 const PREVIEW_ID = new URLSearchParams(location.search).get('preview');
+
+/* ?prize=12 opens a campaign prize.
+
+   수상 카드도 캡슐입니다. 당첨 화면에서 바로 계정에 꽂아 주면
+   받은 줄도 모르고 지나갑니다 -- 여는 일이 보상의 절반입니다.
+   그래서 당첨 화면은 여기로 보내기만 하고, 카드는 캡슐을 여는
+   그 순간 서버가 꺼냅니다.
+
+   숫자는 contest_winners 의 줄 번호입니다. 그 줄의 임자가 지금
+   로그인한 회원일 때만 서버가 내어 줍니다 -- 남의 번호를 적어
+   넣어도 소용없습니다. */
+const PRIZE_ID = new URLSearchParams(location.search).get('prize');
 
 function mapCard(card){
   // the API returns the card either flat ({card_id, rarity, image_url}) or with
@@ -1512,6 +1533,13 @@ async function ensureConnected(){
      spends nothing, so asking someone to connect before they can look at
      a card is a hurdle in front of nothing. */
   if(PREVIEW_ID) return true;
+  /* 수상 카드는 지갑이 아니라 계정에 묶입니다. 소셜로만 들어온
+     회원에게는 연결할 지갑이 없으므로, 로그인만 되어 있으면
+     됩니다 -- authFetch 가 세션을 확인합니다. */
+  if(PRIZE_ID){
+    if(!window.MEMONS) { revToast('Please sign in again.'); return false; }
+    return true;
+  }
   if(!window.MEMONS) { revToast('Wallet module failed to load'); return false; }
   if(MEMONS.connected) return true;
   try{ await MEMONS.connect(); return true; }
@@ -1562,10 +1590,25 @@ async function previewCard(id){
                    image_url: c.image_url, capsule_id: 'paid' });
 }
 
+/* 수상 카드 꺼내기.
+
+   어느 카드인지는 서버가 압니다 -- 관리자가 수상작마다 카드를
+   1:1 로 붙여 두었고, 화면은 줄 번호만 보냅니다. 한 번 꺼낸 줄은
+   서버가 두 번 내어 주지 않으므로, 새로고침해도 두 장이 되지
+   않습니다. */
+async function prizeCard(id){
+  const d = await MEMONS.authFetch('/game', { contest:'claimcard', id: +id });
+  const c = (d && d.card) || {};
+  if(!c.card_id) throw new Error('CARD_NOT_LINKED');
+  return mapCard({ card_id:c.card_id, name:c.name, rarity:c.rarity,
+                   image_url:c.image_url, capsule_id:'paid' });
+}
+
 async function pullServer(){
   /* Preview stands in for the pull, rather than sitting beside it. The
      reveal has several entry points and they all end here; branching at
      the source means every one of them honours the parameter. */
+  if(PRIZE_ID)   return await prizeCard(PRIZE_ID);
   if(PREVIEW_ID) return await previewCard(PREVIEW_ID);
   const r = await MEMONS.pull(); const c=mapCard(r.card); refreshPulls(); return c;
 }
@@ -1579,7 +1622,7 @@ async function refreshPulls(){
   /* Nothing is being spent, so there is no count to keep. Shown as a dash
      rather than hidden: the box is part of the layout the reveal was
      built around, and an empty gap reads as a fault. */
-  if(PREVIEW_ID){
+  if(PREVIEW_ID || PRIZE_ID){
     el.textContent='–';
     if(chg) chg.style.display='none';
     return;
@@ -1601,6 +1644,16 @@ async function refreshPulls(){
 }
 window.refreshPulls=refreshPulls;
 document.addEventListener('DOMContentLoaded', ()=>{ refreshPulls(); });
+
+/* 수상 캡슐은 한 개짜리입니다. ×10 을 남겨 두면 눌러 보고 엉뚱한
+   오류를 봅니다. 돌아가는 곳도 메인이 아니라 당첨 화면입니다. */
+document.addEventListener('DOMContentLoaded', function(){
+  if(!PRIZE_ID) return;
+  var t=document.getElementById('open10');  if(t) t.style.display='none';
+  var h=document.getElementById('hint');    if(h) h.textContent='CLICK THE CAPSULE';
+  var b=document.querySelector('.backlink');
+  if(b){ b.setAttribute('href','event.html'); b.innerHTML='&lsaquo; CAMPAIGN'; }
+});
 
 let busy=false;
 async function single(){

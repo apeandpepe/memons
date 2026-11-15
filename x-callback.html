@@ -111,6 +111,16 @@
       onward(back, { x:'cancelled' });
       return;
     }
+    /* 이 X 계정이 이미 다른 MEMONS 계정에 붙어 있는 경우. 흔한
+       일이고, 사람이 할 일도 분명합니다 -- 원래 쓰던 계정으로
+       들어오면 됩니다. "링크 실패" 로 적으면 알 수가 없습니다. */
+    if(String(e.code||'').indexOf('already linked')>=0 ||
+       String(e.message||'').indexOf('already linked')>=0){
+      fail('This X account is on another MEMONS account',
+           'Sign out here, then sign in with the account that already has this X handle. '+
+           'Your prize is waiting on that account.', back);
+      return;
+    }
     fail('Could not sign in', String(e.message||e), back);
   });
 })();

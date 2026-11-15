@@ -354,7 +354,29 @@
   .vcard .cta{width:100%;display:inline-flex;align-items:center;
     justify-content:center;gap:9px;padding:13px 20px;font-size:14px}
   .vcard .cta svg{width:15px;height:15px;flex:0 0 auto}
+  .vcard .alt{margin-top:12px;font-size:12.5px;color:var(--faint)}
+  .vcard .alt button{background:none;border:none;font:inherit;cursor:pointer;
+    color:var(--muted);border-bottom:1px solid var(--hair);padding:0 0 1px}
+  .vcard .alt button:hover{color:var(--gold);border-color:var(--line)}
   @media(max-width:640px){.vask{padding-top:40px}.vcard{padding:22px 20px}}
+
+  /* ── 계정이 둘로 갈린 경우 ───────────────────────────────────────
+     X 로 처음 들어온 사람에게는 새 계정이 생깁니다. 이미 쓰던
+     계정이 있으면 카드가 엉뚱한 쪽에 쌓이므로, 합칠 자리를
+     알려 줍니다. */
+  .mgb{position:fixed;left:16px;right:16px;bottom:16px;z-index:80;
+    max-width:620px;margin:0 auto;background:rgba(16,16,18,.96);
+    border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+  .mgb p{font-size:13.5px;line-height:1.6;color:var(--text);margin-bottom:12px}
+  .mgb .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .mgb button{font-family:inherit;border-radius:9px;padding:9px 15px;
+    font-size:12.5px;cursor:pointer;border:1px solid var(--hair);
+    background:none;color:var(--muted)}
+  .mgb button.pri{border-color:var(--line);color:var(--gold)}
+  .mgb button:hover{color:var(--text)}
+  .mgb .mm{font-size:12.5px;margin-left:2px}
+
   table{width:100%;border-collapse:collapse}
   thead th{text-align:left;font-size:10.5px;letter-spacing:2px;color:var(--muted);
     text-transform:uppercase;font-weight:600;padding:0 14px 14px;border-bottom:1px solid var(--hair)}
@@ -448,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-15 11:45 · 카드 Claim";
+  var BUILD = "2026-11-15 14:50 · 수상 캡슐 + 계정 연결";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -832,7 +854,11 @@
           /* 수령이 열렸으면 유저가 직접 가져갑니다. 눌러야 받는
              쪽이 받은 줄도 모르는 것보다 낫습니다. */
           : (isCard(myRow.tier) && myWin() && myWin().cards_open)
-            ? '<button class="cta sm" id="cardget">Claim my card</button>'
+            /* 캡슐 화면으로 보냅니다. 카드는 거기서 캡슐을 열 때
+               서버가 꺼내 줍니다 -- 여는 연출이 보상의 절반입니다.
+               여기서 먼저 지급해 버리면 캡슐이 빈 껍데기가 됩니다. */
+            ? '<a class="cta sm" href="capsule-reveal.html?prize='+
+                encodeURIComponent(myWin().id)+'">Claim my card</a>'
           : (isCard(myRow.tier) && myWin() && myWin().card_ready)
             ? '<a class="cta sm" href="index.html#capsule">Issue my card '+I.arr+'</a>'
             : isCard(myRow.tier)
@@ -876,6 +902,13 @@
             '<div class="k">Campaign results</div>'+
             '<p>Verify with X to check your result. If you won, your reward form opens here.</p>'+
             '<button class="cta" id="rx">'+I.x+' Check my result</button>'+
+            /* 쓰던 계정이 있는 사람은 먼저 그 계정으로 들어와야
+               합니다. 그래야 X 가 지금 계정에 붙고, 상품도 카드도
+               그 계정에 쌓입니다. 로그인한 채로 들어오면 이 줄은
+               아예 안 보입니다 -- 그때는 이미 맞는 길입니다. */
+            (tok() ? '' :
+              '<div class="alt">Already have a MEMONS account? '+
+                '<button id="vsign">Sign in first</button></div>')+
           '</div></div>')+
 
       '<div class="bar vbar"><div class="tabs">'+
@@ -1025,31 +1058,6 @@
     '</div>';
   }
 
-  /* 수상 카드를 당첨자가 직접 가져갑니다. 어느 카드인지는 서버가
-     정합니다 -- 화면은 "내 줄" 번호만 보냅니다. */
-  function claimCard(){
-    var w=myWin(); if(!w) return;
-    var b=document.getElementById('cardget'); if(!b) return;
-    b.disabled=true; b.textContent='Claiming…';
-    game({contest:'claimcard', id:w.id}).then(function(r){
-      if(r.ok){
-        w.card_issued=true;
-        renderDetail();
-        return;
-      }
-      b.disabled=false; b.textContent='Claim my card';
-      var m={
-        ALREADY_CLAIMED  : 'You already claimed this card.',
-        CARDS_NOT_OPEN   : 'Cards are not ready yet. Check back soon.',
-        CARD_NOT_LINKED  : 'Your card is still being prepared.',
-        NO_ACCOUNT       : 'Sign in again and retry.',
-        NOT_YOURS        : 'That is not your prize.',
-        NOT_A_CARD_PRIZE : 'This prize is not a card.'
-      }[r.code] || ('Could not claim ('+(r.code||'error')+')');
-      alert(m);
-    });
-  }
-
   /* 서버가 'MISSING:BingX UID' 처럼 칸 이름을 달아 보냅니다. */
   function claimError(code){
     var i=String(code||'').indexOf(':');
@@ -1140,16 +1148,25 @@
       }
       try{
         if(!window.MEMONS_X) throw new Error('X sign-in is unavailable on this page. (x-auth.js did not load)');
-        MEMONS_X.signIn({ returnTo: location.pathname+location.hash }).catch(fail);
+        /* 이미 MEMONS 에 들어와 있으면 '로그인' 이 아니라 '연결' 입니다.
+           signIn 을 쓰면 /social/x 가 X 를 기준으로 계정을 다시 고르고,
+           X 이메일이 가입 때와 다르면 빈 계정이 새로 생깁니다 -- 상품이
+           쓰던 계정이 아닌 그 새 계정에 묶입니다. link 는 지금 들어와
+           있는 계정에 X 를 붙이므로 그럴 일이 없습니다. */
+        var opt={ returnTo: location.pathname+location.hash };
+        ((tok() && MEMONS_X.link) ? MEMONS_X.link(opt) : MEMONS_X.signIn(opt)).catch(fail);
       }catch(e){ fail(e); }
       };
     });
 
+    var vs=document.getElementById('vsign');
+    if(vs) vs.onclick=function(){
+      if(window.MEMONS_SIGNIN) MEMONS_SIGNIN();
+      else location.href='index.html';
+    };
+
     var csub=document.getElementById('csub');
     if(csub) csub.onclick=submitClaim;
-
-    var cget=document.getElementById('cardget');
-    if(cget) cget.onclick=claimCard;
 
     wrap.querySelectorAll('[data-t]').forEach(function(b){
       b.onclick=function(){ rtier=b.dataset.t; rpage=1; renderDetail(); };
@@ -1243,8 +1260,65 @@
   syncHeader();
 
   // ── start ──────────────────────────────────────────────────────
+  /* x-callback 이 붙여 보내는 쪽지입니다.
+       new    = 이 로그인이 계정을 새로 만들었다
+       ok     = 쓰던 계정으로 들어왔다
+       linked = 지금 계정에 X 를 붙였다  */
+  var XNEW='memons_x_new_v1';
   var x=new URLSearchParams(location.search).get('x');
+  try{
+    if(x==='new') sessionStorage.setItem(XNEW,'1');
+    else if(x==='ok'||x==='linked') sessionStorage.removeItem(XNEW);
+  }catch(e){}
   if(x) history.replaceState(null,'',location.pathname+(location.hash||''));
+
+  /* 새 계정이 생긴 사람에게만 뜹니다.
+
+     X 로 처음 들어오면 X 이메일로 쓰던 계정을 찾아 붙여 주는데,
+     X 가 이메일을 안 주거나 가입 때와 다르면 못 찾습니다. 그러면
+     빈 계정에 상품이 묶이고, 수령한 카드가 원래 컬렉션이 아닌
+     그쪽에 쌓입니다. 합치는 길을 여기서 알려 줍니다 -- 서버는
+     새 계정이 비어 있을 때만 합쳐 주므로 잃을 것이 없습니다. */
+  function mergeBar(){
+    var on=false;
+    try{ on = sessionStorage.getItem(XNEW)==='1'; }catch(e){}
+    if(!on || !window.MEMONS_X || !MEMONS_X.pendingMerge || !MEMONS_X.pendingMerge()) return;
+    if(document.querySelector('.mgb')) return;
+
+    var b=document.createElement('div');
+    b.className='mgb';
+    b.innerHTML='<p><b>A new MEMONS account was created from this X sign-in.</b><br>'+
+      'If you already had one, sign in to it and merge — your prize and card '+
+      'will follow. Nothing here is lost either way.</p>'+
+      '<div class="row">'+
+        '<button class="pri" id="mgIn">Sign in to my account</button>'+
+        '<button id="mgGo">Merge now</button>'+
+        '<button id="mgNo">This is my only account</button>'+
+        '<span class="mm" id="mgMsg"></span>'+
+      '</div>';
+    document.body.appendChild(b);
+
+    function done(){ try{ sessionStorage.removeItem(XNEW); }catch(e){} b.remove(); }
+    var msg=b.querySelector('#mgMsg');
+
+    b.querySelector('#mgIn').onclick=function(){
+      if(window.MEMONS_SIGNIN) MEMONS_SIGNIN();
+      else location.href='index.html';
+    };
+    b.querySelector('#mgNo').onclick=function(){
+      if(MEMONS_X.forgetMerge) MEMONS_X.forgetMerge();
+      done();
+    };
+    b.querySelector('#mgGo').onclick=function(){
+      msg.style.color='var(--muted)'; msg.textContent='Merging…';
+      MEMONS_X.mergeAfterLogin().then(function(){
+        done(); location.reload();
+      }).catch(function(e){
+        msg.style.color='var(--red)';
+        msg.textContent=(e&&e.message)?e.message:'Could not merge.';
+      });
+    };
+  }
 
   function route(){
     var key=currentKey();
@@ -1255,6 +1329,7 @@
 
   window.addEventListener('hashchange', function(){ window.scrollTo(0,0); route(); });
   route();
+  mergeBar();
 })();
 </script>
 </body>
