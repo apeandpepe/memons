@@ -470,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-15 15:25 · 수령 전 확인";
+  var BUILD = "2026-11-15 16:05 · 만료 토큰 정리";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -481,9 +481,33 @@
   var wrap = document.getElementById('wrap');
 
   // ── helpers ─────────────────────────────────────────────────────
+  /* 살아 있는 토큰인가.
+
+     이 페이지는 gacha-client.js 를 싣지 않습니다. 그 파일이 죽은
+     토큰을 치우는데, 없으니 아무도 안 치웁니다 -- 6시간 전에
+     왔던 사람의 localStorage 에는 끝난 토큰이 그대로 남아 있고,
+     그걸 "로그인돼 있다" 로 읽으면 X 인증이 연결(link) 경로로
+     갑니다. 서버는 토큰부터 보고 거절하므로 돌아와서야
+     "not signed in" 을 봅니다. 누를 때는 멀쩡해 보였는데요.
+
+     그래서 여기서 직접 봅니다. exp 는 JWT 가 들고 다닙니다. */
+  function alive(t){
+    try{
+      var b=String(t).split('.')[1];
+      if(!b) return false;
+      var p=JSON.parse(atob(b.replace(/-/g,'+').replace(/_/g,'/')));
+      return !p.exp || (p.exp*1000) > (Date.now()+5000);
+    }catch(e){ return false; }
+  }
   function tok(){
-    try{ return (window.MEMONS && window.MEMONS.token) || localStorage.getItem('memons_jwt_v1') || ''; }
-    catch(e){ return ''; }
+    try{
+      var t=(window.MEMONS && window.MEMONS.token) || localStorage.getItem('memons_jwt_v1') || '';
+      if(t && !alive(t)){
+        try{ localStorage.removeItem('memons_jwt_v1'); localStorage.removeItem('memons_addr_v1'); }catch(e){}
+        return '';
+      }
+      return t;
+    }catch(e){ return ''; }
   }
   function esc(s){
     return String(s==null?'':s).replace(/[&<>"]/g,function(m){

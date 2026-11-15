@@ -80,6 +80,14 @@
   var K_MODE     = "memons_x_mode";
   var K_RETURN   = "memons_x_return";
   var K_XTOKEN   = "memons_x_token";   // kept only until a merge finishes
+  /* 연결을 시작할 때의 토큰을 떠 둡니다.
+
+     X 를 다녀오는 사이 세션이 사라질 수 있습니다 -- 앱 안의
+     브라우저가 돌아올 때 저장소를 새로 주거나, 6시간짜리 토큰이
+     그 사이에 끝나거나. 그러면 돌아와서야 "로그인이 안 되어
+     있습니다" 를 보게 되는데, 누를 때는 분명히 되어 있었습니다.
+     그래서 그 순간의 토큰을 같이 들고 갑니다. */
+  var K_LINKTOK  = "memons_x_linktok";
 
   function store() {
     try {
@@ -103,9 +111,9 @@
     catch (e) {}
   }
 
-  function post(path, body, auth) {
+  function post(path, body, auth, useToken) {
     var h = { "content-type": "application/json" };
-    if (auth) { var t = token(); if (t) h.Authorization = "Bearer " + t; }
+    if (auth) { var t = useToken || token(); if (t) h.Authorization = "Bearer " + t; }
     return fetch(API + path, {
       method: "POST", headers: h, body: JSON.stringify(body || {}),
     }).then(function (r) {
@@ -175,6 +183,7 @@
     put(K_STATE, state);
     put(K_MODE, mode);
     put(K_RETURN, opts.returnTo || location.href);
+    if (mode === "link") put(K_LINKTOK, token() || "");
 
     return challengeFor(verifier).catch(function (e) {
       throw new Error("could not prepare the sign-in: " + (e && e.message || e));
@@ -213,7 +222,7 @@
     var returnTo = get(K_RETURN) || "/";
 
     function cleanup() {
-      drop(K_VERIFIER); drop(K_STATE); drop(K_MODE);
+      drop(K_VERIFIER); drop(K_STATE); drop(K_MODE); drop(K_LINKTOK);
     }
 
     if (err) {
@@ -242,38 +251,57 @@
 
     var payload = { code: code, code_verifier: verifier, redirect_uri: REDIRECT_URI };
 
+    /* 로그인(=가입)으로 들어가는 길. 연결이 세션을 잃었을 때도
+       여기로 떨어집니다. */
+    function asSignIn() {
+      return post("/social/x", payload, false).then(function (j) {
+        cleanup();
+        put(SS_TOKEN, j.token);
+        put(K_XTOKEN, j.token);
+        return fetch(API + "/social/me", {
+          headers: { Authorization: "Bearer " + j.token },
+        }).then(function (r) { return r.json(); }).then(function (me) {
+          var first = (me.wallets && me.wallets[0] && me.wallets[0].address) || "";
+          put(SS_ADDR, first);
+          var out = {
+            mode: "signin", returnTo: returnTo, token: j.token, uid: j.uid,
+            handle: j.handle, email: j.email,
+            fresh: j.fresh === true, address: first,
+          };
+          emit("memons:x-signed-in", out);
+          return out;
+        });
+      });
+    }
+
     if (mode === "link") {
-      return post("/social/link-x", payload, true).then(function (j) {
+      /* 나갈 때 떠 둔 토큰을 먼저 씁니다. 없으면 지금 것. */
+      var linkTok = get(K_LINKTOK) || "";
+      return post("/social/link-x", payload, true, linkTok).then(function (j) {
         cleanup();
         if (j.token) put(SS_TOKEN, j.token);
         emit("memons:x-linked", j);
         return { mode: "link", returnTo: returnTo, result: j };
-      }).catch(function (e) { cleanup(); e.returnTo = returnTo; throw e; });
+      }).catch(function (e) {
+        /* 세션이 끝내 없었던 경우. 서버는 토큰을 먼저 보고 거절하므로
+           X 가 준 코드는 아직 쓰이지 않았습니다 -- 그대로 로그인으로
+           들어가면 됩니다. 돌아와서 "로그인이 안 되어 있습니다" 를
+           보여 주고 끝내는 것보다, 들어가게 해 주고 계정이 갈렸으면
+           합치기를 띄우는 편이 낫습니다. */
+        var why = String((e && (e.code || e.message)) || "");
+        if (why.indexOf("not signed in") >= 0 || why.indexOf("unknown member") >= 0) {
+          return asSignIn().catch(function (e2) {
+            cleanup(); e2.returnTo = returnTo; throw e2;
+          });
+        }
+        cleanup(); e.returnTo = returnTo; throw e;
+      });
     }
 
-    return post("/social/x", payload, false).then(function (j) {
-      cleanup();
-      put(SS_TOKEN, j.token);
-      /* Keep the X token only while it might still be needed to merge.
-         Once the member says "no, this is my only account" it is dropped. */
-      put(K_XTOKEN, j.token);
+    return asSignIn().then(function (out) { return out; }).catch(function (e) {
+      cleanup(); e.returnTo = returnTo; throw e;
+    });
 
-      /* Ask which wallets this member has before announcing anything.
-         The rest of the site reads the address, not the UID. */
-      return fetch(API + "/social/me", {
-        headers: { Authorization: "Bearer " + j.token },
-      }).then(function (r) { return r.json(); }).then(function (me) {
-        var first = (me.wallets && me.wallets[0] && me.wallets[0].address) || "";
-        put(SS_ADDR, first);
-        var out = {
-          mode: "signin", returnTo: returnTo, token: j.token, uid: j.uid,
-          handle: j.handle, email: j.email,
-          fresh: j.fresh === true, address: first,
-        };
-        emit("memons:x-signed-in", out);
-        return out;
-      });
-    }).catch(function (e) { cleanup(); e.returnTo = returnTo; throw e; });
   }
 
   // --- merging -------------------------------------------------------
