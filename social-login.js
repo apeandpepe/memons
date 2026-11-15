@@ -71,9 +71,16 @@
   /* The server says what went wrong in `error`. Surfacing that rather
      than "request failed" is the difference between a member who can act
      on the message and one who writes to support. */
+  /* detail 이 먼저입니다. error 는 'not_empty' 처럼 분기용 코드라,
+     그대로 띄우면 사람에게는 아무 말도 안 한 것과 같습니다. 코드는
+     .code 에 실어 보내 부르는 쪽이 분기할 수 있게 둡니다. */
   function readOrThrow(r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
-      if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+      if (!r.ok) {
+        var e = new Error(j.detail || j.error || ("HTTP " + r.status));
+        e.code = j.error || "";
+        throw e;
+      }
       return j;
     });
   }
@@ -246,12 +253,23 @@
         return j;
       })
       .catch(function (e) {
+        var code = e.code || String(e.message || e);
         var m = String(e.message || e);
-        if (m === "wallet_taken") {
-          m = "This wallet is already linked to another MEMONS account.";
+        /* 서버가 설명을 보냈으면 그걸 씁니다. 코드만 왔을 때만
+           여기서 말을 만듭니다. */
+        if (m === code) {
+          if (code === "wallet_taken") {
+            m = "This wallet is already on another MEMONS account, and that account has " +
+                "been used. Sign in with the wallet to use that account instead.";
+          } else if (code === "not_empty") {
+            m = "Both this account and the one holding that wallet have cards or history " +
+                "of their own, so they cannot be merged. Sign in to the one you want to keep.";
+          } else if (code === "already_linked") {
+            m = "Both accounts already use the same sign-in method.";
+          }
         }
-        emit("memons:social-error", { message: m });
-        throw new Error(m);
+        emit("memons:social-error", { message: m, code: code });
+        var out = new Error(m); out.code = code; throw out;
       });
   }
 
