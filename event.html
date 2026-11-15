@@ -470,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-15 14:50 · 수상 캡슐 + 계정 연결";
+  var BUILD = "2026-11-15 15:05 · 수상 캡슐 + X 연결";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -805,10 +805,34 @@
 
     /* X 로 확인을 마쳤는가. MEMONS 로그인만으로는 모릅니다 --
        구글로 가입한 사람에게는 핸들이 없습니다. */
-    var verified = !!(me && me.handle);
-    var myHandle = me && me.handle ? me.handle.toLowerCase() : null;
-    var myRow = myHandle ? wins.filter(function(w){
-      return String(w.x_handle||'').toLowerCase()===myHandle; })[0] : null;
+    /* 내 핸들은 하나가 아닐 수 있습니다.
+
+       whoami 는 user_identities 에 적힌 핸들 하나를 말합니다.
+       그런데 계정에 X 가 이미 붙어 있는 상태로 다른 X 를
+       인증하면 link_social 이 'already_has_one' 으로 돌려보내고
+       그 줄을 바꾸지 않습니다 -- whoami 는 계속 예전 핸들을
+       말하는데 상품은 새 핸들로 들어와 있습니다.
+
+       서버가 "이건 당신 상품입니다" 하고 내어 준 줄(myWins)의
+       핸들이 whoami 보다 확실합니다. 둘 다 내 것으로 칩니다. */
+    var mine = {};
+    if(me && me.handle) mine[String(me.handle).toLowerCase()]=1;
+    myWins.forEach(function(w){
+      if(w.x_handle) mine[String(w.x_handle).toLowerCase()]=1;
+    });
+    function isMine(h){ return !!(h && mine[String(h).toLowerCase()]); }
+
+    var verified = !!(me && me.handle) || myWins.length>0;
+
+    /* 상품이 걸린 줄을 먼저 집습니다 -- 아래 버튼들이 myWin() 을
+       보고 서므로, 둘이 다른 줄을 가리키면 안 됩니다. */
+    var pick = (myWin() && myWin().x_handle)
+                 ? String(myWin().x_handle).toLowerCase() : null;
+    var myRow = pick
+      ? (wins.filter(function(w){
+           return String(w.x_handle||'').toLowerCase()===pick; })[0] || null)
+      : null;
+    if(!myRow) myRow = wins.filter(function(w){ return isMine(w.x_handle); })[0] || null;
 
     /* 빈 칸은 아예 그리지 않습니다.
 
@@ -890,7 +914,8 @@
         ? '<div class="yours" style="margin-bottom:22px">'+
             '<div><div class="k">Your result</div>'+
             '<div style="font-size:15px;margin-top:4px;color:var(--muted)">'+
-              'Not on this list — checked as @'+esc(me.handle)+'.</div></div>'+
+              'Not on this list'+((me&&me.handle)?' — checked as @'+esc(me.handle):'')+
+              '.</div></div>'+
             '<span class="sp"></span>'+
             '<button class="cta sm" id="rx">'+I.x+' Check another account</button>'+
           '</div>'
@@ -928,7 +953,7 @@
             (hasStatus ? '<th>Status</th>'  : '')+
           '</tr></thead><tbody>'+
           page.map(function(w){
-            var isMe = myHandle && String(w.x_handle||'').toLowerCase()===myHandle;
+            var isMe = isMine(w.x_handle);
             return '<tr'+(isMe?' class="me"':'')+'>'+
               (hasRank
                 ? '<td class="rk">'+(w.rank?String(w.rank).padStart(2,'0'):'—')+'</td>' : '')+
@@ -1154,6 +1179,14 @@
            쓰던 계정이 아닌 그 새 계정에 묶입니다. link 는 지금 들어와
            있는 계정에 X 를 붙이므로 그럴 일이 없습니다. */
         var opt={ returnTo: location.pathname+location.hash };
+        /* 이미 MEMONS 에 들어와 있으면 '로그인' 이 아니라 '연결'
+           입니다. signIn 을 쓰면 /social/x 가 X 를 기준으로 계정을
+           다시 고르고, X 이메일이 가입 때와 다르면 빈 계정이 새로
+           생깁니다 -- 상품이 쓰던 계정이 아닌 그 새 계정에
+           묶입니다. link 는 지금 들어와 있는 계정에 X 를 붙이므로
+           그럴 일이 없습니다. (step118 이 올라가 있어야 합니다 --
+           link_social 이 'x' 를 모르면 unknown provider 로
+           떨어집니다.) */
         ((tok() && MEMONS_X.link) ? MEMONS_X.link(opt) : MEMONS_X.signIn(opt)).catch(fail);
       }catch(e){ fail(e); }
       };
