@@ -470,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-15 15:05 · 수상 캡슐 + X 연결";
+  var BUILD = "2026-11-15 15:25 · 수령 전 확인";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -881,7 +881,7 @@
             /* 캡슐 화면으로 보냅니다. 카드는 거기서 캡슐을 열 때
                서버가 꺼내 줍니다 -- 여는 연출이 보상의 절반입니다.
                여기서 먼저 지급해 버리면 캡슐이 빈 껍데기가 됩니다. */
-            ? '<a class="cta sm" href="capsule-reveal.html?prize='+
+            ? '<a class="cta sm" id="cardget" href="capsule-reveal.html?prize='+
                 encodeURIComponent(myWin().id)+'">Claim my card</a>'
           : (isCard(myRow.tier) && myWin() && myWin().card_ready)
             ? '<a class="cta sm" href="index.html#capsule">Issue my card '+I.arr+'</a>'
@@ -1192,6 +1192,26 @@
       };
     });
 
+    /* 되돌릴 수 없는 한 지점.
+
+       카드를 받고 나면 이 계정은 더 이상 비어 있지 않아서
+       merge_x_account 가 합치기를 거부합니다 -- 쓰던 계정으로
+       옮길 길이 없어집니다. 그 전까지는 전부 되돌릴 수 있습니다.
+       그래서 여기서만 한 번 묻습니다. */
+    var cg=document.getElementById('cardget');
+    if(cg) cg.onclick=function(e){
+      if(!mergePending()) return;
+      e.preventDefault();
+      if(confirm(
+        'This MEMONS account was created by your X sign-in a moment ago.\n\n'+
+        'If you already had a MEMONS account, merge first — once the card '+
+        'is claimed here it stays on this account and cannot be moved.\n\n'+
+        'OK — claim on this account\n'+
+        'Cancel — go back and merge')){
+        location.href=cg.getAttribute('href');
+      }
+    };
+
     var vs=document.getElementById('vsign');
     if(vs) vs.onclick=function(){
       if(window.MEMONS_SIGNIN) MEMONS_SIGNIN();
@@ -1312,10 +1332,16 @@
      빈 계정에 상품이 묶이고, 수령한 카드가 원래 컬렉션이 아닌
      그쪽에 쌓입니다. 합치는 길을 여기서 알려 줍니다 -- 서버는
      새 계정이 비어 있을 때만 합쳐 주므로 잃을 것이 없습니다. */
-  function mergeBar(){
+  /* 합칠 것이 남아 있는가. 이 로그인이 계정을 새로 만들었고,
+     아직 "이게 내 유일한 계정" 이라고 말한 적이 없을 때만 참입니다. */
+  function mergePending(){
     var on=false;
     try{ on = sessionStorage.getItem(XNEW)==='1'; }catch(e){}
-    if(!on || !window.MEMONS_X || !MEMONS_X.pendingMerge || !MEMONS_X.pendingMerge()) return;
+    return !!(on && window.MEMONS_X && MEMONS_X.pendingMerge && MEMONS_X.pendingMerge());
+  }
+
+  function mergeBar(){
+    if(!mergePending()) return;
     if(document.querySelector('.mgb')) return;
 
     var b=document.createElement('div');
