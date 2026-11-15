@@ -122,7 +122,11 @@
       return r.json().catch(function () { return {}; })
         .then(function (j) {
           if (r.status === 409 || j.status === "taken") {
-            throw new Error("That email is already connected to a different MEMONS account.");
+            /* 서버가 왜 못 합쳤는지 말해 줍니다 (양쪽 다 쓰던 계정,
+               같은 수단이 이미 있음). 한 문장으로 뭉개면 사람이
+               다음에 뭘 해야 할지 알 수가 없습니다. */
+            throw new Error(j.detail ||
+              "That email is already connected to a different MEMONS account.");
           }
           if (r.status === 403 && j.error === "email_not_confirmed") {
             throw new Error("Check your email and open the confirmation link first.");

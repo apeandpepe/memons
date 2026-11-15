@@ -231,7 +231,18 @@
            a connected wallet, exactly as it would after a wallet login. */
         var s = store();
         if (s) { try { s.setItem(SS_ADDR, addr); } catch (e) {} }
-        emit("memons:wallet-linked", { address: addr, status: j.status });
+
+        /* 그 지갑이 다른 계정에 있었고 둘이 합쳐진 경우. 남은 계정은
+           지금 들고 있던 쪽이 아닐 수 있습니다 -- 서버가 새 토큰을
+           같이 보내므로 그걸로 갈아끼웁니다. 안 바꾸면 방금 접힌
+           계정의 토큰을 든 채로, 로그인 수단이 없는 쪽에 갇힙니다. */
+        if (j && j.token) {
+          save(j.token, addr);
+          if (window.MEMONS && window.MEMONS.adopt) {
+            try { window.MEMONS.adopt(j.token, addr); } catch (e) {}
+          }
+        }
+        emit("memons:wallet-linked", { address: addr, status: j.status, merged: !!(j && j.merged) });
         return j;
       })
       .catch(function (e) {
@@ -288,10 +299,49 @@
     emit("memons:social-signed-out", {});
   }
 
+  /* 구글을 지금 계정에 붙입니다 (로그인이 아닙니다).
+
+     onCredential 은 늘 /social/google 로 갑니다 -- 그건 로그인이라,
+     이미 들어와 있는 사람이 누르면 계정이 구글 쪽으로 갈아끼워집니다.
+     붙이는 길은 /social/link-social 이고, 그쪽은 지금 계정을 그대로
+     두고 수단만 더합니다. 그 구글이 다른 계정에 있으면 서버가 빈
+     쪽을 접고 남은 계정의 토큰을 보냅니다. */
+  function linkGoogle(el, opts) {
+    if (!el) return Promise.reject(new Error("no element to mount into"));
+    return loadGis().then(function () {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: function (resp) {
+          if (!resp || !resp.credential) return;
+          emit("memons:social-start", { what: "link" });
+          post("/social/link-social", { idToken: resp.credential, provider: "google" }, true)
+            .then(function (j) {
+              if (j && j.token) save(j.token, (store() && store().getItem(SS_ADDR)) || "");
+              emit("memons:google-linked", { status: j && j.status, merged: !!(j && j.merged) });
+              return j;
+            })
+            .catch(function (e) {
+              emit("memons:social-error", { message: String(e.message || e) });
+            });
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      window.google.accounts.id.renderButton(el, {
+        theme: (opts && opts.theme) || "filled_black",
+        size:  (opts && opts.size)  || "large",
+        shape: (opts && opts.shape) || "pill",
+        text:  (opts && opts.text)  || "continue_with",
+        width: (opts && opts.width) || undefined,
+      });
+    });
+  }
+
   window.MEMONS_SOCIAL = {
     mountButton: mountButton,
     wallets: wallets,
     linkWallet: linkWallet,
+    linkGoogle: linkGoogle,
     me: me,
     claims: claims,
     isSocial: isSocial,
