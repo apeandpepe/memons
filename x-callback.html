@@ -121,7 +121,10 @@
            'Your prize is waiting on that account.', back);
       return;
     }
-    fail('Could not sign in', String(e.message||e), back);
+    /* post() 는 detail 을 우선 읽지만, 서버가 error 만 보낸 옛
+       응답도 있습니다. 둘 다 없으면 코드라도 적습니다 -- 'merge
+       failed' 한 줄만 보여 주면 물어볼 거리가 없습니다. */
+    fail('Could not sign in', String(e.message||e) + (e.code && e.code!==e.message ? ' ('+e.code+')' : ''), back);
   });
 })();
 </script>
