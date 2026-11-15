@@ -448,7 +448,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-10 17:35 · 확인창 문구";
+  var BUILD = "2026-11-15 11:45 · 카드 Claim";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -799,7 +799,8 @@
     var hasRank = wins.some(function(w){ return w.rank; });
     var hasArt  = wins.some(function(w){ return w.artwork_url; });
     var hasStatus = wins.some(function(w){ return w.post_url; }) ||
-                    !!(myRow && myWins.length && isCard(myRow.tier));
+                    !!(myRow && myWins.length && isCard(myRow.tier)
+                       && myWin() && myWin().card_ready);
 
     return '<div class="sect">'+
       '<div class="headrow"><div>'+
@@ -818,14 +819,30 @@
         edge(myRow.tier)+
         '<span class="who">@'+esc(myRow.x_handle)+'</span>'+
         '<span class="sp"></span>'+
-        (myWins.length && isCard(myRow.tier)
-          ? '<a class="cta sm" href="index.html#capsule">Issue my card '+I.arr+'</a>'
-          : myWins.length
-            /* 상품이 카드가 아니면 받을 곳이 없습니다. 상품이 무엇인지
-               적어 주는 편이 쓸 수 없는 버튼보다 낫습니다. */
-            ? '<span style="font-size:13px;color:var(--muted)">'+
-                esc(tierOf(myRow.tier).prize || myRow.prize_label || '')+'</span>'
-            : '<span style="font-size:12.5px;color:var(--muted)">Available after winner verification.</span>')+
+        /* 카드를 받는 길이 둘입니다. 캡슐로 주는 캠페인은 유저가
+           직접 열어야 하고(card_ready), 수상작으로 만든 카드는
+           관리자가 계정에 바로 넣습니다(card_issued) -- 그쪽은
+           누를 것이 없으니 어디 있는지만 알려 주면 됩니다.
+
+           둘 다 아닌 동안 버튼을 띄우면 빈 캡슐 화면으로 갑니다. */
+        (!myWins.length
+          ? '<span style="font-size:12.5px;color:var(--muted)">Available after winner verification.</span>'
+          : (isCard(myRow.tier) && myWin() && myWin().card_issued)
+            ? '<a class="cta sm" href="mypage-collection.html">View my card '+I.arr+'</a>'
+          /* 수령이 열렸으면 유저가 직접 가져갑니다. 눌러야 받는
+             쪽이 받은 줄도 모르는 것보다 낫습니다. */
+          : (isCard(myRow.tier) && myWin() && myWin().cards_open)
+            ? '<button class="cta sm" id="cardget">Claim my card</button>'
+          : (isCard(myRow.tier) && myWin() && myWin().card_ready)
+            ? '<a class="cta sm" href="index.html#capsule">Issue my card '+I.arr+'</a>'
+            : isCard(myRow.tier)
+              ? '<span style="font-size:13px;color:var(--muted)">'+
+                  esc(tierOf(myRow.tier).prize || myRow.prize_label || '')+
+                  ' · issued once the card is made</span>'
+              /* 상품이 카드가 아니면 받을 곳이 없습니다. 무엇을 받는지
+                 적어 주는 편이 쓸 수 없는 버튼보다 낫습니다. */
+              : '<span style="font-size:13px;color:var(--muted)">'+
+                  esc(tierOf(myRow.tier).prize || myRow.prize_label || '')+'</span>')+
       '</div>' : '')+
 
       (myRow ? claimHtml() : '')+
@@ -891,6 +908,7 @@
               '<td>'+edge(w.tier)+'</td>'+
               (hasStatus
                 ? '<td>'+(isMe && myWins.length && isCard(w.tier)
+                      && myWin() && myWin().card_ready
                     ? '<a class="cta sm" href="index.html#capsule">Issue card '+I.arr+'</a>'
                     : w.post_url
                       ? '<a class="view" href="'+esc(w.post_url)+'" target="_blank" rel="noopener">View post '+OUT+'</a>'
@@ -953,25 +971,38 @@
 
   function claimHtml(){
     var w=myWin();
-    var all=myFields();
-    var fs=all.length ? all : null;
-    if(!w || !fs) return '';
+    if(!w) return '';
 
     /* 닫혀 있어도, 이미 낸 사람에게는 낸 것을 보여 줍니다 -- 냈는지
        아닌지 모르는 채로 두는 쪽이 더 불안합니다. */
     if(!C.claim_open && !w.submitted) return '';
 
+    /* 적을 칸이 하나도 없는 등급이 있습니다. 카드 등급은 받을 곳이
+       계정이라 지갑도 UID 도 필요 없습니다. 그래도 "확인했다" 는
+       기록은 남아야 합니다 -- 그게 카드를 만든 뒤에 지급할 대상
+       명단이 됩니다. 그래서 칸이 없으면 버튼만 세웁니다. */
+    var fs=myFields();
     var d=w.claim_data||{};
     var done=!!w.submitted;
 
     return '<div class="sect enter" id="claimbox" style="margin-top:26px">'+
       '<h3 style="font-size:clamp(24px,2.6vw,34px)">'+
         esc(C.claim_title||'Claim your prize')+'</h3>'+
-      (C.claim_body?'<div class="sub">'+esc(C.claim_body)+'</div>'
-                   :'<div class="sub">Tell us where to send it.</div>')+
+      /* 안내 문구는 캠페인에 하나뿐입니다. 터보처럼 "지갑을 내라"
+         고 적어 두면, 적을 칸이 없는 카드 등급에게도 그 말이
+         보입니다. 칸이 없을 때는 그 문구를 쓰지 않습니다. */
+      '<div class="sub">'+
+        (fs.length
+          ? esc(C.claim_body || 'Tell us where to send it.')
+          : 'Confirm your entry so we can include you in the payout.')+
+      '</div>'+
 
-      (done?'<div class="msg ok" style="margin:0 0 20px">'+
-        'Submitted. You can change it while the campaign is open.</div>':'')+
+      (done
+        ? '<div class="msg ok" style="margin:0 0 20px">'+
+            (fs.length
+              ? 'Submitted. You can change it while the campaign is open.'
+              : 'Confirmed. You are on the payout list.')+'</div>'
+        : '')+
 
       fs.map(function(f){
         var v=d[f.key]==null?'':String(d[f.key]);
@@ -983,13 +1014,40 @@
       }).join('')+
 
       (C.claim_open
-        ? '<button class="cta" id="csub">'+(done?'Update':'Submit')+'</button>'
+        ? '<button class="cta" id="csub">'+
+            (fs.length ? (done?'Update':'Submit')
+                       : (done?'Confirmed':'Confirm my entry'))+'</button>'
         : '<button class="cta" disabled>Submissions are closed</button>')+
 
       '<div class="note">Only @'+esc(w.x_handle||(me&&me.handle)||'')+
         ' can submit this. Nobody else can see or change it.</div>'+
       '<div class="msg" id="cmsg"></div>'+
     '</div>';
+  }
+
+  /* 수상 카드를 당첨자가 직접 가져갑니다. 어느 카드인지는 서버가
+     정합니다 -- 화면은 "내 줄" 번호만 보냅니다. */
+  function claimCard(){
+    var w=myWin(); if(!w) return;
+    var b=document.getElementById('cardget'); if(!b) return;
+    b.disabled=true; b.textContent='Claiming…';
+    game({contest:'claimcard', id:w.id}).then(function(r){
+      if(r.ok){
+        w.card_issued=true;
+        renderDetail();
+        return;
+      }
+      b.disabled=false; b.textContent='Claim my card';
+      var m={
+        ALREADY_CLAIMED  : 'You already claimed this card.',
+        CARDS_NOT_OPEN   : 'Cards are not ready yet. Check back soon.',
+        CARD_NOT_LINKED  : 'Your card is still being prepared.',
+        NO_ACCOUNT       : 'Sign in again and retry.',
+        NOT_YOURS        : 'That is not your prize.',
+        NOT_A_CARD_PRIZE : 'This prize is not a card.'
+      }[r.code] || ('Could not claim ('+(r.code||'error')+')');
+      alert(m);
+    });
   }
 
   /* 서버가 'MISSING:BingX UID' 처럼 칸 이름을 달아 보냅니다. */
@@ -1038,10 +1096,14 @@
            칸이 비어 보이면 저장이 안 된 것처럼 읽힙니다. */
         w.claim_data=r.data.claim||out; w.submitted=true;
         renderDetail();
-        say('cmsg','ok','Saved. We will use this to send your prize.');
+        say('cmsg','ok', fs.length
+          ? 'Saved. We will use this to send your prize.'
+          : 'Confirmed. We will reach you here when the card is ready.');
         return;
       }
-      b.disabled=false; b.textContent = w.submitted?'Update':'Submit';
+      b.disabled=false;
+      b.textContent = fs.length ? (w.submitted?'Update':'Submit')
+                                : (w.submitted?'Confirmed':'Confirm my entry');
       say('cmsg','bad', claimError(r.code));
     });
   }
@@ -1085,6 +1147,9 @@
 
     var csub=document.getElementById('csub');
     if(csub) csub.onclick=submitClaim;
+
+    var cget=document.getElementById('cardget');
+    if(cget) cget.onclick=claimCard;
 
     wrap.querySelectorAll('[data-t]').forEach(function(b){
       b.onclick=function(){ rtier=b.dataset.t; rpage=1; renderDetail(); };
