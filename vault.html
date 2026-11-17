@@ -254,7 +254,15 @@ function draw(){
   if(curPage>pages) curPage=pages;
   const slice=curList.slice((curPage-1)*PAGE_SIZE, curPage*PAGE_SIZE);
   grid.innerHTML=slice.map(d=>{
-    const art = d.locked ? LOCK_SVG : `<img loading="lazy" src="${d.img}" alt="${d.name}">`;
+    /* 그림이 아직 없는 캐릭터. 빈 칸으로 두면 깨진 것처럼 보이고,
+       자물쇠를 쓰면 잠긴 줄 압니다 -- 이름을 크게 적습니다. */
+    const art = d.locked ? LOCK_SVG
+      : (d.img ? `<img loading="lazy" src="${d.img}" alt="${d.name}">`
+               : `<div style="width:100%;height:100%;display:grid;place-items:center;
+                    background:linear-gradient(150deg,#15110a,#0b0a07);
+                    font-family:var(--display,inherit);font-weight:800;
+                    font-size:clamp(18px,4.2vw,30px);letter-spacing:.04em;
+                    color:#E9B84A;text-align:center;padding:8px">${d.name}</div>`);
     const clickAttr = d.locked ? '' : ` onclick="goDetail('${d.num}')" style="cursor:pointer"`;
     return `<div class="card ${d.locked?'locked':''}"${clickAttr}>
       <div class="num">#${d.num}</div>

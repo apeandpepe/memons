@@ -278,19 +278,45 @@
   const list=MEMONS_DATA.characters;
   let c=list.find(x=>x.num===id) || list[0];
   if(c.locked){ c=list.find(x=>x.num==='0001')||list[0]; }
+  /* 아래 VIEW ALL CARDS 가 어느 아카이브로 갈지 알아야 합니다.
+     cards.character_key 와 같은 값입니다. */
+  window.MEMONS_CHAR = c.key || c.name.toLowerCase();
   const set=(id,html)=>{const el=document.getElementById(id); if(el) el.innerHTML=html;};
   set('dNo','No.'+c.num);
   set('dName',c.name);
-  if(c.cat) set('dBadge',c.cat);
-  if(c.main) document.getElementById('dArt').src=c.main;
-  // description
-  if(c.desc && c.desc.length){
-    set('dDesc', c.desc.map(t=>'<p>'+t.replace(/\n/g,'<br>')+'</p>').join(''));
+  /* 값이 없으면 비웁니다.
+
+     전에는 있을 때만 덮어썼습니다. 그러면 안 채운 칸에 HTML 에
+     박아 둔 APEPE 의 값이 그대로 남습니다 -- 두 번째 캐릭터를
+     넣자마자 생일이 APEPE 것으로 보였습니다. 비어 보이는 편이
+     남의 날짜가 보이는 것보다 낫습니다. */
+  set('dBadge', c.cat || '');
+  /* 그림이 없으면 비웁니다. 두고 가면 HTML 에 박힌 APEPE 그림이
+     그대로 남아서, 다른 캐릭터 페이지에 APEPE 가 뜹니다. */
+  var art=document.getElementById('dArt');
+  if(art){
+    if(c.main){ art.src=c.main; art.style.display=''; }
+    else {
+      art.removeAttribute('src'); art.style.display='none';
+      var box=art.parentNode;
+      if(box && !box.querySelector('.noart')){
+        var ph=document.createElement('div');
+        ph.className='noart';
+        ph.style.cssText='width:100%;aspect-ratio:1/1;display:grid;place-items:center;'+
+          'background:linear-gradient(150deg,#15110a,#0b0a07);border-radius:inherit;'+
+          'font-family:var(--display,inherit);font-weight:800;letter-spacing:.04em;'+
+          'font-size:clamp(28px,6vw,56px);color:#E9B84A;text-align:center;padding:16px';
+        ph.textContent=c.name;
+        box.appendChild(ph);
+      }
+    }
   }
-  if(c.born) set('dBorn', c.born);
-  if(c.quote && c.quote.length){
-    set('dQuote', '<span class="qm open">&ldquo;</span>'+c.quote.join('<br>')+'<span class="qm close">&rdquo;</span>');
-  }
+  set('dDesc', (c.desc && c.desc.length)
+    ? c.desc.map(t=>'<p>'+t.replace(/\n/g,'<br>')+'</p>').join('') : '');
+  set('dBorn', c.born || '—');
+  set('dQuote', (c.quote && c.quote.length)
+    ? '<span class="qm open">&ldquo;</span>'+c.quote.join('<br>')+'<span class="qm close">&rdquo;</span>'
+    : '');
   // counter + prev/next (cycles through revealed characters)
   const revealed=list.filter(x=>!x.locked);
   const idx=Math.max(0, revealed.findIndex(x=>x.num===c.num));
@@ -412,7 +438,7 @@
   var b=document.getElementById('viewAll');
   if(!b) return;
   b.onclick=function(){
-    var u='collection.html?char=apepe';
+    var u='collection.html?char='+encodeURIComponent(window.MEMONS_CHAR||'apepe');
     if(document.documentElement.classList.contains('embed')){
       try{ window.top.location.href=u; return; }catch(e){}
     }
