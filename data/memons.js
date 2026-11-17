@@ -17,7 +17,7 @@ window.MEMONS_DATA = {
   /* character: num/name/cat/img for vault cards. main/born/quote/desc for detail (omit if absent). */
   characters: [
     {
-      num:'0001', name:'APEPE', cat:'CRYPTO MEME',
+      num:'0001', name:'APEPE', cat:'CRYPTO MEME', key:'apepe',
       img:'images/vault/apepe.png',
       main:'images/detail/apepe-main.png',
       born:'2023.06.07',
@@ -30,7 +30,21 @@ window.MEMONS_DATA = {
     },
 
     /* --- #0002~#0006: currently LOCKED. To reveal, restore the commented data on each line. --- */
-    { num:'0002', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'DOGE',      cat:'INTERNET LEGEND', img:'images/vault/doge.png',     main:'images/detail/apepe-main.png' */
+    {
+      num:'0002', name:'TURBO', cat:'CRYPTO MEME', key:'turbo',
+      /* 그림이 들어오면 아래 두 줄을 살리세요. 지금은 없어서
+         이름을 크게 적은 타일이 대신 뜹니다. */
+       img:'images/vault/turbo.png',
+      main:'images/detail/turbo-main.png',
+      born:'2023.04.29',
+      quote:['Born from a prompt.','Carried by a community.'],
+      desc:[
+        'TURBO began as an experiment: artist Rhett Mankind asked GPT-4 to design a meme coin, then followed its answers. What came back was a toad, a plan, and a community that decided to make it real.',
+        'It is the first meme to be drawn up by a machine and carried by people — proof that the line between a joke and a movement is only ever the crowd that shows up for it.',
+        'APEPE × TURBO.\nTwo memes, one archive.'
+      ]
+    },
+    /* was: name:'DOGE', cat:'INTERNET LEGEND', img:'images/vault/doge.png', main:'images/detail/apepe-main.png' */
     { num:'0003', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'NYAN CAT',  cat:'VIRAL MEME',      img:'images/vault/nyancat.png',  main:'images/detail/apepe-main.png' */
     { num:'0004', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'PEPE',      cat:'REACTION MEME',   img:'images/vault/pepe.png',     main:'images/detail/apepe-main.png' */
     { num:'0005', name:'???', cat:'UNKNOWN', locked:true },  /* was: name:'CHILL GUY', cat:'RELATABLE MEME',  img:'images/vault/chillguy.png', main:'images/detail/apepe-main.png' */
