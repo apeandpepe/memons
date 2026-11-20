@@ -470,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-15 16:05 · 만료 토큰 정리";
+  var BUILD = "2026-11-20 13:45 · 참가 제출";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -703,7 +703,7 @@
 
   // ══════════════════════════════════════════════ DETAIL ══════════
 
-  var C=null, wins=[], myWins=[], me=null,
+  var C=null, wins=[], myWins=[], myEntries=[], me=null,
       rq='', rtier='all', rpage=1, xpending=null;
 
   /* 한 등급이 500명인 캠페인이 있습니다. 한 장에 다 그리면 표가
@@ -742,6 +742,11 @@
           (C.rules_url
             ? '<br><a class="ulink" href="'+esc(C.rules_url)+'" target="_blank" rel="noopener">'+
                 'View campaign rules '+OUT+'</a>' : '')+
+          /* 발표가 끝난 캠페인만. 그 전에는 걸어 둘 작품이 없고,
+             빈 갤러리로 보내는 것이 안 보내는 것보다 나쁩니다. */
+          (C.show_winners
+            ? '<br><a class="ulink" href="gallery.html#c='+encodeURIComponent(currentKey())+'">'+
+                'View the gallery '+I.arr+'</a>' : '')+
         '</div>'+
       '</div>'+
 
@@ -787,6 +792,137 @@
   }
 
   // ── 03 results ─────────────────────────────────────────────────
+  /* ── 참가 제출 ────────────────────────────────────────────────
+
+     참가 자체는 X 에서 합니다. 여기서는 낸 글을 등록하고, 받을
+     곳을 같이 적습니다. 발표가 끝난 뒤에 당첨자를 다시 불러
+     주소를 묻는 일이 이것으로 없어집니다 (step125).
+
+     낼 수 있는 사람은 X 를 연결한 회원뿐입니다 -- 누구 글인지
+     서버가 확인해야 하기 때문입니다. */
+  function entryFields(){
+    return (C.entry_fields||[]).filter(function(f){ return f && f.key; });
+  }
+
+  function enterHtml(){
+    if(!C.entry_open && !myEntries.length) return '';
+
+    var fs=entryFields();
+    var e0=myEntries[0]||null;
+    var d=(e0 && e0.data) || {};
+    var locked = !!(e0 && e0.status && e0.status!=='pending');
+    /* X 를 연결했는가. secResults 안의 같은 이름 변수는 거기
+       지역이라 여기서는 다시 봅니다. */
+    var verified = !!(me && me.handle);
+
+    return '<div class="sect enter" id="enterbox" style="margin-top:26px">'+
+      '<h3 style="font-size:clamp(24px,2.6vw,34px)">'+
+        esc(C.entry_title||'Submit your entry')+'</h3>'+
+      '<div class="sub">'+
+        esc(C.entry_body ||
+            'Posted on X? Paste the link here so we can count it'+
+            (fs.length?', and tell us where to send your reward.':'.'))+
+      '</div>'+
+
+      (!verified
+        ? '<div class="vcard" style="max-width:none;margin:0">'+
+            '<div class="vt">Verify with X to submit</div>'+
+            '<div class="vb">We check that the post is yours. Nobody else can '+
+              'submit it, and nobody else can see what you enter.</div>'+
+            '<button class="cta" id="rx">'+I.x+' Verify with X</button>'+
+          '</div>'
+        : (
+
+        (myEntries.length
+          ? '<div class="msg ok" style="margin:0 0 20px">'+
+              (locked
+                ? 'Received — judging is done for this entry.'
+                : 'Received. You can change it while the campaign is open.')+
+            '</div>'
+          : '')+
+
+        '<div class="fld"><div class="k">Your post on X *</div>'+
+          '<input class="inp" id="enUrl" value="'+esc(e0?e0.post_url:'')+'" '+
+            'placeholder="https://x.com/'+esc((me&&me.handle)||'you')+'/status/…" '+
+            'autocomplete="off" spellcheck="false"'+
+            ((C.entry_open && !locked)?'':' disabled')+'></div>'+
+
+        fs.map(function(f){
+          var v=d[f.key]==null?'':String(d[f.key]);
+          return '<div class="fld"><div class="k">'+esc(f.label)+
+              (f.required?' *':'')+'</div>'+
+            '<input class="inp" id="ef_'+esc(f.key)+'" value="'+esc(v)+'" '+
+              'placeholder="'+esc(f.hint||'')+'" autocomplete="off" spellcheck="false"'+
+              ((C.entry_open && !locked)?'':' disabled')+'></div>';
+        }).join('')+
+
+        (!C.entry_open
+          ? '<button class="cta" disabled>Entries are closed</button>'
+          : locked
+            ? '<button class="cta" disabled>Judged</button>'
+            : '<button class="cta" id="esub">'+
+                (myEntries.length?'Update':'Submit')+'</button>')+
+
+        '<div class="note">Only @'+esc((me&&me.handle)||'')+
+          ' can submit this. Nobody else can see or change it.</div>'+
+        '<div class="msg" id="emsg2"></div>'
+      ))+
+    '</div>';
+  }
+
+  function submitEntry(){
+    var b=document.getElementById('esub'); if(!b) return;
+    var url=(document.getElementById('enUrl')||{}).value||'';
+    var data={};
+    entryFields().forEach(function(f){
+      var el=document.getElementById('ef_'+f.key);
+      if(el) data[f.key]=(el.value||'').trim();
+    });
+
+    var was=b.textContent;
+    b.disabled=true; b.textContent='…';
+    say('emsg2','', '');
+
+    game({contest:'enter', event:currentKey(), url:url.trim(), data:data})
+      .then(function(r){
+        if(r.ok){
+          return loadMyEntries().then(function(){
+            renderDetail();
+            say('emsg2','ok','Saved.');
+          });
+        }
+        b.disabled=false; b.textContent=was;
+        var code=(r.data && r.data.error) || '';
+        say('emsg2','bad', enterError(code));
+      })
+      .catch(function(e){
+        b.disabled=false; b.textContent=was;
+        say('emsg2','bad', (e&&e.message)||String(e));
+      });
+  }
+
+  /* 서버가 'MISSING:Payout wallet' 처럼 칸 이름을 달아 보냅니다. */
+  function enterError(code){
+    var i=String(code||'').indexOf(':');
+    var head=i<0?String(code||''):code.slice(0,i);
+    var who =i<0?'':code.slice(i+1);
+    var m={
+      ENTRY_CLOSED : 'Entries are closed for this campaign.',
+      NO_X         : 'Connect your X account first.',
+      NO_ACCOUNT   : 'Please sign in again.',
+      BAD_URL      : 'That does not look like a link to a post on X.',
+      NOT_YOUR_POST: 'That post belongs to '+(who||'someone else')+'. Submit your own.',
+      MISSING      : (who||'A field')+' is required.',
+      TOO_LONG     : (who||'That field')+' is too long.',
+      BAD_WALLET   : (who||'That address')+' is not a valid wallet address.',
+      NOT_A_WALLET : 'That is your MEMONS account number, not a wallet you control. '+
+                     'Tokens sent there cannot be recovered.',
+      BAD_EMAIL    : (who||'That email')+' does not look right.',
+      BAD_NUMBER   : (who||'That field')+' should be digits only.'
+    };
+    return m[head] || ('Could not save. ('+(code||'unknown')+')');
+  }
+
   function secResults(){
     if(!C.show_winners){
       return '<div class="sect"><div class="empty">'+
@@ -1169,7 +1305,7 @@
   function renderDetail(){
     /* 한 장에 이어 붙입니다: 머리글 → 소개 → 결과.
        발표 전이면 secResults 가 "아직 발표 전" 한 줄만 그립니다. */
-    wrap.innerHTML = heroHtml() + secAbout() + secResults();
+    wrap.innerHTML = heroHtml() + secAbout() + enterHtml() + secResults();
 
     ['rx'].forEach(function(id){
       var cx=document.getElementById(id);
@@ -1242,6 +1378,9 @@
       else location.href='index.html';
     };
 
+    var esub=document.getElementById('esub');
+    if(esub) esub.onclick=submitEntry;
+
     var csub=document.getElementById('csub');
     if(csub) csub.onclick=submitClaim;
 
@@ -1286,6 +1425,14 @@
     });
   }
 
+  function loadMyEntries(){
+    var key=currentKey();
+    if(!tok() || !key){ myEntries=[]; return Promise.resolve(); }
+    return game({contest:'mine_entries', event:key}).then(function(r){
+      myEntries = (r.ok && Array.isArray(r.data.entries)) ? r.data.entries : [];
+    }).catch(function(){ myEntries=[]; });
+  }
+
   function loadDetail(key){
     wrap.innerHTML='<div class="spin"></div>';
 
@@ -1293,13 +1440,16 @@
       rpc('contest_one',{p_event:key}),
       rpc('contest_public_winners',{p_event:key}),
       myHandle(),
-      tok() ? game({contest:'mine'}) : Promise.resolve({ok:false})
+      tok() ? game({contest:'mine'}) : Promise.resolve({ok:false}),
+      tok() ? game({contest:'mine_entries', event:key}) : Promise.resolve({ok:false})
     ]).then(function(res){
       C    = (res[0].ok && res[0].data) ? res[0].data : null;
       wins = (res[1].ok && Array.isArray(res[1].data)) ? res[1].data : [];
       me   = res[2];
       myWins = (res[3].ok && res[3].data.wins)
                  ? res[3].data.wins.filter(function(w){ return w.event_key===key; }) : [];
+      myEntries = (res[4].ok && Array.isArray(res[4].data.entries))
+                 ? res[4].data.entries : [];
 
       if(!C){
         wrap.innerHTML='<div class="crumb"><a href="#">← Campaigns</a></div>'+
