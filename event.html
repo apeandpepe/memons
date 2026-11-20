@@ -470,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-20 13:45 · 참가 제출";
+  var BUILD = "2026-11-20 15:35 · 참가 제출 오류 표시";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -892,8 +892,7 @@
           });
         }
         b.disabled=false; b.textContent=was;
-        var code=(r.data && r.data.error) || '';
-        say('emsg2','bad', enterError(code));
+        say('emsg2','bad', enterError(r.code));
       })
       .catch(function(e){
         b.disabled=false; b.textContent=was;
