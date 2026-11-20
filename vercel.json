@@ -37,6 +37,10 @@
     {
       "source": "/memeaistudio/:path*",
       "destination": "https://apepe-meme-ai-studio-nu.vercel.app/memeaistudio/:path*"
+    },
+    {
+      "source": "/:campaign",
+      "destination": "/event"
     }
   ],
   "redirects": [

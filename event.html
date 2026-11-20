@@ -470,7 +470,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-20 15:35 · 참가 제출 오류 표시";
+  var BUILD = "2026-11-20 15:50 · 짧은 캠페인 주소";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -714,7 +714,7 @@
     var t=C.tiers||{};
     var any=tiers().some(function(x){ return t[x.key]; });
 
-    return '<div class="crumb"><a href="#">← Campaigns</a>'+
+    return '<div class="crumb"><a href="'+listHref()+'">← Campaigns</a>'+
         '<span class="sep">/</span><span class="cur">'+esc(C.title)+'</span></div>'+
 
       '<div class="hero">'+
@@ -1403,11 +1403,33 @@
 
 
   // ── load ───────────────────────────────────────────────────────
+  /* 캠페인 주소는 세 가지로 들어옵니다.
+
+       /2026HTX-Nov20       알릴 때 쓰는 주소. Vercel 이 /event 로
+                            돌려보내면서 경로는 그대로 둡니다
+       /event#c=2026HTX-Nov20   목록에서 눌렀을 때
+       /event?c=...             옛 주소
+
+     경로가 캠페인 이름인지 페이지 이름인지는 목록으로 가릅니다 --
+     /event 자체를 키로 읽으면 목록이 영영 안 나옵니다. */
+  var PAGE_PATHS=/^(event|event\.html|index|index\.html)?$/i;
+
+  function pathKey(){
+    var p=(location.pathname||'').replace(/^\/+|\/+$/g,'');
+    if(PAGE_PATHS.test(p)) return '';
+    try{ return decodeURIComponent(p); }catch(e){ return p; }
+  }
+
   function currentKey(){
     var m=/^#c=(.+)$/.exec(location.hash||'');
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){ return m[1]; } }
-    return new URLSearchParams(location.search).get('c') || '';
+    return new URLSearchParams(location.search).get('c') || pathKey();
   }
+
+  /* 목록으로 돌아가는 링크. 해시로 들어왔으면 해시만 지워 그 자리에서
+     돌아가고, 짧은 주소로 들어왔으면 /event 로 옮깁니다 -- 해시를
+     지워도 경로가 그대로라 같은 캠페인이 다시 열립니다. */
+  function listHref(){ return pathKey() ? '/event' : '#'; }
 
   function whoAmI(){
     if(!tok()) return Promise.resolve(null);
@@ -1432,7 +1454,12 @@
     }).catch(function(){ myEntries=[]; });
   }
 
-  function loadDetail(key){
+  function notHere(){
+    wrap.innerHTML='<div class="crumb"><a href="'+listHref()+'">← Campaigns</a></div>'+
+      '<div class="empty">This campaign is not available.</div>';
+  }
+
+  function loadDetail(key, retried){
     wrap.innerHTML='<div class="spin"></div>';
 
     Promise.all([
@@ -1451,8 +1478,20 @@
                  ? res[4].data.entries : [];
 
       if(!C){
-        wrap.innerHTML='<div class="crumb"><a href="#">← Campaigns</a></div>'+
-          '<div class="empty">This campaign is not available.</div>';
+        /* 주소의 대소문자가 다를 뿐일 수 있습니다 -- /2026htx-nov20 로
+           옮겨 적은 사람에게 '없는 캠페인' 을 띄우면 그 사람은 우리가
+           내린 줄로 압니다. 목록에서 같은 이름을 찾아봅니다. */
+        if(!retried){
+          var want=String(key||'').toLowerCase();
+          return rpc('contest_feed').then(function(f){
+            var hit=(f.ok && Array.isArray(f.data) ? f.data : []).filter(function(c){
+              return String(c.event_key||'').toLowerCase()===want;
+            })[0];
+            if(hit && hit.event_key!==key) return loadDetail(hit.event_key, true);
+            notHere();
+          });
+        }
+        notHere();
         return;
       }
 
