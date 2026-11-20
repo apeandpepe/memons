@@ -288,6 +288,24 @@
   .chk a{color:var(--text);border-bottom:1px solid var(--hair)}
   .chk a:hover{color:var(--gold)}
   .note{font-size:12.5px;color:var(--faint);text-align:center;margin-top:13px;line-height:1.6}
+
+  /* X 를 아직 안 이은 사람에게 보이는 자리. 폼이 들어설 자리를
+     그대로 차지하므로, 폼과 같은 왼쪽 정렬·같은 여백으로 둡니다 --
+     가운데로 모으면 아래 글과 어긋나 그 부분만 떠 보입니다. */
+  .vgate{border:1px solid var(--hair);border-radius:12px;background:var(--panel2);
+    padding:24px 24px 26px;display:flex;flex-direction:column;align-items:flex-start}
+  .vgate .k{font-size:11px;letter-spacing:2.2px;color:var(--faint);
+    text-transform:uppercase;margin-bottom:12px}
+  .vgate h4{font-size:19px;font-weight:650;letter-spacing:-.3px;margin-bottom:8px}
+  .vgate p{font-size:13.5px;color:var(--muted);line-height:1.7;margin-bottom:20px;
+    max-width:46ch}
+  .vgate .cta{width:auto;display:inline-flex;align-items:center;gap:9px;
+    padding:12px 22px;font-size:13.5px}
+  .vgate .cta svg{width:15px;height:15px;flex:0 0 auto;fill:currentColor}
+  @media(max-width:560px){
+    .vgate{padding:20px 18px 22px}
+    .vgate .cta{width:100%;justify-content:center}
+  }
   .msg{font-size:13px;margin-top:13px;line-height:1.6}
   .msg.bad{color:var(--red)} .msg.ok{color:var(--green)}
 
@@ -470,7 +488,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-20 15:50 · 짧은 캠페인 주소";
+  var BUILD = "2026-11-20 16:00 · 짧은 주소 + 인증 안내";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -825,10 +843,11 @@
       '</div>'+
 
       (!verified
-        ? '<div class="vcard" style="max-width:none;margin:0">'+
-            '<div class="vt">Verify with X to submit</div>'+
-            '<div class="vb">We check that the post is yours. Nobody else can '+
-              'submit it, and nobody else can see what you enter.</div>'+
+        ? '<div class="vgate">'+
+            '<div class="k">Step 1</div>'+
+            '<h4>Verify with X</h4>'+
+            '<p>We check that the post is yours, so nobody else can submit it. '+
+              'What you enter stays private.</p>'+
             '<button class="cta" id="rx">'+I.x+' Verify with X</button>'+
           '</div>'
         : (
