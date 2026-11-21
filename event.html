@@ -98,7 +98,7 @@
   /* ===== tabs + search ===== */
   .bar{display:flex;align-items:center;justify-content:space-between;gap:20px;
     flex-wrap:wrap;margin-bottom:26px;border-bottom:1px solid var(--hair)}
-  .tabs{display:flex;gap:30px}
+  .tabs{display:flex;gap:30px;align-items:center}
   .tab{background:none;border:0;color:var(--muted);font-size:14px;font-weight:500;
     padding:0 0 13px;cursor:pointer;position:relative;transition:color .2s}
   .tab:hover{color:var(--text)}
@@ -185,13 +185,35 @@
     border:0;border-radius:10px;padding:17px 26px;font-size:16px;font-weight:700;
     letter-spacing:-.2px;cursor:pointer;transition:.18s}
   .cta:hover:not(:disabled){filter:brightness(1.07)}
+  /* 크기를 안 적으면 svg 가 제 기본 크기로 펴져 버튼을 채웁니다. */
+  .cta svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:2}
   .cta:disabled{opacity:.45;cursor:default}
   /* nowrap: 이 작은 버튼은 좁은 칸(결과표 한 칸, 수상 배너 끝)에 들어가서,
      두면 "Issue / my / card" 처럼 세 줄로 접힙니다. */
   .cta.sm{width:auto;padding:12px 22px;font-size:13.5px;border-radius:9px;white-space:nowrap}
   .ulink{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);
-    border-bottom:1px solid var(--hair);padding-bottom:3px;margin-top:18px;transition:.2s}
+    border-bottom:1px solid var(--hair);padding-bottom:3px;margin-top:18px;transition:.2s;
+    white-space:nowrap}
   .ulink:hover{color:var(--gold);border-color:var(--line)}
+  /* 보조 링크는 한 줄에 나란히. 세로로 쌓으면 밑줄 두 개가
+     버튼 아래 계단처럼 남습니다. */
+  .ulinks{display:flex;flex-wrap:wrap;gap:22px}
+  .ulinks .ulink{margin-top:16px}
+
+  .gbtn{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;
+    border:1px solid var(--line);border-radius:999px;background:transparent;
+    color:var(--text);font-size:13.5px;font-weight:600;letter-spacing:-.1px;
+    white-space:nowrap;transition:.2s;cursor:pointer}
+  .gbtn:hover{border-color:var(--gold);color:var(--gold);background:rgba(233,184,74,.06)}
+  .gbtn svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9}
+  .gbtn:hover svg{transform:translateX(3px)}
+  .gbtn svg{transition:.2s}
+  /* 탭 줄에 들어가는 작은 쪽. 탭 글씨보다 커지면 탭이 눌려 보입니다. */
+  .gbtn.sm{padding:7px 15px;font-size:13px;margin-bottom:12px}
+  .gbtn.sm svg{width:13px;height:13px}
+  /* 크기를 안 적으면 svg 가 제 기본 크기(300×150)로 펴지면서
+     옆 글자를 세 줄로 접습니다. */
+  .ulink svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7}
 
   /* tier stats */
   /* 등급 수가 캠페인마다 다릅니다(step110). 세 칸으로 못 박아 두면
@@ -488,7 +510,7 @@
   /* 어느 판이 올라가 있는지 확인용. 덮어썼다고 생각했는데 옛 파일이
      열려 있으면, 멀쩡한 코드를 한참 뒤지게 됩니다. 콘솔(F12) 첫 줄에
      찍힙니다. */
-  var BUILD = "2026-11-20 16:10 · 짧은 주소 + 인증 안내";
+  var BUILD = "2026-11-21 11:05 · 갤러리 버튼";
   try{ console.log("%cMEMONS campaigns build "+BUILD,
                    "color:#E9B84A;font-weight:700"); }catch(e){}
 
@@ -678,6 +700,11 @@
           [['all','All'],['live','Ongoing'],['ended','Ended']].map(function(f){
             return '<button class="tab'+(filter===f[0]?' on':'')+'" data-f="'+f[0]+'">'+f[1]+'</button>';
           }).join('')+
+          /* 갤러리는 거르는 조건이 아니라 다른 쪽으로 가는 문입니다.
+             탭처럼 생기면 눌렀을 때 쪽이 통째로 바뀌는 것이 놀랍고,
+             구석에 글씨로 두면 아무도 못 찾습니다. 그래서 탭 옆에
+             버튼 모양으로 둡니다. */
+          '<a class="gbtn sm" href="gallery.html">Gallery '+I.arr+'</a>'+
         '</div>'+
         '<label class="search">'+I.find+
           '<input id="q" placeholder="Search campaigns…" value="'+esc(q)+'"></label>'+
@@ -728,6 +755,41 @@
      수천 줄이 되고, 전화에서는 아예 못 넘깁니다. */
   var PER=50;
 
+  /* 캠페인 상태에 따라 무엇이 큰 버튼인지 바뀝니다.
+
+     진행 중이면 할 일은 참가입니다. 끝나고 발표까지 나왔으면
+     참가는 이제 할 수 없는 일이고, 보러 갈 곳은 갤러리입니다 --
+     못 누르는 버튼을 제일 크게 두면 그 페이지는 끝난 것처럼만
+     보입니다. 발표 전에는 걸어 둘 작품이 없으니 그대로 둡니다. */
+  function heroCta(){
+    var gal = 'gallery.html#c=' + encodeURIComponent(currentKey());
+    var ended = (C.status === 'ended') && C.show_winners;
+
+    var side = [];
+    if(C.rules_url){
+      side.push('<a class="ulink" href="'+esc(C.rules_url)+'" target="_blank" '+
+                'rel="noopener">View campaign rules '+OUT+'</a>');
+    }
+
+    if(ended){
+      if(C.link_url){
+        side.unshift('<a class="ulink" href="'+esc(C.link_url)+'" target="_blank" '+
+                     'rel="noopener">See the announcement '+OUT+'</a>');
+      }
+      return '<a class="cta" href="'+gal+'">View the gallery '+I.arr+'</a>'+
+             (side.length ? '<div class="ulinks">'+side.join('')+'</div>' : '');
+    }
+
+    if(C.show_winners){
+      side.push('<a class="ulink" href="'+gal+'">View the gallery '+I.arr+'</a>');
+    }
+    return (C.link_url
+        ? '<a class="cta" href="'+esc(C.link_url)+'" target="_blank" rel="noopener">'+
+            'Participate on X <span>'+OUT+'</span></a>'
+        : '<button class="cta" disabled>Participation link coming soon</button>')+
+      (side.length ? '<div class="ulinks">'+side.join('')+'</div>' : '');
+  }
+
   function heroHtml(){
     var t=C.tiers||{};
     var any=tiers().some(function(x){ return t[x.key]; });
@@ -753,18 +815,7 @@
             '<div><div class="k">Campaign period</div>'+
               '<div class="per">'+I.cal+esc(period(C))+'</div></div>'+
           '</div>'+
-          (C.link_url
-            ? '<a class="cta" href="'+esc(C.link_url)+'" target="_blank" rel="noopener">'+
-                'Participate on X <span>'+OUT+'</span></a>'
-            : '<button class="cta" disabled>Participation link coming soon</button>')+
-          (C.rules_url
-            ? '<br><a class="ulink" href="'+esc(C.rules_url)+'" target="_blank" rel="noopener">'+
-                'View campaign rules '+OUT+'</a>' : '')+
-          /* 발표가 끝난 캠페인만. 그 전에는 걸어 둘 작품이 없고,
-             빈 갤러리로 보내는 것이 안 보내는 것보다 나쁩니다. */
-          (C.show_winners
-            ? '<br><a class="ulink" href="gallery.html#c='+encodeURIComponent(currentKey())+'">'+
-                'View the gallery '+I.arr+'</a>' : '')+
+          heroCta()+
         '</div>'+
       '</div>'+
 
